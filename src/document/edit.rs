@@ -303,8 +303,8 @@ impl<'a> Document<'a> {
     /// prose as written.
     fn shape<'d>(&'d self, edits: &[&Edit]) -> Vec<Shape<'d, 'a>> {
         // Naming every field makes a new one a compile error until it is weighed here. Tokens and
-        // sentences are made from the rest; the lines and the stack are not what a file reads
-        // as.
+        // sentences are made from the rest, and the code is where the blocks and pieces hold it;
+        // the lines and the stack are not what a file reads as.
         let Document {
             source,
             blocks: _,
@@ -315,6 +315,7 @@ impl<'a> Document<'a> {
             sentences: _,
             lines: _,
             regions,
+            code: _,
             stack: _,
         } = self;
         let mut shape = Vec::new();

@@ -2,19 +2,24 @@
 //!
 //! A repository's own lowercase names (`kubectl`, `tinytuya`) are missing from both tables, and the
 //! file that uses them writes them in code a line away. [`CodeWords`] is the set of those words for
-//! one file: the text of every code span and of every code block that stayed code, cut into runs
-//! of letters, digits and underscores, of at least two characters each. A word the tables do not
-//! hold that is one of the runs is `Seen`.
+//! one file: the text of every code span and of every code block, cut into runs of letters, digits
+//! and underscores, of at least two characters each. A word the tables do not hold that is one of
+//! the runs is `Seen`.
+//!
+//! The code is where the document says the file holds it (`Document::code`), which the reader of
+//! its format records before any fence's comments are read as prose. So every reader of a file
+//! finds the same set: a fence counts whole, its comments too, whether or not the reader goes on
+//! to read those comments as prose. A Rust, C++ or TOML file adds only the code spans and code
+//! blocks of its comments: the identifiers of its source are not read, and the repository would
+//! be where to find them.
 //!
 //! The match is on exact case: `Config` in code does not make `config` seen, and a sentence-initial
-//! `Kubectl` is missed. The comments of a fence that a reader lifted out as prose are not code, so
-//! they add nothing, and a Rust, C++ or TOML file adds only what its comments hold: the identifiers
-//! of its source are not read, and the repository would be where to find them.
+//! `Kubectl` is missed.
 
 use std::borrow::Cow;
 use std::collections::HashSet;
 
-use crate::document::{BlockKind, Body, Document, TokenKind};
+use crate::document::Document;
 
 /// The code words of one file: borrowed from its source where it holds them as written.
 #[derive(Debug, Clone, Default)]
@@ -28,22 +33,19 @@ impl<'a> CodeWords<'a> {
         CodeWords::default()
     }
 
-    /// The code words of `document`: its code spans, and the raw text of its code blocks.
+    /// The code words of `document`: the runs of the file's bytes where it writes code. A code
+    /// span's backticks and the markers of a comment around a line are no run, so the bytes give
+    /// the runs that the rendered text gives.
     pub fn of(document: &Document<'a>) -> CodeWords<'a> {
-        let mut words = CodeWords::new();
-        words.add(
-            document
-                .tokens
+        let source = document.source;
+        CodeWords {
+            words: document
+                .code
                 .iter()
-                .filter(|token| token.kind == TokenKind::Code)
-                .map(|token| &token.text),
-        );
-        for (block, _) in document.walk() {
-            if let (BlockKind::Code { .. }, Body::Raw(pieces)) = (&block.kind, &block.body) {
-                words.add(pieces.iter().map(|piece| &piece.text));
-            }
+                .flat_map(|range| runs(&source[range.clone()]))
+                .map(Cow::Borrowed)
+                .collect(),
         }
-        words
     }
 
     /// The words `forms` name, as they are written. For a sentence whose file is not at hand: its
@@ -71,29 +73,10 @@ impl<'a> CodeWords<'a> {
     pub fn len(&self) -> usize {
         self.words.len()
     }
-
-    /// Adds the runs of `texts`, borrowing them where a text is borrowed from the source.
-    fn add<'t>(&mut self, texts: impl Iterator<Item = &'t Cow<'a, str>>)
-    where
-        'a: 't,
-    {
-        for text in texts {
-            match text {
-                Cow::Borrowed(text) => self.words.extend(runs(text).map(Cow::Borrowed)),
-                Cow::Owned(text) => {
-                    for run in runs(text) {
-                        if !self.words.contains(run) {
-                            self.words.insert(Cow::Owned(run.to_string()));
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 /// The runs of `text` that are code words: letters, digits and `_`, two characters or more.
-pub fn runs(text: &str) -> impl Iterator<Item = &str> {
+fn runs(text: &str) -> impl Iterator<Item = &str> {
     text.split(|c: char| !(c.is_alphanumeric() || c == '_'))
         .filter(|run| run.chars().nth(1).is_some())
 }
@@ -101,18 +84,54 @@ pub fn runs(text: &str) -> impl Iterator<Item = &str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::document::{Fences, Reader, Stack};
+    use crate::document::{Fences, Language, Reader, Stack, Surface};
+    use crate::tag::Origin;
 
     fn words(source: &str) -> Vec<String> {
-        let document = Document::markdown(source);
-        let mut found: Vec<String> = CodeWords::of(&document)
-            .words
-            .iter()
-            .map(|word| word.to_string())
-            .collect();
+        sorted(&CodeWords::of(&Document::markdown(source)))
+    }
+
+    fn sorted(code: &CodeWords<'_>) -> Vec<String> {
+        let mut found: Vec<String> = code.words.iter().map(|word| word.to_string()).collect();
         found.sort();
         found
     }
+
+    /// The words marked `Seen` in `document` before the byte `end`, in order.
+    fn seen(document: &Document<'_>, end: usize) -> Vec<String> {
+        document
+            .tokens
+            .iter()
+            .filter(|token| token.origin == Origin::Seen && token.range.end <= end)
+            .map(|token| token.text.to_string())
+            .collect()
+    }
+
+    /// Markdown with fences of each language whose comments a reader may read as prose: doc
+    /// comments with a code span and a fence of their own, plain comments, a fence in a quote and
+    /// one in a list item, and one of a language no reader reads.
+    const FENCED: &str = "Run `kubectl get` here. The zorbler and the frobnozz run.\n\n\
+        ```rust\n\
+        /// Reads `frob_conf` first.\n\
+        ///\n\
+        /// ```\n\
+        /// let inner_x = 1;\n\
+        /// ```\n\
+        // the zorbler runs\n\
+        let quux = 1;\n\
+        ```\n\n\
+        > ```cpp\n\
+        > // a cpp_note here\n\
+        > int widget_count = 2; /* blockish frobnozz */\n\
+        > ```\n\n\
+        - an item\n\n  \
+          ```toml\n  \
+          # toml_note\n  \
+          key_name = \"v\"\n  \
+          ```\n\n\
+        ```text\n\
+        plain_fence words\n\
+        ```\n";
 
     #[test]
     fn a_code_span_and_a_code_block_add_their_runs() {
@@ -146,13 +165,130 @@ mod tests {
     }
 
     #[test]
-    fn the_comments_of_a_fence_are_prose() {
-        let source = "Text.\n\n```rust\n// the frobnicator runs\nlet quux = 1;\n```\n";
-        assert!(!CodeWords::of(&Document::markdown(source)).is_empty());
-        let reading = Stack::new(Reader::Markdown {
-            fences: Fences::all(),
-        });
-        assert!(CodeWords::of(&reading.document(source)).is_empty());
+    fn every_reader_of_a_markdown_file_finds_the_same_code_words_and_seen_words() {
+        let exam = Document::markdown(FENCED);
+        let code = sorted(&CodeWords::of(&exam));
+        let fenced = FENCED.find("```rust").unwrap();
+        for word in [
+            "kubectl",
+            "frob_conf",
+            "inner_x",
+            "zorbler",
+            "quux",
+            "cpp_note",
+            "widget_count",
+            "frobnozz",
+            "toml_note",
+            "key_name",
+            "plain_fence",
+        ] {
+            assert!(code.iter().any(|found| found == word), "{word}: {code:?}");
+        }
+        assert!(!code.iter().any(|found| found == "rust" || found == "toml"));
+        // A word of a fence's comment is code whichever reader reads the file: the exam's, the
+        // lint's with every fence, and one for each language and surface on its own.
+        let mut fences = vec![Fences::default(), Fences::all()];
+        for language in [Language::Rust, Language::Cpp, Language::Toml] {
+            for surfaces in [
+                vec![Surface::DocComment],
+                vec![Surface::Comment],
+                vec![Surface::DocComment, Surface::Comment],
+            ] {
+                fences.push(Fences {
+                    languages: vec![language],
+                    surfaces,
+                });
+            }
+        }
+        let mut lifted = 0;
+        for fences in fences {
+            let document = Stack::new(Reader::Markdown {
+                fences: fences.clone(),
+            })
+            .document(FENCED);
+            lifted += document.regions.len();
+            assert_eq!(sorted(&CodeWords::of(&document)), code, "{fences:?}");
+            // So the prose out of the fences has the same `Seen` words.
+            assert_eq!(
+                seen(&document, fenced),
+                ["zorbler", "frobnozz"],
+                "{fences:?}"
+            );
+        }
+        // The readers that read fences read their comments as prose: the test reads them.
+        assert!(lifted > 10, "{lifted}");
+        assert_eq!(seen(&exam, FENCED.len()), ["zorbler", "frobnozz"]);
+    }
+
+    #[test]
+    fn a_code_file_adds_the_code_of_its_comments_and_not_its_source() {
+        let rust = "//! Crate docs name `crate_word`.\n\
+                    //!\n\
+                    //! ```\n\
+                    //! let doc_fence_word = 1;\n\
+                    //! ```\n\n\
+                    /// Makes a `frob_widget`.\n\
+                    fn source_ident() {\n    \
+                        // A plain comment:\n    \
+                        //\n    \
+                        //     indented_run here\n    \
+                        let local_var = 1;\n\
+                    }\n";
+        let cpp = "/// Returns a value.\n\
+                   ///\n\
+                   ///     cpp_run(x)\n\
+                   int cpp_ident = 0; // trailing\n";
+        let toml = "# A table:\n\
+                    #\n\
+                    #     toml_run = 1\n\
+                    key_ident = 2\n";
+        let both = vec![Surface::DocComment, Surface::Comment];
+        for (reader, source, wanted, never) in [
+            (
+                Reader::Rust {
+                    surfaces: both.clone(),
+                },
+                rust,
+                &[
+                    "crate_word",
+                    "doc_fence_word",
+                    "frob_widget",
+                    "indented_run",
+                ][..],
+                &["source_ident", "local_var", "fn"][..],
+            ),
+            (
+                Reader::Cpp {
+                    surfaces: both.clone(),
+                },
+                cpp,
+                &["cpp_run"][..],
+                &["cpp_ident", "int", "trailing"][..],
+            ),
+            (
+                Reader::Toml {
+                    surfaces: vec![Surface::Comment],
+                },
+                toml,
+                &["toml_run"][..],
+                &["key_ident"][..],
+            ),
+        ] {
+            let document = Stack::new(reader.clone()).document(source);
+            let code = sorted(&CodeWords::of(&document));
+            for word in wanted {
+                assert!(
+                    code.iter().any(|found| found == word),
+                    "{reader:?} {word}: {code:?}"
+                );
+            }
+            for word in never {
+                assert!(
+                    !code.iter().any(|found| found == word),
+                    "{reader:?} {word}: {code:?}"
+                );
+            }
+        }
     }
 
     #[test]

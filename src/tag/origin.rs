@@ -479,20 +479,33 @@ pub fn origins_seen(tokens: &[Token<'_>], seen: &CodeWords<'_>) -> Vec<Origin> {
     let mut work = tokens.to_vec();
     for at in 0..work.len() {
         work[at].origin = if work[at].kind == TokenKind::Word {
-            let origin = origin_of(&work, at, false);
-            if origin == Origin::English
-                && seen.contains(&work[at].text)
-                && table::read_shaped(&work[at].text).0.confidence == Confidence::Unknown
-            {
-                Origin::Seen
-            } else {
-                origin
-            }
+            let text = &work[at].text;
+            seen_or(origin_of(&work, at, false), text, seen, || {
+                table::read_shaped(text).0.confidence
+            })
         } else {
             Origin::English
         };
     }
     work.iter().map(|token| token.origin).collect()
+}
+
+/// The origin of a word that the cues gave `origin`, in a file that writes the words `seen`
+/// in code: [`Origin::Seen`] if no cue marked it, `seen` holds it, and the tables lack it, which
+/// `confidence` gives, its reading by the tables and shape alone; otherwise `origin`. The tagger
+/// and [`origins_seen`] both ask it, so they agree. `confidence` is called last, as only a word of
+/// `seen` needs it.
+pub(super) fn seen_or(
+    origin: Origin,
+    text: &str,
+    seen: &CodeWords<'_>,
+    confidence: impl FnOnce() -> Confidence,
+) -> Origin {
+    if origin == Origin::English && seen.contains(text) && confidence() == Confidence::Unknown {
+        Origin::Seen
+    } else {
+        origin
+    }
 }
 
 /// Sets the origin of the token at `at` of a sentence, whose word the tables have read, and reads a

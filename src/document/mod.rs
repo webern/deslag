@@ -71,6 +71,11 @@ pub struct Document<'a> {
     /// The comments of a code file that were read as prose, in the order of the file: their text,
     /// where it is in the file, and how the file holds it. A Markdown file has those of its fences.
     pub(crate) regions: Vec<Region>,
+    /// Where the file writes code, ordered by where each starts: every code span, markup
+    /// included, and every line of every code block, as the reader of its format found them. A
+    /// fence whose comments a reader goes on to read as prose keeps its lines here, so each reader
+    /// of a file finds the same code in it, whichever fences it reads.
+    pub(crate) code: Vec<Range<usize>>,
     /// What read the source into the first layer, which [`Document::apply`] reads an edited source
     /// with to prove it. The later layers are made from the first, so they need not be read.
     stack: Stack,
@@ -354,6 +359,7 @@ impl<'a> Document<'a> {
         let lines = std::iter::once(0)
             .chain(source.match_indices('\n').map(|(at, _)| at + 1))
             .collect();
+        let code = code_in(&blocks, &pieces);
         Document {
             source,
             blocks,
@@ -364,6 +370,7 @@ impl<'a> Document<'a> {
             sentences: Vec::new(),
             lines,
             regions: Vec::new(),
+            code,
             stack,
         }
     }
@@ -520,6 +527,30 @@ impl<'a> Document<'a> {
 /// region's text agree on.
 fn text(source: &str, range: Range<usize>) -> Cow<'_, str> {
     Cow::Borrowed(&source[range])
+}
+
+/// Where `blocks` and their `pieces` hold code, ordered by where each starts: each code span, and
+/// each line of each code block at any depth.
+fn code_in(blocks: &[Block<'_>], pieces: &[Piece<'_>]) -> Vec<Range<usize>> {
+    fn lines(blocks: &[Block<'_>], code: &mut Vec<Range<usize>>) {
+        for block in blocks {
+            match (&block.kind, &block.body) {
+                (BlockKind::Code { .. }, Body::Raw(raw)) => {
+                    code.extend(raw.iter().map(|piece| piece.range.clone()));
+                }
+                (_, Body::Blocks(children)) => lines(children, code),
+                _ => {}
+            }
+        }
+    }
+    let mut code: Vec<Range<usize>> = pieces
+        .iter()
+        .filter(|piece| piece.kind == PieceKind::Code)
+        .map(|piece| piece.range.clone())
+        .collect();
+    lines(blocks, &mut code);
+    code.sort_by_key(|range| range.start);
+    code
 }
 
 /// The byte order mark, which opens some files and is not part of their text.

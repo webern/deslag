@@ -92,12 +92,7 @@ pub fn sentence_by_rules_seen(tokens: &mut [Token<'_>], context: Context, seen: 
             token.reading = Some(reading);
             commands |= origin::mark(tokens, at, plain, name, &mut after_git);
             let token = &mut tokens[at];
-            if token.origin == Origin::English
-                && reading.confidence == Confidence::Unknown
-                && seen.contains(&token.text)
-            {
-                token.origin = Origin::Seen;
-            }
+            token.origin = origin::seen_or(token.origin, &token.text, seen, || reading.confidence);
         } else {
             token.reading = None;
             token.origin = Origin::English;

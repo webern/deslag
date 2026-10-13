@@ -26,7 +26,8 @@ packed, to git's history.
 
 ## What it costs
 
-Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named:
+Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named, but for
+tagging's share, which was measured once code words were marked seen:
 
 - Binary: `deslag` is 9,856,248 bytes without the stage and 13,478,368 with it, 3,622,120 more.
   The file is in it once.
@@ -35,7 +36,7 @@ Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named
 - Per run: every run that reads prose pays that parse once. `deslag check` of one three-line
   Markdown file takes 21.8 ms, against 9.9 ms without the stage (medians of 50 runs).
 - Tagging's share of reading the corpus's big tier, which `cargo run -p deslag-corpus -- time
-  --check` holds under 75%, is 64% in debug and 57% in release. That check keeps each file's
+  --check` holds under 75%, is 65% in debug and 58% in release. That check keeps each file's
   fastest pass, so it leaves out the parse.
 
 ## Training data
@@ -51,7 +52,7 @@ Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named
 - The dev gold, the holdout and the owner's set trained nothing. The silver batch's tune split (399
   sentences) chose the cutoffs below and the mapping of margins to scores, and nothing else.
 
-Each sentence was first read by deslag's rules, version 11, and the model learned to correct that
+Each sentence was first read by deslag's rules, version 12, and the model learned to correct that
 reading. That is why the weights say which rules version they belong to (`rules_version` in the
 header) and why the tagger runs them only after the rules of that version.
 
@@ -72,9 +73,9 @@ code licence. The weights hold words and numbers, not sentences.
 - The exporter, `scripts/train/weights.py`, writes the model as it is. It retrains nothing and
   prunes nothing, and it refuses a model whose cutoffs are not whole numbers over the steps.
 - The model's file is `.train/shapes/p-hyb-s.model.json` after `make generate-shapes`. Its sha256
-  is `685bfa1c47182437393ca65fee77f6656a431ae0081e3bfb85db041264738f06`. The two readings files it
-  trained on have sha256 `fe335d9cf7f906bd22d85127012968e5a0c689479af2e67683fd7283940444c7` (the
-  treebank's train file) and `17644617e1d638fc7a7c3093eea0d92b9131617dea6a979f7362df4ca3ffb704`
+  is `4ade3302e849ca3255135d553ef02b36df093e8c6d4857b142634c756b43e0f9`. The two readings files it
+  trained on have sha256 `2e7f239c16a77d1a21ba02a801047ea38a688c1b2a22ad6f53cc19a6dee91dab` (the
+  treebank's train file) and `68e2c9353571606d328cd0c57d66f6ec91c43bdff6f6342ec60f21c35628bcca`
   (silver's train split).
 - The file's header names the model's sha256 (`model_sha256`). `weights.py check --model` refuses
   a model file with another hash, and `make generate-weights` runs it after each export.
@@ -85,10 +86,17 @@ The weights belong to one version of the rules, `deslag::tag::RULES_VERSION`, an
 header. `tests/golden/rules.txt` holds a hash of what the rules read of `tests/corpus/core/`, and
 fails a change to it until `RULES_VERSION` is raised and `make fix-golden` run. Then:
 
-1. `make generate-shapes` trains the models from the rules of the new version. The tools build
-   while the weights are behind the rules.
+1. Copy `.train/shapes` to a directory of its own first (`cp -a .train/shapes .train/shapes-r11`):
+   `make generate-shapes` writes over the models of the last training, and a retraining on the
+   same features should be compared with them. Then `make generate-shapes`, under Python 3.13,
+   trains the models from the rules of the new version. The tools build while the weights are
+   behind the rules.
 2. `make generate-weights`, with Python 3.13, writes this file from the hybrid model and checks it
-   against the model. Nothing else makes the file.
+   against the model. Nothing else makes the file. When the features did not change, only
+   `rules_version` and `model_sha256` differ from the last file, and `python3
+   scripts/train/weights.py same --old .train/shapes-r11/p-hyb-s.model.json --new
+   .train/shapes/p-hyb-s.model.json` says whether the new model's weights, vocabulary, steps and
+   tuning are the old one's.
 3. A change to the file is a change to the tagger: raise `deslag::tag::VERSION`, run
    `make fix-golden`, and update the counts and costs here.
 4. Read the diff of `tests/golden/verbs_no_nouns.txt` after `make fix-golden`. The lint reads the
@@ -116,8 +124,8 @@ file of decisions, `tools/exam/tests/golden/learned.txt`, which `cargo test` hol
 `make test-python` holds the Python to. A comparison run once, when the file was written, found no
 word that decides differently in the dev set (3,138 words), the treebank's dev set (21,315), a set
 the maintainer labelled (583), or the corpus (840,484). The scores
-below are the exam's counts on the dev gold, with the rules alone (version 11) against the shipped
-tagger (version 12).
+below are the exam's counts on the dev gold, with the rules alone (version 12) against the shipped
+tagger (version 13).
 
 | measure | rules alone | with the learned stage |
 | --- | --- | --- |

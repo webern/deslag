@@ -377,8 +377,9 @@ fn pipeline() -> (tempfile::TempDir, PathBuf) {
 #[test]
 fn the_pipeline_ends_in_a_dev_and_a_holdout_file_the_exam_reads() {
     let (_dir, out) = pipeline();
-    let dev = Gold::read(&out.join("dev.conllu")).unwrap();
-    let holdout = Gold::read(&out.join("holdout.conllu")).unwrap();
+    // The kit writes no sidecar; `deslag-gold seen` does, from a fetched fixture.
+    let dev = Gold::read_bare(&out.join("dev.conllu")).unwrap();
+    let holdout = Gold::read_bare(&out.join("holdout.conllu")).unwrap();
     assert_eq!(dev.sentences.len(), 300);
     assert_eq!(holdout.sentences.len(), 150);
     assert_eq!(dev.split, Some(Split::Dev));
@@ -507,7 +508,7 @@ fn the_disputes_files_are_empty_and_the_log_and_manifest_sit_beside_the_gold() {
 
 /// The `sent_id` of every sentence of a gold file.
 fn gold_ids(path: &Path) -> std::collections::BTreeSet<String> {
-    Gold::read(path)
+    Gold::read_bare(path)
         .unwrap()
         .sentences
         .into_iter()

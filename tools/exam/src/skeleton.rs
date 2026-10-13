@@ -2,9 +2,11 @@
 //!
 //! One CoNLL-U sentence per gold sentence, with its `sent_id` and `# text` set to the text deslag's
 //! tokens index into. One line per deslag token: `FORM` is the token's text, `MISC` is `Kind=`,
-//! `Origin=` on a `Word` whose origin is not English (`Symbol`, `Command`, `Path` or `Flag`) and
+//! `Origin=` on a `Word` whose origin is not English (`Symbol`, `Command`, `Path`, `Flag` or
+//! `Seen`, the last from the gold file's sidecar, see [`crate::seen`]) and
 //! `SpaceAfter=No` where no space follows, and every other column is `_`. `import` ignores
-//! `Origin=`; it is for a person or a program that labels the words. The program fills
+//! `Origin=`; it is for a person or a program that labels the words, and `readings --tokens` reads
+//! the `Seen` forms of each sentence back as the set its file wrote in code. The program fills
 //! `UPOS` on every `Word` line, so it grades on deslag's own tokens. The skeleton starts with
 //! `# exam.tokens = deslag` and gives each sentence its `# exam.context`, so a file filled from it
 //! is read in the context each sentence was in, and as deslag's tokens. It never carries the tier
@@ -141,7 +143,7 @@ pub fn skeleton(gold: &Gold) -> String {
     out.push_str(&batch_line(gold.silver_batch.as_deref()));
     for sentence in &gold.sentences {
         let tokens = sentence.tokens();
-        let origins = deslag::tag::origins(&tokens);
+        let origins = deslag::tag::origins_seen(&tokens, &sentence.code_words);
         let _ = writeln!(out, "# sent_id = {}", sentence.sent_id);
         let _ = writeln!(out, "# exam.context = {}", sentence.context.name());
         let _ = writeln!(out, "# text = {}", sentence.text);

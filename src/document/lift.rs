@@ -20,6 +20,8 @@ pub(super) struct Layers<'a> {
     pieces: Vec<Piece<'a>>,
     spans: Vec<Span<'a>>,
     points: Vec<Point>,
+    /// Where the region's text holds code, in the file.
+    code: Vec<Range<usize>>,
 }
 
 /// Reads the text of `region` as `markup` and lifts what it finds into the coordinates of `source`,
@@ -58,6 +60,7 @@ pub(super) fn lift<'a>(source: &'a str, region: &Region, markup: Markup) -> Laye
             .iter()
             .map(|point| lifter.point(point))
             .collect(),
+        code: inner.code.iter().map(|range| lifter.range(range)).collect(),
     }
 }
 
@@ -210,14 +213,16 @@ impl<'a> Document<'a> {
     /// theirs to move.
     ///
     /// A region in the text of a fenced code block goes into that block, at any depth, and replaces
-    /// the lines of code it held as its body, which a lint that reads code never sees again. Any
-    /// other region goes in among the top-level blocks, which are not nested in one another.
+    /// the lines of code it held as its body, which a lint that reads code never sees again. The
+    /// document's code still holds those lines. Any other region goes in among the top-level
+    /// blocks, which are not nested in one another.
     pub(super) fn merge(&mut self, layers: Layers<'a>) {
         let Layers {
             mut block,
             pieces,
             spans,
             points,
+            code,
         } = layers;
         let start = block.range.start;
         let first = self
@@ -248,6 +253,9 @@ impl<'a> Document<'a> {
             .points
             .partition_point(|point| point.range.start < start);
         self.points.splice(at..at, points);
+        // A region of a fence holds code inside the fence's lines, which stay where they are.
+        self.code.extend(code);
+        self.code.sort_by_key(|range| range.start);
     }
 }
 

@@ -92,7 +92,7 @@ fn kind_id(kind: TokenKind) -> u16 {
 /// where its normal form is read.
 fn placeholder(origin: Origin) -> Option<(&'static str, &'static str)> {
     match origin {
-        Origin::English => None,
+        Origin::English | Origin::Seen => None,
         Origin::Symbol => Some(("<Symbol>", "<symbol>")),
         Origin::Command => Some(("<Command>", "<command>")),
         Origin::Path => Some(("<Path>", "<path>")),

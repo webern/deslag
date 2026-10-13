@@ -7,7 +7,7 @@
 # alphabetical order of the 13 codes: ADJ ADP ADV AUX CONJ DET INTJ NOUN NUM PART PRON PROPN
 # VERB), S, L, U or ? for Sure, Likely, Unsure or Unknown, and `=` with the hex of the tags kept
 # (bit n for the nth code) when that is not the tag alone.
-# deslag::tag::VERSION 12
+# deslag::tag::VERSION 13
 # 3384 sentences with 26761 words
 
 ## synthetic

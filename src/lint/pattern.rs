@@ -48,8 +48,8 @@ pub enum Item {
     /// and not from the sentence.
     NotFeature(Features),
     /// A word whose origin is this: `Item::Origin(Origin::Symbol)` is a bare identifier, and
-    /// `Origin::English` a word no cue marks as code. A token the tagger has not read is
-    /// `English`, so it matches only that.
+    /// `Origin::English` a word no cue marks as code, and not `Seen`, a word its file writes in
+    /// code. A token the tagger has not read is `English`, so it matches only that.
     ///
     /// It reads the token's `origin`, which is not a confidence on a set of tags: a lint that
     /// skips code, or asks for a name to be in a code span, wants this and not [`Item::Tag`].

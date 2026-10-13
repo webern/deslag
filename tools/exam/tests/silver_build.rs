@@ -344,18 +344,22 @@ fn a_draw_that_was_not_dealt_into_parts_is_refused() {
 
 #[test]
 fn a_draw_made_under_another_tag_version_is_refused() {
+    let now = deslag::tag::RULES_VERSION;
     refused(
         |made| {
             made.edit(1, "manifest.tsv", |text| {
-                text.replace("# tag_version = 11\n", "# tag_version = 10\n")
+                text.replace(
+                    &format!("# tag_version = {now}\n"),
+                    &format!("# tag_version = {}\n", now - 1),
+                )
             })
         },
-        &["tag version 10", "draw again"],
+        &[&format!("tag version {}", now - 1), "draw again"],
     );
     refused(
         |made| {
             made.edit(1, "manifest.tsv", |text| {
-                text.replace("# tag_version = 11\n", "")
+                text.replace(&format!("# tag_version = {now}\n"), "")
             })
         },
         &["records no tag_version"],

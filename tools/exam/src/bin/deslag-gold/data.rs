@@ -563,8 +563,14 @@ impl Sample {
             } else {
                 match first(exam_skeleton::FROM).filter(|from| LABELLED_FROM.contains(from)) {
                     Some(from) => {
-                        let gold = deslag_exam::gold::Gold::read(&graded_gold(golds, from)?)?;
-                        if exam_skeleton::skeleton(&gold) != text {
+                        let path = graded_gold(golds, from)?;
+                        // A skeleton made before the gold had its sidecar has no `Origin=Seen`,
+                        // and is that gold's as much as one made now.
+                        let bare = deslag_exam::gold::Gold::read_bare(&path)?;
+                        let made = exam_skeleton::skeleton(&bare) == text
+                            || exam_skeleton::skeleton(&deslag_exam::gold::Gold::read(&path)?)
+                                == text;
+                        if !made {
                             return Err(Error::load(
                                 &shown,
                                 Place::File,
@@ -1012,6 +1018,38 @@ pub mod tests {
         assert_eq!(meta.context, Context::ListItem);
         assert_eq!((meta.tier, meta.split), (None, None));
         assert!(in_label_place(&dir));
+    }
+
+    #[test]
+    fn a_skeleton_opens_with_the_seen_words_of_the_sidecar_or_from_before_it() {
+        let root = tempfile::tempdir().unwrap();
+        let dir = root.path().join("golds");
+        std::fs::create_dir_all(&dir).unwrap();
+        let gold_path = dir.join("dev.conllu");
+        let text = GOLD
+            .replace("# text = ", "# source = f.md bytes 0-14\n# text = ")
+            .replace("\tit\t", "\tfrobnozz\t");
+        std::fs::write(&gold_path, text).unwrap();
+        let bare = deslag_exam::gold::Gold::read_bare(&gold_path).unwrap();
+        std::fs::write(
+            deslag_exam::seen::path_of(&bare.path),
+            deslag_exam::seen::render(&bare, &[vec![2]]),
+        )
+        .unwrap();
+        let with = deslag_exam::gold::Gold::read(&gold_path).unwrap();
+        let now = exam_skeleton::skeleton(&with);
+        let before = exam_skeleton::skeleton(&bare);
+        assert!(now.contains("Origin=Seen") && !before.contains("Origin=Seen"));
+        for (name, skeleton) in [("now", &now), ("before", &before)] {
+            let label = root.path().join(LABEL_DIR).join(name);
+            std::fs::create_dir_all(&label).unwrap();
+            std::fs::write(label.join("sample.conllu"), skeleton).unwrap();
+            assert!(Sample::open_in(&label, &dir).is_ok(), "{name}");
+        }
+        let label = root.path().join(LABEL_DIR).join("edited");
+        std::fs::create_dir_all(&label).unwrap();
+        std::fs::write(label.join("sample.conllu"), now.replace("Seen", "Path")).unwrap();
+        assert!(Sample::open_in(&label, &dir).is_err());
     }
 
     #[test]

@@ -338,6 +338,7 @@ pub fn write_skeleton(
     let mut count = 0;
     for entry in entries {
         let document = Document::markdown(&entry.text);
+        let seen = deslag::tag::CodeWords::of(&document);
         for (range, start, context) in in_context(&document) {
             let tokens = &document.tokens[range];
             if skip && !writable(tokens) {
@@ -345,7 +346,7 @@ pub fn write_skeleton(
             }
             let mut tagged = tokens.to_vec();
             if read == Reader::Rules {
-                deslag::tag::sentence_by_rules(&mut tagged, context);
+                deslag::tag::sentence_by_rules_seen(&mut tagged, context, &seen);
             }
             let mut text = String::new();
             let mut lines = String::new();
@@ -575,8 +576,13 @@ pub fn score(list: &List, entries: &[Entry], source: &Source<'_>) -> Result<Scor
             // The document read each sentence with the shipped tagger; read it again with the
             // rules alone, in the context it was read in.
             for document in &mut documents {
+                let seen = deslag::tag::CodeWords::of(document);
                 for (range, _, context) in in_context(document) {
-                    deslag::tag::sentence_by_rules(&mut document.tokens[range], context);
+                    deslag::tag::sentence_by_rules_seen(
+                        &mut document.tokens[range],
+                        context,
+                        &seen,
+                    );
                 }
             }
             "rules".to_string()

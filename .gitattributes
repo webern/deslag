@@ -2,3 +2,6 @@ tests/configs/** -text
 # The tagger's tables are built into the binary and parsed by line; a checkout keeps their line
 # ends as they are, on Windows too.
 src/tag/*.txt text eol=lf
+# The holdout set and its sidecar are read by tools only: a plain diff names the change and prints
+# none of it, and GitHub folds them in a pull request's files.
+tests/gold/holdout* -diff linguist-generated=true

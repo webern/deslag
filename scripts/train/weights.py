@@ -6,6 +6,7 @@ tables the file's digit ranges are cut from.
 
     weights.py export --model MODEL.json --out src/tag/weights.txt
     weights.py check  --weights src/tag/weights.txt [--model MODEL.json]
+    weights.py same   --old OLD.json --new NEW.json
 
 The file is UTF-8 text, one fact to a line, all of it integers and words, so the Rust side parses no
 feature string. Fields in a line are separated by one tab.
@@ -46,6 +47,7 @@ lookup for `n` and `n-1` looks there for a text that begins that way.
 """
 
 import argparse
+import json
 import sys
 import unicodedata
 
@@ -418,6 +420,30 @@ def cmd_check(args):
         print("the file is the model", file=sys.stderr)
 
 
+# The parts of a model that decide what it tags: its weights, the words it knows, the steps it took
+# and the cutoffs it was tuned to. Its `meta` also names the training files' hashes and the tag
+# version, which a retraining on other readings changes while the parts stay.
+SAME_PARTS = ("weights", "vocab", "steps", "tuning")
+
+
+def cmd_same(args):
+    """Says, for each of SAME_PARTS, whether the models hold the same, and which keys of `meta`
+    differ. Exit 1 when a part differs."""
+    models = []
+    for path in (args.old, args.new):
+        with open(path, encoding="utf-8") as f:
+            models.append(json.load(f))
+    old, new = models
+    differs = [part for part in SAME_PARTS if old.get(part) != new.get(part)]
+    for part in SAME_PARTS:
+        size = len(new[part]) if hasattr(new.get(part), "__len__") else new.get(part)
+        print(f"{part}: {'differs' if part in differs else 'equal'} ({size})")
+    keys = sorted(key for key in set(old["meta"]) | set(new["meta"])
+                  if old["meta"].get(key) != new["meta"].get(key))
+    print(f"meta: differs in {', '.join(keys) if keys else 'nothing'}")
+    return 1 if differs else 0
+
+
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -429,13 +455,16 @@ def main(argv):
     check.add_argument("--weights", required=True)
     check.add_argument("--model")
     check.set_defaults(run=cmd_check)
+    same = sub.add_parser("same")
+    same.add_argument("--old", required=True)
+    same.add_argument("--new", required=True)
+    same.set_defaults(run=cmd_same)
     args = parser.parse_args(argv)
     try:
-        args.run(args)
+        return args.run(args) or 0
     except (Failure, OSError) as error:
         print(error, file=sys.stderr)
         return 2
-    return 0
 
 
 if __name__ == "__main__":

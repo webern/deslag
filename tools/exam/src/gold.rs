@@ -13,7 +13,7 @@ use std::ops::Range;
 use std::path::Path;
 
 use deslag::document::{Token, TokenKind};
-use deslag::tag::Origin;
+use deslag::tag::{CodeWords, Origin};
 use sha2::{Digest, Sha256};
 
 use crate::conllu::{self, Block, Id};
@@ -188,6 +188,14 @@ pub struct GoldSentence {
     pub units: Vec<Unit>,
     /// A `deslag` file's token ranges in `text`, one per word. Empty for a `ud` file.
     pub spans: Vec<Range<usize>>,
+    /// Where `# source = <file> bytes <a>-<b>` says the sentence is: the fixture's path under the
+    /// big tier, and the byte range in it. `None` when the sentence says nothing.
+    pub source: Option<(String, Range<usize>)>,
+    /// The IDs of the words that the sentence's file writes in code, from the sidecar; empty when
+    /// the file has none.
+    pub code_ids: Vec<usize>,
+    /// The forms of those words: what [`deslag::tag::sentence_seen`] is given.
+    pub code_words: CodeWords<'static>,
     mode: TokenMode,
 }
 
@@ -224,8 +232,18 @@ pub struct Unit {
 }
 
 impl Gold {
-    /// Reads and checks the gold file at `path`.
+    /// Reads and checks the gold file at `path`, and the sidecar beside it that names the words
+    /// each sentence's file writes in code (see [`crate::seen`]). A gold set that needs one and has
+    /// none, or has a stale one, is an error.
     pub fn read(path: &Path) -> Result<Gold, Error> {
+        let mut gold = Gold::read_bare(path)?;
+        crate::seen::attach(&mut gold)?;
+        Ok(gold)
+    }
+
+    /// Reads and checks the gold file at `path`, with no sidecar: for the tools that make or sort
+    /// gold files, and the sidecar's own.
+    pub fn read_bare(path: &Path) -> Result<Gold, Error> {
         let shown = path.display().to_string();
         let bytes = std::fs::read(path).map_err(|source| Error::Io {
             path: shown.clone(),
@@ -336,6 +354,9 @@ impl GoldSentence {
         let mut tier = None;
         let mut context = Context::Prose;
         let mut seen = BTreeSet::new();
+        let source = block
+            .comment("source")
+            .and_then(|comment| parse_source(&comment.value));
         for comment in &block.comments {
             if !comment.key.starts_with("exam.") {
                 continue;
@@ -459,6 +480,9 @@ impl GoldSentence {
             words,
             units,
             spans,
+            source,
+            code_ids: Vec::new(),
+            code_words: CodeWords::new(),
             mode,
         })
     }
@@ -555,6 +579,13 @@ impl Word {
         };
         Ok((word, space_after))
     }
+}
+
+/// The file and byte range of a `# source = <file> bytes <a>-<b>` comment's value.
+fn parse_source(value: &str) -> Option<(String, Range<usize>)> {
+    let (file, bytes) = value.rsplit_once(" bytes ")?;
+    let (start, end) = bytes.split_once('-')?;
+    Some((file.to_string(), start.parse().ok()?..end.parse().ok()?))
 }
 
 /// The comment a silver batch's file opens with, naming the batch: a training reader refuses a file
@@ -655,6 +686,6 @@ fn bad_value(path: &str, comment: &conllu::Comment, names: &[&str]) -> Error {
     )
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }

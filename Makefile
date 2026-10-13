@@ -106,9 +106,9 @@ help:
 	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"
 	@echo "                 gates and the owner set's metrics; not test-python, which runs when the scripts it"
 	@echo "                 tests change"
-	@echo "test-blobs       fetch the corpus's big tier, test it, check the silver batches with test-silver, and"
-	@echo "                 fail if tagging takes over its budget of the time to read it; needs the network, so"
-	@echo "                 not in test"
+	@echo "test-blobs       fetch the corpus's big tier, test it, check the silver batches with test-silver, check"
+	@echo "                 the gold sets' seen sidecars against their fixtures, and fail if tagging takes over"
+	@echo "                 its budget of the time to read it; needs the network, so not in test"
 	@echo "test-brill       train the Brill tagger on the treebank's train set, grade it on the dev and owner sets with"
 	@echo "                 deslag-exam and compare it with deslag, its initial tagger and the perceptron;"
 	@echo "                 generates first, so minutes, not in test or ci; run test-percept first for the"
@@ -313,6 +313,7 @@ test: preflight test-exam
 # took with its learned stage (about 64% in debug), plus room.
 test-blobs: preflight fetch-blobs test-silver
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
+	cargo test $(CARGO_FLAGS) -p deslag-exam --test seen -- --ignored
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
 
 # The Brill tagger's unit tests, then the exam's full report on the dev and owner sets for it and for its

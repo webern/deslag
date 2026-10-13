@@ -1000,6 +1000,15 @@ def exam_binary():
                default=None)
 
 
+def write_empty_seen(conllu_path):
+    """Has `deslag-gold seen --empty` write the sidecar beside a silver split that names no word:
+    the exam refuses a silver file without one. The tool, beside deslag-exam, owns the format."""
+    gold = os.path.join(os.path.dirname(exam_binary()), "deslag-gold")
+    if not os.path.isfile(gold):
+        raise RuntimeError(f"{gold} is not built; `make test-python` builds it beside deslag-exam")
+    subprocess.run([gold, "seen", conllu_path, "--empty"], check=True, capture_output=True)
+
+
 @unittest.skipUnless(exam_binary(), "deslag-exam is not built")
 class RetiredBatchEndToEndTests(unittest.TestCase):
     """The readings the trainers read are written by `deslag-exam`, from silver.py's split, and
@@ -1011,6 +1020,7 @@ class RetiredBatchEndToEndTests(unittest.TestCase):
         silver.split(write(d, "silver.conllu", body), write(d, "manifest.tsv", rows),
                      os.path.join(d, "out"), "true", live)
         train = os.path.join(d, "out", "silver-train.conllu")
+        write_empty_seen(train)
         made = {name: os.path.join(d, f"{name}.conllu") for name in ("gold", "tokens", "skeleton")}
         exam = exam_binary()
         for args in (["readings", "--gold", train, "--out", made["gold"]],
@@ -1079,6 +1089,16 @@ class FeatureLayerTests(unittest.TestCase):
 
     def test_symbol_is_a_placeholder_origin_and_english_is_not(self):
         self.assertEqual(features.spelled(["+", "up"], ["Symbol", "English"]), ["<Symbol>", "up"])
+
+    def test_seen_is_no_placeholder_so_a_seen_word_is_spelled_as_it_is(self):
+        # A word the file writes in code keeps its spelling until the features are trained again.
+        self.assertNotIn("Seen", features.PLACEHOLDER_ORIGINS)
+        forms = ["run", "kubectl", "now"]
+        self.assertEqual(features.spelled(forms, ["English", "Seen", "English"]), forms)
+        plain = features.Prepared(forms, ["English", "English", "English"])
+        seen = features.Prepared(forms, ["English", "Seen", "English"])
+        self.assertEqual(plain.forms, seen.forms)
+        self.assertEqual(plain.norms, seen.norms)
 
     def test_the_hybrid_features_add_deslags_reading_and_the_replace_features_do_not(self):
         sent = toy_readings()[0]
@@ -1478,6 +1498,18 @@ class WeightsFileTests(unittest.TestCase):
                 weights.check_against(out, path)
             self.assertEqual(weights.main(["check", "--weights", out, "--model", path]), 2)
 
+    def test_two_models_are_the_same_when_their_parts_are_and_their_meta_may_differ(self):
+        model = self.model()
+        with tempfile.TemporaryDirectory() as d:
+            old, new = os.path.join(d, "old.json"), os.path.join(d, "new.json")
+            shaped.save(model, old)
+            model.meta["deslag_version"] = model.meta.get("deslag_version", 0) + 1
+            shaped.save(model, new)
+            self.assertEqual(weights.main(["same", "--old", old, "--new", new]), 0)
+            model.steps += 1
+            shaped.save(model, new)
+            self.assertEqual(weights.main(["same", "--old", old, "--new", new]), 1)
+
     def test_a_file_that_is_not_the_format_is_refused(self):
         text = weights.export_text(self.model(), SHA)
         for broken in ("", "something else\n", text.replace("deslag-weights 1", "deslag-weights 2"),
@@ -1716,6 +1748,23 @@ class OwnerSetTests(RunShTests):
         message = str(caught.exception)
         self.assertIn("2 != 0", message)
         self.assertIn("report-only", message)
+
+
+class SilverSidecarTests(RunShTests):
+    """Silver's splits are cut by run.sh, so run.sh writes the sidecar each one needs."""
+
+    def test_each_split_has_its_sidecar_written_with_the_manifest_before_it_is_read(self):
+        calls = self.run_all("generate-shapes")
+        for split in ("silver-train", "silver-tune"):
+            sidecar = [i for i, c in enumerate(calls)
+                       if " -- seen " in c and f".train/shapes/{split}.conllu" in c]
+            self.assertEqual(len(sidecar), 1, split)
+            self.assertIn("--manifest .blobs/unpacked/silver/2026-10-08-silver/manifest.tsv",
+                          calls[sidecar[0]])
+            read = [i for i, c in enumerate(calls)
+                    if f" readings --gold .train/shapes/{split}.conllu" in c]
+            self.assertEqual(len(read), 1, split)
+            self.assertLess(sidecar[0], read[0])
 
 
 class MilestoneTests(RunShTests):

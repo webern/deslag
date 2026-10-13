@@ -5,8 +5,8 @@ of Collins (2002) and of the averaged perceptron taggers that followed it (Honni
 the word, its lower-cased form, suffixes of 1 to 3 and the first letter, its shape, the two
 previous tags and the words around it. A learner measures before adding any other.
 
-Two additions come from deslag's tokens. A word whose origin is not English (`Symbol`, `Command`,
-`Path` or `Flag`) is spelled by a placeholder, `<Symbol>` and so on, wherever the learner reads a
+Two additions come from deslag's tokens. A word whose origin is `Symbol`, `Command`, `Path` or
+`Flag` is spelled by a placeholder, `<Symbol>` and so on, wherever the learner reads a
 spelling; its shape stays, and the import keeps the skeleton's forms. And a sentence read with
 deslag's readings gives each word's features its best-guess code, confidence and `Kept=` set.
 """

@@ -3,5 +3,5 @@
 # tests/golden.rs writes this file. The learned stage was trained on what the rules read, so
 # a change to it raises deslag::tag::RULES_VERSION, and the weights are trained again for it:
 # src/tag/weights.md says how.
-rules_version 11
-fnv1a64 370ea268190a6f09
+rules_version 12
+fnv1a64 443eb2dfa667e17b

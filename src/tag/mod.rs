@@ -36,7 +36,7 @@ pub use types::{Confidence, Context, Features, Origin, Reading, Tag, TagSet};
 
 /// The version of the readings, raised by each change that alters any of them. The golden tag
 /// stream, `tests/golden/tags.txt`, names it, and git keeps each version of that file.
-pub const VERSION: u32 = 12;
+pub const VERSION: u32 = 13;
 
 /// The version of the rules alone: the tables and passes that [`sentence_by_rules`] runs. It
 /// starts at the version the weights were trained on, and is raised by a change to any reading
@@ -45,7 +45,7 @@ pub const VERSION: u32 = 12;
 /// version are wrong for another: the weights file names the version it was trained on, and where
 /// that is not this one the learned stage does not run and a test fails until the weights are
 /// trained again.
-pub const RULES_VERSION: u32 = 11;
+pub const RULES_VERSION: u32 = 12;
 
 // Carrying a reading costs `Token` nothing: it is 48 bytes, as it was with a one-byte word type.
 #[cfg(target_pointer_width = "64")]

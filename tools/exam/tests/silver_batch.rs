@@ -274,7 +274,19 @@ fn parts_become_a_batch_with_every_file_of_the_layout_and_it_checks() {
 
 #[test]
 fn silver_conllu_is_read_by_the_exam_loader_and_by_readings() {
-    let (made, dir) = built();
+    let (made, batch) = built();
+    // A gold file that names a silver batch needs the sidecar of its seen words. The batch holds
+    // none, so a copy beside one that names no word is what the exam reads.
+    let dir = made.root.join("with-sidecar");
+    fs::create_dir_all(&dir).unwrap();
+    fs::copy(batch.join("silver.conllu"), dir.join("silver.conllu")).unwrap();
+    let gold = deslag_exam::gold::Gold::read_bare(&dir.join("silver.conllu")).unwrap();
+    let empty = vec![Vec::new(); gold.sentences.len()];
+    fs::write(
+        deslag_exam::seen::path_of(&gold.path),
+        deslag_exam::seen::render(&gold, &empty),
+    )
+    .unwrap();
     let out = made.root.join("readings.conllu");
     let ran = std::process::Command::new(env!("CARGO_BIN_EXE_deslag-exam"))
         .args(["readings", "--gold"])

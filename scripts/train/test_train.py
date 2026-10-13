@@ -3,6 +3,7 @@
 
 import os
 import random
+import hashlib
 import re
 import shutil
 import subprocess
@@ -1001,6 +1002,35 @@ def exam_binary():
 
 
 @unittest.skipUnless(exam_binary(), "deslag-exam is not built")
+def write_empty_seen(conllu_path):
+    """The sidecar beside a silver split that names no seen word, in the format `deslag-gold seen`
+    writes: the exam refuses a silver file without one."""
+    hasher, rows, sent_id, forms = hashlib.sha256(), [], None, []
+
+    def close():
+        if sent_id is not None:
+            hasher.update(sent_id.encode() + b"\0")
+            for form in forms:
+                hasher.update(form.encode() + b"\1")
+            hasher.update(b"\n")
+            rows.append(f"{sent_id}\t\n")
+
+    with open(conllu_path, encoding="utf-8") as f:
+        for line in f.read().split("\n"):
+            if line.startswith("# sent_id"):
+                close()
+                sent_id, forms = line.split("=", 1)[1].strip(), []
+            elif line and line[0].isdigit():
+                cols = line.split("\t")
+                if cols[0].isdigit():
+                    forms.append(cols[1])
+        close()
+    side = os.path.splitext(conllu_path)[0] + ".seen.tsv"
+    with open(side, "w", encoding="utf-8") as f:
+        f.write(f"# seen_rule = 1\n# gold_sha256 = {hasher.hexdigest()}\n# written by the test\n"
+                + "".join(rows))
+
+
 class RetiredBatchEndToEndTests(unittest.TestCase):
     """The readings the trainers read are written by `deslag-exam`, from silver.py's split, and
     still name the batch, so a retired batch is refused on them."""
@@ -1011,6 +1041,7 @@ class RetiredBatchEndToEndTests(unittest.TestCase):
         silver.split(write(d, "silver.conllu", body), write(d, "manifest.tsv", rows),
                      os.path.join(d, "out"), "true", live)
         train = os.path.join(d, "out", "silver-train.conllu")
+        write_empty_seen(train)
         made = {name: os.path.join(d, f"{name}.conllu") for name in ("gold", "tokens", "skeleton")}
         exam = exam_binary()
         for args in (["readings", "--gold", train, "--out", made["gold"]],
@@ -1487,6 +1518,18 @@ class WeightsFileTests(unittest.TestCase):
             with self.assertRaisesRegex(conllu.Failure, "sha256"):
                 weights.check_against(out, path)
             self.assertEqual(weights.main(["check", "--weights", out, "--model", path]), 2)
+
+    def test_two_models_are_the_same_when_their_parts_are_and_their_meta_may_differ(self):
+        model = self.model()
+        with tempfile.TemporaryDirectory() as d:
+            old, new = os.path.join(d, "old.json"), os.path.join(d, "new.json")
+            shaped.save(model, old)
+            model.meta["deslag_version"] = model.meta.get("deslag_version", 0) + 1
+            shaped.save(model, new)
+            self.assertEqual(weights.main(["same", "--old", old, "--new", new]), 0)
+            model.steps += 1
+            shaped.save(model, new)
+            self.assertEqual(weights.main(["same", "--old", old, "--new", new]), 1)
 
     def test_a_file_that_is_not_the_format_is_refused(self):
         text = weights.export_text(self.model(), SHA)

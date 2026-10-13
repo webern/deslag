@@ -261,10 +261,12 @@ fn harper(base: &[(&str, &str)], patches: &str) -> Harper {
 
 fn readings(harper: &Harper, text: &str) -> Vec<Option<(Tag, Confidence)>> {
     let tokens = Token::split(text);
+    let seen = deslag::tag::CodeWords::new();
     let sentence = Sentence {
         text,
         tokens: &tokens,
         context: Context::Prose,
+        seen: &seen,
     };
     run(harper, "s1", &sentence)
         .unwrap()

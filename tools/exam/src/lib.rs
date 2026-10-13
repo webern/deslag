@@ -27,6 +27,7 @@ pub mod readings;
 pub mod report;
 pub mod saved;
 pub mod score;
+pub mod seen;
 pub mod skeleton;
 pub mod stats;
 pub mod strata;

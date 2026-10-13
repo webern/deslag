@@ -5,6 +5,7 @@
 //! rule tagger and a trained model implement the same trait.
 
 use deslag::document::{Token, TokenKind};
+use deslag::tag::CodeWords;
 
 use crate::error::Error;
 use crate::tags::{Confidence, Features, Reading, Tag, TagSet};
@@ -20,6 +21,8 @@ pub struct Sentence<'s> {
     pub tokens: &'s [Token<'s>],
     /// The block it is in.
     pub context: Context,
+    /// The words its file writes in code, which a tagger may read as deslag's does.
+    pub seen: &'s CodeWords<'s>,
 }
 
 /// A part-of-speech tagger.
@@ -82,7 +85,7 @@ impl Tagger for Deslag {
 
     fn tag(&self, sentence: &Sentence<'_>) -> Vec<Option<Reading>> {
         let mut tokens = sentence.tokens.to_vec();
-        deslag::tag::sentence(&mut tokens, sentence.context);
+        deslag::tag::sentence_seen(&mut tokens, sentence.context, sentence.seen);
         tokens
             .iter()
             .map(|token| token.reading.map(Reading::from))
@@ -101,7 +104,7 @@ impl Tagger for Rules {
 
     fn tag(&self, sentence: &Sentence<'_>) -> Vec<Option<Reading>> {
         let mut tokens = sentence.tokens.to_vec();
-        deslag::tag::sentence_by_rules(&mut tokens, sentence.context);
+        deslag::tag::sentence_by_rules_seen(&mut tokens, sentence.context, sentence.seen);
         tokens
             .iter()
             .map(|token| token.reading.map(Reading::from))
@@ -199,10 +202,12 @@ mod tests {
 
     fn run_on(text: &str, tagger: &dyn Tagger) -> Result<Vec<Option<Reading>>, Error> {
         let tokens = Token::split(text);
+        let seen = CodeWords::new();
         let sentence = Sentence {
             text,
             tokens: &tokens,
             context: Context::Prose,
+            seen: &seen,
         };
         run(tagger, "s9", &sentence)
     }

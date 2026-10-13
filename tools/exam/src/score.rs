@@ -222,9 +222,10 @@ pub fn score(
             text: &sentence.text,
             tokens,
             context: sentence.context,
+            seen: &sentence.code_words,
         };
         let readings = source.readings(index, &label, &view)?;
-        let origins = deslag::tag::origins(tokens);
+        let origins = deslag::tag::origins_seen(tokens, &sentence.code_words);
         let mut scored = Vec::with_capacity(alignment.scored.len());
         let mut of_origin: Vec<Vec<TokenScore<'_>>> =
             Origin::ALL.iter().map(|_| Vec::new()).collect();

@@ -483,6 +483,28 @@ enum Command {
         #[arg(long, default_value = "tests/gold/owner.conllu")]
         into: PathBuf,
     },
+    /// Writes the sidecar of a gold file, `<gold>.seen.tsv` beside it: for each sentence, the IDs
+    /// of the words that the file the sentence was quoted from also writes in a code span or a
+    /// fence. The exam reads it to give those words the origin `Seen`.
+    ///
+    /// Each sentence is looked up in its fixture by `# source = <file> bytes <a>-<b>`, or by a
+    /// silver batch's `manifest.tsv` with `--manifest`, and checked against the gold file's own
+    /// words. The sidecar holds numbers and never a word. This prints counts only, names a
+    /// sentence of a holdout file by its position, and no error carries a form or a fixture's
+    /// path. `--check` writes nothing and fails if the sidecar on disk differs.
+    Seen {
+        /// The gold file: `tests/gold/dev.conllu`, or a split of a silver batch.
+        gold: PathBuf,
+        /// The silver batch's manifest, for a gold file that has no `# source` lines.
+        #[arg(long)]
+        manifest: Option<PathBuf>,
+        /// The big tier, unpacked by `make fetch-blobs`.
+        #[arg(long, default_value = ".blobs/unpacked/corpus")]
+        corpus: PathBuf,
+        /// Compare the sidecar with what the fixtures give, and write nothing.
+        #[arg(long)]
+        check: bool,
+    },
     /// Opens a CoNLL-U file of deslag tokens in a terminal UI, one sentence at a time, for the
     /// owner to read and correct its tags. Untagged input (a skeleton) is fine.
     ///
@@ -823,6 +845,18 @@ fn run(cli: Cli) -> Result<bool, Problems> {
         } => rank_stage(&dir, &from, per_repo, top),
         Command::Queue { from, picks, out } => queue_stage(&from, &picks, &out),
         Command::Own { queue, into } => own_stage(&queue, &into).map(|moved| println!("{moved}")),
+        Command::Seen {
+            gold,
+            manifest,
+            corpus,
+            check,
+        } => {
+            println!(
+                "{}",
+                seen_stage(&gold, manifest.as_deref(), &corpus, check)?
+            );
+            Ok(())
+        }
         Command::Batches { size } => batches_stage(&dir, size),
         Command::ReadTags {
             lines,
@@ -1404,6 +1438,48 @@ fn queue_stage(from: &Pool, picks: &Path, out: &Path) -> Result<(), Problems> {
     write_text(out, &text)?;
     println!("wrote {} sentences to {}", ids.len(), out.display());
     Ok(())
+}
+
+/// Writes the sidecar of the gold file `gold`, or with `check` compares it, and says in counts what
+/// it holds. Nothing it returns or fails with carries a form or a fixture's path.
+fn seen_stage(
+    gold: &Path,
+    manifest: Option<&Path>,
+    corpus: &Path,
+    check: bool,
+) -> Result<String, Error> {
+    let loaded = deslag_exam::gold::Gold::read_bare(gold)?;
+    if loaded.tokens != deslag_exam::gold::TokenMode::Deslag {
+        return Err(Error::load(
+            &loaded.path,
+            Place::File,
+            "a file with exam.tokens = ud has no sidecar",
+        ));
+    }
+    let places = deslag_exam::seen::locate(&loaded, manifest)?;
+    let ids = deslag_exam::seen::compute(&loaded, &places, corpus)?;
+    let text = deslag_exam::seen::render(&loaded, &ids);
+    let path = deslag_exam::seen::path_of(&loaded.path);
+    let words: usize = ids.iter().map(Vec::len).sum();
+    let with = ids.iter().filter(|ids| !ids.is_empty()).count();
+    let counts = format!(
+        "{}: {} sentences, {words} seen words in {with} of them",
+        path.display(),
+        ids.len()
+    );
+    if check {
+        let held = std::fs::read_to_string(&path).unwrap_or_default();
+        if held != text {
+            return Err(Error::load(
+                &path.display().to_string(),
+                Place::File,
+                format!("it is not what the fixtures give ({counts})"),
+            ));
+        }
+        return Ok(format!("{counts}, as on disk"));
+    }
+    write_text(&path, &text)?;
+    Ok(counts)
 }
 
 /// Moves the reviewed sentences of `queue` into `into`, and says how many.

@@ -32,12 +32,13 @@ use crate::data::{Sent, Tok};
 const SHOWN: usize = 60;
 
 /// How a token is shown: a word as it is, with its origin in braces after it when that is not
-/// English, anything else in brackets.
+/// English, anything else in brackets. A `Seen` word is shown as it is: the file's own use of it is
+/// no help to a reader of the sentence alone.
 pub fn show(tok: &Tok) -> String {
     let label = match tok.kind {
         TokenKind::Word => {
             return match tok.origin {
-                Origin::English => tok.form.clone(),
+                Origin::English | Origin::Seen => tok.form.clone(),
                 origin => format!("{}{{{}}}", tok.form, origin.name().to_lowercase()),
             };
         }
@@ -227,7 +228,10 @@ mod tests {
     #[test]
     fn the_preamble_explains_every_origin_mark_the_batches_can_show() {
         let preamble = include_str!("../../../../../scripts/label/prompts/preamble.md");
-        for origin in Origin::ALL.into_iter().skip(1) {
+        for origin in Origin::ALL
+            .into_iter()
+            .filter(|origin| !matches!(origin, Origin::English | Origin::Seen))
+        {
             let mark = format!("{{{}}}", origin.name().to_lowercase());
             assert!(preamble.contains(&mark), "the preamble never says {mark}");
         }

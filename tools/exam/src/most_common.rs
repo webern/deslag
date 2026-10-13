@@ -196,10 +196,12 @@ mod tests {
 
     fn read(tagger: &MostCommonTag, text: &str) -> Vec<Option<Reading>> {
         let tokens = Token::split(text);
+        let seen = deslag::tag::CodeWords::new();
         let sentence = Sentence {
             text,
             tokens: &tokens,
             context: Context::Prose,
+            seen: &seen,
         };
         run(tagger, "s1", &sentence).unwrap()
     }

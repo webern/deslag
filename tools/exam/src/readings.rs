@@ -27,7 +27,7 @@ use std::fmt::Write;
 use std::path::Path;
 
 use deslag::document::Token;
-use deslag::tag::Origin;
+use deslag::tag::{CodeWords, Origin};
 
 use crate::align::{Aligned, align_all};
 use crate::conllu::{self, Block, Id};
@@ -81,15 +81,13 @@ pub fn of_gold(gold: &Gold) -> Result<(String, usize), Error> {
             .iter()
             .map(|scored| (scored.token, scored.tag))
             .collect();
-        write_sentence(
-            &mut out,
-            &sentence.sent_id,
-            sentence.context,
-            &sentence.text,
-            &tokens,
-            &golds,
-            reader(false),
-        )?;
+        let view = Sentence {
+            text: &sentence.text,
+            tokens: &tokens,
+            context: sentence.context,
+            seen: &sentence.code_words,
+        };
+        write_sentence(&mut out, &sentence.sent_id, &view, &golds, reader(false))?;
     }
     Ok((out, gold.sentences.len()))
 }
@@ -169,12 +167,23 @@ pub fn of_skeleton(path: &Path, shipped: bool) -> Result<(String, usize), Error>
         };
         let tokens = tokens_of(&sentence_text.value, block)
             .map_err(|message| Error::load(&shown, place(block), message))?;
+        // The skeleton says which words the file wrote in code: the forms it marked `Seen`.
+        let seen = CodeWords::of_forms(block.lines.iter().filter_map(|line| {
+            conllu::pairs(&line.misc)
+                .into_iter()
+                .any(|pair| pair == ("Origin", Origin::Seen.name()))
+                .then_some(line.form.as_str())
+        }));
+        let view = Sentence {
+            text: &sentence_text.value,
+            tokens: &tokens,
+            context,
+            seen: &seen,
+        };
         write_sentence(
             &mut out,
             &sent_id.value,
-            context,
-            &sentence_text.value,
-            &tokens,
+            &view,
             &BTreeMap::new(),
             reader(shipped),
         )?;
@@ -233,22 +242,21 @@ fn tokens_of<'a>(text: &'a str, block: &Block) -> Result<Vec<Token<'a>>, String>
 fn write_sentence(
     out: &mut String,
     sent_id: &str,
-    context: Context,
-    text: &str,
-    tokens: &[Token<'_>],
+    view: &Sentence<'_>,
     golds: &BTreeMap<usize, Tag>,
     by: &dyn Tagger,
 ) -> Result<(), Error> {
-    let view = Sentence {
+    let Sentence {
         text,
         tokens,
         context,
-    };
-    let readings = tagger::run(by, sent_id, &view)?;
+        seen,
+    } = *view;
+    let readings = tagger::run(by, sent_id, view)?;
     let _ = writeln!(out, "# sent_id = {sent_id}");
     let _ = writeln!(out, "# exam.context = {}", context.name());
     let _ = writeln!(out, "# text = {text}");
-    let origins = deslag::tag::origins(tokens);
+    let origins = deslag::tag::origins_seen(tokens, seen);
     for (index, token) in tokens.iter().enumerate() {
         let joined = tokens
             .get(index + 1)

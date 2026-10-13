@@ -275,7 +275,8 @@ trainer_of() {
 }
 
 # Silver's train and tune splits, which are cut only if the batch is not retired and `silver
-# standing` passes, and the readings of both with their gold, beside the treebank's train set.
+# standing` passes, their sidecars, and the readings of both with their gold, beside the
+# treebank's train set.
 silver_split() {
   [ -f "$silver_dir/silver.conllu" ] || {
     echo "run.sh: no silver batch $silver_batch under .blobs/unpacked; run make fetch-blobs" >&2
@@ -284,6 +285,14 @@ silver_split() {
   python3 scripts/train/silver.py split --silver "$silver_dir/silver.conllu" \
     --manifest "$silver_dir/manifest.tsv" --out "$shapes_dir" \
     --standing "cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam --bin deslag-gold -- silver standing"
+  # Each split's sidecar names the words its sentences' files write in code, which `readings`
+  # reads so that they carry `Origin=Seen`. Uncommitted: it follows the split.
+  local split
+  for split in silver-train silver-tune; do
+    # shellcheck disable=SC2086
+    cargo run ${CARGO_FLAGS:-} --quiet -p deslag-exam --bin deslag-gold -- seen \
+      "$shapes_dir/$split.conllu" --manifest "$silver_dir/manifest.tsv"
+  done
   exam readings --gold "$shapes_dir/silver-train.conllu" --out "$shapes_dir/silver-train.readings.conllu"
   exam readings --gold "$shapes_dir/silver-tune.conllu" --out "$shapes_dir/silver-tune.readings.conllu"
 }

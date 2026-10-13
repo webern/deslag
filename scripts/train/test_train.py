@@ -1080,6 +1080,16 @@ class FeatureLayerTests(unittest.TestCase):
     def test_symbol_is_a_placeholder_origin_and_english_is_not(self):
         self.assertEqual(features.spelled(["+", "up"], ["Symbol", "English"]), ["<Symbol>", "up"])
 
+    def test_seen_is_no_placeholder_so_a_seen_word_is_spelled_as_it_is(self):
+        # A word the file writes in code keeps its spelling until the features are trained again.
+        self.assertNotIn("Seen", features.PLACEHOLDER_ORIGINS)
+        forms = ["run", "kubectl", "now"]
+        self.assertEqual(features.spelled(forms, ["English", "Seen", "English"]), forms)
+        plain = features.Prepared(forms, ["English", "English", "English"])
+        seen = features.Prepared(forms, ["English", "Seen", "English"])
+        self.assertEqual(plain.forms, seen.forms)
+        self.assertEqual(plain.norms, seen.norms)
+
     def test_the_hybrid_features_add_deslags_reading_and_the_replace_features_do_not(self):
         sent = toy_readings()[0]
         for hybrid in (False, True):
@@ -1716,6 +1726,23 @@ class OwnerSetTests(RunShTests):
         message = str(caught.exception)
         self.assertIn("2 != 0", message)
         self.assertIn("report-only", message)
+
+
+class SilverSidecarTests(RunShTests):
+    """Silver's splits are cut by run.sh, so run.sh writes the sidecar each one needs."""
+
+    def test_each_split_has_its_sidecar_written_with_the_manifest_before_it_is_read(self):
+        calls = self.run_all("generate-shapes")
+        for split in ("silver-train", "silver-tune"):
+            sidecar = [i for i, c in enumerate(calls)
+                       if " -- seen " in c and f".train/shapes/{split}.conllu" in c]
+            self.assertEqual(len(sidecar), 1, split)
+            self.assertIn("--manifest .blobs/unpacked/silver/2026-10-08-silver/manifest.tsv",
+                          calls[sidecar[0]])
+            read = [i for i, c in enumerate(calls)
+                    if f" readings --gold .train/shapes/{split}.conllu" in c]
+            self.assertEqual(len(read), 1, split)
+            self.assertLess(sidecar[0], read[0])
 
 
 class MilestoneTests(RunShTests):

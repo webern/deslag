@@ -26,7 +26,8 @@ packed, to git's history.
 
 ## What it costs
 
-Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named:
+Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named, but for
+tagging's share, which was measured at `c83b401`:
 
 - Binary: `deslag` is 9,856,248 bytes without the stage and 13,478,368 with it, 3,622,120 more.
   The file is in it once.
@@ -35,7 +36,7 @@ Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named
 - Per run: every run that reads prose pays that parse once. `deslag check` of one three-line
   Markdown file takes 21.8 ms, against 9.9 ms without the stage (medians of 50 runs).
 - Tagging's share of reading the corpus's big tier, which `cargo run -p deslag-corpus -- time
-  --check` holds under 75%, is 65% in debug and 59% in release. That check keeps each file's
+  --check` holds under 75%, is 65% in debug and 58% in release. That check keeps each file's
   fastest pass, so it leaves out the parse.
 
 ## Training data

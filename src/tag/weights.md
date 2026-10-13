@@ -27,7 +27,7 @@ packed, to git's history.
 ## What it costs
 
 Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named, but for
-tagging's share, which was measured at `c83b401`:
+tagging's share, which was measured once code words were marked seen:
 
 - Binary: `deslag` is 9,856,248 bytes without the stage and 13,478,368 with it, 3,622,120 more.
   The file is in it once.

@@ -391,7 +391,8 @@ impl Texts {
             if !required && !path.exists() {
                 continue;
             }
-            let gold = Gold::read(&path)?;
+            // Only the text is read, so the sidecar is not: a stale one does not stop a draw.
+            let gold = Gold::read_bare(&path)?;
             for sentence in &gold.sentences {
                 texts.add(&sentence.text);
             }
@@ -439,7 +440,7 @@ impl Texts {
             if !required && !path.exists() {
                 continue;
             }
-            for sentence in &Gold::read(&path)?.sentences {
+            for sentence in &Gold::read_bare(&path)?.sentences {
                 texts.add(&sentence.text);
             }
         }

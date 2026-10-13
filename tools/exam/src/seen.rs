@@ -17,10 +17,11 @@
 //! and forms alone, so editing a tag does not stale it; `seen_rule` is the version of the rule
 //! that picks the words, and a change to that rule stales every sidecar.
 //!
-//! Only a `deslag` gold file loads a sidecar. One that quotes a fixture (`# source` lines and an
-//! `exam.split`) or names a silver batch needs one, and a stale one is an error that says how to
-//! write it again. The tool that writes it, `deslag-gold seen`, checks quietly that the bytes it
-//! reads are the sentence the gold file has, and no error it gives carries a form or a path of a
+//! Only a `deslag` gold file loads a sidecar. One that quotes a fixture (a `# source` line) or
+//! names a silver batch needs one, and a stale one is an error that says how to write it again. A
+//! reader that wants only the sentences' text reads the gold file bare, and a stale sidecar does
+//! not stop it. The tool that writes it, `deslag-gold seen`, checks quietly that the bytes it reads
+//! are the sentence the gold file has, and no error it gives carries a form or a path of a
 //! fixture: on a holdout file a sentence is its position.
 
 use std::collections::BTreeMap;
@@ -29,7 +30,7 @@ use std::ops::Range;
 use std::path::{Path, PathBuf};
 
 use deslag::document::{Document, TokenKind};
-use deslag::tag::CodeWords;
+use deslag::tag::{CodeWords, Origin};
 use sha2::{Digest, Sha256};
 
 use crate::error::{Error, Place};
@@ -59,12 +60,11 @@ pub fn hash_of(gold: &Gold) -> String {
     hex(&hash.finalize())
 }
 
-/// Whether `gold` needs a sidecar: it is a `deslag` file that quotes fixtures of a gold split, or
-/// names a silver batch.
+/// Whether `gold` needs a sidecar: it is a `deslag` file that quotes fixtures (a `# source` line,
+/// as `dev.conllu`, `holdout.conllu` and `owner.conllu` have), or names a silver batch.
 pub fn needs(gold: &Gold) -> bool {
     gold.tokens == TokenMode::Deslag
-        && (gold.silver_batch.is_some()
-            || (gold.split.is_some() && gold.sentences.iter().any(|s| s.source.is_some())))
+        && (gold.silver_batch.is_some() || gold.sentences.iter().any(|s| s.source.is_some()))
 }
 
 /// The text of the sidecar of `gold`, whose sentences' words have the IDs `ids` (one list each).
@@ -95,7 +95,7 @@ pub fn attach(gold: &mut Gold) -> Result<(), Error> {
                 return Err(Error::load(
                     &shown,
                     Place::File,
-                    format!("there is none; `deslag-gold seen {}` writes it", gold.path),
+                    format!("there is none; `{}` writes it", command(gold)),
                 ));
             }
             return Ok(());
@@ -107,11 +107,12 @@ pub fn attach(gold: &mut Gold) -> Result<(), Error> {
             });
         }
     };
+    let writes = command(gold);
     let stale = |what: &str| {
         Error::load(
             &shown,
             Place::File,
-            format!("{what}; `deslag-gold seen {}` writes it again", gold.path),
+            format!("{what}; `{writes}` writes it again"),
         )
     };
     let (mut rule, mut hash) = (None, None);
@@ -156,10 +157,25 @@ pub fn attach(gold: &mut Gold) -> Result<(), Error> {
         }
         let forms = ids.iter().map(|id| sentence.words[id - 1].form.as_str());
         sentence.code_words = CodeWords::of_forms(forms);
-        sentence.seen_ids = ids;
+        sentence.code_ids = ids;
     }
     Ok(())
 }
+
+/// The command that writes the sidecar of `gold`. A silver split has no `# source` lines, so it
+/// names the manifest of its batch, which the big tier unpacks beside the batch.
+fn command(gold: &Gold) -> String {
+    match &gold.silver_batch {
+        Some(batch) => format!(
+            "deslag-gold seen {} --manifest {SILVER_DIR}/{batch}/manifest.tsv",
+            gold.path
+        ),
+        None => format!("deslag-gold seen {}", gold.path),
+    }
+}
+
+/// Where `make fetch-blobs` unpacks each silver batch, in a directory named for the batch.
+const SILVER_DIR: &str = ".blobs/unpacked/silver";
 
 /// Where a sentence is: the fixture's path under the corpus root, and the bytes in it.
 pub type Located = (String, Range<usize>);
@@ -293,6 +309,23 @@ pub fn compute(gold: &Gold, places: &[Located], corpus: &Path) -> Result<Vec<Vec
     Ok(ids)
 }
 
+/// How many words of `gold` have the origin `Seen`, given `ids` from [`compute`]: what the exam
+/// finds from the sidecar, and fewer than the IDs, since a table word or a symbol a file writes in
+/// code is not `Seen`.
+pub fn seen_words(gold: &Gold, ids: &[Vec<usize>]) -> usize {
+    gold.sentences
+        .iter()
+        .zip(ids)
+        .map(|(sentence, ids)| {
+            let code = CodeWords::of_forms(ids.iter().map(|id| &sentence.words[id - 1].form));
+            deslag::tag::origins_seen(&sentence.tokens(), &code)
+                .into_iter()
+                .filter(|origin| *origin == Origin::Seen)
+                .count()
+        })
+        .sum()
+}
+
 /// Whether `tokens` are the lines of `sentence`: as many, with the same forms.
 fn matches_tokens(sentence: &GoldSentence, tokens: &[deslag::document::Token<'_>]) -> bool {
     sentence.words.len() == tokens.len()
@@ -369,7 +402,7 @@ mod tests {
         assert!(error.contains("deslag-gold seen"), "{error}");
         std::fs::write(path_of(&gold.path), render(&gold, &[vec![2]])).unwrap();
         let loaded = Gold::read(&path).unwrap();
-        assert_eq!(loaded.sentences[0].seen_ids, [2]);
+        assert_eq!(loaded.sentences[0].code_ids, [2]);
         assert!(loaded.sentences[0].code_words.contains("kubectl"));
         // A tag edit leaves it fresh.
         std::fs::write(&path, text.replace("NOUN", "PROPN")).unwrap();
@@ -378,6 +411,59 @@ mod tests {
         std::fs::write(&path, text.replace("tool", "tools")).unwrap();
         let error = Gold::read(&path).unwrap_err().to_string();
         assert!(error.contains("changed"), "{error}");
+    }
+
+    #[test]
+    fn a_file_that_quotes_fixtures_needs_one_without_a_split() {
+        // As `owner.conllu` is: `# source` lines, and no `exam.split`.
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("owner.conllu");
+        std::fs::write(
+            &path,
+            gold_text("kubectl").replace("# exam.split = dev\n", ""),
+        )
+        .unwrap();
+        let gold = Gold::read_bare(&path).unwrap();
+        assert!(gold.split.is_none() && needs(&gold));
+        let error = Gold::read(&path).unwrap_err().to_string();
+        assert!(error.contains("there is none"), "{error}");
+        std::fs::write(path_of(&gold.path), render(&gold, &[vec![2]])).unwrap();
+        assert_eq!(Gold::read(&path).unwrap().sentences[0].code_ids, [2]);
+    }
+
+    #[test]
+    fn the_advice_for_a_silver_split_names_its_manifest() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("silver-train.conllu");
+        let text = gold_text("kubectl")
+            .replace("# exam.split = dev\n", "# silver.batch = b1\n")
+            .replace("# source = ", "# note = ");
+        std::fs::write(&path, &text).unwrap();
+        let error = Gold::read(&path).unwrap_err().to_string();
+        assert!(
+            error.contains("seen.tsv")
+                && error.contains("--manifest .blobs/unpacked/silver/b1/manifest.tsv"),
+            "{error}"
+        );
+        let gold = Gold::read_bare(&path).unwrap();
+        std::fs::write(
+            path_of(&gold.path),
+            render(&gold, &[vec![2]]).replace("= 1", "= 0"),
+        )
+        .unwrap();
+        let error = Gold::read(&path).unwrap_err().to_string();
+        assert!(
+            error.contains("another rule") && error.contains("--manifest"),
+            "{error}"
+        );
+    }
+
+    #[test]
+    fn a_seen_word_is_a_code_word_that_no_table_holds() {
+        let gold = Gold::parse("dev.conllu", "dev.conllu", &gold_text("frobnozz")).unwrap();
+        // `tool` is a table word: written in code, it is not `Seen`.
+        assert_eq!(seen_words(&gold, &[vec![2, 3]]), 1);
+        assert_eq!(seen_words(&gold, &[vec![3]]), 0);
     }
 
     #[test]

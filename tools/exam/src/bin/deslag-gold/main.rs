@@ -491,7 +491,8 @@ enum Command {
     /// silver batch's `manifest.tsv` with `--manifest`, and checked against the gold file's own
     /// words. The sidecar holds numbers and never a word. This prints counts only, names a
     /// sentence of a holdout file by its position, and no error carries a form or a fixture's
-    /// path. `--check` writes nothing and fails if the sidecar on disk differs.
+    /// path. `--check` writes nothing and fails if the sidecar on disk differs. `--empty` writes
+    /// one that names no word and reads no fixture, for a test's own gold file.
     Seen {
         /// The gold file: `tests/gold/dev.conllu`, or a split of a silver batch.
         gold: PathBuf,
@@ -504,6 +505,9 @@ enum Command {
         /// Compare the sidecar with what the fixtures give, and write nothing.
         #[arg(long)]
         check: bool,
+        /// Name no word in any sentence, and read no fixture.
+        #[arg(long, conflicts_with_all = ["manifest", "check"])]
+        empty: bool,
     },
     /// Opens a CoNLL-U file of deslag tokens in a terminal UI, one sentence at a time, for the
     /// owner to read and correct its tags. Untagged input (a skeleton) is fine.
@@ -850,11 +854,17 @@ fn run(cli: Cli) -> Result<bool, Problems> {
             manifest,
             corpus,
             check,
+            empty,
         } => {
-            println!(
-                "{}",
-                seen_stage(&gold, manifest.as_deref(), &corpus, check)?
-            );
+            let from = if empty {
+                Fixtures::None
+            } else {
+                Fixtures::In {
+                    manifest: manifest.as_deref(),
+                    corpus: &corpus,
+                }
+            };
+            println!("{}", seen_stage(&gold, from, check)?);
             Ok(())
         }
         Command::Batches { size } => batches_stage(&dir, size),
@@ -1440,14 +1450,20 @@ fn queue_stage(from: &Pool, picks: &Path, out: &Path) -> Result<(), Problems> {
     Ok(())
 }
 
+/// Where `deslag-gold seen` finds the words each sentence's file writes in code.
+enum Fixtures<'p> {
+    /// Nowhere: no sentence has any.
+    None,
+    /// In the fixtures under `corpus`, found by `# source` or by `manifest`.
+    In {
+        manifest: Option<&'p Path>,
+        corpus: &'p Path,
+    },
+}
+
 /// Writes the sidecar of the gold file `gold`, or with `check` compares it, and says in counts what
 /// it holds. Nothing it returns or fails with carries a form or a fixture's path.
-fn seen_stage(
-    gold: &Path,
-    manifest: Option<&Path>,
-    corpus: &Path,
-    check: bool,
-) -> Result<String, Error> {
+fn seen_stage(gold: &Path, from: Fixtures<'_>, check: bool) -> Result<String, Error> {
     let loaded = deslag_exam::gold::Gold::read_bare(gold)?;
     if loaded.tokens != deslag_exam::gold::TokenMode::Deslag {
         return Err(Error::load(
@@ -1456,14 +1472,20 @@ fn seen_stage(
             "a file with exam.tokens = ud has no sidecar",
         ));
     }
-    let places = deslag_exam::seen::locate(&loaded, manifest)?;
-    let ids = deslag_exam::seen::compute(&loaded, &places, corpus)?;
+    let ids = match from {
+        Fixtures::None => vec![Vec::new(); loaded.sentences.len()],
+        Fixtures::In { manifest, corpus } => {
+            let places = deslag_exam::seen::locate(&loaded, manifest)?;
+            deslag_exam::seen::compute(&loaded, &places, corpus)?
+        }
+    };
     let text = deslag_exam::seen::render(&loaded, &ids);
     let path = deslag_exam::seen::path_of(&loaded.path);
-    let words: usize = ids.iter().map(Vec::len).sum();
+    let hits: usize = ids.iter().map(Vec::len).sum();
     let with = ids.iter().filter(|ids| !ids.is_empty()).count();
+    let seen = deslag_exam::seen::seen_words(&loaded, &ids);
     let counts = format!(
-        "{}: {} sentences, {words} seen words in {with} of them",
+        "{}: {} sentences, {hits} words their files write in code in {with} of them, {seen} of those words Seen",
         path.display(),
         ids.len()
     );

@@ -193,7 +193,7 @@ pub struct GoldSentence {
     pub source: Option<(String, Range<usize>)>,
     /// The IDs of the words that the sentence's file writes in code, from the sidecar; empty when
     /// the file has none.
-    pub seen_ids: Vec<usize>,
+    pub code_ids: Vec<usize>,
     /// The forms of those words: what [`deslag::tag::sentence_seen`] is given.
     pub code_words: CodeWords<'static>,
     mode: TokenMode,
@@ -481,7 +481,7 @@ impl GoldSentence {
             units,
             spans,
             source,
-            seen_ids: Vec::new(),
+            code_ids: Vec::new(),
             code_words: CodeWords::new(),
             mode,
         })

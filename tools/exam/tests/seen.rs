@@ -36,11 +36,11 @@ fn every_checked_in_sidecar_loads_and_names_words() {
         let with = gold
             .sentences
             .iter()
-            .filter(|s| !s.seen_ids.is_empty())
+            .filter(|s| !s.code_ids.is_empty())
             .count();
         assert!(with > 0, "the {name} sidecar names no word");
         for sentence in &gold.sentences {
-            assert!(sentence.code_words.len() <= sentence.seen_ids.len());
+            assert!(sentence.code_words.len() <= sentence.code_ids.len());
         }
     }
 }

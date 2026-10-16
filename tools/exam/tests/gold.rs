@@ -220,35 +220,62 @@ fn the_load_errors_of_the_conventions() {
     }
 }
 
-/// A holdout file names a sentence by its position in every load error, never by its `sent_id`.
+/// The error reading `text` as holdout whatever its header says, which must not load.
+fn forced_error(text: &str) -> String {
+    match Gold::parse_holdout("f.conllu", "f.conllu", text) {
+        Ok(_) => panic!("{text:?} should not load"),
+        Err(error) => error.to_string(),
+    }
+}
+
+/// The error for `text`, which has the holdout header when `headed` and is read plainly, and has
+/// none otherwise and is read as holdout by its reader.
+fn holdout_error(headed: bool, text: &str) -> String {
+    if headed {
+        error(text)
+    } else {
+        forced_error(text)
+    }
+}
+
+/// A holdout file names a sentence by its position in every load error, never by its `sent_id`,
+/// whether its header says it is holdout or its reader does.
 #[test]
 fn holdout_load_errors_name_sentences_by_position() {
-    let head = "# exam.split = holdout\n# exam.trains = no\n";
-    let first = sentence("secret-1", head);
-    let cases = [
-        (
-            format!("{first}\n{}", sentence("secret-1", "")),
-            "f.conllu:8: sentence 2: its sent_id is used twice",
-        ),
-        (
-            format!("{first}\n# sent_id = secret-2\n# text = x\n"),
-            "f.conllu: sentence 2: no words",
-        ),
-        (
-            format!(
-                "{first}\n# sent_id = secret-2\n{}",
-                line("1", "Cats", "NOUN", "_", "_")
+    for headed in [true, false] {
+        let head = if headed {
+            "# exam.split = holdout\n# exam.trains = no\n"
+        } else {
+            ""
+        };
+        // The second sentence starts on line 8 after a two-line header, and on 6 without one.
+        let second = if headed { 8 } else { 6 };
+        let first = sentence("secret-1", head);
+        let cases = [
+            (
+                format!("{first}\n{}", sentence("secret-1", "")),
+                format!("f.conllu:{second}: sentence 2: its sent_id is used twice"),
             ),
-            "f.conllu: sentence 2: no `# text = ` comment",
-        ),
-    ];
-    for (text, expect) in cases {
-        let got = error(&text);
-        assert!(got.contains(expect), "\n got: {got}\nwant: {expect}");
-        assert!(
-            !got.contains("secret"),
-            "a holdout error names no sent_id: {got}"
-        );
+            (
+                format!("{first}\n# sent_id = secret-2\n# text = x\n"),
+                "f.conllu: sentence 2: no words".to_string(),
+            ),
+            (
+                format!(
+                    "{first}\n# sent_id = secret-2\n{}",
+                    line("1", "Cats", "NOUN", "_", "_")
+                ),
+                "f.conllu: sentence 2: no `# text = ` comment".to_string(),
+            ),
+        ];
+        for (text, expect) in cases {
+            let got = holdout_error(headed, &text);
+            assert!(got.contains(&expect), "\n got: {got}\nwant: {expect}");
+            assert!(
+                !got.contains("secret"),
+                "a holdout error names no sent_id: {got}"
+            );
+        }
     }
     // The same mistakes in a file that is not holdout still name the sentence.
     let dev = format!("{}\n{}", sentence("secret-1", ""), sentence("secret-1", ""));
@@ -259,44 +286,52 @@ fn holdout_load_errors_name_sentences_by_position() {
 /// word of the text. The ID error is the same in every file, since it is found before the split.
 #[test]
 fn holdout_load_errors_echo_no_field_value() {
-    let head = "# exam.split = holdout\n# exam.trains = no\n# sent_id = a\n# text = secret\n";
-    let deslag =
-        "# exam.split = holdout\n# exam.trains = no\n# exam.tokens = deslag\n# sent_id = a\n";
-    let cases = [
-        (
-            format!("{head}{}", line("secret", "x", "NOUN", "_", "_")),
-            "f.conllu:5: bad ID",
-        ),
-        (
-            format!("{head}{}", line("1", "x", "secret", "_", "_")),
-            "f.conllu:5: UPOS is not one of the 17 UD tags",
-        ),
-        (
-            format!("{head}{}", line("1", "x", "NOUN", "secret", "_")),
-            "f.conllu:5: a FEATS entry has no value",
-        ),
-        (
-            format!(
-                "{deslag}{}",
-                line("1", "x", "NOUN", "_", "Kind=secret|Prov=agree")
+    for headed in [true, false] {
+        let split = if headed {
+            "# exam.split = holdout\n# exam.trains = no\n"
+        } else {
+            ""
+        };
+        let head = format!("{split}# sent_id = a\n# text = secret\n");
+        let deslag = format!("{split}# exam.tokens = deslag\n# sent_id = a\n");
+        // The word line is the fifth of a headed file and the third of the other.
+        let at = if headed { 5 } else { 3 };
+        let cases = [
+            (
+                format!("{head}{}", line("secret", "x", "NOUN", "_", "_")),
+                format!("f.conllu:{at}: bad ID"),
             ),
-            "f.conllu:5: Kind is unknown",
-        ),
-        (
-            format!(
-                "{deslag}{}",
-                line("1", "x", "NOUN", "_", "Kind=Word|Prov=secret")
+            (
+                format!("{head}{}", line("1", "x", "secret", "_", "_")),
+                format!("f.conllu:{at}: UPOS is not one of the 17 UD tags"),
             ),
-            "f.conllu:5: Prov is unknown; it is one of",
-        ),
-    ];
-    for (text, expect) in cases {
-        let got = error(&text);
-        assert!(got.contains(expect), "\n got: {got}\nwant: {expect}");
-        assert!(
-            !got.contains("secret"),
-            "a holdout error echoes no value: {got}"
-        );
+            (
+                format!("{head}{}", line("1", "x", "NOUN", "secret", "_")),
+                format!("f.conllu:{at}: a FEATS entry has no value"),
+            ),
+            (
+                format!(
+                    "{deslag}{}",
+                    line("1", "x", "NOUN", "_", "Kind=secret|Prov=agree")
+                ),
+                format!("f.conllu:{at}: Kind is unknown"),
+            ),
+            (
+                format!(
+                    "{deslag}{}",
+                    line("1", "x", "NOUN", "_", "Kind=Word|Prov=secret")
+                ),
+                format!("f.conllu:{at}: Prov is unknown; it is one of"),
+            ),
+        ];
+        for (text, expect) in cases {
+            let got = holdout_error(headed, &text);
+            assert!(got.contains(&expect), "\n got: {got}\nwant: {expect}");
+            assert!(
+                !got.contains("secret"),
+                "a holdout error echoes no value: {got}"
+            );
+        }
     }
     // The same UPOS in a file that is not holdout is still named.
     let dev = format!(
@@ -304,6 +339,89 @@ fn holdout_load_errors_echo_no_field_value() {
         line("1", "x", "secret", "_", "_")
     );
     assert!(error(&dev).contains("UPOS `secret` is not one of the 17 UD tags"));
+}
+
+/// A comment that is wrong names its key and value in a plain file, and neither in holdout text:
+/// above its header, below it, with none and a reader that says so, or with both.
+#[test]
+fn holdout_load_errors_echo_no_comment_key_or_value() {
+    let header = "# exam.split = holdout\n# exam.trains = no\n";
+    // The comment, what a plain file's error names, and what a holdout file's must not.
+    let cases = [
+        (
+            "# exam.tier = secret\n",
+            "`exam.tier` is `secret`",
+            ["secret", "exam.tier"],
+        ),
+        (
+            "# exam.context = secret\n",
+            "`exam.context` is `secret`",
+            ["secret", "exam.context"],
+        ),
+        (
+            "# exam.tokens = secret\n",
+            "`exam.tokens` is `secret`",
+            ["secret", "exam.tokens"],
+        ),
+        (
+            "# exam.trains = secret\n",
+            "`exam.trains` is `secret`",
+            ["secret", "exam.trains"],
+        ),
+        (
+            "# exam.split = secret\n",
+            "`exam.split` is `secret`",
+            ["secret", "exam.split"],
+        ),
+        (
+            "# exam.secret = x\n",
+            "unknown key `exam.secret`",
+            ["secret", "exam.secret"],
+        ),
+        (
+            "# exam.tier = llm\n# exam.tier = human\n",
+            "`exam.tier` twice",
+            ["exam.tier", "twice`"],
+        ),
+    ];
+    for (comment, plain, leaks) in cases {
+        let got = error(&sentence("a", comment));
+        assert!(got.contains(plain), "\n got: {got}\nwant: {plain}");
+        let above = sentence("a", &format!("{comment}{header}"));
+        let below = sentence("a", &format!("{header}{comment}"));
+        let none = sentence("a", comment);
+        for (what, got) in [
+            ("above the header", error(&above)),
+            ("below the header", error(&below)),
+            ("forced, above the header", forced_error(&above)),
+            ("forced, with no header", forced_error(&none)),
+        ] {
+            assert!(got.starts_with("f.conllu:"), "{what}: {got}");
+            assert!(!got.contains('\n'), "{what}: an error is one line: {got}");
+            for leak in leaks {
+                assert!(!got.contains(leak), "{what} echoes `{leak}`: {got}");
+            }
+        }
+    }
+}
+
+/// The forced read is holdout from its first byte, and what the file says does not undo it: the
+/// header is still the file's to read, for the caller to compare.
+#[test]
+fn a_forced_read_is_holdout_whatever_the_header_says() {
+    let plain = sentence("secret-1", "");
+    let forced = Gold::parse_holdout("f.conllu", "f.conllu", &plain).unwrap();
+    assert!(forced.holdout());
+    assert_eq!(forced.split, None);
+    let dev = sentence("secret-1", "# exam.split = dev\n");
+    let forced = Gold::parse_holdout("f.conllu", "f.conllu", &dev).unwrap();
+    assert!(forced.holdout());
+    assert_eq!(forced.split, Some(Split::Dev));
+    // The plain read of the same text is not holdout.
+    assert!(!ok(&dev).holdout());
+    let headed = sentence("a", "# exam.split = holdout\n# exam.trains = no\n");
+    assert!(ok(&headed).holdout());
+    assert!(Gold::parse_holdout("f.conllu", "f.conllu", &headed).is_ok());
 }
 
 #[test]

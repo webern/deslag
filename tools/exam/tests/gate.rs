@@ -8,7 +8,7 @@ mod common;
 use std::path::Path;
 use std::process::{Command, Output};
 
-use common::{FORBIDDEN, FORBIDDEN_MORE, assert_no_words};
+use common::{FORBIDDEN, FORBIDDEN_MORE, assert_no_words, line};
 use deslag_exam::gate::{self, Gates};
 use deslag_exam::tagger::{Deslag, Sentence, Tagger};
 use deslag_exam::tags::{Confidence, Features, Reading, Tag, TagSet};
@@ -280,7 +280,7 @@ fn a_panic_on_holdout_is_withheld() {
         .to_string();
     assert_eq!(
         error,
-        "holdout: the tagger panicked; the message is withheld because it may quote the sentence"
+        "holdout: reading or tagging the set panicked; the message is withheld because it may quote the text"
     );
     for word in FORBIDDEN.iter().chain(&FORBIDDEN_MORE) {
         assert!(!error.contains(word), "{error}");
@@ -290,6 +290,104 @@ fn a_panic_on_holdout_is_withheld() {
     // run gets the same answer.
     let again = gate::run(&gates, Path::new("."), &Panics, &["holdout".to_string()]);
     assert!(again.is_err());
+}
+
+/// Checks that `output` is a refusal: exit 2, nothing on stdout, and one line on stderr that names
+/// no word. Returns the line.
+fn refused(output: &Output, what: &str) -> String {
+    let err = text(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{what}: {err}");
+    assert!(
+        output.stdout.is_empty(),
+        "{what}: nothing is printed on exit 2"
+    );
+    assert_eq!(err.lines().count(), 1, "{what}: {err}");
+    assert!(err.starts_with("deslag-exam: "), "{what}: {err}");
+    assert_no_words(&err, what);
+    err
+}
+
+#[test]
+fn the_holdout_set_refuses_a_file_that_does_not_say_holdout() {
+    // `done-when.conllu` says `exam.split = dev`.
+    let dir = tempfile::tempdir().unwrap();
+    let gates = holding(DONE_WHEN, "holdout");
+    let output = gate(dir.path(), &gates, "noun", &["holdout"]);
+    let err = refused(&output, "the holdout set on a dev file");
+    assert!(
+        err.contains("[holdout] tests/cases/done-when.conllu"),
+        "{err}"
+    );
+    assert!(err.contains("does not say `exam.split = holdout`"), "{err}");
+}
+
+#[test]
+fn a_holdout_file_that_lost_its_header_is_refused_and_its_errors_name_nothing() {
+    let dir = tempfile::tempdir().unwrap();
+    let gold = dir.path().join("lost-header.conllu");
+    let gold_text = |upos: &str| {
+        format!(
+            "# sent_id = s1\n# text = cats\n{}",
+            line("1", "cats", upos, "_", "_")
+        )
+    };
+    let gates = holding(gold.to_str().unwrap(), "holdout");
+    // The path of a tempdir is random and may hold a word, so it is cut out before looking.
+    let shown = |err: &str| err.replace(dir.path().to_str().unwrap(), "");
+
+    // A sound file without the header is not scored in full mode, and is not aggregated either.
+    std::fs::write(&gold, gold_text("NOUN")).unwrap();
+    let output = gate(dir.path(), &gates, "noun", &["holdout"]);
+    let err = refused(&output, "a holdout file with no header");
+    assert!(err.contains("does not say `exam.split = holdout`"), "{err}");
+
+    // One that cannot load says where, and nothing of the line.
+    std::fs::write(&gold, gold_text("secret")).unwrap();
+    let output = gate(dir.path(), &gates, "noun", &["holdout"]);
+    let err = refused(&output, "a headerless holdout file that does not load");
+    assert!(!shown(&err).contains("secret"), "{err}");
+    assert!(!shown(&err).contains("cats"), "{err}");
+    assert!(
+        err.contains(":3: UPOS is not one of the 17 UD tags"),
+        "{err}"
+    );
+}
+
+#[test]
+fn a_set_that_is_not_the_holdout_set_refuses_a_file_that_says_holdout() {
+    let dir = tempfile::tempdir().unwrap();
+    let gates = holding(DONE_WHEN_HOLDOUT, "dev");
+    let output = gate(dir.path(), &gates, "noun", &["dev"]);
+    let err = refused(&output, "the dev set on a holdout file");
+    assert!(
+        err.contains("[dev] tests/cases/done-when-holdout.conllu says `exam.split = holdout`"),
+        "{err}"
+    );
+}
+
+#[test]
+fn the_holdout_set_refuses_an_import_and_a_list_before_it_reads_anything() {
+    // The gold is not there: an error about reading it would be the wrong refusal.
+    let gold = "tests/cases/not-there.conllu";
+    let sets = ["holdout".to_string()];
+    let root = Path::new(".");
+    let import = Path::new("no-import.conllu");
+
+    let gates = format!("[holdout]\ngold = \"{gold}\"\naccuracy = {{ min_per_mille = 1 }}\n");
+    let gates = Gates::parse("gates.toml", &gates).unwrap();
+    let error = gate::run_import(&gates, root, import, &sets).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "gates.toml: [holdout] gate --import refuses a holdout set; read the holdout milestone with score --import"
+    );
+
+    let gates = format!("[holdout]\ngold = \"{gold}\"\nlist = \"no-list.tsv\"\n");
+    let gates = Gates::parse("gates.toml", &gates).unwrap();
+    let error = gate::run(&gates, root, &Panics, &sets).unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "gates.toml: [holdout] a mustpass set names words, so it refuses a holdout gold"
+    );
 }
 
 /// deslag's tagger, except that every `with` reads `ADV`, `Sure`, kept `{ADV}`.

@@ -36,7 +36,9 @@ gold = "tests/gold/dev.conllu"
 list = "tests/gold/mustpass.tsv"
 
 # The targets the tagger was built to, never ratcheted: a holdout that moved with every change
-# would become a second dev set. Its output is pass or fail per metric, nothing more.
+# would become a second dev set. Its output is pass or fail per metric, nothing more. The set's
+# name makes it holdout, not its file: its gold must say `exam.split = holdout`, and no other set's
+# gold may.
 [holdout]
 gold = "tests/gold/holdout.conllu"
 best_guess_accuracy = { min_per_mille = 850 }

@@ -163,13 +163,17 @@ pub fn attach(gold: &mut Gold) -> Result<(), Error> {
 }
 
 /// The command that writes the sidecar of `gold`. A silver split has no `# source` lines, so it
-/// names the manifest of its batch, which the big tier unpacks beside the batch.
+/// names the manifest of its batch, which the big tier unpacks beside the batch. A holdout file's
+/// comments are never echoed, so its batch is `<batch>`.
 fn command(gold: &Gold) -> String {
     match &gold.silver_batch {
-        Some(batch) => format!(
-            "deslag-gold seen {} --manifest {SILVER_DIR}/{batch}/manifest.tsv",
-            gold.path
-        ),
+        Some(batch) => {
+            let batch = if gold.holdout() { "<batch>" } else { batch };
+            format!(
+                "deslag-gold seen {} --manifest {SILVER_DIR}/{batch}/manifest.tsv",
+                gold.path
+            )
+        }
         None => format!("deslag-gold seen {}", gold.path),
     }
 }

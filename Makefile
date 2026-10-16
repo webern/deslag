@@ -69,6 +69,10 @@ EWT_DEV := .ewt/$(shell awk '$$1 == "release" { print $$2 }' $(EWT)/ewt.lock)/en
 # Cargo.lock fails there instead of being rewritten.
 CARGO_FLAGS ?=
 
+# The test binaries ci-fast leaves to ci, by source path: those that take more than ten seconds alone in
+# the fast profile.
+FAST_SKIP := tests/corpus.rs tools/exam/tests/readings.rs
+
 # The sweep under tools/sweep is outside the workspace, with a manifest and a lock of its own, so each
 # gate that covers the workspace takes a second cargo line for it. It builds into the same target
 # directory, so the CI cache of target/ holds its build too. Pass it CARGO_FLAGS and never a profile
@@ -85,7 +89,7 @@ PYTHON_VERSION := 3.13
         test-exam test-label test-owner test-percept test-python test-scanners test-shapes \
         test-shapes-milestone test-silver \
         test-spacy \
-        test-ticlist-brill-deslag test-ticlist-brill-percept test-ticlist-percept \
+        test-ticlist-brill-deslag test-ticlist-brill-percept test-ticlist-percept test-tier test-time \
         check check-clippy check-deslag check-doc check-fmt check-publish check-release \
         check-typos \
         clean clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train \
@@ -104,11 +108,10 @@ help:
 	@echo "build-batches    build the batches in $(BLOBSTORE)/batches/ the big tier lacks; network, so not in build"
 	@echo "build-release    build with the release profile"
 	@echo "test             run every Rust test that needs no network, doctests included, and the exam's"
-	@echo "                 gates and the owner set's metrics; not test-python, which runs when the scripts it"
-	@echo "                 tests change"
-	@echo "test-blobs       fetch the corpus's big tier, test it, check the silver batches with test-silver, check"
-	@echo "                 the gold sets' seen sidecars against their fixtures, and fail if tagging takes over"
-	@echo "                 its budget of the time to read it; needs the network, so not in test"
+	@echo "                 gates and the owner set's metrics; the test binaries run at once; not test-python,"
+	@echo "                 which runs when the scripts it tests change"
+	@echo "test-blobs       fetch the corpus's big tier, then test-silver, test-tier and test-time; needs the"
+	@echo "                 network, so not in test"
 	@echo "test-brill       train the Brill tagger on the treebank's train set, grade it on the dev and owner sets with"
 	@echo "                 deslag-exam and compare it with deslag, its initial tagger and the perceptron;"
 	@echo "                 generates first, so minutes, not in test or ci; run test-percept first for the"
@@ -166,6 +169,11 @@ help:
 	@echo "test-ticlist-percept"
 	@echo "                 score the perceptron on the tic list, tests/gold/ticlist.tsv, with deslag-exam; generates"
 	@echo "                 first, so minutes, and not in test or ci"
+	@echo "test-tier        fetch the corpus's big tier, run the tests that read it, and check the gold sets' seen"
+	@echo "                 sidecars against their fixtures; needs the network, so not in test; test-blobs runs it"
+	@echo "test-time        fetch the corpus's big tier, print how long reading and tagging it take, and fail if"
+	@echo "                 tagging takes over its budget of the time to read it; minutes, on a quiet machine, and"
+	@echo "                 needs the network, so not in test; test-blobs runs it"
 	@echo "check            run every check that gates CI: fmt, clippy, deslag, doc, typos"
 	@echo "check-clippy     clippy with warnings denied, tests included"
 	@echo "check-deslag     run deslag on this repository's own Markdown"
@@ -190,8 +198,9 @@ help:
 	@echo "                 .label/ledger.tsv stays too, to be imported once)"
 	@echo "clean-spacy      remove the installed spaCy and what it wrote"
 	@echo "clean-train      remove what the generate-* targets for the learners and their tests wrote"
-	@echo "ci               what the GitHub ci job runs: preflight, check, build, test, test-blobs,"
-	@echo "                 test-scanners, with --locked; not test-python, which the python workflow runs"
+	@echo "ci               preflight, check, build, test, test-blobs, test-scanners, with --locked; the ci"
+	@echo "                 workflow runs these parts as parallel jobs and the release runs this target; not"
+	@echo "                 test-python, which the python workflow runs"
 	@echo "ci-fast          the gate to run before a push, about 20 seconds warm: preflight, check, the"
 	@echo "                 exam's gates, the owner set's metrics, deslag-sweep's tests and the Rust tests but the"
 	@echo "                 slowest, at once; ci runs the rest"
@@ -302,19 +311,16 @@ build-release: preflight
 # ---------------------------------------------------------------------------
 # test
 
+# The exam's gates, then every test binary of the workspace at once, in debug, then the doctests and
+# the sweep's tests. Needs no fetch, so a fresh clone passes.
 test: preflight test-exam
-	cargo test $(CARGO_FLAGS) --workspace --all-features
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/test-at-once.sh dev
+	cargo test $(CARGO_FLAGS) --workspace --all-features --doc
 	cargo test $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET)
 
-# The big tier's tests are ignored by a plain cargo test, so that test runs
-# offline and with no login. The time that follows prints how long reading and
-# tagging the tier take, and fails if tagging's share of reading is over the
-# budget of the profile built. The budget is 75.0% in either profile: what tagging
-# took with its learned stage (about 64% in debug), plus room.
-test-blobs: preflight fetch-blobs test-silver
-	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
-	cargo test $(CARGO_FLAGS) -p deslag-exam --test seen -- --ignored
-	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
+# The big tier's checks and tests, which a plain cargo test ignores so that it runs offline and with no
+# login, then the timing check. The ci workflow runs the timing check alone, in a job of its own.
+test-blobs: preflight fetch-blobs test-silver test-tier test-time
 
 # The Brill tagger's unit tests, then the exam's full report on the dev and owner sets for it and for its
 # initial tagger, and `compare` against deslag's tagger, the initial tagger and, if test-percept
@@ -469,6 +475,19 @@ test-ticlist-brill-percept: generate-brill-percept
 test-ticlist-percept: generate-percept
 	@CARGO_FLAGS="$(CARGO_FLAGS)" $(TRAIN)/run.sh ticlist
 
+# The tests that read the unpacked big tier and are ignored by a plain cargo test, then the gold sets'
+# seen sidecars against their fixtures.
+test-tier: preflight fetch-blobs
+	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
+	cargo test $(CARGO_FLAGS) -p deslag-exam --test seen -- --ignored
+
+# Prints how long reading and tagging the big tier take, and fails if tagging's share of reading is over
+# the budget of the profile built. The budget is 75.0% in either profile: what tagging took with its
+# learned stage (about 64% in debug), plus room. It needs the machine to itself, so the ci workflow runs
+# it alone on a runner.
+test-time: preflight fetch-blobs
+	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
+
 # ---------------------------------------------------------------------------
 # check
 
@@ -561,14 +580,14 @@ ci: preflight check build test test-blobs test-scanners
 
 # The pre-push gate. Preflight stays first, as in every gate: it costs nothing and
 # is how a new machine or worktree learns what it lacks. The gates and
-# test-fast.sh use Cargo.toml's fast profile; test-fast.sh runs every Rust test
+# test-at-once.sh use Cargo.toml's fast profile; test-at-once.sh runs every Rust test
 # binary but the slowest at once. The slowest binaries, the doctests, the big tier
 # and test-python are left to CI.
 ci-fast: CARGO_FLAGS += --locked
 ci-fast: preflight check
 	cargo run $(CARGO_FLAGS) --profile fast --quiet -p deslag-exam -- gate --gates tests/gold/gates.toml dev mustpass holdout
 	@CARGO_FLAGS="$(CARGO_FLAGS) --profile fast" $(SCRIPTS)/owner-score.sh --metrics
-	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/test-fast.sh
+	@CARGO_FLAGS="$(CARGO_FLAGS)" $(SCRIPTS)/test-at-once.sh fast $(FAST_SKIP)
 	cargo test $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET)
 
 fix: fix-fmt fix-clippy fix-golden fix-test-output

@@ -168,6 +168,8 @@ pub struct Gold {
     pub tokens: TokenMode,
     /// Its sentences, in order.
     pub sentences: Vec<GoldSentence>,
+    /// Whether the reader said it is holdout text before it read a byte, whatever the file says.
+    forced_holdout: bool,
 }
 
 /// One sentence of a gold file.
@@ -236,7 +238,17 @@ impl Gold {
     /// each sentence's file writes in code (see [`crate::seen`]). A gold set that needs one and has
     /// none, or has a stale one, is an error.
     pub fn read(path: &Path) -> Result<Gold, Error> {
-        let mut gold = Gold::read_bare(path)?;
+        let mut gold = Gold::read_file(path, false)?;
+        crate::seen::attach(&mut gold)?;
+        Ok(gold)
+    }
+
+    /// Like [`Gold::read`], for a caller that knows the file is holdout text: it is handled as
+    /// holdout from its first byte, whether or not its header says so, and no error it gives echoes
+    /// a key or a value of its comments. The caller checks that the header agrees, with
+    /// [`Gold::split`].
+    pub fn read_holdout(path: &Path) -> Result<Gold, Error> {
+        let mut gold = Gold::read_file(path, true)?;
         crate::seen::attach(&mut gold)?;
         Ok(gold)
     }
@@ -244,6 +256,10 @@ impl Gold {
     /// Reads and checks the gold file at `path`, with no sidecar: for the tools that make or sort
     /// gold files, and the sidecar's own.
     pub fn read_bare(path: &Path) -> Result<Gold, Error> {
+        Gold::read_file(path, false)
+    }
+
+    fn read_file(path: &Path, holdout: bool) -> Result<Gold, Error> {
         let shown = path.display().to_string();
         let bytes = std::fs::read(path).map_err(|source| Error::Io {
             path: shown.clone(),
@@ -254,16 +270,26 @@ impl Gold {
         let name = path
             .file_name()
             .map_or_else(|| shown.clone(), |name| name.to_string_lossy().into_owned());
-        Gold::parse(&shown, &name, &text)
+        Gold::parse_as(&shown, &name, &text, holdout)
     }
 
     /// Checks `text`, the contents of the file `path` whose name is `name`.
     pub fn parse(path: &str, name: &str, text: &str) -> Result<Gold, Error> {
+        Gold::parse_as(path, name, text, false)
+    }
+
+    /// Like [`Gold::parse`], for text that is holdout whatever its header says: see
+    /// [`Gold::read_holdout`].
+    pub fn parse_holdout(path: &str, name: &str, text: &str) -> Result<Gold, Error> {
+        Gold::parse_as(path, name, text, true)
+    }
+
+    fn parse_as(path: &str, name: &str, text: &str, forced: bool) -> Result<Gold, Error> {
         let blocks = conllu::read(path, text)?;
         let Some(first) = blocks.first() else {
             return Err(Error::load(path, Place::File, "the file has no sentences"));
         };
-        let head = Head::of(path, first, name)?;
+        let head = Head::of(path, first, name, forced)?;
         let mut gold = Gold {
             path: path.to_string(),
             sha256: hex(&Sha256::digest(text.as_bytes())),
@@ -273,6 +299,7 @@ impl Gold {
             silver_batch: head.silver_batch,
             tokens: head.tokens,
             sentences: Vec::with_capacity(blocks.len()),
+            forced_holdout: forced,
         };
         let mut seen = BTreeSet::new();
         for (index, block) in blocks.iter().enumerate() {
@@ -294,9 +321,10 @@ impl Gold {
         Ok(gold)
     }
 
-    /// Whether it is holdout text, whose reports must name no word.
+    /// Whether it is holdout text, whose reports must name no word: the reader said so, or the
+    /// header does.
     pub fn holdout(&self) -> bool {
-        self.split == Some(Split::Holdout)
+        self.forced_holdout || self.split == Some(Split::Holdout)
     }
 
     /// The first 12 hex digits of its SHA-256.
@@ -362,16 +390,19 @@ impl GoldSentence {
                 continue;
             }
             if !seen.insert(comment.key.as_str()) {
-                return Err(Error::at(
-                    path,
-                    comment.line,
-                    format!("`{}` twice", comment.key),
-                ));
+                // Holdout text names no key: it may not be one of ours.
+                let message = if holdout {
+                    "an `exam.` comment is given twice".to_string()
+                } else {
+                    format!("`{}` twice", comment.key)
+                };
+                return Err(Error::at(path, comment.line, message));
             }
             match comment.key.as_str() {
                 "exam.tier" => {
                     tier = Some(choose(
                         path,
+                        holdout,
                         comment,
                         Tier::from_name,
                         Tier::ALL,
@@ -379,8 +410,9 @@ impl GoldSentence {
                     )?)
                 }
                 "exam.context" => {
-                    context = Context::from_name(&comment.value)
-                        .ok_or_else(|| bad_value(path, comment, &Context::ALL.map(Context::name)))?
+                    context = Context::from_name(&comment.value).ok_or_else(|| {
+                        bad_value(path, holdout, comment, &Context::ALL.map(Context::name))
+                    })?
                 }
                 key if FILE_KEYS.contains(&key) => {
                     if index > 0 {
@@ -394,11 +426,12 @@ impl GoldSentence {
                     }
                 }
                 key => {
-                    return Err(Error::at(
-                        path,
-                        comment.line,
-                        format!("unknown key `{key}`"),
-                    ));
+                    let message = if holdout {
+                        "an unknown `exam.` key".to_string()
+                    } else {
+                        format!("unknown key `{key}`")
+                    };
+                    return Err(Error::at(path, comment.line, message));
                 }
             }
         }
@@ -605,7 +638,14 @@ struct Head {
 }
 
 impl Head {
-    fn of(path: &str, first: &Block, name: &str) -> Result<Head, Error> {
+    /// What `first` says about the file. The file is holdout text when `holdout` says so or its
+    /// header does, and then no error names a key or a value of its comments. The header is found
+    /// before the other comments are read, so what an error says does not depend on their order.
+    fn of(path: &str, first: &Block, name: &str, holdout: bool) -> Result<Head, Error> {
+        let holdout = holdout
+            || first.comments.iter().any(|comment| {
+                comment.key == "exam.split" && comment.value == Split::Holdout.name()
+            });
         let mut head = Head {
             tokens: TokenMode::Ud,
             split: None,
@@ -618,6 +658,7 @@ impl Head {
                 "exam.tokens" => {
                     head.tokens = choose(
                         path,
+                        holdout,
                         comment,
                         TokenMode::from_name,
                         TokenMode::ALL,
@@ -627,6 +668,7 @@ impl Head {
                 "exam.split" => {
                     head.split = Some(choose(
                         path,
+                        holdout,
                         comment,
                         Split::from_name,
                         Split::ALL,
@@ -634,8 +676,14 @@ impl Head {
                     )?)
                 }
                 "exam.trains" => {
-                    head.trains =
-                        choose(path, comment, Trains::from_name, Trains::ALL, Trains::name)?
+                    head.trains = choose(
+                        path,
+                        holdout,
+                        comment,
+                        Trains::from_name,
+                        Trains::ALL,
+                        Trains::name,
+                    )?
                 }
                 "exam.source" => head.source = comment.value.clone(),
                 SILVER_BATCH => head.silver_batch = Some(comment.value.clone()),
@@ -662,6 +710,7 @@ impl Head {
 /// The value of `comment` as one of `all`, or a load error listing them.
 fn choose<T: Copy>(
     path: &str,
+    holdout: bool,
     comment: &conllu::Comment,
     parse: fn(&str) -> Option<T>,
     all: &[T],
@@ -669,21 +718,24 @@ fn choose<T: Copy>(
 ) -> Result<T, Error> {
     parse(&comment.value).ok_or_else(|| {
         let names: Vec<&str> = all.iter().map(|value| name(*value)).collect();
-        bad_value(path, comment, &names)
+        bad_value(path, holdout, comment, &names)
     })
 }
 
-fn bad_value(path: &str, comment: &conllu::Comment, names: &[&str]) -> Error {
-    Error::at(
-        path,
-        comment.line,
+/// The error for a `comment` whose value is none of `names`. In holdout text it names the line and
+/// the values that would do, and neither the key nor the value found.
+fn bad_value(path: &str, holdout: bool, comment: &conllu::Comment, names: &[&str]) -> Error {
+    let message = if holdout {
+        format!("an `exam.` comment must be one of {}", names.join(", "))
+    } else {
         format!(
             "`{}` is `{}`, and it must be one of {}",
             comment.key,
             comment.value,
             names.join(", ")
-        ),
-    )
+        )
+    };
+    Error::at(path, comment.line, message)
 }
 
 pub(crate) fn hex(bytes: &[u8]) -> String {

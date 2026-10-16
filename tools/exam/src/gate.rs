@@ -8,10 +8,14 @@
 //! A `mustpass` set has no metric: it names a list of words (`crate::mustpass`) and how many it may
 //! miss. `gate --import` runs the same sets on a file another program filled, never on holdout.
 //!
-//! A holdout set's output is a verdict per metric and nothing else. It is rendered by a function
-//! that is never given the [`Scoring`], so it cannot hold a count, a word or a `sent_id`, and the
-//! tagger runs under `catch_unwind` with the panic hook silenced, because a panic message can
-//! quote the text it choked on.
+//! The set called `holdout` is the holdout set, whatever its file says, and its output is a verdict
+//! per metric and nothing else. Its header must agree: the file of the `holdout` set says
+//! `exam.split = holdout` and no other set's file does, or the gate exits 2 with one line that
+//! names the set and the path. The name also refuses `--import` and a `list` before the file is
+//! opened. The set's load, its header check and its run are one boundary under `catch_unwind` with
+//! the panic hook silenced, because a panic message can quote the text it choked on, and only the
+//! summed counts leave it. The verdicts are rendered by a function that is never given the
+//! [`Scoring`], so it cannot hold a count, a word or a `sent_id`.
 
 use std::collections::BTreeMap;
 use std::fmt::Write;
@@ -20,7 +24,7 @@ use std::path::Path;
 
 use crate::align::align_all;
 use crate::error::Error;
-use crate::gold::Gold;
+use crate::gold::{Gold, Split};
 use crate::import::Imported;
 use crate::metrics::{METRICS, Metric, TOKENS, WIDTH, level_metrics};
 use crate::mustpass::{self, MustPass};
@@ -33,9 +37,8 @@ const GROUPS: usize = 20;
 /// How many `sent_id`s a group lists.
 const IDS: usize = 3;
 
-/// What the shipped holdout line says when a tagger panics.
-const PANIC: &str =
-    "holdout: the tagger panicked; the message is withheld because it may quote the sentence";
+/// What the shipped holdout line says when reading or tagging a set panics.
+const PANIC: &str = "holdout: reading or tagging the set panicked; the message is withheld because it may quote the text";
 /// The line a failing holdout adds.
 const REVERT: &str =
     "A holdout failure is not fixed by tuning against it: revert the change and have it reviewed.";
@@ -445,48 +448,56 @@ fn run_input(
     let mut text = format!("deslag-exam gate: {}, tagger {who}\n", gates.path);
     let mut failed: Vec<(String, Vec<&'static str>)> = Vec::new();
     for set in sets {
-        let gold = Gold::read(&root.join(&set.gold))?;
-        let full = !gold.holdout();
-        if !full && matches!(input, Input::Import(_)) {
-            return Err(Error::Cannot(format!(
-                "{}: [{}] gate --import refuses a holdout set; read the holdout milestone with score --import",
-                gates.path, set.name
-            )));
-        }
-        if let Some(spec) = &set.must_pass {
-            if !full {
+        // The set's name decides, before its file is opened; the file's header must agree.
+        let holdout = set.name == Split::Holdout.name();
+        if holdout {
+            if matches!(input, Input::Import(_)) {
+                return Err(Error::Cannot(format!(
+                    "{}: [{}] gate --import refuses a holdout set; read the holdout milestone with score --import",
+                    gates.path, set.name
+                )));
+            }
+            if set.must_pass.is_some() {
                 return Err(Error::Cannot(format!(
                     "{}: [{}] a mustpass set names words, so it refuses a holdout gold",
                     gates.path, set.name
                 )));
             }
-            let scoring = score_set(&gold, input, true)?;
-            let list = MustPass::read(&root.join(&spec.list))?;
-            let misses = list.misses(&gold, &scoring);
-            text.push('\n');
-            text.push_str(&render_must_pass(set, spec, &list, &misses));
-            if !misses.is_empty() {
-                failed.push((set.name.clone(), vec!["Misses"]));
-            }
-            continue;
         }
-        let (scoring, sum) = if full {
-            let scoring = score_set(&gold, input, true)?;
-            let sum = sum(&scoring);
-            (scoring, sum)
-        } else {
+        let path = root.join(&set.gold);
+        let (sum, loaded) = if holdout {
             let Input::Tagger(tagger) = input else {
-                unreachable!("an import was refused on a holdout set above")
+                unreachable!("an import was refused on the holdout set above")
             };
-            let scoring = withholding(&gold, *tagger)?;
-            let sum = sum(&scoring);
-            (scoring, sum)
+            let counts = holdout_counts(gates, set, *tagger, || Gold::read_holdout(&path))?;
+            (counts, None)
+        } else {
+            let gold = Gold::read(&path)?;
+            if gold.holdout() {
+                return Err(Error::Cannot(format!(
+                    "{}: [{}] {} says `exam.split = holdout`: only the set called holdout reads holdout text",
+                    gates.path, set.name, set.gold
+                )));
+            }
+            if let Some(spec) = &set.must_pass {
+                let scoring = score_set(&gold, input, true)?;
+                let list = MustPass::read(&root.join(&spec.list))?;
+                let misses = list.misses(&gold, &scoring);
+                text.push('\n');
+                text.push_str(&render_must_pass(set, spec, &list, &misses));
+                if !misses.is_empty() {
+                    failed.push((set.name.clone(), vec!["Misses"]));
+                }
+                continue;
+            }
+            let scoring = score_set(&gold, input, true)?;
+            (sum(&scoring), Some((gold, scoring)))
         };
         if let Some(pinned) = set.tokens
             && pinned != sum[TOKENS]
         {
             // A holdout's counts are not printed, not even in a complaint.
-            return Err(Error::Cannot(if full {
+            return Err(Error::Cannot(if loaded.is_some() {
                 format!(
                     "{}: [{}] tokens = {pinned}, but the set scores {} tokens: re-baseline its gates by hand",
                     gates.path, set.name, sum[TOKENS]
@@ -517,15 +528,16 @@ fn run_input(
             .map(|row| row.gate.metric.name)
             .collect();
         text.push('\n');
-        if full {
-            text.push_str(&render_full(set, &gold, &scoring, &sum, &rows));
-        } else {
-            // Only the metric names and verdicts cross to the holdout's renderer.
-            let verdicts: Vec<(&str, Verdict)> = rows
-                .iter()
-                .map(|row| (row.gate.metric.name, row.judged.verdict))
-                .collect();
-            text.push_str(&render_holdout(&set.name, &set.gold, &verdicts));
+        match &loaded {
+            Some((gold, scoring)) => text.push_str(&render_full(set, gold, scoring, &sum, &rows)),
+            None => {
+                // Only the metric names and verdicts cross to the holdout's renderer.
+                let verdicts: Vec<(&str, Verdict)> = rows
+                    .iter()
+                    .map(|row| (row.gate.metric.name, row.judged.verdict))
+                    .collect();
+                text.push_str(&render_holdout(&set.name, &set.gold, &verdicts));
+            }
         }
         if !misses.is_empty() {
             failed.push((set.name.clone(), misses));
@@ -610,19 +622,42 @@ fn sum(scoring: &Scoring) -> Vec<u64> {
     sum
 }
 
-/// Scores a holdout set with the tagger's panic caught and silent. A panic message can quote the
-/// text, as a bad `str` slice does, so the hook that prints it is replaced for the run and put
-/// back after.
-fn withholding(gold: &Gold, tagger: &dyn Tagger) -> Result<Scoring, Error> {
+/// Reads the holdout set `set` with `load`, checks its header, and scores it with `tagger`, all
+/// inside [`withholding`]: only the summed counts leave, and the [`Gold`] and the [`Scoring`] stay
+/// here, and so does every error that could name a word. What it says names the set and the path
+/// from the gates file, and nothing from the file read.
+fn holdout_counts(
+    gates: &Gates,
+    set: &GateSet,
+    tagger: &dyn Tagger,
+    load: impl FnOnce() -> Result<Gold, Error>,
+) -> Result<Vec<u64>, Error> {
+    withholding(|| {
+        let gold = load()?;
+        if gold.split != Some(Split::Holdout) {
+            // A file without its header has also lost the `exam.trains = no` check, so it is
+            // refused, not scored.
+            return Err(Error::Cannot(format!(
+                "{}: [{}] {} does not say `exam.split = holdout`: the set called holdout reads holdout text only, so the header must agree",
+                gates.path, set.name, set.gold
+            )));
+        }
+        let aligned = align_all(&gold);
+        let scoring = score(&gold, &aligned, &Source::Tagger(tagger), false)?;
+        Ok(sum(&scoring))
+    })
+}
+
+/// Runs `work`, which reads and scores a holdout set, with its panic caught and silent. A panic
+/// message can quote the text, as a bad `str` slice does, so the hook that prints it is replaced
+/// for the run and put back after. The hook is process-wide: call this once per set.
+fn withholding(work: impl FnOnce() -> Result<Vec<u64>, Error>) -> Result<Vec<u64>, Error> {
     let hook = panic::take_hook();
     panic::set_hook(Box::new(|_| {}));
-    let caught = panic::catch_unwind(AssertUnwindSafe(|| {
-        let aligned = align_all(gold);
-        score(gold, &aligned, &Source::Tagger(tagger), false)
-    }));
+    let caught = panic::catch_unwind(AssertUnwindSafe(work));
     panic::set_hook(hook);
     match caught {
-        Ok(scoring) => scoring,
+        Ok(counts) => counts,
         Err(_) => Err(Error::Cannot(PANIC.to_string())),
     }
 }
@@ -883,6 +918,8 @@ fn example_lines(out: &mut String, scoring: &Scoring) {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
+
     use super::*;
 
     #[test]
@@ -945,6 +982,82 @@ mod tests {
         );
         // A count gate has a numerator to judge, whatever the denominator.
         assert_eq!(judge(Bound::MaxCount(0), None, 0, 0).verdict, Verdict::Pass);
+    }
+
+    /// The panic hook is process-wide, and the boundary swaps it: a test that runs the boundary
+    /// or reads the hook holds this.
+    static HOOK: Mutex<()> = Mutex::new(());
+
+    /// Takes [`HOOK`], whether or not a failed test poisoned it.
+    fn alone() -> MutexGuard<'static, ()> {
+        HOOK.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    #[test]
+    fn a_panic_in_the_boundary_is_withheld_every_time() {
+        let _alone = alone();
+        let sentinel = "secret-sentinel";
+        for _ in 0..2 {
+            let error = withholding(|| panic!("cannot slice `{sentinel}`"));
+            let Err(Error::Cannot(message)) = error else {
+                panic!("a panic is Error::Cannot, not {error:?}");
+            };
+            assert_eq!(message, PANIC);
+            assert!(!message.contains(sentinel), "{message}");
+        }
+        // An error and a count cross the boundary as they are.
+        assert_eq!(withholding(|| Ok(vec![1, 2])).unwrap(), [1, 2]);
+        let error = withholding(|| Err(Error::Cannot("kept".to_string())));
+        assert_eq!(error.unwrap_err().to_string(), "kept");
+    }
+
+    #[test]
+    fn the_hook_in_place_before_the_boundary_is_in_place_after_it() {
+        let _alone = alone();
+        let heard = Arc::new(Mutex::new(Vec::new()));
+        let before = panic::take_hook();
+        let marker = Arc::clone(&heard);
+        panic::set_hook(Box::new(move |info| {
+            // Only the panics of this test count: others run beside it and may panic too.
+            if let Some(message) = info.payload().downcast_ref::<&str>()
+                && message.starts_with("marker:")
+            {
+                marker.lock().unwrap().push(message.to_string());
+            }
+        }));
+        let inside = withholding(|| panic!("marker: inside"));
+        let _ = panic::catch_unwind(|| panic!("marker: after"));
+        // Put the hook back first, so a failed assertion below is printed.
+        panic::set_hook(before);
+        assert!(inside.is_err());
+        assert_eq!(
+            *heard.lock().unwrap(),
+            ["marker: after"],
+            "the boundary silences the hook inside it, and puts the one it found back"
+        );
+    }
+
+    #[test]
+    fn the_load_of_a_holdout_set_is_inside_the_boundary() {
+        let _alone = alone();
+        let sentinel = "secret-sentinel";
+        let gates = Gates::parse(
+            "g.toml",
+            "[holdout]\ngold = \"h.conllu\"\naccuracy = { min_per_mille = 1 }\n",
+        )
+        .unwrap();
+        let set = gates.set("holdout").unwrap();
+        let tagger = crate::tagger::built_in("noun").unwrap();
+        for _ in 0..2 {
+            let error = holdout_counts(&gates, set, tagger.as_ref(), || {
+                panic!("cannot read `{sentinel}`")
+            });
+            let Err(Error::Cannot(message)) = error else {
+                panic!("a panic while loading is Error::Cannot, not {error:?}");
+            };
+            assert_eq!(message, PANIC);
+            assert!(!message.contains(sentinel), "{message}");
+        }
     }
 
     #[test]

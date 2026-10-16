@@ -13,8 +13,15 @@ concurrency:
 permissions:
   contents: read
 
+# make ci, which the release runs, takes the sum of its parts. Here the parts are jobs side by side, so a
+# run takes as long as the slowest, the timing check. tests/ci_jobs.rs fails unless the `make` lines of
+# the jobs run every recipe line of make ci. Each job installs and caches only what its line reads,
+# except typos, which make preflight wants in all of them, and each has a target cache of its own, keyed
+# by setup-rust-toolchain on the job. make ci is not everything: python.yml runs make test-python when
+# the scripts it tests change.
 jobs:
-  ci:
+  # Fmt, clippy, deslag on its own Markdown, rustdoc, typos, the builds, and the scanners' sweeps.
+  check:
     strategy:
       fail-fast: false
       matrix:
@@ -22,12 +29,7 @@ jobs:
         # when the project has Windows users.
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    # make ci fetches the corpus's big tier, a package this repository is granted access to; see
-    # scripts/blobstore/blobs.md.
-    permissions:
-      contents: read
-      packages: read
+    timeout-minutes: 20
     steps:
       # make check-deslag judges the change from origin/main, which needs its history.
       - name: Checkout
@@ -45,15 +47,6 @@ jobs:
         with:
           tool: typos
 
-      # .blobs is the pinned image unpacked, with the stamp that says so, so a hit means
-      # fetch-blobs touches nothing. Keyed on the lock, with no restore keys: another image is
-      # of no use.
-      - name: Cache the corpus's big tier
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
-        with:
-          path: .blobs
-          key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
-
       # .crates is the crates of Cargo.lock and of scripts/crates/c/Cargo.lock vendored, with the
       # stamps that say so, so a hit means fetch-crates touches nothing. Keyed on both locks, with no
       # restore keys: another lock's crates are fetched again anyway. A further corpus lock,
@@ -64,9 +57,102 @@ jobs:
           path: .crates
           key: crates-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'scripts/crates/c/Cargo.lock') }}
 
-      # blobs.sh reads the package with gh's token, which here is the workflow token. make ci is
-      # not everything: python.yml runs make test-python when the scripts it tests change.
-      - name: CI
+      - name: Check, build and sweep
+        run: make CARGO_FLAGS=--locked check build test-scanners
+
+  # Every Rust test of the workspace but the big tier's. It reads no .blobs, as a fresh clone does.
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      - name: Install typos
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        with:
+          tool: typos
+
+      - name: Test
+        run: make CARGO_FLAGS=--locked test
+
+  # The big tier's tests and the silver batches' checks. The tier is a package this repository is
+  # granted access to; see scripts/blobstore/blobs.md.
+  blobs:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      - name: Install typos
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        with:
+          tool: typos
+
+      # .blobs is the pinned image unpacked, with the stamp that says so, so a hit means
+      # fetch-blobs touches nothing. Keyed on the lock, with no restore keys: another image is
+      # of no use.
+      - name: Cache the corpus's big tier
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
+        with:
+          path: .blobs
+          key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
+
+      # blobs.sh reads the package with gh's token, which here is the workflow token.
+      - name: Test the big tier
         env:
           GH_TOKEN: ${{ github.token }}
-        run: make ci
+        run: make CARGO_FLAGS=--locked test-silver test-tier
+
+  # The timing check, alone on its runner: it measures seconds on one thread, so nothing else may
+  # share the machine. It is the longest job, and so the length of a run.
+  time:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+
+      - name: Install typos
+        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        with:
+          tool: typos
+
+      - name: Cache the corpus's big tier
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
+        with:
+          path: .blobs
+          key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
+
+      - name: Time reading and tagging the big tier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: make CARGO_FLAGS=--locked test-time

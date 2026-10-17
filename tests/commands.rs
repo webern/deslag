@@ -345,6 +345,77 @@ fn a_cd_before_a_call_applies_in_order_and_a_subshell_keeps_its_own() {
 }
 
 #[test]
+fn a_subshell_after_a_keyword_keeps_its_cd_and_gives_back_its_parenthesis() {
+    for body in [
+        "for d in sub other; do (cd sub && make sub-only); done",
+        "if true; then (cd sub && make sub-only); fi",
+        "if true; then true; else (cd sub && make sub-only); fi",
+        "while ! (cd sub && make sub-only); do sleep 1; done",
+    ] {
+        let found = reading(&sh(body));
+        assert_eq!(found.claims.len(), 1, "{body}");
+        assert_eq!(found.claims[0].text, "make sub-only", "{body}");
+        assert_eq!(found.claims[0].targets[0].name, "sub-only", "{body}");
+        assert_eq!(found.claims[0].cds, ["sub"], "{body}");
+    }
+    // The cd stays in the subshell, and so does a cd that cannot be followed.
+    let found = reading(&sh("if true; then (cd sub && make a); make b; fi"));
+    assert_eq!(found.claims[1].targets[0].name, "b");
+    assert!(found.claims[1].cds.is_empty());
+    let found = reading(&sh("for d in x; do (cd $d && make a); make b; done"));
+    assert_eq!(
+        claims(&sh("for d in x; do (cd $d && make a); make b; done")),
+        [claim("make b", &["b"])]
+    );
+    assert_eq!(found.refused.len(), 1);
+    assert_eq!(found.refused[0].why, Why::Cd);
+    // A parenthesis in the middle of a command is the word's.
+    assert_eq!(
+        claims(&sh("make a (b)")),
+        [claim("make a (b)", &["a", "(b)"])]
+    );
+}
+
+#[test]
+fn a_cd_counts_after_a_keyword_that_starts_a_command() {
+    for body in [
+        "if [ -d sub ]; then cd sub; make sub-only; fi",
+        "{ cd sub && make sub-only; }",
+        "for d in x; do cd sub; make sub-only; done",
+        "if false; then true; else cd sub; make sub-only; fi",
+        "if false; then true; elif true; then cd sub; make sub-only; fi",
+        "while true; do cd sub; make sub-only; done",
+        "if cd sub; then make sub-only; fi",
+        "! cd sub; make sub-only",
+        "cd sub && ! make sub-only",
+    ] {
+        let found = reading(&sh(body));
+        assert_eq!(found.claims.len(), 1, "{body}");
+        assert_eq!(found.claims[0].text, "make sub-only", "{body}");
+        assert_eq!(found.claims[0].cds, ["sub"], "{body}");
+    }
+    // A cd to a variable leaves the directory unknown, and the rest of the block silent.
+    for body in [
+        "for d in x; do cd $d; make sub-only; done",
+        "if true; then cd $d; make sub-only; fi",
+        "{ cd $d && make sub-only; }",
+    ] {
+        let text = sh(body);
+        let found = reading(&text);
+        assert_eq!(found.claims, [], "{body}");
+        assert_eq!(found.refused.len(), 1, "{body}");
+        assert_eq!(found.refused[0].why, Why::Cd, "{body}");
+        assert_eq!(held(&text, &found.refused[0].location), "cd $d", "{body}");
+    }
+    // A keyword after another word, and a code span with a keyword in it, are not commands.
+    assert_eq!(
+        claims(&sh("echo then cd sub\nmake a")),
+        [claim("make a", &["a"])]
+    );
+    assert_eq!(claims("Run `then make a`.\n"), []);
+}
+
+#[test]
 fn a_cd_that_cannot_be_followed_ends_the_claims_of_its_block() {
     for cd in [
         "cd",
@@ -615,6 +686,39 @@ fn a_cd_moves_the_block_to_a_directory_under_the_root() {
     assert_eq!(in_block("(cd sub && make s)\nmake s"), ["s"]);
     assert_eq!(in_block("cd sub\ncd ..\nmake s"), ["s"]);
     assert_eq!(in_block("cd ./sub/\nmake s"), Vec::<String>::new());
+}
+
+#[test]
+fn a_cd_or_a_subshell_after_a_keyword_moves_the_block_on_disk() {
+    let repo = repo_with("root:\n");
+    repo.write("sub/Makefile", "sub-only:\n");
+    let in_block = |body: &str| missing(&repo, "README.md", &sh(body));
+    for body in [
+        "if [ -d sub ]; then cd sub; make sub-only; fi",
+        "{ cd sub && make sub-only; }",
+        "for d in x; do cd sub; make sub-only; done",
+        "for d in sub other; do (cd sub && make sub-only); done",
+        "if true; then (cd sub && make sub-only); fi",
+    ] {
+        assert_eq!(in_block(body), Vec::<String>::new(), "{body}");
+    }
+    // The cd is followed, and the target is named without a parenthesis.
+    assert_eq!(
+        in_block("for d in sub other; do (cd sub && make zz); done"),
+        ["zz"]
+    );
+    assert_eq!(in_block("if true; then (cd sub && make zz); fi"), ["zz"]);
+    assert_eq!(in_block("{ cd sub && make root zz; }"), ["zz"]);
+    // The subshell gave the directory back.
+    assert_eq!(
+        in_block("if true; then (cd sub && make sub-only); make sub-only; fi"),
+        ["sub-only"]
+    );
+    // A cd to a variable: nothing after it is checked.
+    assert_eq!(
+        in_block("for d in x; do cd $d; make zz; done"),
+        Vec::<String>::new()
+    );
 }
 
 #[test]

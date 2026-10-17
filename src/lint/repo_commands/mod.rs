@@ -13,7 +13,8 @@
 //! Where make runs is a guess: the root, the file's directory and the block's tracked directory,
 //! each with every `-C dir` applied. A `cd` to an existing directory under the root moves the
 //! tracked one for the lines after, to the `)` of a subshell; any other `cd`, and `pushd`, ends
-//! the claims of the block. A claim passes if any of them defines its targets.
+//! the claims of the block, or of the subshell it is in. A `cd` also counts after `then`, `do`,
+//! `{` and the like. A claim passes if any of them defines its targets.
 //!
 //! Silent, since silence beats a false positive: no Makefile in any of those directories; an open
 //! Makefile (`$(eval`, a target named by `$`, an include not on disk) for a target it lacks; `-f`;
@@ -128,7 +129,8 @@ pub struct Refused {
     pub why: Why,
 }
 
-/// Why something is left alone. The first three end the claims of the rest of their block.
+/// Why something is left alone. The first three end the claims of the rest of their block, or of
+/// their subshell.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Why {
     /// A quote or substitution is never closed.
@@ -189,18 +191,19 @@ fn read_block(document: &Document<'_>, code: &Gathered<'_>, reading: &mut Readin
     let locate = |range: Range<usize>| document.locate(code.source_range(range));
     let stream = shell::read(&code.text);
     let mut cds: Vec<String> = Vec::new();
-    // How many `cd`s were in force at each open subshell.
-    let mut scopes: Vec<usize> = Vec::new();
+    // How many `cd`s were in force at each open subshell, and whether the block was silenced.
+    let mut scopes: Vec<(usize, bool)> = Vec::new();
     let mut silenced = false;
     for item in stream.items {
         let words = match item {
             Item::Open => {
-                scopes.push(cds.len());
+                scopes.push((cds.len(), silenced));
                 continue;
             }
             Item::Close => {
-                if let Some(kept) = scopes.pop() {
+                if let Some((kept, was_silenced)) = scopes.pop() {
                     cds.truncate(kept);
+                    silenced = was_silenced;
                 }
                 continue;
             }

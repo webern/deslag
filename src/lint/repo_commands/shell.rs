@@ -3,10 +3,11 @@
 //!
 //! The text is one stream, so a quote spans lines and a trailing `\` joins them. A comment is
 //! dropped, and a command ends at a newline, `&&`, `||`, `;`, `|` or `&`. A redirection and its
-//! file are dropped, as is the body of a heredoc, whose opener stays. A `(` that opens a command
-//! and the `)` that closes it are items of their own, since a subshell keeps its `cd` to itself.
-//! A block with a `$ ` or `% ` prompt on any line holds commands only on the prompted lines and
-//! what they continue; the rest is output.
+//! file are dropped, as is the body of a heredoc, whose opener stays. A keyword that starts a
+//! command, such as `then` or `{` ([`OPENERS`]), is a command of its own, so the command after it,
+//! or a `(`, starts there. A `(` that opens a command and the `)` that closes it are items of their
+//! own, since a subshell keeps its `cd` to itself. A block with a `$ ` or `% ` prompt on any line
+//! holds commands only on the prompted lines and what they continue; the rest is output.
 
 use std::ops::Range;
 
@@ -18,6 +19,12 @@ pub(super) struct Word {
     /// Its bytes in the text read, quotes included.
     pub range: Range<usize>,
 }
+
+/// The keywords that start a command without being one: a command begins after each. Quoted, or
+/// after another word, a keyword is an argument.
+pub(super) const OPENERS: [&str; 9] = [
+    "if", "elif", "while", "until", "then", "else", "do", "{", "!",
+];
 
 /// What the stream holds, in order.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -155,8 +162,17 @@ impl<'t> Scanner<'t> {
                 delimiter: word.text,
                 strip_tabs,
             }),
+            None if self.words.is_empty() && self.is_opener(&word) => {
+                self.items.push(Item::Command(vec![word]));
+            }
             None => self.words.push(word),
         }
+    }
+
+    /// Whether `word` is a keyword as written, not quoted or escaped.
+    fn is_opener(&self, word: &Word) -> bool {
+        OPENERS.contains(&word.text.as_str())
+            && self.text.get(word.range.clone()) == Some(word.text.as_str())
     }
 
     fn end_command(&mut self) {
@@ -655,6 +671,76 @@ mod tests {
             commands("make a) f(x)\n"),
             lines(&[&["make", "a)", "f(x)"]])
         );
+    }
+
+    #[test]
+    fn a_keyword_that_starts_a_command_is_a_command_of_its_own() {
+        let text = "if [ -d sub ]; then cd sub; make a; fi\n\
+                    for d in x; do cd sub; make b; done\n\
+                    { cd sub && make c; }\n\
+                    ! make d\n";
+        assert_eq!(
+            commands(text),
+            lines(&[
+                &["if"],
+                &["[", "-d", "sub", "]"],
+                &["then"],
+                &["cd", "sub"],
+                &["make", "a"],
+                &["fi"],
+                &["for", "d", "in", "x"],
+                &["do"],
+                &["cd", "sub"],
+                &["make", "b"],
+                &["done"],
+                &["{"],
+                &["cd", "sub"],
+                &["make", "c"],
+                &["}"],
+                &["!"],
+                &["make", "d"],
+            ])
+        );
+        // After another word, or quoted or escaped, a keyword is an argument.
+        assert_eq!(
+            commands("echo then cd x\n\"do\" cd x\n\\{ cd x\n"),
+            lines(&[
+                &["echo", "then", "cd", "x"],
+                &["do", "cd", "x"],
+                &["{", "cd", "x"]
+            ])
+        );
+    }
+
+    #[test]
+    fn a_subshell_opens_after_a_keyword_and_closes_before_the_target_is_read() {
+        assert_eq!(
+            commands("for d in sub other; do (cd sub && make sub-only); done\n"),
+            lines(&[
+                &["for", "d", "in", "sub", "other"],
+                &["do"],
+                &["("],
+                &["cd", "sub"],
+                &["make", "sub-only"],
+                &[")"],
+                &["done"],
+            ])
+        );
+        assert_eq!(
+            commands("if true; then (cd sub && make x); fi\n"),
+            lines(&[
+                &["if"],
+                &["true"],
+                &["then"],
+                &["("],
+                &["cd", "sub"],
+                &["make", "x"],
+                &[")"],
+                &["fi"],
+            ])
+        );
+        // In the middle of a command, a parenthesis is the word's.
+        assert_eq!(commands("make (a) b\n"), lines(&[&["make", "(a)", "b"]]));
     }
 
     #[test]

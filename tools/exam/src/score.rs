@@ -7,6 +7,7 @@
 //! calibration of raw scores.
 
 use std::collections::BTreeMap;
+use std::path::Path;
 
 use deslag::tag::Origin;
 
@@ -47,6 +48,34 @@ impl Source<'_> {
         match self {
             Source::Tagger(tagger) => tagger::run(*tagger, label, sentence),
             Source::Import(imported) => Ok(imported.readings[index].clone()),
+        }
+    }
+}
+
+/// Where a run's readings come from before they are read: a tagger, or the path of an import file,
+/// which is read against the gold it fills.
+pub enum Input<'a> {
+    /// A built-in tagger, run on every set.
+    Tagger(&'a dyn Tagger),
+    /// An import file, which fills the skeleton of one gold file.
+    Import(&'a Path),
+}
+
+impl Input<'_> {
+    /// Runs these readings over `gold`, which `aligned` has aligned: [`score`] for a tagger, and
+    /// for an import file that is read first, with errors that name no word when `names` is false.
+    pub fn score(
+        &self,
+        gold: &Gold,
+        aligned: &[Aligned<'_>],
+        names: bool,
+    ) -> Result<Scoring, Error> {
+        match self {
+            Input::Tagger(tagger) => score(gold, aligned, &Source::Tagger(*tagger), names),
+            Input::Import(path) => {
+                let imported = Imported::read(path, gold, !names)?;
+                score(gold, aligned, &Source::Import(&imported), names)
+            }
         }
     }
 }

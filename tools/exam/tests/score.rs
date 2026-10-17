@@ -5,13 +5,14 @@ mod common;
 
 use std::collections::HashMap;
 
-use common::case;
+use common::{FORBIDDEN, FORBIDDEN_MORE, Panics, case, case_path};
 use deslag_exam::Error;
 use deslag_exam::align::align_all;
 use deslag_exam::gold::Gold;
+use deslag_exam::holdout::{self, PANIC};
 use deslag_exam::metrics::{METRICS, Metric, level_metrics};
 use deslag_exam::report::estimate;
-use deslag_exam::score::{Scoring, Source, score};
+use deslag_exam::score::{Input, Scoring, Source, score};
 use deslag_exam::stats::{Bootstrap, Estimate, ratio, unpaired};
 use deslag_exam::strata::{Population, origin_populations, populations};
 use deslag_exam::tagger::{Sentence, Tagger, built_in};
@@ -409,6 +410,22 @@ fn a_holdout_run_is_known_by_position() {
         .map(|s| s.sent_id.as_str())
         .collect();
     assert_eq!(ids, ["1", "2", "3", "4"]);
+}
+
+#[test]
+fn a_panic_while_scoring_a_holdout_gold_is_withheld() {
+    let gold = case_path("done-when-holdout.conllu");
+    let error = holdout::score_report(&gold, None, &Input::Tagger(&Panics), None, 20)
+        .unwrap_err()
+        .to_string();
+    assert_eq!(error, PANIC);
+    for word in FORBIDDEN.iter().chain(&FORBIDDEN_MORE) {
+        assert!(!error.contains(word), "{error}");
+    }
+    assert!(!error.contains("cannot slice"), "{error}");
+    // The hook is back, and a later run gets the same answer.
+    let again = holdout::score_report(&gold, None, &Input::Tagger(&Panics), None, 20);
+    assert_eq!(again.unwrap_err().to_string(), PANIC);
 }
 
 #[test]

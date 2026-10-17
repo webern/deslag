@@ -19,6 +19,7 @@ pub mod error;
 pub mod gate;
 pub mod gold;
 pub mod harper;
+pub mod holdout;
 pub mod import;
 pub mod metrics;
 pub mod most_common;

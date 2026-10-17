@@ -1786,13 +1786,13 @@ class MilestoneTests(RunShTests):
                 self.run_all(("milestone",) + args, before=self.models)
             self.assertIn("2 != 0", str(caught.exception), args)
 
-    def test_two_candidates_are_scored_in_aggregate_and_compared_once(self):
+    def test_two_candidates_are_scored_as_holdout_and_compared_once(self):
         calls = self.run_all(("milestone", "p-hyb-s", "b-hyb-s"), before=self.models)
         exam = [c for c in calls if "deslag-exam" in c]
         for gold in ("tests/gold/holdout.conllu", ".ewt/r2.18/en_ewt-ud-test.conllu"):
             scores = [c for c in exam if f" score --gold {gold} " in c]
             self.assertEqual(len(scores), 2, gold)
-            self.assertTrue(all("--aggregate" in c for c in scores), scores)
+            self.assertTrue(all("--holdout" in c for c in scores), scores)
         self.assertEqual(len([c for c in exam if " compare " in c]), 2)
         verbs = {c.split(" -- ")[1].split()[0] for c in exam}
         self.assertEqual(verbs, {"tokens", "readings", "score", "compare"})

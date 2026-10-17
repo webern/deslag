@@ -10,6 +10,21 @@ use std::path::{Path, PathBuf};
 use deslag::document::{Token, TokenKind};
 use deslag_exam::align::Alignment;
 use deslag_exam::gold::{Gold, GoldSentence};
+use deslag_exam::tagger::{Sentence, Tagger};
+use deslag_exam::tags::Reading;
+
+/// A tagger that panics with the sentence it was given, as a bad `str` slice does.
+pub struct Panics;
+
+impl Tagger for Panics {
+    fn name(&self) -> &str {
+        "panics"
+    }
+
+    fn tag(&self, sentence: &Sentence<'_>) -> Vec<Option<Reading>> {
+        panic!("cannot slice `{}`", sentence.text);
+    }
+}
 
 /// The path of the case file `name`, relative to the crate, as the golden tests print it.
 pub fn case_path(name: &str) -> PathBuf {

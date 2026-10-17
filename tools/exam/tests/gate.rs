@@ -8,7 +8,7 @@ mod common;
 use std::path::Path;
 use std::process::{Command, Output};
 
-use common::{FORBIDDEN, FORBIDDEN_MORE, assert_no_words, line};
+use common::{FORBIDDEN, FORBIDDEN_MORE, Panics, assert_no_words, line};
 use deslag_exam::gate::{self, Gates};
 use deslag_exam::tagger::{Deslag, Sentence, Tagger};
 use deslag_exam::tags::{Confidence, Features, Reading, Tag, TagSet};
@@ -255,19 +255,6 @@ fn a_tagger_that_is_not_built_in_exits_2() {
     let output = gate(dir.path(), &holding(DONE_WHEN, "dev"), "spacy", &["dev"]);
     assert_eq!(output.status.code(), Some(2));
     assert!(text(&output.stderr).contains("no built-in tagger `spacy`"));
-}
-
-/// Panics with the sentence it was given, as a bad `str` slice does.
-struct Panics;
-
-impl Tagger for Panics {
-    fn name(&self) -> &str {
-        "panics"
-    }
-
-    fn tag(&self, sentence: &Sentence<'_>) -> Vec<Option<Reading>> {
-        panic!("cannot slice `{}`", sentence.text);
-    }
 }
 
 #[test]

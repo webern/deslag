@@ -1,7 +1,7 @@
 corpus = "sha256:922148d1308932a1fb1e422e3c33aa0fd43d798dbb2b17fd5faa4e6697f853e7"
-lock = "sha256:401838127c2564c7da0318a4610084ad61dd4f78909a822e1aa976df50f2592a"
+lock = "sha256:d5f981ef8e56e90742a9ef0371726b4fe789b408e462529c493c0e5d2812fd01"
 lang = "c"
-oracles = ["tree-sitter 0.27.0", "tree-sitter-c 0.24.2"]
+oracles = ["tree-sitter 0.27.1", "tree-sitter-c 0.24.2"]
 scanner = true
 files = 6
 bytes = 739

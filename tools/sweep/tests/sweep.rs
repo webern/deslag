@@ -1,11 +1,12 @@
 //! The sweep end to end: through the library with a scanner defined here, and through the binary
 //! with none, over the fixtures in `tests/fixtures/`.
 //!
-//! The golden files hold what the sweep prints, less its `lock` and `oracles` lines, which say which
-//! lockfile and oracle versions printed it. The test strips those lines before it compares or
-//! writes, so a dependency update that changes no verdict fails nothing and touches no golden file.
-//! Every line left is a verdict, and an oracle that changes one fails. Rerun with
-//! `DESLAG_FIX_GOLDEN=1`, or `make fix-golden`, to rewrite them, and read the diff.
+//! The golden files hold what the sweep prints, less the `lock` and `oracles` lines at the top of
+//! the report, which say which lockfile and oracle versions printed it. The test strips them before
+//! it compares or writes, so a dependency update that changes no verdict fails nothing and touches
+//! no golden file. What stays says what was measured and what the oracle made of it, and an oracle
+//! that changes a count fails. Rerun with `DESLAG_FIX_GOLDEN=1`, or `make fix-golden`, to rewrite
+//! them, and read the diff.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -48,38 +49,63 @@ fn fixtures(name: &str) -> PathBuf {
     manifest_dir().join("tests/fixtures").join(name)
 }
 
-/// The start of the lines that name the lockfile and the oracles a report was made with.
+/// The start of the top-level lines that name the lockfile and the oracles a report was made with.
 const STAMPS: [&str; 2] = ["lock = ", "oracles = "];
 
-/// `report` without its stamp lines, which leaves the verdicts.
-fn verdicts(report: &str) -> String {
-    report
-        .split_inclusive('\n')
-        .filter(|line| !STAMPS.iter().any(|stamp| line.starts_with(stamp)))
-        .collect()
+/// `report` split before its first table: the top-level keys, then the tables.
+fn split_header(report: &str) -> (&str, &str) {
+    let tables = report.find("\n[").map_or(report.len(), |at| at + 1);
+    report.split_at(tables)
 }
 
-/// Compares the verdicts of `actual` with the golden file `name`, or rewrites the file with them
+/// `report` without its stamp lines. A table line that starts the same way is a count, and stays.
+fn without_stamps(report: &str) -> String {
+    let (header, tables) = split_header(report);
+    let kept: String = header
+        .split_inclusive('\n')
+        .filter(|line| !STAMPS.iter().any(|stamp| line.starts_with(stamp)))
+        .collect();
+    kept + tables
+}
+
+/// Compares `actual`, less its stamps, with the golden file `name`, or rewrites the file with that
 /// when `DESLAG_FIX_GOLDEN` is set.
 fn assert_golden(name: &str, actual: &str) {
     // The sweep still prints its stamps. The golden files do not hold them.
+    let (header, _) = split_header(actual);
     for stamp in STAMPS {
         assert!(
-            actual.lines().any(|line| line.starts_with(stamp)),
-            "the sweep printed no `{stamp}` line"
+            header.lines().any(|line| line.starts_with(stamp)),
+            "the sweep printed no `{stamp}` line at the top of its report"
         );
     }
-    let verdicts = verdicts(actual);
+    let stripped = without_stamps(actual);
     let path = manifest_dir().join("tests/golden").join(name);
     if std::env::var_os("DESLAG_FIX_GOLDEN").is_some() {
-        std::fs::write(&path, &verdicts).unwrap();
+        std::fs::write(&path, &stripped).unwrap();
         return;
     }
     let expected = std::fs::read_to_string(&path).unwrap_or_default();
     assert_eq!(
-        verdicts, expected,
+        stripped, expected,
         "{name} differs from what the sweep prints; rerun with DESLAG_FIX_GOLDEN=1 to rewrite it"
     );
+}
+
+#[test]
+fn only_the_stamps_at_the_top_of_a_report_are_stripped() {
+    let report = "corpus = \"c\"\nlock = \"l\"\nlang = \"c\"\noracles = [\"o\"]\nfiles = 1\n\n\
+                  [clean.comment]\noracle = 5\nlock = 7\noracles = 8\n";
+    let stripped = "corpus = \"c\"\nlang = \"c\"\nfiles = 1\n\n\
+                    [clean.comment]\noracle = 5\nlock = 7\noracles = 8\n";
+    assert_eq!(without_stamps(report), stripped);
+}
+
+#[test]
+#[should_panic(expected = "printed no `lock = ` line")]
+fn a_line_in_a_table_does_not_stand_for_a_stamp() {
+    let report = "corpus = \"c\"\nfiles = 1\n\n[clean.comment]\nlock = 7\noracles = 8\n";
+    assert_golden("not-a-golden-file.toml", report);
 }
 
 #[test]

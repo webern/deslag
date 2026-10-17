@@ -84,7 +84,7 @@ mod tests {
         let set = globs(&["/src/**/*.rs"], &["/src/proto/**"]);
         assert_eq!(set.select("docs/a.md"), Selection::Miss);
         assert_eq!(set.select("docs/proto/a.md"), Selection::Miss);
-        // The same path under no exclude at all.
+        // The same path under no exclude.
         assert_eq!(
             globs(&["/src/**/*.rs"], &[]).select("lib.rs"),
             Selection::Miss

@@ -3,7 +3,8 @@
 Split files at most 200 lines long, and keep under 80 lines. Never read more than
 5 files at once; each function takes up to 4 tests, per 100 lines.
 
-It holds at most about 200 lines, at most 3 or 4 jobs, and between 3 and 5 files.
+It holds at most about 200 lines, at most 3 or 4 jobs, and between 3 and 5 files. A section of
+5 to 15 entries is fine, and so is a range of from 2 to 9 targets.
 
 It runs on Python 3 files, Node 18 packages and v2 modules. Version 3.11 has 4.5 files.
 

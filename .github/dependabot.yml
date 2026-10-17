@@ -1,10 +1,26 @@
 version: 2
+
+# One pull request a week with every update, across both ecosystems. The sweep keeps its own
+# lockfile and is watched too, minus the two crates its Cargo.toml pins. scripts/crates/c is left out
+# on purpose; see its Cargo.toml.
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: weekly
+
 updates:
   - package-ecosystem: cargo
     directory: /
-    schedule:
-      interval: weekly
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies
+  - package-ecosystem: cargo
+    directory: /tools/sweep
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies
+    ignore:
+      - dependency-name: ra-ap-rustc_lexer
+      - dependency-name: unicode-ident
   - package-ecosystem: github-actions
     directory: /
-    schedule:
-      interval: weekly
+    patterns: ["*"]
+    multi-ecosystem-group: dependencies

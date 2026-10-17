@@ -59,7 +59,7 @@ jobs:
       # test-python builds deslag-gold, so it needs the toolchain rust-toolchain.toml names, and
       # the registry and target dir cached, as in ci.yml.
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
 
       # The train scripts check the learned tagger's golden decisions, and what Python reads as a
       # letter or a digit follows its Unicode version, so the Python is pinned.
@@ -71,7 +71,7 @@ jobs:
       # make preflight runs first here as in every gate, and it checks for typos, which this job
       # does not otherwise use. Keep it: it is how a machine learns what it lacks.
       - name: Install typos
-        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
         with:
           tool: typos
 

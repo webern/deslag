@@ -5,8 +5,10 @@
 //! comes from the config. Each item matches one token by its kind, its folded text, its folded
 //! text ending, or not ending, in a given string, its folded text being or not being in a listed
 //! set, whether it starts a listed pair of words, the part of speech the tagger read for it, a
-//! feature the tagger read, or its origin, where the word comes from. An item may be optional, and
-//! a gap skips a bounded number of tokens. A match never leaves its sentence.
+//! feature the tagger read, or its origin, where the word comes from. Items combine: one of several,
+//! or none of them. An item may be optional, a gap skips a bounded number of tokens, and a run
+//! skips a bounded number that each match an item. A check on the token before or after a place
+//! adds nothing to the match. A match never leaves its sentence, and neither does a check.
 //!
 //! [`Pattern::find`] tries each start position in turn and reports the first that matches, with
 //! the longest match from there, then resumes after it: leftmost first, then longest, and no two
@@ -56,10 +58,23 @@ pub enum Item {
     Origin(Origin),
     /// Every one of these items matches the one token.
     All(&'static [Item]),
+    /// At least one of these items matches the one token.
+    Any(&'static [Item]),
+    /// A token, of any kind, that this item does not match.
+    Not(&'static Item),
+    /// A punctuation mark whose text is in this set.
+    Mark(&'static [&'static str]),
     /// This item, or nothing.
     Optional(&'static Item),
     /// Up to this many tokens of any kind.
     Gap(usize),
+    /// Up to this many tokens that each match this item.
+    Run(usize, &'static Item),
+    /// No width: the token after this place is none, or this item does not match it.
+    NotFollowedBy(&'static Item),
+    /// No width: the token before this place is none, or this item does not match it. The first
+    /// token of a sentence has none before it.
+    NotPrecededBy(&'static Item),
 }
 
 /// A row of items that matches a row of tokens in one sentence.
@@ -123,6 +138,16 @@ fn longest(items: &[Item], tokens: &[Token<'_>], folded: &[String], at: usize) -
             .take_while(|skip| at + skip <= tokens.len())
             .filter_map(|skip| longest(rest, tokens, folded, at + skip))
             .max(),
+        Item::Run(most, inner) => (0..=*most)
+            .take_while(|skip| *skip == 0 || one(inner, tokens, folded, at + skip - 1))
+            .filter_map(|skip| longest(rest, tokens, folded, at + skip))
+            .max(),
+        Item::NotFollowedBy(inner) => (!one(inner, tokens, folded, at))
+            .then(|| longest(rest, tokens, folded, at))
+            .flatten(),
+        Item::NotPrecededBy(inner) => (at == 0 || !one(inner, tokens, folded, at - 1))
+            .then(|| longest(rest, tokens, folded, at))
+            .flatten(),
         _ => one(item, tokens, folded, at)
             .then(|| longest(rest, tokens, folded, at + 1))
             .flatten(),
@@ -158,7 +183,14 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         }
         Item::Origin(origin) => word && token.origin == *origin,
         Item::All(items) => items.iter().all(|item| one(item, tokens, folded, at)),
-        Item::Optional(_) | Item::Gap(_) => false,
+        Item::Any(items) => items.iter().any(|item| one(item, tokens, folded, at)),
+        Item::Not(inner) => !one(inner, tokens, folded, at),
+        Item::Mark(marks) => token.kind == TokenKind::Punctuation && marks.contains(&text.as_str()),
+        Item::Optional(_)
+        | Item::Gap(_)
+        | Item::Run(..)
+        | Item::NotFollowedBy(_)
+        | Item::NotPrecededBy(_) => false,
     }
 }
 
@@ -306,6 +338,96 @@ mod tests {
             items: &[Item::Literal("a"), Item::Gap(3)],
         };
         assert_eq!(found(&Q, "a b c d e"), ["a b c d"]);
+    }
+
+    #[test]
+    fn any_needs_one_item() {
+        const P: Pattern = Pattern {
+            items: &[Item::Any(&[Item::Literal("not"), Item::Suffix("n't")])],
+        };
+        assert_eq!(found(&P, "It is not, and isn't, but is."), ["not", "isn't"]);
+        // A code span is no word, whatever it holds.
+        assert!(found(&P, "Use `isn't` or nothing.").is_empty());
+    }
+
+    #[test]
+    fn not_takes_a_token_of_any_kind_that_the_item_does_not_match() {
+        const P: Pattern = Pattern {
+            items: &[Item::Not(&Item::Literal("a")), Item::Literal("b")],
+        };
+        assert_eq!(found(&P, "a b, c b. `x` b, b"), ["c b", "`x` b", ", b"]);
+        // It needs a token: the end of the sentence is none.
+        const END: Pattern = Pattern {
+            items: &[Item::Literal("x"), Item::Not(&Item::Literal("a"))],
+        };
+        assert_eq!(found(&END, "x y. x"), ["x y"]);
+    }
+
+    #[test]
+    fn a_mark_is_a_punctuation_mark_in_the_set() {
+        const P: Pattern = Pattern {
+            items: &[Item::Mark(&[",", ";"]), Item::Kind(TokenKind::Word)],
+        };
+        assert_eq!(found(&P, "a, b; c: d e. , f"), [", b", "; c", ", f"]);
+        // A word that is spelled like a mark is no mark.
+        assert!(found(&P, "a `,` b").is_empty());
+    }
+
+    #[test]
+    fn a_run_is_bounded_and_each_token_of_it_must_match() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::Literal("not"),
+                Item::Run(2, &Item::Not(&Item::Mark(&[","]))),
+                Item::Literal("but"),
+            ],
+        };
+        assert_eq!(found(&P, "not but"), ["not but"]);
+        assert_eq!(found(&P, "not a b but c"), ["not a b but"]);
+        assert!(found(&P, "not a b c but d").is_empty());
+        assert!(found(&P, "not a, b but c").is_empty());
+        // Nothing to run over at the end of the sentence is a run of none.
+        const END: Pattern = Pattern {
+            items: &[
+                Item::Literal("not"),
+                Item::Run(3, &Item::Kind(TokenKind::Word)),
+            ],
+        };
+        assert_eq!(found(&END, "It is not a b. c d"), ["not a b"]);
+        assert_eq!(found(&END, "It is not"), ["not"]);
+    }
+
+    #[test]
+    fn not_followed_by_looks_ahead_without_taking_the_token() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::Literal("at"),
+                Item::Literal("all"),
+                Item::NotFollowedBy(&Item::Literal("times")),
+            ],
+        };
+        assert_eq!(found(&P, "Not at all times. Not at all clear."), ["at all"]);
+        // Nothing follows the end of a sentence, and a sentence does not see the next one.
+        assert_eq!(found(&P, "Not at all."), ["at all"]);
+        assert_eq!(found(&P, "Not at all. Times change."), ["at all"]);
+    }
+
+    #[test]
+    fn not_preceded_by_looks_back_without_taking_the_token() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::NotPrecededBy(&Item::Literal("or")),
+                Item::Literal("not"),
+            ],
+        };
+        assert_eq!(
+            found(&P, "Whole or not at all, or not."),
+            Vec::<String>::new()
+        );
+        assert_eq!(found(&P, "It is not whole."), ["not"]);
+        // The first token of a sentence has none before it, and the last of the one before is not it.
+        assert_eq!(found(&P, "Or. Not so."), ["Not"]);
+        assert_eq!(found(&P, "Not so."), ["Not"]);
     }
 
     #[test]

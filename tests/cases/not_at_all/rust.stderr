@@ -1,0 +1,14 @@
+ERROR: deslag detected negations padded with "at all"!
+
+src/lib.rs has 3 negations padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 1: "not ship a binary at all"
+  line 3: "no runtime dependencies at all"
+  line 6: "no configuration at all"
+
+deslag: 1 of 1 files with negations padded with "at all".

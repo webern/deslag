@@ -5,7 +5,7 @@
 //! included, is ignored: deslag does not parse YAML, and a file whose frontmatter is more exotic
 //! than this is not a file deslag understands.
 //!
-//! A block that is never closed by a second `---` is not frontmatter at all, and is ignored. That
+//! A block that is never closed by a second `---` is not frontmatter, and is ignored. That
 //! keeps a document that opens with a thematic break working.
 
 use crate::Error;

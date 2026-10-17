@@ -1,0 +1,3 @@
+schema_version = 1
+
+[rust.lints.not_at_all]

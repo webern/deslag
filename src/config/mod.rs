@@ -59,7 +59,7 @@ use crate::glob::Pattern;
 
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, Lints, ListGrowth, MaxEmphasis, MaxSizeBytes,
-    Merge, PhraseGroups, RepoLayout, VerbsNoNouns,
+    Merge, NotAtAll, PhraseGroups, RepoLayout, VerbsNoNouns,
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{

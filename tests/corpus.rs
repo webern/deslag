@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
-use common::corpus::load_corpus;
+use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::changelog::Version;
@@ -407,12 +407,12 @@ fn expected_report(path: &str, size_bytes: u64, budget: u64) -> String {
 }
 
 /// The hand-picked fixtures the matrix is written against.
-fn load_core() -> Vec<Fixture> {
-    let core: Vec<Fixture> = load_corpus()
-        .into_iter()
+fn load_core() -> Vec<&'static Fixture> {
+    let core: Vec<&Fixture> = corpus()
+        .iter()
         .filter(|fixture| fixture.category == "core")
         .collect();
-    let mut slugs: Vec<&str> = core.iter().map(Fixture::slug).collect();
+    let mut slugs: Vec<&str> = core.iter().map(|fixture| fixture.slug()).collect();
     slugs.sort_unstable();
     let before = slugs.len();
     slugs.dedup();
@@ -421,7 +421,7 @@ fn load_core() -> Vec<Fixture> {
 }
 
 /// Runs one case and asserts the outcome the intended budgets imply.
-fn run_case(case: &Case, fixtures: &[Fixture]) {
+fn run_case(case: &Case, fixtures: &[&Fixture]) {
     let repo = Repo::new();
 
     let mut placed: Vec<(String, u64, Option<u64>)> = Vec::new();
@@ -571,7 +571,7 @@ fn place_real(repo: &Repo, fixtures: &[Fixture]) -> Vec<String> {
 
 #[test]
 fn every_category_is_well_stocked() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     for category in ["human", "llm", "mixed"] {
         let count = fixtures
             .iter()
@@ -589,9 +589,9 @@ fn the_whole_corpus_is_held_to_its_budgets() {
     const GLOBAL: u64 = 4096;
     const README: u64 = 8192;
 
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let repo = Repo::new();
-    let paths = place_real(&repo, &fixtures);
+    let paths = place_real(&repo, fixtures);
     repo.write(
         "deslag.toml",
         &config_text(Some(GLOBAL), &[("README.md", README)]),
@@ -649,7 +649,7 @@ fn the_corpus_emphasis_reports_agree_with_the_library() {
     const FREE_SPANS: u64 = 2;
     const MAX_PERCENT: f64 = 1.0;
 
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
@@ -664,7 +664,7 @@ fn the_corpus_emphasis_reports_agree_with_the_library() {
         message: None,
     };
 
-    let paths = place_real(&repo, &fixtures);
+    let paths = place_real(&repo, fixtures);
     let mut expected: Vec<String> = fixtures
         .iter()
         .zip(paths)
@@ -725,15 +725,17 @@ const LAYOUT_HEADINGS: &[&str] = &[
 
 #[test]
 fn the_corpus_layouts_read_from_the_text_alone() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let mut layouts = 0;
 
-    for fixture in &fixtures {
+    for fixture in fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let lines: Vec<&str> = text.lines().collect();
         let slug = fixture.slug();
+        // Read once: the document does not change with the heading asked of it.
+        let document = Document::markdown(&text);
         for heading in LAYOUT_HEADINGS {
-            let layout = match repo_layout::read(&Document::markdown(&text), heading) {
+            let layout = match repo_layout::read(&document, heading) {
                 Ok(layout) => layout,
                 Err(Problem::NoSection) => continue,
                 Err(Problem::NoBlock { location }) => {
@@ -804,7 +806,7 @@ fn the_corpus_locations_hold_what_they_point_at() {
     let empty = tempfile::tempdir().expect("a temp directory");
     let mut located: Vec<Lint> = Vec::new();
 
-    for fixture in &load_corpus() {
+    for fixture in corpus() {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let findings = check_file_at(
             &config,
@@ -949,7 +951,7 @@ fn reported_chars(stderr: &str) -> Vec<(String, usize)> {
 
 #[test]
 fn the_corpus_banned_characters_agree_with_the_library() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
@@ -957,7 +959,7 @@ fn the_corpus_banned_characters_agree_with_the_library() {
     );
     let settings = BannedChars::default();
 
-    let paths = place_real(&repo, &fixtures);
+    let paths = place_real(&repo, fixtures);
     let mut expected: Vec<(String, usize)> = fixtures
         .iter()
         .zip(paths)
@@ -1023,14 +1025,14 @@ const LEFT_BY_REASON: &[(&str, usize)] = &[
 /// second run changes nothing.
 #[test]
 fn the_corpus_is_fixed_only_where_the_report_says() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
         "schema_version = 1\n\n[md.lints.banned_chars]\n",
     );
     let settings = BannedChars::default();
-    let paths = place_real(&repo, &fixtures);
+    let paths = place_real(&repo, fixtures);
     let config = Config::load(repo.root(), None).expect("a config");
     let fixes = fix::fix(repo.root(), &config, &[], false, None).expect("fix runs");
     let fixes: HashMap<&str, &Outcome> = fixes
@@ -1153,7 +1155,7 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
 /// The default groups are meant to catch the characters agents write and people do not.
 #[test]
 fn the_default_groups_flag_llm_text_far_more_than_human_text() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let settings = BannedChars::default();
     let flagged = |category: &str| {
         fixtures
@@ -1172,7 +1174,7 @@ fn the_default_groups_flag_llm_text_far_more_than_human_text() {
 
 #[test]
 fn verbs_no_nouns_flags_llm_text_far_more_than_human_text() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let settings = VerbsNoNouns::default();
     let flagged = |category: &str| {
         fixtures
@@ -1196,10 +1198,10 @@ const LIVE_GROUP_FILES: usize = 5;
 
 #[test]
 fn the_phrase_groups_match_no_human_fixture_and_each_matches_llm_fixtures() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let settings = BannedPhrases::default();
     let mut live: BTreeMap<&str, usize> = BTreeMap::new();
-    for fixture in &fixtures {
+    for fixture in fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let document = Document::markdown(&text);
         let Some(over) = banned_phrases::check(&document, Some(&settings), &Version::Next) else {
@@ -1238,9 +1240,9 @@ fn the_phrase_groups_match_no_human_fixture_and_each_matches_llm_fixtures() {
 
 #[test]
 fn the_corpus_blocks_start_on_lines_of_text() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let mut measured = 0;
-    for fixture in &fixtures {
+    for fixture in fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let lines: Vec<&str> = text.lines().collect();
         for block in density::measure(&Document::markdown(&text)) {
@@ -1281,12 +1283,12 @@ fn reported_dense(stderr: &str) -> Vec<(String, usize, usize)> {
 
 #[test]
 fn the_corpus_density_reports_agree_with_the_library() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let repo = Repo::new();
     repo.write("deslag.toml", "schema_version = 1\n\n[md.lints.density]\n");
     let settings = Density::default();
 
-    let paths = place_real(&repo, &fixtures);
+    let paths = place_real(&repo, fixtures);
     let mut files = 0;
     let mut expected: Vec<(String, usize, usize)> = Vec::new();
     for (fixture, path) in fixtures.iter().zip(paths) {
@@ -1321,9 +1323,9 @@ fn the_corpus_density_reports_agree_with_the_library() {
 
 #[test]
 fn the_corpus_reads_into_layers_in_the_order_of_the_file() {
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let (mut tokens, mut sentences) = (0, 0);
-    for fixture in &fixtures {
+    for fixture in fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let document = Document::markdown(&text);
         let slug = fixture.slug();

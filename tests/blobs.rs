@@ -17,7 +17,7 @@ use std::path::Path;
 
 use common::Repo;
 use common::blobs::{Entry, Exclusion, Tried, load_blobs};
-use common::claims::{BIG_FACTOR, BIG_HUMAN_PER_MILLE, CLAIMS, is_english, moved};
+use common::claims::{BIG_FACTOR, BIG_HUMAN_PER_MILLE, Broke, CLAIMS, is_english, moved};
 use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
@@ -845,12 +845,12 @@ fn the_catalogue_counts_are_the_big_tiers() {
         assert!(
             llm * humans >= BIG_FACTOR * human * llms,
             "{}",
-            moved(claim.lint, "big tier", &tally)
+            moved(claim, "big tier", Broke::Factor(BIG_FACTOR), &tally)
         );
         assert!(
             human * 1000 <= BIG_HUMAN_PER_MILLE * humans,
             "{}",
-            moved(claim.lint, "big tier", &tally)
+            moved(claim, "big tier", Broke::Ceiling, &tally)
         );
     }
 

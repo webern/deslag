@@ -24,6 +24,9 @@ pub struct Claim {
     /// always more often. A factor of 1 asks only for more often, since 380 files a side are too
     /// few for 3 times of a lint that few `human` files fail; the big tier carries the 3 times.
     pub tree_factor: usize,
+    /// What can move its findings, as the start of a failure's advice: the tagger, if the lint
+    /// reads one, and the corpus.
+    pub moved_by: &'static str,
 }
 
 /// Every taste lint's claim. A new taste lint adds its row here.
@@ -32,6 +35,7 @@ pub const CLAIMS: &[Claim] = &[
         lint: "verbs_no_nouns",
         fails: |document| verbs_no_nouns::check(document, Some(&VerbsNoNouns::default())).is_some(),
         tree_factor: 3,
+        moved_by: "The tagger or the corpus",
     },
     Claim {
         lint: "not_at_all",
@@ -44,6 +48,7 @@ pub const CLAIMS: &[Claim] = &[
             possessive_own::check(document, Some(&PossessiveOwn::default())).is_some()
         },
         tree_factor: 3,
+        moved_by: "The lint or the corpus",
     },
 ];
 
@@ -59,12 +64,32 @@ pub fn is_english(fixture: &Fixture) -> bool {
     fixture.sidecar.content.natural_language == "en"
 }
 
-/// What a failed claim says, for `lint` and the counts that broke it on `tier`. The claim is a
-/// decision of the lint's doc comment, so a human makes the next one.
-pub fn moved(lint: &str, tier: &str, counts: &str) -> String {
+/// The part of a claim that failed.
+#[derive(Debug, Clone, Copy)]
+pub enum Broke {
+    /// `llm` fixtures fail the lint less than this many times as often as `human` ones.
+    Factor(usize),
+    /// More than [`BIG_HUMAN_PER_MILLE`] of the big tier's `human` fixtures fail the lint.
+    Ceiling,
+}
+
+/// What a failed claim says, for the part of `claim` that broke on `tier`, with the counts that
+/// broke it. The claim is a decision of the lint's doc comment, so a human makes the next one.
+pub fn moved(claim: &Claim, tier: &str, broke: Broke, counts: &str) -> String {
+    let what = match broke {
+        Broke::Factor(factor) => {
+            format!("llm files fail it less than {factor} times as often as human files")
+        }
+        Broke::Ceiling => format!(
+            "more than {}% of human files fail it",
+            BIG_HUMAN_PER_MILLE as f64 / 10.0
+        ),
+    };
     format!(
-        "{lint}: its claim no longer holds on the {tier} ({counts}). The lint or the corpus moved \
-         its findings: a human decides whether to change the lint, to excuse more cases, or to \
-         change the claim in the lint's doc comment."
+        "{lint}: {what} on the {tier} ({counts}). Its claim no longer holds. {moved_by} moved its \
+         findings: a human decides whether to change the lint, to excuse more cases, or to change \
+         the claim in the lint's doc comment.",
+        lint = claim.lint,
+        moved_by = claim.moved_by,
     )
 }

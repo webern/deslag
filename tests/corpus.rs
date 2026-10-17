@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
-use common::claims::{CLAIMS, is_english, moved};
+use common::claims::{Broke, CLAIMS, is_english, moved};
 use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
@@ -1220,7 +1220,12 @@ fn the_taste_lints_flag_llm_text_far_more_than_human_text() {
         assert!(
             llm > human && llm >= claim.tree_factor * human,
             "{}",
-            moved(claim.lint, "tree", &format!("human {human}, llm {llm}"))
+            moved(
+                claim,
+                "tree",
+                Broke::Factor(claim.tree_factor),
+                &format!("human {human}, llm {llm}")
+            )
         );
     }
 }

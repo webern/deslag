@@ -30,7 +30,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
-use common::corpus::{CATEGORIES, load_corpus};
+use common::corpus::{CATEGORIES, corpus};
 use common::fixture::Fixture;
 use deslag::changelog::Version;
 use deslag::document::{Document, Token, TokenKind};
@@ -199,9 +199,9 @@ fn every_lint_finds_what_its_golden_file_says() {
     }
 
     let empty = tempfile::tempdir().expect("a temp directory");
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let mut found: BTreeMap<Lint, Vec<(&Fixture, String)>> = BTreeMap::new();
-    for fixture in &fixtures {
+    for fixture in fixtures {
         let findings = check_file_at(
             &config,
             &fixture.path,
@@ -496,7 +496,7 @@ fn a_reading_is_written_as_the_legend_says() {
 #[test]
 fn the_tag_stream_is_what_its_golden_file_says() {
     let fix = std::env::var(FIX).as_deref() == Ok("1");
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let core: Vec<&Fixture> = fixtures.iter().filter(|f| f.category == TAGGED).collect();
     assert!(!core.is_empty(), "the corpus has no {TAGGED} fixtures");
     let stream = tag_stream(&core);
@@ -530,7 +530,7 @@ fn the_tag_stream_is_what_its_golden_file_says() {
 #[test]
 fn the_rules_read_what_their_golden_hash_says_for_their_version() {
     let fix = std::env::var(FIX).as_deref() == Ok("1");
-    let fixtures = load_corpus();
+    let fixtures = corpus();
     let core: Vec<&Fixture> = fixtures.iter().filter(|f| f.category == TAGGED).collect();
     assert!(!core.is_empty(), "the corpus has no {TAGGED} fixtures");
     let (body, ..) = stream_body(&core, true);

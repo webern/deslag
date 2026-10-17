@@ -108,6 +108,7 @@ impl TagSet {
     }
 
     /// The tags in both this set and `other`.
+    #[inline(always)]
     pub const fn intersection(self, other: TagSet) -> TagSet {
         TagSet(self.0 & other.0)
     }
@@ -119,13 +120,26 @@ impl TagSet {
     }
 
     /// How many tags are in it.
+    #[inline(always)]
     pub fn len(self) -> usize {
         self.0.count_ones() as usize
     }
 
     /// Whether it holds none.
+    #[inline(always)]
     pub fn is_empty(self) -> bool {
         self.0 == 0
+    }
+
+    /// The set as one bit for each tag, at its place in [`Tag::ALL`]: how the tables built at
+    /// compile time hold it.
+    pub(super) const fn bits(self) -> u16 {
+        self.0
+    }
+
+    /// The set that [`TagSet::bits`] gave `bits` for.
+    pub(super) const fn from_bits(bits: u16) -> TagSet {
+        TagSet(bits)
     }
 
     /// Its tags, in the fixed order.
@@ -207,6 +221,18 @@ impl Features {
         self.0 & other.0 == other.0
     }
 
+    /// The flags as one bit each, in the order of [`Features::ALL`]: how the tables built at
+    /// compile time hold them.
+    #[allow(dead_code, reason = "the build script writes the tables with it")]
+    pub(super) const fn bits(self) -> u16 {
+        self.0
+    }
+
+    /// The flags that [`Features::bits`] gave `bits` for.
+    pub(super) const fn from_bits(bits: u16) -> Features {
+        Features(bits)
+    }
+
     /// The flags of both.
     pub const fn union(self, other: Features) -> Features {
         Features(self.0 | other.0)
@@ -286,6 +312,7 @@ impl Confidence {
     }
 
     /// Its place in [`Confidence::ALL`].
+    #[inline(always)]
     pub fn index(self) -> usize {
         self as usize
     }
@@ -298,6 +325,7 @@ impl Confidence {
     }
 
     /// Whether it is `Sure` or `Likely`: the levels a tagger commits to, and that accuracy counts.
+    #[inline(always)]
     pub fn committed(self) -> bool {
         matches!(self, Confidence::Sure | Confidence::Likely)
     }
@@ -329,6 +357,7 @@ pub struct Reading {
 
 impl Reading {
     /// The tags not ruled out: `kept` and the best guess.
+    #[inline(always)]
     pub fn possible(&self) -> TagSet {
         self.kept.with(self.tag)
     }

@@ -31,7 +31,7 @@
 //! tags open.
 
 use super::pass::View;
-use super::{Confidence, Features, Reading, Tag, TagSet};
+use super::{Confidence, Features, Reading, Tag, TagSet, is_one_of};
 
 /// The tags a word may have for a noun cue to read it as a noun.
 const NOUN_CUE_OK: TagSet = TagSet::of(Tag::Noun).with(Tag::Verb).with(Tag::ProperNoun);
@@ -52,43 +52,48 @@ const SUBJECTS: &[&str] = &["i", "we", "they", "he", "she"];
 
 /// Runs the pass over one sentence.
 pub(super) fn run(view: &mut View<'_, '_>) {
-    for at in 1..view.len() {
-        let Some(reading) = view.reading(at) else {
-            continue;
-        };
-        if reading.confidence != Confidence::Unsure || super::starts_upper(view.text(at)) {
-            continue;
-        }
-        let possible = reading.possible();
-        let is_noun_cue = view.within(at, NOUN_CUE_OK) && possible.contains(Tag::Noun);
-        let is_verb_cue = view.within(at, VERB_CUE_OK) && possible.contains(Tag::Verb);
-        let verb_form = if is_verb_cue {
-            verb_before(view, at)
-        } else {
-            None
-        };
-        let (tag, features) = if is_noun_cue && noun_before(view, at) {
-            (Tag::Noun, noun_features(reading))
-        } else if let Some(form) = verb_form {
-            (Tag::Verb, verb_features(reading, form))
-        } else {
-            continue;
-        };
-        let features = (tag != reading.tag).then_some(features);
-        if !view.narrow_with(at, possible, tag, features) {
-            view.confirm(at, tag);
-        }
+    let mut at = 1;
+    while at < view.len() {
+        read_word(view, at);
+        at += 1;
+    }
+}
+
+/// Reads the word at `at` against the cues of the pass.
+fn read_word(view: &mut View<'_, '_>, at: usize) {
+    let Some(reading) = view.reading(at) else {
+        return;
+    };
+    if !matches!(reading.confidence, Confidence::Unsure) || super::starts_upper(view.text(at)) {
+        return;
+    }
+    let possible = reading.possible();
+    let is_noun_cue = view.within(at, NOUN_CUE_OK) && possible.contains(Tag::Noun);
+    let is_verb_cue = view.within(at, VERB_CUE_OK) && possible.contains(Tag::Verb);
+    let verb_form = if is_verb_cue {
+        verb_before(view, at)
+    } else {
+        None
+    };
+    let (tag, features) = if is_noun_cue && noun_before(view, at) {
+        (Tag::Noun, noun_features(reading))
+    } else if let Some(form) = verb_form {
+        (Tag::Verb, verb_features(reading, form))
+    } else {
+        return;
+    };
+    let features = (tag != reading.tag).then_some(features);
+    if !view.narrow_with(at, possible, tag, features) {
+        view.confirm(at, tag);
     }
 }
 
 /// Whether the word before is a determiner or a possessive.
 fn noun_before(view: &View<'_, '_>, at: usize) -> bool {
-    view.text_of_word(at - 1).is_some_and(|text| {
-        view.settled(at - 1) == Some(Tag::Determiner)
-            || POSSESSIVES
-                .iter()
-                .any(|word| text.eq_ignore_ascii_case(word))
-    })
+    match view.text_of_word(at - 1) {
+        Some(text) => view.settled(at - 1) == Some(Tag::Determiner) || is_one_of(text, POSSESSIVES),
+        None => false,
+    }
 }
 
 /// What the word before asks of a verb.
@@ -104,13 +109,12 @@ enum Form {
 /// subject pronoun, or none of them.
 fn verb_before(view: &View<'_, '_>, at: usize) -> Option<Form> {
     let text = view.text_of_word(at - 1)?;
-    let is = |list: &[&str]| list.iter().any(|word| text.eq_ignore_ascii_case(word));
     let decided = view.decided(at - 1);
-    if (is(MODALS) && decided == Some(Tag::Auxiliary))
-        || (text.eq_ignore_ascii_case("to") && decided == Some(Tag::Particle))
+    if (is_one_of(text, MODALS) && decided == Some(Tag::Auxiliary))
+        || (super::same_word(text, "to") && decided == Some(Tag::Particle))
     {
         Some(Form::Base)
-    } else if is(SUBJECTS) {
+    } else if is_one_of(text, SUBJECTS) {
         Some(Form::Present)
     } else {
         None

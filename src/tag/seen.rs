@@ -17,14 +17,29 @@
 //! `Kubectl` is missed.
 
 use std::borrow::Cow;
-use std::collections::HashSet;
 
+use super::layout::word_hash;
 use crate::document::Document;
 
 /// The code words of one file: borrowed from its source where it holds them as written.
+///
+/// A table of its own, hashed with FNV, and read with plain loops: a debug build
+/// pays for every call of the standard library's hashing, and a file asks for the set of each of
+/// its words.
 #[derive(Debug, Clone, Default)]
 pub struct CodeWords<'a> {
-    words: HashSet<Cow<'a, str>>,
+    /// Open addressing, linear probing. Empty or a power of two long, and at most half full.
+    slots: Vec<Slot<'a>>,
+    /// How many words the slots hold.
+    len: usize,
+}
+
+/// A place in the table of code words.
+#[derive(Debug, Clone, Default)]
+struct Slot<'a> {
+    /// The hash of the word, so a growing table does not hash again.
+    hash: usize,
+    word: Option<Cow<'a, str>>,
 }
 
 impl<'a> CodeWords<'a> {
@@ -38,47 +53,138 @@ impl<'a> CodeWords<'a> {
     /// the runs that the rendered text gives.
     pub fn of(document: &Document<'a>) -> CodeWords<'a> {
         let source = document.source;
-        CodeWords {
-            words: document
-                .code
-                .iter()
-                .flat_map(|range| runs(&source[range.clone()]))
-                .map(Cow::Borrowed)
-                .collect(),
+        let mut words = CodeWords::new();
+        let mut at = 0;
+        while at < document.code.len() {
+            let range = &document.code[at];
+            words.add_runs(&source[range.start..range.end]);
+            at += 1;
         }
+        words
     }
 
     /// The words `forms` name, as they are written. For a sentence whose file is not at hand: its
     /// words that the file writes in code.
     pub fn of_forms<S: AsRef<str>>(forms: impl IntoIterator<Item = S>) -> CodeWords<'static> {
-        CodeWords {
-            words: forms
-                .into_iter()
-                .map(|form| Cow::Owned(form.as_ref().to_string()))
-                .collect(),
+        let mut words = CodeWords::new();
+        for form in forms {
+            words.insert(Cow::Owned(form.as_ref().to_string()));
         }
+        words
     }
 
     /// Whether the file writes `text` in code.
+    #[inline]
     pub fn contains(&self, text: &str) -> bool {
-        self.words.contains(text)
+        if self.len == 0 {
+            return false;
+        }
+        let hash = word_hash(text);
+        let mask = self.slots.len() - 1;
+        let mut at = hash & mask;
+        loop {
+            let slot = &self.slots[at];
+            match &slot.word {
+                None => return false,
+                Some(word) if slot.hash == hash && word.as_ref() == text => return true,
+                Some(_) => at = (at + 1) & mask,
+            }
+        }
     }
 
     /// Whether there is no word.
     pub fn is_empty(&self) -> bool {
-        self.words.is_empty()
+        self.len == 0
     }
 
     /// How many words there are.
     pub fn len(&self) -> usize {
-        self.words.len()
+        self.len
     }
-}
 
-/// The runs of `text` that are code words: letters, digits and `_`, two characters or more.
-fn runs(text: &str) -> impl Iterator<Item = &str> {
-    text.split(|c: char| !(c.is_alphanumeric() || c == '_'))
-        .filter(|run| run.chars().nth(1).is_some())
+    /// Adds the runs of `text`: letters, digits and `_`, two characters or more.
+    fn add_runs(&mut self, text: &'a str) {
+        let bytes = text.as_bytes();
+        let mut start = 0;
+        let mut chars = 0;
+        let mut at = 0;
+        while at < bytes.len() {
+            let byte = bytes[at];
+            let (width, in_run) = if byte < 0x80 {
+                (
+                    1,
+                    byte.wrapping_sub(b'0') < 10
+                        || (byte | 0x20).wrapping_sub(b'a') < 26
+                        || byte == b'_',
+                )
+            } else {
+                // Only a character past ASCII is decoded.
+                match text[at..].chars().next() {
+                    Some(c) => (c.len_utf8(), c.is_alphanumeric()),
+                    None => (1, false),
+                }
+            };
+            if in_run {
+                if chars == 0 {
+                    start = at;
+                }
+                chars += 1;
+            } else {
+                if chars >= 2 {
+                    self.insert(Cow::Borrowed(&text[start..at]));
+                }
+                chars = 0;
+            }
+            at += width;
+        }
+        if chars >= 2 {
+            self.insert(Cow::Borrowed(&text[start..]));
+        }
+    }
+
+    /// Adds `word` if the table lacks it.
+    fn insert(&mut self, word: Cow<'a, str>) {
+        if (self.len + 1) * 2 > self.slots.len() {
+            self.grow();
+        }
+        let hash = word_hash(&word);
+        let mask = self.slots.len() - 1;
+        let mut at = hash & mask;
+        loop {
+            match &self.slots[at].word {
+                None => break,
+                Some(held) if self.slots[at].hash == hash && held.as_ref() == word.as_ref() => {
+                    return;
+                }
+                Some(_) => at = (at + 1) & mask,
+            }
+        }
+        self.slots[at] = Slot {
+            hash,
+            word: Some(word),
+        };
+        self.len += 1;
+    }
+
+    /// Doubles the table, and gives an empty one eight slots.
+    fn grow(&mut self) {
+        let size = if self.slots.is_empty() {
+            8
+        } else {
+            self.slots.len() * 2
+        };
+        let old = std::mem::replace(&mut self.slots, vec![Slot::default(); size]);
+        let mask = size - 1;
+        for slot in old {
+            if slot.word.is_some() {
+                let mut at = slot.hash & mask;
+                while self.slots[at].word.is_some() {
+                    at = (at + 1) & mask;
+                }
+                self.slots[at] = slot;
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -92,7 +198,11 @@ mod tests {
     }
 
     fn sorted(code: &CodeWords<'_>) -> Vec<String> {
-        let mut found: Vec<String> = code.words.iter().map(|word| word.to_string()).collect();
+        let mut found: Vec<String> = code
+            .slots
+            .iter()
+            .filter_map(|slot| slot.word.as_ref().map(|word| word.to_string()))
+            .collect();
         found.sort();
         found
     }
@@ -132,6 +242,38 @@ mod tests {
         ```text\n\
         plain_fence words\n\
         ```\n";
+
+    /// The runs of `text` as a split on every character that is not a letter, a digit or `_` finds
+    /// them, two characters or more each.
+    fn split_runs(text: &str) -> std::collections::BTreeSet<String> {
+        text.split(|c: char| !(c.is_alphanumeric() || c == '_'))
+            .filter(|run| run.chars().nth(1).is_some())
+            .map(str::to_string)
+            .collect()
+    }
+
+    #[test]
+    fn the_table_holds_the_runs_that_a_split_finds() {
+        let mut text = String::from(
+            "na\u{ef}ve_x \u{e9} \u{fc}ber a b_ _c ab 1 22 \u{65e5}\u{672c}\u{8a9e} x\u{b2} \u{2019}q\u{2019}",
+        );
+        // Enough words to grow the table more than once, and some of them twice.
+        for n in 0..300 {
+            text.push_str(&format!(" word_{n} {}", n % 40));
+        }
+        let mut code = CodeWords::new();
+        code.add_runs(&text);
+        let want = split_runs(&text);
+        assert_eq!(code.len(), want.len());
+        assert_eq!(sorted(&code), want.iter().cloned().collect::<Vec<_>>());
+        for word in &want {
+            assert!(code.contains(word), "{word}");
+        }
+        for word in ["a", "word_", "word_300", "", "\u{fc}", "ab "] {
+            assert!(!code.contains(word), "{word}");
+        }
+        assert!(!CodeWords::new().contains("ab"));
+    }
 
     #[test]
     fn a_code_span_and_a_code_block_add_their_runs() {

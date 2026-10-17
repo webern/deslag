@@ -11,10 +11,16 @@
 //! is from the way it is written. Then the pruning passes in `pass.rs` read each word in its
 //! sentence, and narrow what the tables left open.
 
+#[cfg(test)]
+mod build_tables;
+mod built;
+#[cfg(test)]
 mod closed;
 mod function;
 mod infinitive;
+mod layout;
 mod learned;
+#[cfg(test)]
 mod lexicon;
 mod nounverb;
 mod origin;
@@ -91,8 +97,13 @@ pub fn sentence_by_rules_seen(tokens: &mut [Token<'_>], context: Context, seen: 
             let (reading, plain, name) = table::read_shaped(&token.text);
             token.reading = Some(reading);
             commands |= origin::mark(tokens, at, plain, name, &mut after_git);
-            let token = &mut tokens[at];
-            token.origin = origin::seen_or(token.origin, &token.text, seen, || reading.confidence);
+            // A word the tables hold is never `Seen`, so only one they lack asks `seen`, which
+            // hashes its text.
+            if reading.confidence == Confidence::Unknown {
+                let token = &mut tokens[at];
+                let unknown = || Confidence::Unknown;
+                token.origin = origin::seen_or(token.origin, &token.text, seen, unknown);
+            }
         } else {
             token.reading = None;
             token.origin = Origin::English;
@@ -107,7 +118,7 @@ pub fn sentence_by_rules_seen(tokens: &mut [Token<'_>], context: Context, seen: 
 
 /// The longest word, in bytes, that either table can hold once folded: the lexicon's longest and a
 /// possessive `'s` after it.
-const LONGEST: usize = lexicon::LONGEST + 2;
+const LONGEST: usize = layout::KEY + 2;
 
 /// `text` folded into `buf` for a lookup: lower case, a curly apostrophe straight. `None` when it
 /// is too long or is not ASCII, so no table can hold it.
@@ -126,12 +137,69 @@ fn fold<'b>(text: &str, buf: &'b mut [u8; LONGEST]) -> Option<&'b str> {
 
 /// Whether `text` starts with an upper-case letter. A first byte that is ASCII is the whole answer,
 /// which saves decoding it in the passes that ask of every word.
+#[inline]
 fn starts_upper(text: &str) -> bool {
     match text.as_bytes().first() {
-        Some(byte) if byte.is_ascii() => byte.is_ascii_uppercase(),
+        Some(&byte) if byte < 0x80 => byte.wrapping_sub(b'A') < 26,
         Some(_) => text.chars().next().is_some_and(char::is_uppercase),
         None => false,
     }
+}
+
+/// Whether `text` has a lower-case letter.
+fn has_lower_case(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        if byte >= 0x80 {
+            // A letter past ASCII asks the character tables.
+            return text.chars().any(char::is_lowercase);
+        }
+        if byte.wrapping_sub(b'a') < 26 {
+            return true;
+        }
+        at += 1;
+    }
+    false
+}
+
+/// Whether `a` and `b` are the same word whatever the case of their ASCII letters. It is what
+/// `str::eq_ignore_ascii_case` is, with plain loops, as the passes ask it of every word.
+#[inline(always)]
+fn same_word(a: &str, b: &str) -> bool {
+    let (a, b) = (a.as_bytes(), b.as_bytes());
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut at = 0;
+    while at < a.len() {
+        let (x, y) = (a[at], b[at]);
+        if x != y {
+            let x = if x.wrapping_sub(b'A') < 26 { x + 32 } else { x };
+            let y = if y.wrapping_sub(b'A') < 26 { y + 32 } else { y };
+            if x != y {
+                return false;
+            }
+        }
+        at += 1;
+    }
+    true
+}
+
+/// Whether `text` is one of the `words`, whatever its case.
+#[inline]
+fn is_one_of(text: &str, words: &[&str]) -> bool {
+    // Most words in the list are not the length of the text, which is all the check needs.
+    let len = text.len();
+    let mut at = 0;
+    while at < words.len() {
+        if words[at].len() == len && same_word(text, words[at]) {
+            return true;
+        }
+        at += 1;
+    }
+    false
 }
 
 /// What the tables say of the word `text`, from the one table of both that [`table`] holds. The

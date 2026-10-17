@@ -27,7 +27,7 @@
 //! and the other words by their text, which no ambiguity touches.
 
 use super::pass::View;
-use super::{Tag, TagSet};
+use super::{Tag, TagSet, is_one_of, same_word};
 use crate::document::TokenKind;
 
 /// The readings `to` keeps: a particle and a preposition.
@@ -119,24 +119,22 @@ enum Decision {
 
 /// Runs the pass over one sentence.
 pub(super) fn run(view: &mut View<'_, '_>) {
-    for at in 0..view.len() {
-        if view.kind(at) != TokenKind::Word || !view.text(at).eq_ignore_ascii_case("to") {
-            continue;
-        }
-        let Some(reading) = view.reading(at) else {
-            continue;
-        };
-        if !reading.possible().contains(Tag::Particle)
-            || !reading.possible().contains(Tag::Adposition)
+    let mut at = 0;
+    while at < view.len() {
+        if matches!(view.kind(at), TokenKind::Word)
+            && same_word(view.text(at), "to")
+            && let Some(reading) = view.reading(at)
+            && reading.possible().contains(Tag::Particle)
+            && reading.possible().contains(Tag::Adposition)
         {
-            continue;
+            let decision = from_next(view, at).or_else(|| from_previous(view, at));
+            match decision {
+                Some(Decision::Particle) => view.narrow(at, BOTH, Tag::Particle),
+                Some(Decision::Preposition) => view.narrow(at, BOTH, Tag::Adposition),
+                None => false,
+            };
         }
-        let decision = from_next(view, at).or_else(|| from_previous(view, at));
-        match decision {
-            Some(Decision::Particle) => view.narrow(at, BOTH, Tag::Particle),
-            Some(Decision::Preposition) => view.narrow(at, BOTH, Tag::Adposition),
-            None => false,
-        };
+        at += 1;
     }
 }
 
@@ -159,10 +157,9 @@ fn from_next(view: &View<'_, '_>, at: usize) -> Option<Decision> {
                 };
             }
             let text = view.text(next);
-            let is = |list: &[&str]| list.iter().any(|word| text.eq_ignore_ascii_case(word));
-            if is(OBJECT_WORDS) {
+            if is_one_of(text, OBJECT_WORDS) {
                 Some(Decision::Preposition)
-            } else if is(INFINITIVES) {
+            } else if is_one_of(text, INFINITIVES) {
                 Some(Decision::Particle)
             } else {
                 None
@@ -175,10 +172,7 @@ fn from_next(view: &View<'_, '_>, at: usize) -> Option<Decision> {
 /// What the word before `to`, if it is the previous token, says.
 fn from_previous(view: &View<'_, '_>, at: usize) -> Option<Decision> {
     let text = (at > 0 && view.kind(at - 1) == TokenKind::Word).then(|| view.text(at - 1))?;
-    TAKES_INFINITIVE
-        .iter()
-        .any(|word| text.eq_ignore_ascii_case(word))
-        .then_some(Decision::Particle)
+    is_one_of(text, TAKES_INFINITIVE).then_some(Decision::Particle)
 }
 
 #[cfg(test)]

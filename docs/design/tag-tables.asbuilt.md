@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-17
 subsystems:
   - tag-tables
 max_size_bytes: 5200
@@ -8,8 +8,7 @@ max_size_bytes: 5200
 
 `tag.asbuilt.md` says what tagging is. This says how a word is read on its own, before any pass
 reads it in its sentence. Two tables do it, `closed.rs` and `lexicon.rs`, held together in
-`table.rs`; a word in neither goes to `shape.rs`. None of it is counted by deslag from a corpus or
-a treebank; the ranking uses WordNet's counts, below.
+`table.rs`; a word in neither goes to `shape.rs`.
 
 A word is folded first: lower case, ASCII only, a curly apostrophe read straight. A word that is
 not ASCII, or is over 24 bytes (the lexicon's longest), is in no table.
@@ -18,9 +17,9 @@ not ASCII, or is over 24 bytes (the lexicon's longest), is in no table.
 
 `closed.rs` lists 371 function words, written by hand from English grammar and the annotation guide:
 determiners, pronouns, prepositions, conjunctions, auxiliaries and modals, `not` and `to`, some
-numerals and interjections, quantifiers such as `many`, wh-adverbs and expletive `there`. About 90
-are contractions, each one token read as its first part with `Contraction`: `don't` AUX, `it's`
-PRON, `let's` VERB, `cannot` AUX.
+numerals and interjections, quantifiers, wh-adverbs and expletive `there`. About 90 are
+contractions, each one token read as its first part with `Contraction`: `don't` AUX, `it's` PRON,
+`let's` VERB, `cannot` AUX.
 
 An entry lists every tag the word plausibly has, most common first, and the features of the first.
 A word with one tag is `Sure`; one with several is `Unsure`, since nothing here reads context.
@@ -53,16 +52,16 @@ counts, and the counts total at least 60 (10 lemma counts of a noun, 20 of a ver
 adjective or adverb). 5,796 words have it. Only the prior pass reads it.
 
 Possessives are not stored. `x's` that no table has is read from the noun or proper noun `x`, with
-its number and `Contraction`, at `Unsure`; an `x` that is no noun there leaves the word to
-`shape.rs`.
+its number and `Contraction`, at `Unsure`, by the mark of `x` below; an `x` that is no noun there
+leaves the word to `shape.rs`.
 
 ## The word table
 
-`table.rs` builds one hash table of both on first use, about 9 ms and 4 MB. Each word is held with
-its `Reading` already made and its dominance mark, so a lookup folds and hashes once and one
-probe answers. Words of up to eight bytes are in a table of 16-byte slots, four to a 64-byte
-bucket; longer words are in a table of 32-byte slots. The closed-class reading wins where both
-tables have a word.
+`build.rs` builds one hash table of both, 3 MB that `table.rs` reads in the binary, without the
+lexicon's text. Each word has its `Reading` made and a mark byte of the lexicon's: dominance, and
+what a possessive reads of the word as a stem (noun, proper noun, which ranks first, plural). One
+probe answers a lookup. Words of up to eight bytes are in 16-byte slots, four to a 64-byte bucket;
+longer words are in 32-byte slots. The closed-class reading wins where both tables have a word.
 
 ## Shape
 

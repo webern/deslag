@@ -1,5 +1,5 @@
 //! The word table: what the closed-class table and the open-class lexicon say of every word they
-//! have, in one hash table built on first use.
+//! have, in one hash table made when the crate builds.
 //!
 //! A word used to be folded into a buffer, looked up in the closed-class table, then looked up in
 //! the lexicon, whose line was parsed into a reading on each lookup, and a word the prior pass
@@ -8,255 +8,137 @@
 //! probe answers both questions and allocates nothing.
 //!
 //! The answers are those of the tables themselves. The closed-class reading wins where both have a
-//! word, and a word in neither is read by [`lexicon::lookup`] as a possessive, or by its shape.
-//! The dominance mark is the lexicon's alone, whatever the reading comes from.
+//! word, and a word in neither is read as a possessive of a stem the lexicon has, or by its shape.
+//! The mark byte beside the reading is the lexicon's alone, whatever the reading comes from: the
+//! dominance mark, and what a possessive of the word as a stem is read from (see
+//! [`layout::mark`]), so the lexicon's text is not in the binary.
 //!
 //! **Layout.** Words of up to eight bytes, most of any text, have a table of 16-byte slots, four
 //! to a 64-byte bucket, each holding the word as one `u64` and its length. Longer words, up to
 //! [`KEY`] bytes, have one of 32-byte slots with three `u64`. A probe folds the case of the word's
 //! bytes eight at a time and compares the key and length whole, so no byte of a word is copied or
-//! looked at twice. Together the two tables are about 4 MB, and building them takes about 9 ms.
+//! looked at twice. Together the two tables are about 3 MB. `build.rs` makes them (see
+//! `build_tables.rs`) and the binary holds them as bytes, which a probe reads where they lie, so
+//! the first word costs no more than the rest. `layout.rs` says where each field of a slot is.
 
-use std::sync::OnceLock;
+#[cfg(test)]
+use super::closed;
+use super::layout::{
+    BUCKET, KEY, LONG_SLOT, SHORT_SLOT, WORDS_HEADER, WORDS_MAGIC, long_hash, long_key, mark,
+    reading_at, short_hash, u32_at, u64_at,
+};
+pub(super) use super::layout::{SHORT, short_key, short_key_const};
+#[cfg(test)]
+use super::lexicon;
+use super::{Confidence, Features, Reading, Tag, TagSet, built, shape};
 
-use super::{Reading, closed, lexicon};
-
-/// The most bytes of a word the table holds: the lexicon's longest.
-const KEY: usize = lexicon::LONGEST;
-
-/// The most bytes of a short word, which fits one `u64`.
-pub(super) const SHORT: usize = 8;
-
-const _: () = assert!(KEY > SHORT && KEY <= 3 * SHORT);
-
-/// What a slot says of its word: its reading, and whether the lexicon marks it dominant.
+/// What a slot says of its word: its reading, and the lexicon's mark of it (see [`mark`]).
 #[derive(Clone, Copy)]
 struct Entry {
     reading: Reading,
-    dominant: bool,
+    mark: u8,
 }
 
-/// What an empty slot holds, which no probe reads.
-const NOTHING: Entry = Entry {
-    reading: Reading {
-        tag: super::Tag::Noun,
-        features: super::Features::NONE,
-        confidence: super::Confidence::Unknown,
-        kept: super::TagSet::EMPTY,
-    },
-    dominant: false,
+/// The count of buckets of short words, which the header gives. A build that wrote other bytes
+/// than these tables does not compile.
+const BUCKETS: usize = {
+    assert!(
+        u32_at(built::WORDS, 0) == WORDS_MAGIC,
+        "the word table is not what this build's layout writes"
+    );
+    let buckets = u32_at(built::WORDS, 4) as usize;
+    assert!(
+        buckets.is_power_of_two(),
+        "the buckets of short words are not a power of two, and a mask picks the bucket"
+    );
+    buckets
 };
 
-/// A slot of the table of short words.
-#[derive(Clone, Copy)]
-struct Short {
-    key: u64,
-    reading: Reading,
-    dominant: bool,
-    /// The word's length in bytes; 0 in an empty slot.
-    len: u8,
-}
+/// The count of slots of long words, which the header gives.
+const SLOTS: usize = {
+    let slots = u32_at(built::WORDS, 8) as usize;
+    assert!(
+        slots.is_power_of_two(),
+        "the slots of long words are not a power of two, and a mask picks the slot"
+    );
+    assert!(
+        built::WORDS.len() == WORDS_HEADER + BUCKETS * BUCKET + slots * LONG_SLOT,
+        "the word table is not the size its header says"
+    );
+    slots
+};
 
-/// Four slots of the table of short words, a cache line, which a probe reads whole.
-#[derive(Clone, Copy)]
-#[repr(align(64))]
-struct Bucket {
-    slots: [Short; 4],
-}
+/// The bytes of the table of short words: a power of two of buckets.
+const SHORT_TABLE: &[u8] = built::WORDS
+    .split_at(WORDS_HEADER)
+    .1
+    .split_at(BUCKETS * BUCKET)
+    .0;
 
-/// A slot of the table of long words.
-#[derive(Clone, Copy)]
-struct Long {
-    key: [u64; 3],
-    reading: Reading,
-    dominant: bool,
-    /// The word's length in bytes; 0 in an empty slot.
-    len: u8,
-}
+/// The bytes of the table of long words: a power of two of slots.
+const LONG_TABLE: &[u8] = built::WORDS
+    .split_at(WORDS_HEADER + BUCKETS * BUCKET)
+    .1
+    .split_at(SLOTS * LONG_SLOT)
+    .0;
 
-const _: () = assert!(size_of::<Short>() == 16);
-const _: () = assert!(size_of::<Bucket>() == 64);
-const _: () = assert!(size_of::<Long>() == 32);
-
-/// The two tables: the words of up to [`SHORT`] bytes, which most of any text is, and the longer
-/// ones. Each is a power of two of buckets or slots, open addressing with linear probing from the
-/// one the hash names, and a slot with no length is empty. A bucket of short words fills from its
-/// first slot, so it is full when its last is used, and only then does a word go to the next.
-struct Table {
-    short: Vec<Bucket>,
-    long: Vec<Long>,
-}
-
-fn table() -> &'static Table {
-    static TABLE: OnceLock<Table> = OnceLock::new();
-    TABLE.get_or_init(build)
-}
-
-/// Makes the tables from the lexicon's words, then the closed-class words over them.
-fn build() -> Table {
-    let mut words: Vec<(&str, Entry)> = lexicon::entries()
-        .map(|(word, reading, dominant)| (word, Entry { reading, dominant }))
-        .collect();
-    // Room for a third as many slots again as words, at the least.
-    let size = |count: usize| (count * 4 / 3).max(2).next_power_of_two();
-    let closed_short = closed::words().filter(|word| word.len() <= SHORT).count();
-    let lexicon_short = words.iter().filter(|(word, _)| word.len() <= SHORT).count();
-    let empty_short = Short {
-        key: 0,
-        reading: NOTHING.reading,
-        dominant: false,
-        len: 0,
-    };
-    let empty_long = Long {
-        key: [0; 3],
-        reading: NOTHING.reading,
-        dominant: false,
-        len: 0,
-    };
-    let mut table = Table {
-        // A bucket for every two short words, a slot for every one at the least.
-        short: vec![
-            Bucket {
-                slots: [empty_short; 4]
-            };
-            ((lexicon_short + closed_short) / 2)
-                .max(1)
-                .next_power_of_two()
-        ],
-        long: vec![
-            empty_long;
-            size(words.len() - lexicon_short + closed::words().count() - closed_short)
-        ],
-    };
-    for (word, entry) in words.drain(..) {
-        table.insert(word, |_| entry);
-    }
-    for word in closed::words() {
-        if let Some(reading) = closed::lookup(word) {
-            // The closed-class table changes the reading and not the mark.
-            table.insert(word, |was| Entry {
-                reading,
-                dominant: was.dominant,
+/// What the table has for the folded word of `len` bytes whose key is `key`. A bucket is full when
+/// its last slot is in use, and only then can the word be in the next.
+fn probe_short(key: u64, len: usize) -> Option<Entry> {
+    let buckets = SHORT_TABLE;
+    let mask = buckets.len() / BUCKET - 1;
+    let mut at = short_hash(key, len) & mask;
+    loop {
+        let bucket = at * BUCKET;
+        // All four compared at once, so that where the word is in the bucket does not cost a
+        // branch.
+        let mut found = 0;
+        let mut i = 0;
+        while i < 4 {
+            let slot = bucket + i * SHORT_SLOT;
+            found |=
+                usize::from(u64_at(buckets, slot) == key && buckets[slot + 15] as usize == len)
+                    << i;
+            i += 1;
+        }
+        if found != 0 {
+            let slot = bucket + found.trailing_zeros() as usize * SHORT_SLOT;
+            // An empty slot does not have a length, and no word is that short.
+            return (len != 0).then(|| Entry {
+                reading: reading_at(buckets, slot + 8),
+                mark: buckets[slot + 14],
             });
         }
-    }
-    table
-}
-
-impl Table {
-    /// Puts `word` in, as `make` says given what the table held for it, or [`NOTHING`].
-    fn insert(&mut self, word: &str, make: impl FnOnce(Entry) -> Entry) {
-        let len = word.len();
-        assert!(
-            (1..=KEY).contains(&len),
-            "{word:?} does not fit the word table"
-        );
-        if len <= SHORT {
-            let key = short_key(word.as_bytes());
-            let mask = self.short.len() - 1;
-            let mut at = short_hash(key, len) & mask;
-            // The first slot that is empty or has the word, along the buckets from its own.
-            let slot = 'found: loop {
-                for slot in &mut self.short[at].slots {
-                    if slot.len == 0 || (slot.len as usize == len && slot.key == key) {
-                        break 'found slot;
-                    }
-                }
-                at = (at + 1) & mask;
-            };
-            let Entry { reading, dominant } = make(Entry {
-                reading: slot.reading,
-                dominant: slot.dominant,
-            });
-            *slot = Short {
-                key,
-                reading,
-                dominant,
-                len: len as u8,
-            };
-        } else {
-            let key = long_key(word.as_bytes());
-            let mask = self.long.len() - 1;
-            let mut at = long_hash(&key, len) & mask;
-            while self.long[at].len != 0
-                && !(self.long[at].len as usize == len && self.long[at].key == key)
-            {
-                at = (at + 1) & mask;
-            }
-            let was = &self.long[at];
-            let Entry { reading, dominant } = make(Entry {
-                reading: was.reading,
-                dominant: was.dominant,
-            });
-            self.long[at] = Long {
-                key,
-                reading,
-                dominant,
-                len: len as u8,
-            };
+        if buckets[bucket + 3 * SHORT_SLOT + 15] == 0 {
+            return None;
         }
+        at = (at + 1) & mask;
     }
 }
 
-/// A word of up to [`SHORT`] bytes as one `u64`: its first four bytes and its last four, which
-/// overlap in a word of fewer than eight, so that the key and the length say the word whole.
-pub(super) fn short_key(bytes: &[u8]) -> u64 {
-    let len = bytes.len();
-    // Two loads of four bytes, which overlap in a word of fewer than eight.
-    if len >= 4 {
-        let first = u32::from_le_bytes([bytes[0], bytes[1], bytes[2], bytes[3]]);
-        let end = u32::from_le_bytes([
-            bytes[len - 4],
-            bytes[len - 3],
-            bytes[len - 2],
-            bytes[len - 1],
-        ]);
-        return u64::from(first) | u64::from(end) << 32;
+/// As [`probe_short`] for a long word.
+fn probe_long(key: &[u64; 3], len: usize) -> Option<Entry> {
+    let slots = LONG_TABLE;
+    let mask = slots.len() / LONG_SLOT - 1;
+    let mut at = long_hash(key, len) & mask;
+    loop {
+        let slot = at * LONG_SLOT;
+        let stored = slots[slot + 31] as usize;
+        if stored == 0 {
+            return None;
+        }
+        if stored == len
+            && u64_at(slots, slot) == key[0]
+            && u64_at(slots, slot + 8) == key[1]
+            && u64_at(slots, slot + 16) == key[2]
+        {
+            return Some(Entry {
+                reading: reading_at(slots, slot + 24),
+                mark: slots[slot + 30],
+            });
+        }
+        at = (at + 1) & mask;
     }
-    // A shorter word repeats its bytes where it has too few, so the key still says the word whole.
-    let (first, end) = match *bytes {
-        [] => return 0,
-        [a] => ([a, a, a, a], [a, a, a, a]),
-        [a, b] => ([a, b, b, b], [a, a, a, b]),
-        [a, b, c] => ([a, b, c, c], [a, a, b, c]),
-        _ => unreachable!(),
-    };
-    u64::from(u32::from_le_bytes(first)) | u64::from(u32::from_le_bytes(end)) << 32
-}
-
-/// The byte at `at` of `bytes`, or its last if there is none, as [`short_key`] takes it.
-const fn clamped(bytes: &[u8], at: usize) -> u64 {
-    let last = bytes.len() - 1;
-    bytes[if at < last { at } else { last }] as u64
-}
-
-/// [`short_key`], for a constant.
-pub(super) const fn short_key_const(bytes: &[u8]) -> u64 {
-    let len = bytes.len();
-    if len == 0 {
-        return 0;
-    }
-    let first = clamped(bytes, 0)
-        | clamped(bytes, 1) << 8
-        | clamped(bytes, 2) << 16
-        | clamped(bytes, 3) << 24;
-    let end = clamped(bytes, len.saturating_sub(4))
-        | clamped(bytes, (len + 1).saturating_sub(4)) << 8
-        | clamped(bytes, (len + 2).saturating_sub(4)) << 16
-        | clamped(bytes, (len + 3).saturating_sub(4)) << 24;
-    first | end << 32
-}
-
-/// A word of [`SHORT`] to [`KEY`] bytes, longer than a short one, as three `u64`: its first eight
-/// bytes, its last eight, and the eight after the first, which with the length say the word whole.
-fn long_key(bytes: &[u8]) -> [u64; 3] {
-    let len = bytes.len();
-    let lane = |at: usize| {
-        let mut eight = [0; 8];
-        eight.copy_from_slice(&bytes[at..at + 8]);
-        u64::from_le_bytes(eight)
-    };
-    [lane(0), lane(len - 8), if len > 16 { lane(8) } else { 0 }]
 }
 
 /// One lane of ASCII with every upper-case letter made lower case, eight bytes at once.
@@ -268,82 +150,6 @@ fn lower(lane: u64) -> u64 {
     let past_z = low7 + (0x80 - u64::from(b'Z') - 1) * ONES;
     let upper = from_a & !past_z & (0x80 * ONES);
     lane | (upper >> 2)
-}
-
-/// The product of `a` and `b` with its two halves folded together.
-fn fold_mul(a: u64, b: u64) -> u64 {
-    let product = u128::from(a) * u128::from(b);
-    (product as u64) ^ ((product >> 64) as u64)
-}
-
-/// A hash of a short word's key and length: one multiply, folded, which spreads every byte of a
-/// short word over the whole result. The table is fixed and its keys are ours, so nothing here
-/// needs a hash that resists a chosen input.
-fn short_hash(key: u64, len: usize) -> usize {
-    fold_mul(
-        key ^ 0x243f_6a88_85a3_08d3 ^ len as u64,
-        0x9e37_79b9_7f4a_7c15,
-    ) as usize
-}
-
-/// A hash of a long word's key and length, in the same way.
-fn long_hash(key: &[u64; 3], len: usize) -> usize {
-    let mut hash = fold_mul(
-        key[0] ^ 0x243f_6a88_85a3_08d3 ^ len as u64,
-        0x9e37_79b9_7f4a_7c15,
-    );
-    hash = fold_mul(hash ^ key[1], 0x1319_8a2e_0370_7345);
-    hash = fold_mul(hash ^ key[2], 0xa409_3822_299f_31d1);
-    hash as usize
-}
-
-/// What the table has for the folded word of `len` bytes whose key is `key`. A bucket is full when
-/// its last slot is in use, and only then can the word be in the next.
-fn probe_short(key: u64, len: usize) -> Option<Entry> {
-    let buckets = &table().short;
-    let mask = buckets.len() - 1;
-    let mut at = short_hash(key, len) & mask;
-    loop {
-        let slots = &buckets[at].slots;
-        // All four compared at once, so that where the word is in the bucket does not cost a
-        // branch.
-        let mut found = 0;
-        for (i, slot) in slots.iter().enumerate() {
-            found |= usize::from(slot.key == key && slot.len as usize == len) << i;
-        }
-        if found != 0 {
-            let slot = &slots[found.trailing_zeros() as usize];
-            // An empty slot does not have a length, and no word is that short.
-            return (len != 0).then_some(Entry {
-                reading: slot.reading,
-                dominant: slot.dominant,
-            });
-        }
-        if slots[3].len == 0 {
-            return None;
-        }
-        at = (at + 1) & mask;
-    }
-}
-
-/// As [`probe_short`] for a long word.
-fn probe_long(key: &[u64; 3], len: usize) -> Option<Entry> {
-    let slots = &table().long;
-    let mask = slots.len() - 1;
-    let mut at = long_hash(key, len) & mask;
-    loop {
-        let slot = &slots[at];
-        if slot.len == 0 {
-            return None;
-        }
-        if slot.len as usize == len && slot.key == *key {
-            return Some(Entry {
-                reading: slot.reading,
-                dominant: slot.dominant,
-            });
-        }
-        at = (at + 1) & mask;
-    }
 }
 
 /// What the table has for the word `text`, folded as [`super::fold`] does.
@@ -493,11 +299,55 @@ pub(super) fn read(text: &str) -> Reading {
 fn miss(text: &str) -> Reading {
     if ends_in_possessive(text.as_bytes()) {
         let mut buf = [0; super::LONGEST];
-        if let Some(reading) = super::fold(text, &mut buf).and_then(lexicon::lookup) {
+        if let Some(reading) = super::fold(text, &mut buf).and_then(possessive) {
             return reading;
         }
     }
-    closed::unknown(text)
+    shape::guess(text)
+}
+
+/// The reading of `x's`, which the table lacks and which is folded, from the lexicon's `x`: its
+/// best noun or proper noun, `Unsure`, with the stem's number and the second word fused on. `None`
+/// when the lexicon does not have `x` as a noun, as the mark of the stem says.
+fn possessive(word: &str) -> Option<Reading> {
+    let stem = word.strip_suffix("'s").filter(|stem| !stem.is_empty())?;
+    let bits = stem_mark(stem)?;
+    let (noun, proper) = (bits & mark::NOUN != 0, bits & mark::PROPER != 0);
+    // The first of the two in the stem's rank order, where it has both.
+    let (tag, kept) = match (noun, proper) {
+        (true, true) if bits & mark::PROPER_FIRST != 0 => {
+            (Tag::ProperNoun, TagSet::of(Tag::ProperNoun).with(Tag::Noun))
+        }
+        (true, true) => (Tag::Noun, TagSet::of(Tag::Noun).with(Tag::ProperNoun)),
+        (true, false) => (Tag::Noun, TagSet::of(Tag::Noun)),
+        (false, true) => (Tag::ProperNoun, TagSet::of(Tag::ProperNoun)),
+        (false, false) => return None,
+    };
+    let number = if bits & mark::PLURAL != 0 {
+        Features::PLURAL
+    } else {
+        Features::SINGULAR
+    };
+    Some(Reading {
+        tag,
+        features: number.union(Features::CONTRACTION),
+        confidence: Confidence::Unsure,
+        kept,
+    })
+}
+
+/// The lexicon's mark of the folded word `stem`, or `None` if the table lacks it. A word that only
+/// the closed-class table has gets a mark of zero, which leaves its possessive to the shape.
+fn stem_mark(stem: &str) -> Option<u8> {
+    let bytes = stem.as_bytes();
+    let entry = if bytes.len() <= SHORT {
+        probe_short(short_key(bytes), bytes.len())
+    } else if bytes.len() <= KEY {
+        probe_long(&long_key(bytes), bytes.len())
+    } else {
+        None
+    };
+    entry.map(|entry| entry.mark)
 }
 
 /// Whether `bytes` end in `'s` or `S`, straight or curly: the only words the lexicon reads without
@@ -511,13 +361,22 @@ fn ends_in_possessive(bytes: &[u8]) -> bool {
 
 /// Whether the lexicon marks the word `text` dominant: see `lexicon::dominant`.
 pub(super) fn dominant(text: &str) -> bool {
-    find(text).is_some_and(|entry| entry.dominant)
+    find(text).is_some_and(|entry| entry.mark & mark::DOMINANT != 0)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::tag::{Confidence, Tag};
+
+    #[test]
+    fn the_bytes_are_what_the_tables_make() {
+        assert!(
+            crate::tag::build_tables::words() == built::WORDS,
+            "the word table in the binary is not what the closed-class table and the lexicon \
+             make: build.rs did not run again after one changed"
+        );
+    }
 
     #[test]
     fn lower_folds_ascii_letters_and_nothing_else() {
@@ -557,17 +416,28 @@ mod tests {
     #[test]
     fn every_word_of_both_tables_reads_as_its_table_says() {
         let mut count = 0;
-        for (word, reading, dominant) in lexicon::entries() {
+        for (word, reading, bits) in lexicon::entries() {
             count += 1;
             let want = closed::lookup(word).unwrap_or(reading);
             assert_eq!(read(word), want, "{word}");
+            let dominant = bits & mark::DOMINANT != 0;
             assert_eq!(super::dominant(word), dominant, "{word}");
             assert_eq!(lexicon::dominant(word), dominant, "{word}");
+            // The table holds the lexicon's mark whole, whether or not a closed-class word has
+            // taken the reading.
+            assert_eq!(stem_mark(word), Some(bits), "{word}");
         }
         assert!(count > 70_000, "{count} words");
+        let in_lexicon: std::collections::HashSet<&str> =
+            lexicon::entries().map(|(word, _, _)| word).collect();
         for word in closed::words() {
             assert_eq!(Some(read(word)), closed::lookup(word), "{word}");
             assert_eq!(super::dominant(word), lexicon::dominant(word), "{word}");
+            // A word only the closed-class table has is no stem: the lexicon lacks it.
+            let bits = stem_mark(word).expect("a closed-class word is in the table");
+            if !in_lexicon.contains(word) {
+                assert_eq!(bits, 0, "{word}");
+            }
         }
     }
 
@@ -577,7 +447,7 @@ mod tests {
         let mut buf = [0; crate::tag::LONGEST];
         super::super::fold(text, &mut buf)
             .and_then(|word| closed::lookup(word).or_else(|| lexicon::lookup(word)))
-            .unwrap_or_else(|| closed::unknown(text))
+            .unwrap_or_else(|| shape::guess(text))
     }
 
     #[test]

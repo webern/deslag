@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-17
 subsystems:
   - tag
 max_size_bytes: 4096
@@ -16,7 +16,7 @@ src/tag/
   types.rs    Tag, TagSet, Features, Confidence, Reading, Context
   table.rs    one hash table over the two tables below
   closed.rs   the closed-class table: function words, by hand
-  lexicon.rs  the open-class lexicon, from lexicon.txt (generated)
+  lexicon.rs  reads lexicon.txt (generated), for build.rs and tests
   shape.rs    a guess for a word neither table has
   pass.rs     the View a pass reads and changes, PASSES
   proper.rs infinitive.rs function.rs nounverb.rs prior.rs single.rs

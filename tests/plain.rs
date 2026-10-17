@@ -6,7 +6,7 @@ mod common;
 use std::borrow::Cow;
 use std::ops::Range;
 
-use common::corpus::load_corpus;
+use common::corpus::corpus;
 use deslag::Document;
 use deslag::document::{Block, BlockKind, Body, Edit, Piece, PieceKind, Point, PointKind, Refusal};
 
@@ -469,8 +469,7 @@ fn any_text_reads_into_layers_that_lead_back_to_it() {
 #[test]
 fn every_other_human_fixture_reads_into_layers_that_lead_back_to_it() {
     // Every other fixture of one category keeps the test short: all of them take seven seconds.
-    let corpus = load_corpus();
-    for fixture in corpus.iter().filter(|f| f.category == "human").step_by(2) {
+    for fixture in corpus().iter().filter(|f| f.category == "human").step_by(2) {
         let text = std::str::from_utf8(&fixture.bytes).expect("text");
         check(text);
     }

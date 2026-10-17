@@ -32,10 +32,12 @@
 //! **A re-tagged word** has the features its new guess keeps, as [`super::pass`] gives them to a
 //! pass that changes a guess.
 
-use std::borrow::Cow;
+use std::ops::Range;
+use std::sync::OnceLock;
 
+use super::layout::Piece;
 use super::pass::features_for;
-use super::weights::{OF_THESE_RULES, Weights, template};
+use super::weights::{OF_THESE_RULES, Part, Weights, template};
 use super::{Confidence, Origin, Reading, Tag, TagSet};
 use crate::document::{Token, TokenKind};
 
@@ -108,34 +110,70 @@ fn spelled<'t>(token: &'t Token<'_>) -> &'t str {
     }
 }
 
+/// Where a token's normal form is.
+enum Norm<'t> {
+    /// In the token's own text, or a constant.
+    Text(&'t str),
+    /// In the sentence's arena of lower-cased forms.
+    Lowered(Range<usize>),
+}
+
 /// The normal form of the token: lower case, with a year as `!YEAR` and any other form that opens
-/// with a digit as `!DIGITS`.
-fn normal<'t>(weights: &Weights, token: &'t Token<'_>) -> Cow<'t, str> {
+/// with a digit as `!DIGITS`. A form that needs lower-casing is written to the end of `arena`, so
+/// that a sentence's forms take one allocation, not one each.
+fn normal<'t>(weights: &Weights, token: &'t Token<'_>, arena: &mut String) -> Norm<'t> {
     if token.kind == TokenKind::Word {
         if let Some((_, lower)) = placeholder(token.origin) {
-            return Cow::Borrowed(lower);
+            return Norm::Text(lower);
         }
     }
     let form: &str = &token.text;
-    let Some(first) = form.chars().next() else {
-        return Cow::Borrowed("");
+    let Some(&lead) = form.as_bytes().first() else {
+        return Norm::Text("");
     };
-    if weights.is_digit(first) {
-        return Cow::Borrowed(if is_year(weights, form) {
+    // Only a character past ASCII needs the ranges of the digit tables.
+    let digit = if lead < 0x80 {
+        lead.wrapping_sub(b'0') < 10
+    } else {
+        form.chars().next().is_some_and(|c| weights.is_digit(c))
+    };
+    if digit {
+        return Norm::Text(if is_year(weights, form) {
             "!YEAR"
         } else {
             "!DIGITS"
         });
     }
-    if form.is_ascii() {
-        if form.bytes().any(|byte| byte.is_ascii_uppercase()) {
-            Cow::Owned(form.to_ascii_lowercase())
-        } else {
-            Cow::Borrowed(form)
+    let start = arena.len();
+    // One pass over the bytes says whether the form is ASCII and whether it has a capital.
+    let bytes = form.as_bytes();
+    let (mut ascii, mut upper) = (true, false);
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        if byte >= 0x80 {
+            ascii = false;
+            break;
         }
-    } else {
-        Cow::Owned(form.to_lowercase())
+        upper |= byte.wrapping_sub(b'A') < 26;
+        at += 1;
     }
+    if ascii {
+        if !upper {
+            return Norm::Text(form);
+        }
+        arena.push_str(form);
+        arena[start..].make_ascii_lowercase();
+    } else if form.contains('\u{3a3}') {
+        // A capital sigma is lower case by where it stands in the word, which `str` knows.
+        arena.push_str(&form.to_lowercase());
+    } else {
+        // Without a sigma, `str::to_lowercase` is `char::to_lowercase` of each character.
+        for c in form.chars() {
+            arena.extend(c.to_lowercase());
+        }
+    }
+    Norm::Lowered(start..arena.len())
 }
 
 /// Whether `form` is four decimal digits making a number from 1800 to 2100.
@@ -159,6 +197,37 @@ fn is_year(weights: &Weights, form: &str) -> bool {
 /// other character as it is, and a run of one kind as one.
 fn shape(weights: &Weights, form: &str, out: &mut String) {
     out.clear();
+    let bytes = form.as_bytes();
+    // No ASCII byte is 0xff, so it says no kind came before.
+    let mut last = 0xff;
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        if byte >= 0x80 {
+            // Past ASCII, the character tables say the kind of each character.
+            out.clear();
+            shape_of_characters(weights, form, out);
+            return;
+        }
+        let kind = if byte.wrapping_sub(b'A') < 26 {
+            b'X'
+        } else if byte.wrapping_sub(b'a') < 26 {
+            b'x'
+        } else if byte.wrapping_sub(b'0') < 10 {
+            b'd'
+        } else {
+            byte
+        };
+        if kind != last {
+            out.push(char::from(kind));
+            last = kind;
+        }
+        at += 1;
+    }
+}
+
+/// [`shape`] of a form that has a character past ASCII.
+fn shape_of_characters(weights: &Weights, form: &str, out: &mut String) {
     let mut last = None;
     for c in form.chars() {
         let kind = if c.is_uppercase() {
@@ -177,215 +246,269 @@ fn shape(weights: &Weights, form: &str, out: &mut String) {
     }
 }
 
-/// The last `count` characters of `text`, or all of it if it is shorter.
-#[inline]
-fn tail(text: &str, count: usize) -> &str {
-    if text.is_ascii() {
-        return &text[text.len().saturating_sub(count)..];
-    }
-    let mut start = text.len();
-    let mut chars = text.char_indices().rev();
-    for _ in 0..count {
-        match chars.next() {
-            Some((at, _)) => start = at,
-            None => break,
+/// What the features read of one normal form: the form, its last one, two and three characters
+/// and its first, each with its hash. A sentence makes these once for each word, and a feature of
+/// the word or of a neighbour reads the one made.
+#[derive(Clone, Copy)]
+struct Form<'s> {
+    norm: Part<'s>,
+    suffix_1: Part<'s>,
+    suffix_2: Part<'s>,
+    suffix_3: Part<'s>,
+    prefix_1: Part<'s>,
+    /// Whether the form begins `n+1 ` or `n `, which [`Weights::text`] reads as the string of
+    /// another template if a space follows. Such a form takes that slow path, with no hash made
+    /// ahead.
+    lead: bool,
+}
+
+impl<'s> Form<'s> {
+    /// The form of the normal form `text`.
+    fn of(text: &'s str) -> Form<'s> {
+        let bytes = text.as_bytes();
+        // One pass from the end hashes the whole text and each of its last three characters: a
+        // character starts at a byte that is not a continuation byte.
+        let mut piece = Piece::EMPTY;
+        let mut starts = [0; 3];
+        let mut pieces = [Piece::EMPTY; 3];
+        let mut chars = 0;
+        let mut at = bytes.len();
+        while at > 0 {
+            at -= 1;
+            piece = piece.with_front(bytes[at]);
+            if bytes[at] & 0xc0 != 0x80 {
+                if chars < 3 {
+                    starts[chars] = at;
+                    pieces[chars] = piece;
+                }
+                chars += 1;
+            }
+        }
+        // A text of fewer characters is its own last three.
+        while chars < 3 {
+            pieces[chars] = piece;
+            chars += 1;
+        }
+        // The first character is as long as its first byte says.
+        let first = match bytes.first() {
+            None => 0,
+            Some(&byte) if byte < 0xc0 => 1,
+            Some(&byte) if byte < 0xe0 => 2,
+            Some(&byte) if byte < 0xf0 => 3,
+            Some(_) => 4,
+        };
+        let suffix = |n: usize| Part {
+            text: &text[starts[n]..],
+            piece: pieces[n],
+        };
+        Form {
+            norm: Part { text, piece },
+            suffix_1: suffix(0),
+            suffix_2: suffix(1),
+            suffix_3: suffix(2),
+            prefix_1: Part::of(&text[..first]),
+            lead: bytes.len() >= 2
+                && bytes[0] == b'n'
+                && (bytes[1] == b' '
+                    || (bytes.len() >= 4
+                        && bytes[1] == b'+'
+                        && bytes[2] == b'1'
+                        && bytes[3] == b' ')),
         }
     }
-    &text[start..]
 }
 
-/// The first character of `text`, or nothing.
-#[inline]
-fn head(text: &str) -> &str {
-    match text.chars().next() {
-        Some(c) => &text[..c.len_utf8()],
-        None => "",
-    }
+/// The forms of the pads around a sentence: two before and two after.
+fn pads() -> &'static ([Form<'static>; 2], [Form<'static>; 2]) {
+    static PADS: OnceLock<([Form<'static>; 2], [Form<'static>; 2])> = OnceLock::new();
+    PADS.get_or_init(|| (PAD_BEFORE.map(Form::of), PAD_AFTER.map(Form::of)))
 }
 
-/// The set of tags as the bits of their places in [`ALPHA`].
-fn bits(tags: TagSet) -> u16 {
+/// The bits of a set of tags as [`TagSet::bits`] holds them, in the order of [`Tag::ALL`], moved to
+/// the places of [`ALPHA`].
+const fn spread(raw: u16) -> u16 {
     let mut bits = 0;
-    for (at, tag) in ALPHA.iter().enumerate() {
-        if tags.contains(*tag) {
-            bits |= 1 << at;
+    let mut tag = 0;
+    while tag < 13 {
+        if raw >> tag & 1 != 0 {
+            bits |= 1 << PLACE[tag];
         }
+        tag += 1;
     }
     bits
 }
 
-/// Adds the totals in `cells` to `scores`, by place.
-#[inline]
-fn add(scores: &mut [i64; 13], cells: &[i32]) {
-    for &cell in cells {
-        scores[(cell & 15) as usize] += i64::from(cell >> 4);
+/// [`spread`] of each value of the low byte, and of the high byte.
+const SPREAD_LOW: [u16; 256] = {
+    let mut table = [0; 256];
+    let mut raw = 0;
+    while raw < 256 {
+        table[raw] = spread(raw as u16);
+        raw += 1;
     }
+    table
+};
+const SPREAD_HIGH: [u16; 32] = {
+    let mut table = [0; 32];
+    let mut raw = 0;
+    while raw < 32 {
+        table[raw] = spread((raw as u16) << 8);
+        raw += 1;
+    }
+    table
+};
+
+/// The set of tags as the bits of their places in [`ALPHA`].
+#[inline]
+fn bits(tags: TagSet) -> u16 {
+    let raw = tags.bits();
+    SPREAD_LOW[usize::from(raw & 0xff)] | SPREAD_HIGH[usize::from(raw >> 8)]
 }
 
-/// What the features of one word read: the sentence's normal forms, padded by two on each side
-/// so that a neighbour is a lookup with no bounds to check, the word, and the previous tags.
+/// What the features of one word read: the sentence's forms, padded by two on each side so that a
+/// neighbour is a lookup with no bounds to check, the word, and the previous tags.
 struct Word<'s> {
-    norms: &'s [Cow<'s, str>],
-    /// The index of the word's normal form in `norms`.
+    forms: &'s [Form<'s>],
+    /// The index of the word's form in `forms`.
     at: usize,
     form: &'s str,
     shape: &'s str,
     previous: u16,
     before_previous: u16,
     reading: Reading,
+    /// The places of the tags the rules kept.
+    open: u16,
 }
 
-/// The scores of the 13 tags, by place, for the word.
+/// Adds to `scores` the totals, for the places in `open`, of the feature with this template, first
+/// integer and text.
+#[inline(always)]
+fn scores_of(
+    weights: &Weights,
+    open: u16,
+    template: u8,
+    a: u16,
+    text: Part<'_>,
+    scores: &mut [i64; 13],
+) {
+    weights.probe(template, a, 0, text).add_to(open, scores);
+}
+
+/// The scores of the tags the rules kept, by place, for the word. The scores of the other places
+/// are not summed: [`decide`] reads none of them.
 fn score(weights: &Weights, word: &Word<'_>) -> [i64; 13] {
-    let norms = word.norms;
-    let norm: &str = &norms[word.at];
-    let before: &str = &norms[word.at - 1];
-    let before_2: &str = &norms[word.at - 2];
-    let after: &str = &norms[word.at + 1];
-    let after_2: &str = &norms[word.at + 2];
+    let forms = word.forms;
+    let this = &forms[word.at];
+    let before = &forms[word.at - 1];
+    let before_2 = &forms[word.at - 2];
+    let after = &forms[word.at + 1];
+    let after_2 = &forms[word.at + 2];
     let (h1, h2) = (word.previous, word.before_previous);
     let reading = word.reading;
     let tag = place(reading.tag);
     let level = reading.confidence.index() as u8;
-    let mut scores = weights.bias;
-    add(
-        &mut scores,
-        weights.find(template::FORM, 0, 0, word.form, None),
+    // The places of the tags still possible, and so the places to sum. Their set is also the
+    // value of the feature `d kept`.
+    let open = word.open;
+    // The bias and the features of the previous tags, and those of the rules' tag and confidence,
+    // have no text, so the weights hold them as sums, one row for each of their values.
+    let mut scores = weights.history(h1, h2);
+    let rules = weights.rules(tag, level);
+    let mut places = open;
+    while places != 0 {
+        let at = places.trailing_zeros() as usize;
+        places &= places - 1;
+        scores[at] += rules[at];
+    }
+    let shape = Part::of(word.shape);
+    let spelled = Part::of(word.form);
+    let s = &mut scores;
+    scores_of(weights, open, template::FORM, 0, spelled, s);
+    // The strings of `n` and `n-1` that begin as another template's take the slow path.
+    if this.lead {
+        weights.text(template::NORM, this.norm.text).add_to(open, s);
+    } else {
+        scores_of(weights, open, template::NORM, 0, this.norm, s);
+    }
+    scores_of(weights, open, template::SUFFIX_1, 0, this.suffix_1, s);
+    scores_of(weights, open, template::SUFFIX_2, 0, this.suffix_2, s);
+    scores_of(weights, open, template::SUFFIX_3, 0, this.suffix_3, s);
+    scores_of(weights, open, template::PREFIX_1, 0, this.prefix_1, s);
+    scores_of(weights, open, template::SHAPE, 0, shape, s);
+    scores_of(weights, open, template::PREVIOUS_NORM, h1, this.norm, s);
+    if before.lead {
+        weights
+            .text(template::BEFORE, before.norm.text)
+            .add_to(open, s);
+    } else {
+        scores_of(weights, open, template::BEFORE, 0, before.norm, s);
+    }
+    scores_of(
+        weights,
+        open,
+        template::BEFORE_SUFFIX_3,
+        0,
+        before.suffix_3,
+        s,
     );
-    add(&mut scores, weights.text(template::NORM, norm));
-    add(
-        &mut scores,
-        weights.find(template::SUFFIX_1, 0, 0, tail(norm, 1), None),
+    scores_of(weights, open, template::BEFORE_2, 0, before_2.norm, s);
+    scores_of(weights, open, template::AFTER, 0, after.norm, s);
+    scores_of(
+        weights,
+        open,
+        template::AFTER_SUFFIX_3,
+        0,
+        after.suffix_3,
+        s,
     );
-    add(
-        &mut scores,
-        weights.find(template::SUFFIX_2, 0, 0, tail(norm, 2), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::SUFFIX_3, 0, 0, tail(norm, 3), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREFIX_1, 0, 0, head(norm), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::SHAPE, 0, 0, word.shape, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS, h1, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_2, h2, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_PAIR, h1, h2 as u8, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_NORM, h1, 0, norm, None),
-    );
-    add(&mut scores, weights.text(template::BEFORE, before));
-    add(
-        &mut scores,
-        weights.find(template::BEFORE_SUFFIX_3, 0, 0, tail(before, 3), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::BEFORE_2, 0, 0, before_2, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::AFTER, 0, 0, after, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::AFTER_SUFFIX_3, 0, 0, tail(after, 3), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::AFTER_2, 0, 0, after_2, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::BEFORE_NORM, 0, 0, before, Some(norm)),
-    );
-    add(
-        &mut scores,
-        weights.find(template::NORM_AFTER, 0, 0, norm, Some(after)),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_SHAPE, h1, 0, word.shape, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::RULES_TAG, tag, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::RULES_CONFIDENCE, u16::from(level), 0, "", None),
-    );
-    let kept = bits(reading.possible());
-    add(
-        &mut scores,
-        weights.find(template::RULES_KEPT, kept, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::RULES_TAG_CONFIDENCE, tag, level, "", None),
-    );
+    scores_of(weights, open, template::AFTER_2, 0, after_2.norm, s);
+    let pair = weights.probe_pair(template::BEFORE_NORM, 0, 0, before.norm, this.norm);
+    pair.add_to(open, s);
+    let pair = weights.probe_pair(template::NORM_AFTER, 0, 0, this.norm, after.norm);
+    pair.add_to(open, s);
+    scores_of(weights, open, template::PREVIOUS_SHAPE, h1, shape, s);
+    scores_of(weights, open, template::RULES_KEPT, open, Part::of(""), s);
     scores
 }
 
-/// The tags among `candidates` whose score is within `width` of `top`.
-fn within(candidates: TagSet, scores: &[i64; 13], top: i64, width: i64) -> TagSet {
+/// The tags among the places in `open` whose score is within `width` of `top`.
+fn within(open: u16, scores: &[i64; 13], top: i64, width: i64) -> TagSet {
     let mut kept = TagSet::EMPTY;
-    for (at, tag) in ALPHA.iter().enumerate() {
-        if candidates.contains(*tag) && top - scores[at] <= width {
-            kept = kept.with(*tag);
+    let mut at = 0;
+    while at < 13 {
+        if open >> at & 1 != 0 && top - scores[at] <= width {
+            kept = kept.with(ALPHA[at]);
         }
+        at += 1;
     }
     kept
 }
 
-/// The learned reading of a word whose rules reading is `old`, given its scores. `candidates`
-/// holds at least two tags. `known` says the model has seen the word's normal form; it is read only
-/// for a word the rules call `Unknown`.
-fn decide(
-    weights: &Weights,
-    old: Reading,
-    candidates: TagSet,
-    scores: &[i64; 13],
-    known: bool,
-) -> Reading {
+/// The learned reading of a word whose rules reading is `old`, given its scores. `open` holds the
+/// places of at least two tags. `known` says the model has seen the word's normal form; it is read
+/// only for a word the rules call `Unknown`.
+fn decide(weights: &Weights, old: Reading, open: u16, scores: &[i64; 13], known: bool) -> Reading {
     let (mut top, mut second) = (i64::MIN, i64::MIN);
     let mut best = 0;
-    for (at, tag) in ALPHA.iter().enumerate() {
-        if !candidates.contains(*tag) {
-            continue;
+    let mut at = 0;
+    while at < 13 {
+        if open >> at & 1 != 0 {
+            let score = scores[at];
+            if score > top {
+                second = top;
+                top = score;
+                best = at;
+            } else if score > second {
+                second = score;
+            }
         }
-        let score = scores[at];
-        if score > top {
-            second = top;
-            top = score;
-            best = at;
-        } else if score > second {
-            second = score;
-        }
+        at += 1;
     }
     let tag = ALPHA[best];
     let margin = top - second;
     let cutoffs = weights.cutoffs;
     let (confidence, kept) = if !known && old.confidence == Confidence::Unknown {
-        (
-            Confidence::Unknown,
-            within(candidates, scores, top, cutoffs.kept),
-        )
+        (Confidence::Unknown, within(open, scores, top, cutoffs.kept))
     } else if margin >= cutoffs.sure {
         (Confidence::Sure, TagSet::of(tag))
     } else if margin < cutoffs.unsure {
@@ -394,7 +517,7 @@ fn decide(
             (Confidence::Likely, old.possible())
         } else {
             let width = cutoffs.kept.max(cutoffs.unsure);
-            (Confidence::Unsure, within(candidates, scores, top, width))
+            (Confidence::Unsure, within(open, scores, top, width))
         }
     } else {
         (Confidence::Likely, TagSet::of(tag))
@@ -416,10 +539,38 @@ pub(super) fn run(tokens: &mut [Token<'_>]) {
     if !OF_THESE_RULES {
         return;
     }
+    // A word the rules left no choice about keeps its reading. A sentence with none has nothing to
+    // score.
+    let choice = |token: &Token<'_>| match (token.kind, token.reading) {
+        (TokenKind::Word, Some(old)) => {
+            old.confidence != Confidence::Sure && old.possible().len() >= 2
+        }
+        _ => false,
+    };
+    if !tokens.iter().any(choice) {
+        return;
+    }
     let mut changes: Vec<(usize, Reading)> = Vec::new();
     {
         let tokens: &[Token<'_>] = tokens;
-        let mut norms: Vec<Cow<'_, str>> = Vec::new();
+        let weights = Weights::get();
+        // The sentence's normal forms: the ones that change case are written to one arena first,
+        // and the forms are made once it stops growing.
+        let mut arena = String::new();
+        let norms: Vec<Norm<'_>> = tokens
+            .iter()
+            .map(|token| normal(weights, token, &mut arena))
+            .collect();
+        let (pad_before, pad_after) = pads();
+        let mut forms: Vec<Form<'_>> = Vec::with_capacity(tokens.len() + 4);
+        forms.extend_from_slice(pad_before);
+        for norm in &norms {
+            forms.push(Form::of(match norm {
+                Norm::Text(text) => text,
+                Norm::Lowered(range) => &arena[range.clone()],
+            }));
+        }
+        forms.extend_from_slice(pad_after);
         let mut shaped = String::new();
         let (mut previous, mut before_previous) = (START, START_2);
         for (at, token) in tokens.iter().enumerate() {
@@ -429,27 +580,23 @@ pub(super) fn run(tokens: &mut [Token<'_>]) {
                     if old.confidence == Confidence::Sure || candidates.len() < 2 {
                         place(old.tag)
                     } else {
-                        let weights = Weights::get();
-                        if norms.is_empty() {
-                            norms.extend(PAD_BEFORE.map(Cow::Borrowed));
-                            norms.extend(tokens.iter().map(|token| normal(weights, token)));
-                            norms.extend(PAD_AFTER.map(Cow::Borrowed));
-                        }
                         shape(weights, &token.text, &mut shaped);
+                        let open = bits(candidates);
                         let word = Word {
-                            norms: &norms,
+                            forms: &forms,
                             at: at + 2,
                             form: spelled(token),
                             shape: &shaped,
                             previous,
                             before_previous,
                             reading: old,
+                            open,
                         };
                         let scores = score(weights, &word);
                         // Only a word the rules call `Unknown` asks whether the model knows it.
-                        let known =
-                            old.confidence != Confidence::Unknown || weights.knows(&norms[at + 2]);
-                        let new = decide(weights, old, candidates, &scores, known);
+                        let known = old.confidence != Confidence::Unknown
+                            || weights.knows(forms[at + 2].norm.text);
+                        let new = decide(weights, old, open, &scores, known);
                         changes.push((at, new));
                         place(new.tag)
                     }
@@ -467,6 +614,8 @@ pub(super) fn run(tokens: &mut [Token<'_>]) {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
+
     use super::*;
     use crate::tag::weights::Cutoffs;
     use crate::tag::{Context, sentence_by_rules};
@@ -515,7 +664,11 @@ mod tests {
                 reading: None,
                 origin: Origin::English,
             };
-            normal(weights, &token).into_owned()
+            let mut arena = String::new();
+            match normal(weights, &token, &mut arena) {
+                Norm::Text(text) => text.to_string(),
+                Norm::Lowered(range) => arena[range].to_string(),
+            }
         };
         assert_eq!(norm("1999"), "!YEAR");
         assert_eq!(norm("2100"), "!YEAR");
@@ -529,6 +682,39 @@ mod tests {
         // A superscript is a digit but not a decimal one, and a half is neither.
         assert_eq!(norm("\u{b2}"), "!DIGITS");
         assert_eq!(norm("\u{bd}x"), "\u{bd}x");
+        // Lower case is `str::to_lowercase`, with its final sigma, whatever the text.
+        for text in [
+            "WORD",
+            "MixedCase",
+            "\u{3a3}\u{391}\u{3a3}",
+            "\u{39f}\u{394}\u{3a5}\u{3a3}\u{3a3}\u{395}\u{3a5}\u{3a3}",
+            "\u{130}stanbul",
+            "\u{1c5}x",
+            "\u{c0}\u{c9}\u{ce}",
+            "R\u{e9}sum\u{e9}",
+        ] {
+            assert_eq!(norm(text), text.to_lowercase(), "{text}");
+        }
+    }
+
+    #[test]
+    fn the_forms_of_a_sentence_share_one_arena() {
+        let weights = Weights::get();
+        let tokens = Token::split("The Quick BROWN fox");
+        let mut arena = String::new();
+        let norms: Vec<Norm<'_>> = tokens
+            .iter()
+            .map(|token| normal(weights, token, &mut arena))
+            .collect();
+        let lowered: Vec<&str> = norms
+            .iter()
+            .filter_map(|norm| match norm {
+                Norm::Lowered(range) => Some(&arena[range.clone()]),
+                Norm::Text(_) => None,
+            })
+            .collect();
+        assert_eq!(lowered, ["the", "quick", "brown"]);
+        assert_eq!(arena, "thequickbrown");
     }
 
     #[test]
@@ -543,6 +729,62 @@ mod tests {
         assert_eq!(shape_of("v2.1"), "xd.d");
         assert_eq!(shape_of("\u{663}\u{664}"), "d");
         assert_eq!(shape_of("\u{b2}x"), "dx");
+    }
+
+    /// The last `count` characters of `text`, or all of it if it is shorter.
+    fn tail(text: &str, count: usize) -> &str {
+        let mut start = text.len();
+        let mut chars = text.char_indices().rev();
+        for _ in 0..count {
+            match chars.next() {
+                Some((at, _)) => start = at,
+                None => break,
+            }
+        }
+        &text[start..]
+    }
+
+    /// The first character of `text`, or nothing.
+    fn head(text: &str) -> &str {
+        match text.chars().next() {
+            Some(c) => &text[..c.len_utf8()],
+            None => "",
+        }
+    }
+
+    #[test]
+    fn a_form_holds_the_affixes_the_features_read_and_their_hashes() {
+        for text in [
+            "",
+            "a",
+            "go",
+            "the",
+            "running",
+            "-START-",
+            "!YEAR",
+            "na\u{ef}ve",
+            "\u{e9}t\u{e9}",
+            "\u{1f980}x\u{1f980}",
+            "\u{3c3}\u{3b1}\u{3c2}",
+            "n+1 foo",
+            "n bar",
+            "nn",
+        ] {
+            let form = Form::of(text);
+            let parts = [
+                (form.norm, text),
+                (form.suffix_1, tail(text, 1)),
+                (form.suffix_2, tail(text, 2)),
+                (form.suffix_3, tail(text, 3)),
+                (form.prefix_1, head(text)),
+            ];
+            for (part, want) in parts {
+                assert_eq!(part.text, want, "{text:?}");
+                assert_eq!(part.piece, Piece::of(want.as_bytes()), "{text:?} {want:?}");
+            }
+            let lead = text.starts_with("n+1 ") || text.starts_with("n ");
+            assert_eq!(form.lead, lead, "{text:?}");
+        }
     }
 
     #[test]
@@ -626,7 +868,7 @@ mod tests {
         };
         let tags = TagSet::of(Tag::Adjective).with(Tag::Noun).with(Tag::Verb);
         let decide_with = |old: Reading, scores: &[i64; 13], known: bool| {
-            decide(weights, old, tags, scores, known)
+            decide(weights, old, bits(tags), scores, known)
         };
         let unsure_word = old(Tag::Noun, Confidence::Unsure, &[Tag::Verb, Tag::Adjective]);
         // A margin at the Sure cutoff is Sure, one short of it Likely.

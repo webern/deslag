@@ -1,0 +1,17 @@
+kind = "setting"
+id = "cpp.overrides[].exclude"
+summary = "Spares files from an override that its globs match"
+onboarding = '''
+`exclude` in an `[[cpp.overrides]]` entry lists the files that the entry's `globs` match and the
+override does not apply to. They keep the settings of [cpp] and of the overrides that do match. A
+pattern is written as in `globs`, and an override still has to write its `globs`. The exclude only
+removes files: it does not change how specific the override is, and it cannot bring back a file
+[cpp] does not select. Only a human adds an exclude: never add one to make a check pass.
+
+```toml
+[[cpp.overrides]]
+globs = ["/src/**/*.cc"]
+exclude = ["/src/api/**"]
+lints.banned_phrases = {}
+```
+'''

@@ -1,0 +1,18 @@
+kind = "setting"
+id = "toml.exclude"
+summary = "Leaves files out of [toml] that its globs match"
+onboarding = '''
+`toml.exclude` lists the files that `toml.globs` match and [toml] leaves out, such as generated
+code. A pattern is written as in `globs`: one holding a `/` matches the path from the repo root, one
+without matches the file name in any directory. It does not have to end in `.toml`. With no
+`exclude`, nothing is left out.
+
+A file that git or a `.ignore` file ignores stays unread, and nothing re-includes a file. An exclude
+hides a file from every lint, so only a human adds one: never add one to make a check pass.
+
+```toml
+[toml]
+globs = ["/tools/**/*.toml"]
+exclude = ["/tools/sweep/**"]
+```
+'''

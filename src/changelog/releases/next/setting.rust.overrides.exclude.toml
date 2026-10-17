@@ -1,0 +1,17 @@
+kind = "setting"
+id = "rust.overrides[].exclude"
+summary = "Spares files from an override that its globs match"
+onboarding = '''
+`exclude` in an `[[rust.overrides]]` entry lists the files that the entry's `globs` match and the
+override does not apply to. They keep the settings of [rust] and of the overrides that do match. A
+pattern is written as in `globs`, and an override still has to write its `globs`. The exclude only
+removes files: it does not change how specific the override is, and it cannot bring back a file
+[rust] does not select. Only a human adds an exclude: never add one to make a check pass.
+
+```toml
+[[rust.overrides]]
+globs = ["/src/**/*.rs"]
+exclude = ["/src/api/**"]
+lints.banned_phrases = {}
+```
+'''

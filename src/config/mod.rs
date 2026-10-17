@@ -399,7 +399,8 @@ impl Config {
         Err(Error::Setting {
             path: self.path.display().to_string(),
             message: format!(
-                "{rel_path} is selected by {who}; narrow their globs so that one of them selects it"
+                "{rel_path} is selected by {who}; narrow their globs so that one of them selects \
+                 it, or exclude it from one of them"
             ),
         })
     }
@@ -427,8 +428,17 @@ impl Config {
     }
 
     /// Why no section selects `rel_path`, as a line for `deslag explain` to print: the section
-    /// that reads files of its extension, and whether the config has it.
+    /// whose exclude drops it and the pattern, else the section that reads files of its extension
+    /// and whether the config has it.
     pub(crate) fn unselected(&self, rel_path: &str) -> String {
+        let excluded = self.sections.iter().find_map(|section| {
+            section
+                .excluded_by(rel_path)
+                .map(|pattern| (section.name(), pattern))
+        });
+        if let Some((name, pattern)) = excluded {
+            return format!("no section; [{name}] excludes it by {:?}", pattern.as_str());
+        }
         match reading_section(rel_path) {
             None => "no section, so deslag check never reads it".to_string(),
             Some((name, extension)) if self.sections.iter().any(|s| s.name() == name) => {
@@ -529,6 +539,7 @@ mod tests {
         let everything = |name| {
             let parts = Parts {
                 globs: Some(vec!["**".to_string()]),
+                exclude: Vec::new(),
                 default_globs: &[],
                 extensions: None,
                 stack: Stack::new(Reader::Markdown {
@@ -550,6 +561,88 @@ mod tests {
         assert!(
             said.contains("a.c is selected by [md], [rust] and [cpp];"),
             "{said}"
+        );
+    }
+
+    fn load_toml(text: &str) -> Config {
+        Config::parse(
+            &format!("schema_version = 1\n{text}"),
+            PathBuf::from("deslag.toml"),
+            ConfigSource::Explicit,
+        )
+        .unwrap_or_else(|error| panic!("{text}: {error}"))
+    }
+
+    /// Two sections that select a file are told to exclude it from one, and doing so settles it.
+    #[test]
+    fn excluding_a_file_from_one_of_two_sections_leaves_the_other_to_read_it() {
+        let both = "[md]\nglobs = [\"**\"]\n[rust]\n";
+        let said = load_toml(both)
+            .sole_section_for("src/lib.rs")
+            .expect_err("two sections select it")
+            .to_string();
+        assert!(
+            said.contains(
+                "src/lib.rs is selected by both [md] and [rust]; narrow their globs so that one \
+                 of them selects it, or exclude it from one of them"
+            ),
+            "{said}"
+        );
+
+        let config = load_toml(&format!("{both}exclude = [\"/src/lib.rs\"]\n"));
+        let md = config.sole_section_for("src/lib.rs").expect("one section");
+        assert_eq!(md.map(Section::name), Some("md"));
+        let config = load_toml("[md]\nglobs = [\"**\"]\nexclude = [\"*.rs\"]\n[rust]\n");
+        let rust = config.sole_section_for("src/lib.rs").expect("one section");
+        assert_eq!(rust.map(Section::name), Some("rust"));
+    }
+
+    /// A file named on its own is read by the section for its extension when none selects it, as
+    /// before; an exclude drops it from the walk and nothing more.
+    #[test]
+    fn a_path_a_section_excludes_is_read_by_extension_when_named_on_its_own() {
+        let config = load_toml(
+            "[md]\nexclude = [\"/docs/adr/**\"]\n[rust]\nexclude = [\"/src/proto/**\"]\n",
+        );
+        for (path, name) in [
+            ("src/proto/gen.rs", "rust"),
+            ("src/lib.rs", "rust"),
+            ("docs/adr/0001.md", "md"),
+            ("docs/adr/notes.txt", "md"),
+        ] {
+            let section = config.section_to_read(path).expect("a section");
+            assert_eq!(section.name(), name, "{path}");
+        }
+        assert!(
+            config
+                .sole_section_for("src/proto/gen.rs")
+                .expect("ok")
+                .is_none()
+        );
+    }
+
+    /// The line `explain` prints for a file no section selects names an exclude that drops it.
+    #[test]
+    fn an_unselected_path_names_the_section_and_pattern_that_exclude_it() {
+        let config = load_toml(
+            "[md]\nexclude = [\"/docs/adr/**\"]\n[rust]\nexclude = [\"/src/proto/**\"]\n",
+        );
+        assert_eq!(
+            config.unselected("src/proto/gen.rs"),
+            "no section; [rust] excludes it by \"/src/proto/**\""
+        );
+        assert_eq!(
+            config.unselected("docs/adr/0001.md"),
+            "no section; [md] excludes it by \"/docs/adr/**\""
+        );
+        // A path no exclude touches is still told why as before.
+        assert_eq!(
+            config.unselected("notes.txt"),
+            "no section, so deslag check never reads it"
+        );
+        assert_eq!(
+            config.unselected("src/a.c"),
+            "no section; add a [cpp] section to read .c files"
         );
     }
 }

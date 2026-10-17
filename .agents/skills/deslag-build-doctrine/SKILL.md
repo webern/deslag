@@ -69,7 +69,7 @@ Target names start with a verb. The vocabulary:
 - test: runs tests
 - clean: deletes build, test and other artifacts; everything the Makefile creates is cleanable
 
-`ci`, which the release calls and the ci workflow runs as parallel jobs, and `ci-fast`, the
+`ci`, which the release calls and the ci workflow splits into parallel jobs, and `ci-fast`, the
 pre-push gate of about 20 seconds, are the non-verb targets. Neither runs everything; `test-python`
 has its own workflow.
 

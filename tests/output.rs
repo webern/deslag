@@ -26,6 +26,8 @@ max_percent = 0
 min_entries = 2
 max_entries = 2
 
+[md.lints.repo_commands]
+
 [md.lints.banned_chars]
 
 [md.lints.banned_phrases.ban]
@@ -55,6 +57,8 @@ A paragraph that runs on well past sixty characters, which is the limit here.
 
 It ships no binary.
 
+Run `make nope` to see.
+
 - An item the change adds.
 ";
 
@@ -65,6 +69,7 @@ const ESCAPED: &str = "a, b: 100%.md";
 fn failing() -> Repo {
     let repo = Repo::new();
     repo.write("deslag.toml", CONFIG);
+    repo.write("Makefile", "build:\n\t@true\n");
     repo.write(ESCAPED, "# All\n");
     repo.write(
         "docs/big.md",

@@ -25,7 +25,7 @@ use crate::change::Change;
 use crate::config::{Config, Section};
 use crate::document::{Edit, Refusal};
 use crate::glob::{self, RepoFile};
-use crate::lint::{self, Judging, Mark, on_lines};
+use crate::lint::{self, Disk, Judging, Mark, on_lines};
 
 /// What fix did, or would do, to one file.
 #[derive(Debug, Clone, PartialEq)]
@@ -87,8 +87,11 @@ pub fn fix(
     for (file, section) in chosen(root, config, paths)? {
         let outcome = match String::from_utf8(lint::read(&file)?) {
             Ok(text) => {
-                let dir = file.absolute.parent().unwrap_or(root);
-                passes(config, section, &file.relative, text, dir, change)?
+                let disk = Disk {
+                    dir: file.absolute.parent().unwrap_or(root),
+                    root: Some(root),
+                };
+                passes(config, section, &file.relative, text, disk, change)?
             }
             Err(_) => Outcome::NotUtf8,
         };
@@ -211,14 +214,14 @@ fn chosen<'c>(
     Ok(chosen)
 }
 
-/// Fixes `text`, the contents of the file at `relative` in `dir`, in passes until one does not make
-/// an edit.
+/// Fixes `text`, the contents of the file at `relative` and `disk`, in passes until one does not
+/// make an edit.
 fn passes(
     config: &Config,
     section: &Section,
     relative: &str,
     mut text: String,
-    dir: &Path,
+    disk: Disk<'_>,
     change: Option<&Change>,
 ) -> Result<Outcome, Error> {
     let unsettled = |problem: String| Error::Fix {
@@ -235,7 +238,7 @@ fn passes(
             relative,
             text.as_bytes(),
             &text,
-            dir,
+            disk,
             Judging {
                 change,
                 phrases_at: &stamp,

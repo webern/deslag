@@ -1,0 +1,16 @@
+kind = "lint"
+id = "repo_commands"
+keys = ["message"]
+summary = "Fails a file that runs a make target that no Makefile defines"
+onboarding = '''
+`repo_commands` fails a file that tells an agent to run a `make` target that no Makefile defines. A
+claim is a call of `make` or `gmake` with a target, in a shell block or in a code span that is that
+one call alone, such as `make ci`. deslag reads Makefiles and what they include, and never runs
+make. It passes what it cannot tell: no Makefile, a `cd` it cannot follow, a target that is a
+variable. It suits AGENTS.md and README.md; turn it on for every file `[md]` selects, or in an
+override.
+
+```toml
+[md.lints.repo_commands]
+```
+'''

@@ -23,6 +23,7 @@ use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayou
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
+use deslag::lint::repo_commands::{self, Shape};
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis, verbs_no_nouns};
 use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
@@ -784,6 +785,100 @@ fn the_corpus_layouts_read_from_the_text_alone() {
     assert_eq!(layout.malformed, vec![], "{layout:?}");
 }
 
+#[test]
+fn the_corpus_commands_read_from_the_text_alone() {
+    let fixtures = corpus();
+    // Per category: files with a claim, claims, targets, spans.
+    let mut counts: BTreeMap<&str, [usize; 4]> = BTreeMap::new();
+    let (mut blocks, mut calls, mut refused) = (0, 0, 0);
+
+    for fixture in fixtures {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        let path = fixture.path.as_str();
+        let reading = repo_commands::read(&Document::markdown(&text));
+        blocks += reading.blocks;
+        calls += reading.calls;
+        refused += reading.refused.len();
+        assert!(reading.claims.len() <= reading.calls, "{path}");
+
+        for claim in &reading.claims {
+            let call = held(&text, &claim.call, path);
+            assert!(call.contains("make"), "{path}: {call}");
+            assert!(!claim.targets.is_empty(), "{path}: {claim:?}");
+            if claim.shape == Shape::Span {
+                assert!(
+                    call.starts_with('`') && call.ends_with('`'),
+                    "{path}: {call}"
+                );
+            }
+            for target in &claim.targets {
+                let word = held(&text, &target.location, path);
+                assert!(
+                    (claim.call.start..=claim.call.end).contains(&target.location.start)
+                        && target.location.end <= claim.call.end,
+                    "{path}: {target:?} is outside {claim:?}"
+                );
+                if claim.shape == Shape::Block && !word.contains(['\'', '"', '\\']) {
+                    assert_eq!(word, target.name, "{path}");
+                }
+            }
+        }
+        for refusal in &reading.refused {
+            assert!(
+                !held(&text, &refusal.location, path).is_empty(),
+                "{path}: {refusal:?}"
+            );
+        }
+
+        if !reading.claims.is_empty() {
+            let count = counts.entry(fixture.category.as_str()).or_default();
+            count[0] += 1;
+            count[1] += reading.claims.len();
+            count[2] += reading
+                .claims
+                .iter()
+                .map(|claim| claim.targets.len())
+                .sum::<usize>();
+            count[3] += reading
+                .claims
+                .iter()
+                .filter(|claim| claim.shape == Shape::Span)
+                .count();
+        }
+    }
+
+    for (category, [files, claims, targets, spans]) in &counts {
+        eprintln!("{category}: {files} files, {claims} claims, {targets} targets, {spans} spans");
+    }
+    eprintln!("{blocks} blocks of shell, {calls} calls of make, {refused} left alone");
+    let total = |at: usize| counts.values().map(|count| count[at]).sum::<usize>();
+    let (files, claims, targets, spans) = (total(0), total(1), total(2), total(3));
+    eprintln!("{files} files, {claims} claims, {targets} targets, {spans} spans");
+    assert!(files >= 49, "{files} files hold a claim");
+    assert!(claims >= 223, "{claims} claims");
+    assert!(targets >= 223, "{targets} targets");
+    assert!(spans >= 135, "{spans} spans");
+    assert!(calls >= claims, "{calls} calls, {claims} claims");
+
+    // These say to run `make` and name no target, or say nothing of it.
+    for none in [
+        "mixed/spree--spree/",
+        "mixed/cypress-io--cypress-documentation/",
+        "human/gitlab--eidheim--tiny-process-library/",
+    ] {
+        let found: Vec<&Fixture> = fixtures
+            .iter()
+            .filter(|fixture| fixture.path.starts_with(none))
+            .collect();
+        assert!(!found.is_empty(), "{none} is in the corpus");
+        for fixture in found {
+            let text = String::from_utf8_lossy(&fixture.bytes);
+            let reading = repo_commands::read(&Document::markdown(&text));
+            assert_eq!(reading.claims, vec![], "{}", fixture.path);
+        }
+    }
+}
+
 /// What `location` holds in `text`, once it is shown to lie inside `text`, to start and end on
 /// characters, and to start on the line it names. `context` names it in a failure.
 fn held<'t>(text: &'t str, location: &Location, context: &str) -> &'t str {
@@ -826,6 +921,8 @@ fn the_corpus_locations_hold_what_they_point_at() {
             match &finding.violation {
                 // A fixture alone is no change, so a lint that judges one never runs here.
                 Violation::MaxSizeBytes(_) | Violation::ListGrowth(_) => {}
+                // An empty directory has no Makefile, so every claim is silent.
+                Violation::RepoCommands(_) => {}
                 Violation::BannedChars(over) => {
                     for banned in &over.banned {
                         for location in &banned.locations {
@@ -925,7 +1022,9 @@ fn the_corpus_locations_hold_what_they_point_at() {
     let unlocated: Vec<Lint> = Lint::ALL
         .into_iter()
         .filter(|lint| {
-            *lint != Lint::MaxSizeBytes && !lint.reads_change() && !located.contains(lint)
+            !matches!(lint, Lint::MaxSizeBytes | Lint::RepoCommands)
+                && !lint.reads_change()
+                && !located.contains(lint)
         })
         .collect();
     assert_eq!(

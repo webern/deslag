@@ -95,7 +95,13 @@ fn each_module_is_named_in_one_asbuilt_doc() {
 fn each_lint_module_doc_fits_its_budget() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     for lint in Lint::ALL {
-        let path = root.join("src/lint").join(format!("{}.rs", lint.id()));
+        // A lint is a file, or a directory with the same name when it has parts of its own.
+        let file = root.join("src/lint").join(format!("{}.rs", lint.id()));
+        let path = if file.exists() {
+            file
+        } else {
+            root.join("src/lint").join(lint.id()).join("mod.rs")
+        };
         let text = fs::read_to_string(&path).unwrap_or_else(|error| panic!("{path:?}: {error}"));
         let bytes: usize = text
             .lines()

@@ -23,6 +23,9 @@ max_percent = 1.0
 
 [md.lints.repo_layout]
 
+# Silent here, as every run is in an empty directory: the file lists the fixtures with a claim.
+[md.lints.repo_commands]
+
 [md.lints.banned_chars]
 
 # The default groups run too. These run each part of the matcher: one word, a row of words, an

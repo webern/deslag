@@ -1,0 +1,4 @@
+schema_version = 1
+
+[md.lints.repo_commands]
+message = "Fix {path}: name a target from the Makefile, or add the target."

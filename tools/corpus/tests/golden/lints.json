@@ -19,6 +19,7 @@
   "every_file": false,
   "left_out": [
     "repo_layout",
+    "repo_commands",
     "list_growth"
   ],
   "lints": [

@@ -180,7 +180,7 @@ fn every_glob_of_the_cpp_section_ends_in_an_extension_it_reads_and_an_override_g
 /// either, since no C comment has them, and prose by either surface.
 fn can_run(lint: Lint, surfaces: &[&str]) -> bool {
     match lint {
-        Lint::MaxSizeBytes | Lint::RepoLayout | Lint::ListGrowth => false,
+        Lint::MaxSizeBytes | Lint::RepoLayout | Lint::RepoCommands | Lint::ListGrowth => false,
         Lint::MaxEmphasis
         | Lint::BannedChars
         | Lint::BannedPhrases

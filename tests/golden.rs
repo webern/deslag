@@ -34,8 +34,8 @@ use common::corpus::{CATEGORIES, corpus};
 use common::fixture::Fixture;
 use deslag::changelog::Version;
 use deslag::document::{Document, Token, TokenKind};
-use deslag::lint::density;
 use deslag::lint::repo_layout::Problem;
+use deslag::lint::{density, repo_commands};
 use deslag::tag::{Confidence, Features, Origin, RULES_VERSION, Reading, Tag, VERSION};
 use deslag::{Config, ConfigSource, Lint, Violation, check_file_at};
 
@@ -69,6 +69,7 @@ fn record_of(violation: &Violation) -> Option<String> {
         ),
         Violation::RepoLayout(over) if over.problems == [Problem::NoSection] => return None,
         Violation::RepoLayout(over) => format!("problems:{}", over.problems.len()),
+        Violation::RepoCommands(over) => format!("targets:{}", over.missing.len()),
         Violation::BannedChars(over) => format!("count:{}", over.count()),
         Violation::BannedPhrases(over) => format!("matches:{}", over.matches.len()),
         Violation::Density(over) => {
@@ -97,6 +98,10 @@ fn note(lint: Lint) -> &'static str {
         Lint::RepoLayout => {
             "# In an empty directory every path a layout lists is missing, so each fixture with the\n\
              # section fails. One without it is left out, and counted as passing.\n"
+        }
+        Lint::RepoCommands => {
+            "# In an empty directory every claim is silent, so each fixture listed holds at least\n\
+             # one claim, a make call with a target, and the record counts its claims and targets.\n"
         }
         _ => "",
     }
@@ -215,6 +220,20 @@ fn every_lint_finds_what_its_golden_file_says() {
                 let lint = finding.violation.lint();
                 found.entry(lint).or_default().push((fixture, record));
             }
+        }
+    }
+
+    // Nothing is a finding of `repo_commands` here, so what it reads stands for it.
+    for fixture in fixtures {
+        let text = String::from_utf8_lossy(&fixture.bytes);
+        let reading = repo_commands::read(&Document::markdown(&text));
+        if !reading.claims.is_empty() {
+            let targets: usize = reading.claims.iter().map(|claim| claim.targets.len()).sum();
+            let record = format!("claims:{} targets:{targets}", reading.claims.len());
+            found
+                .entry(Lint::RepoCommands)
+                .or_default()
+                .push((fixture, record));
         }
     }
 

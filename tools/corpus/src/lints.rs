@@ -5,9 +5,9 @@
 //! path there, so the config's overrides apply to it as they would, and with the phrase catalogue
 //! whole, as the report config has no stamp to hold a new phrase back. The lints that need more
 //! than the file are left out.
-//! `repo_layout` reads the files around a file, which the corpus does not hold, so its findings
-//! are dropped. A lint that judges a change, such as `list_growth`, needs a base, which a corpus
-//! file has none of, so it is taken out of the config before any file is checked.
+//! `repo_layout` and `repo_commands` read the files around a file, which the corpus does not hold,
+//! so they are dropped. A lint that judges a change, such as `list_growth`, needs a base, which a
+//! corpus file has none of, so it is taken out of the config before any file is checked.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -100,7 +100,7 @@ pub struct Lints {
     pub config: String,
     /// Whether every file was checked, or only those the config's globs select.
     pub every_file: bool,
-    /// The lints left out: `repo_layout`, and each that judges a change.
+    /// The lints left out: `repo_layout`, `repo_commands`, and each that judges a change.
     pub left_out: Vec<String>,
     /// Each lint that failed a file, then `any`.
     pub lints: Vec<LintRow>,
@@ -117,7 +117,7 @@ pub struct LintConfig {
 
 /// Whether `lints` leaves `lint` out.
 fn left_out(lint: Lint) -> bool {
-    lint == Lint::RepoLayout || lint.reads_change()
+    matches!(lint, Lint::RepoLayout | Lint::RepoCommands) || lint.reads_change()
 }
 
 /// The config at `explicit`, or else the one `deslag` finds in the repository at `root`, less the

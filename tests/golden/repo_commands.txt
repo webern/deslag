@@ -1,0 +1,59 @@
+# repo_commands: each fixture under tests/corpus/ that it fails, with what it measured there.
+# A fixture that passes is not listed. Each is linted alone, in an empty directory.
+# tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
+# `make fix-golden` rewrites it; read the diff before committing it.
+# In an empty directory every claim is silent, so each fixture listed holds at least
+# one claim, a make call with a target, and the record counts its claims and targets.
+# fails 49 of 1230: core 6, human 7, llm 10, mixed 26
+
+[md.lints.repo_commands]
+
+core/midi-agents.md claims:1 targets:1
+core/rt-agents.md claims:5 targets:5
+core/rt-build-doctrine.md claims:5 targets:5
+core/rt-open-pr.md claims:1 targets:1
+core/rt-pr-template.md claims:1 targets:1
+core/rt-readme.md claims:3 targets:3
+human/apptension--saas-boilerplate/services__docs__docs__features__sso__general.md claims:2 targets:2
+human/codeberg--curl--curl-mirror/docs__INSTALL.md claims:4 targets:4
+human/codeberg--skyjake--lagrange/README.md claims:1 targets:1
+human/codeberg--ziglang--zig/CONTRIBUTING.md claims:1 targets:1
+human/gitlab--freedesktop-sdk--freedesktop-sdk/BOOTABLE_IMAGES.md claims:4 targets:4
+human/gitlab--pages--pelican/README.md claims:1 targets:1
+human/idris-lang--Idris2/CHANGELOG.md claims:3 targets:3
+llm/FStarLang--FStar/doc__ref__bootstrapping.md claims:13 targets:13
+llm/POps-Rox--terraform-az-overlays-costmanagement/github__copilot-instructions.md claims:1 targets:1
+llm/appleboy--gorush/AGENTS.md claims:7 targets:7
+llm/cksystemsteaching--selfie/docs__presentations__what-is-selfie__README.md claims:9 targets:9
+llm/ddev--ddev/claude__rules__docs.md claims:5 targets:5
+llm/eunomia-bpf--bpf-benchmark/docs__tmp__impl-product-config-20260423__summary.md claims:1 targets:1
+llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md claims:6 targets:6
+llm/gitlab--gitlab-org--gitaly/doc__invoking_grpc_endpoints_locally.md claims:1 targets:1
+llm/openatx--uiautomator2/github__copilot-instructions.md claims:15 targets:15
+llm/pulumi--kubespy/github__copilot-instructions.md claims:19 targets:19
+mixed/Bee-Mar--mmpm/CHANGELOG.md claims:2 targets:2
+mixed/JuliaDocs--Documenter.jl/docs__src__contributing.md claims:4 targets:4
+mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md claims:3 targets:3
+mixed/TimoLassmann--kalign/README.md claims:2 targets:2
+mixed/amir20--dozzle/README.md claims:3 targets:3
+mixed/appleboy--gorush/README.md claims:2 targets:2
+mixed/cksystemsteaching--selfie/assignments__introductory-assignments.md claims:7 targets:7
+mixed/compiler-explorer--compiler-explorer/docs__AddingACompiler.md claims:1 targets:1
+mixed/depot--cli/README.md claims:1 targets:1
+mixed/dotnet--ClangSharp/README.md claims:2 targets:2
+mixed/fishi0x01--vsh/CHANGELOG.md claims:2 targets:2
+mixed/getsentry--sentry-java/CONTRIBUTING.md claims:3 targets:3
+mixed/gitlab--glitchtip--glitchtip-backend/README.md claims:5 targets:5
+mixed/jaegertracing--jaeger-ui/RELEASE.md claims:2 targets:2
+mixed/learningequality--kolibri/platforms__android__README.md claims:27 targets:27
+mixed/lightdash--lightdash/github__CONTRIBUTING.md claims:1 targets:1
+mixed/okteto--okteto/contributing.md claims:1 targets:1
+mixed/online-ml--river/CONTRIBUTING.md claims:2 targets:2
+mixed/quay--quay/docs__getting-started.md claims:2 targets:2
+mixed/quay--quay/docs__quick-local-deployment.md claims:1 targets:1
+mixed/quay--quay/github__CONTRIBUTING.md claims:7 targets:7
+mixed/tapsilat--iban.im/README.md claims:1 targets:1
+mixed/tektoncd--pipeline/DEVELOPMENT.md claims:4 targets:4
+mixed/tiagofga--Estruturas-de-Dados-e-Algoritmos-em-C/README.md claims:14 targets:14
+mixed/toku345--emacs.d/README.md claims:4 targets:4
+mixed/zrepl--zrepl/README.md claims:11 targets:11

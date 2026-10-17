@@ -1,0 +1,3 @@
+schema_version = 1
+
+[rust.lints.repo_commands]

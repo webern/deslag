@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "repo_commands",
+      "report": "ERROR: deslag detected a make target that does not exist!\n\nREADME.md names 1 make target that no Makefile defines.\n\nAn agent that runs a call like these stops, or hunts for the right target, or edits the doc to match its guess. Open the Makefile and the doc, decide which one is wrong, and fix that one: write the target the Makefile has, or give the Makefile the target the doc names. deslag reads Makefiles and never runs make.\n\nDo not change the language of a code block, a `cd` before the call or the order of the steps to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe calls:\n  line 3: `make fmt`: no Makefile defines fmt",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 39,
+          "end": 49,
+          "line": 3,
+          "column": 29,
+          "end_line": 3,
+          "end_column": 39,
+          "note": "`make fmt`: no Makefile defines fmt"
+        }
+      ]
+    }
+  ]
+}

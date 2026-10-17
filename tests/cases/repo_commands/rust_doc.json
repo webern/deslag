@@ -1,0 +1,34 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "repo_commands",
+      "report": "ERROR: deslag detected a make target that does not exist!\n\nsrc/lib.rs names 2 make targets that no Makefile defines.\n\nAn agent that runs a call like these stops, or hunts for the right target, or edits the doc to match its guess. Open the Makefile and the doc, decide which one is wrong, and fix that one: write the target the Makefile has, or give the Makefile the target the doc names. deslag reads Makefiles and never runs make.\n\nDo not change the language of a code block, a `cd` before the call or the order of the steps to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe calls:\n  line 3: `make bench`: no Makefile defines bench\n  line 8: `make package`: no Makefile defines package",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 57,
+          "end": 69,
+          "line": 3,
+          "column": 37,
+          "end_line": 3,
+          "end_column": 49,
+          "note": "`make bench`: no Makefile defines bench"
+        },
+        {
+          "kind": "occurrence",
+          "start": 110,
+          "end": 134,
+          "line": 8,
+          "column": 5,
+          "end_line": 9,
+          "end_column": 17,
+          "note": "`make package`: no Makefile defines package"
+        }
+      ]
+    }
+  ]
+}

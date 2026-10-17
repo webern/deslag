@@ -66,8 +66,8 @@ lints.max_size_bytes.value = 8000
 ```
 
 In `[rust]`, `[cpp]` and `[toml]`, `max_size_bytes` and `repo_layout` are an error, since they need
-the whole file. `list_growth` is an error in `[cpp]` and `[toml]`, and in `[rust]` without the
-`doc_comment` surface. The rest read comments.
+the whole file. So are `list_growth` and `repo_commands`, except in `[rust]` with the `doc_comment`
+surface. The rest read comments.
 
 ## 4. See what each file reads
 

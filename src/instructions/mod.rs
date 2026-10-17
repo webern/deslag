@@ -65,6 +65,7 @@ fn section(lint: Lint) -> &'static str {
         Lint::MaxSizeBytes => include_str!("lints/max_size_bytes.md"),
         Lint::MaxEmphasis => include_str!("lints/max_emphasis.md"),
         Lint::RepoLayout => include_str!("lints/repo_layout.md"),
+        Lint::RepoCommands => include_str!("lints/repo_commands.md"),
         Lint::BannedChars => include_str!("lints/banned_chars.md"),
         Lint::BannedPhrases => include_str!("lints/banned_phrases.md"),
         Lint::Density => include_str!("lints/density.md"),

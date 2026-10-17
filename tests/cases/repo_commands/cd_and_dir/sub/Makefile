@@ -1,0 +1,2 @@
+sub-test:
+	@true

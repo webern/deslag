@@ -47,6 +47,9 @@ pub struct Lints {
     /// The index of the repo that the file must hold.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub repo_layout: Option<RepoLayout>,
+    /// That the make targets the file tells an agent to run exist.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repo_commands: Option<RepoCommands>,
     /// The characters the file must not hold, such as the em dash.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub banned_chars: Option<BannedChars>,
@@ -71,6 +74,7 @@ impl Lints {
             Lint::MaxSizeBytes => self.max_size_bytes.is_some(),
             Lint::MaxEmphasis => self.max_emphasis.is_some(),
             Lint::RepoLayout => self.repo_layout.is_some(),
+            Lint::RepoCommands => self.repo_commands.is_some(),
             Lint::BannedChars => self.banned_chars.is_some(),
             Lint::BannedPhrases => self.banned_phrases.is_some(),
             Lint::Density => self.density.is_some(),
@@ -161,6 +165,7 @@ impl Merge for Lints {
         self.max_size_bytes.merge(&over.max_size_bytes);
         self.max_emphasis.merge(&over.max_emphasis);
         self.repo_layout.merge(&over.repo_layout);
+        self.repo_commands.merge(&over.repo_commands);
         self.banned_chars.merge(&over.banned_chars);
         self.banned_phrases.merge(&over.banned_phrases);
         self.density.merge(&over.density);
@@ -333,6 +338,27 @@ impl Merge for RepoLayout {
         if over.max_width.is_some() {
             self.max_width = over.max_width;
         }
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.repo_commands`: a file fails when it tells an agent to run a make target that no Makefile
+/// defines.
+///
+/// Like `repo_layout`, the table itself turns the check on. It sets nothing else: what counts as a
+/// claim is the lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct RepoCommands {
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl Merge for RepoCommands {
+    fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);
         }

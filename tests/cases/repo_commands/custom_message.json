@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "repo_commands",
+      "report": "ERROR: deslag detected a make target that does not exist!\n\nREADME.md names 1 make target that no Makefile defines.\n\nFix README.md: name a target from the Makefile, or add the target.\n\nThe calls:\n  line 3: `make release`: no Makefile defines release",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 15,
+          "end": 29,
+          "line": 3,
+          "column": 5,
+          "end_line": 3,
+          "end_column": 19,
+          "note": "`make release`: no Makefile defines release"
+        }
+      ]
+    }
+  ]
+}

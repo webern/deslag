@@ -18,8 +18,8 @@
 //!
 //! Silent, since silence beats a false positive: no Makefile in any of those directories; an open
 //! Makefile (`$(eval`, a target named by `$`, an include not on disk) for a target it lacks; `-f`;
-//! a target holding `$`, a backtick, `<`, `>`, `[`, `]`, `{`, `}`, `*`, `?` or `...`; a line the
-//! tokenizer cannot read, which ends the claims of its block.
+//! a target holding `$`, a backtick, `<`, `>`, `[`, `]`, `{`, `}`, `*`, `?`, `...` or `…`; a line
+//! the tokenizer cannot read, which ends the claims of its block.
 //!
 //! [`read`] needs only the document. [`check`] adds the disk. `--diff` misses a target renamed in
 //! the Makefile alone, since the file that names it is not in the change.

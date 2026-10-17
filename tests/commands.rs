@@ -294,6 +294,30 @@ fn what_a_shell_or_a_reader_fills_in_is_not_a_target() {
 }
 
 #[test]
+fn an_ellipsis_is_not_a_target_in_either_form() {
+    for span in ["make ...", "make \u{2026}", "make a\u{2026}"] {
+        assert_eq!(claims(&format!("Run `{span}`.\n")), [], "{span}");
+        assert_eq!(claims(&sh(span)), [], "{span}");
+    }
+    let found = reading(&sh("make a \u{2026} b ... c"));
+    assert_eq!(found.claims.len(), 1);
+    assert_eq!(found.claims[0].targets.len(), 3);
+    assert_eq!(
+        found
+            .refused
+            .iter()
+            .filter(|r| r.why == Why::Target)
+            .count(),
+        2
+    );
+    let repo = repo_with("ci:\n");
+    assert_eq!(
+        missing(&repo, "README.md", "Run `make \u{2026}` or `make ci`.\n"),
+        Vec::<String>::new()
+    );
+}
+
+#[test]
 fn a_call_that_names_its_makefile_or_an_unreadable_directory_is_left_alone() {
     let text = sh("make -f other a\nmake -C $D b\nmake --eval=x c\nmake d");
     let found = reading(&text);

@@ -513,9 +513,10 @@ fn directory(value: Option<&str>) -> Result<String, Refusal> {
 }
 
 /// Whether `word` holds what only a shell or a reader can fill in: a variable, a command
-/// substitution, a glob, a placeholder such as `<name>`, `[name]` or `{name}`, or an ellipsis.
+/// substitution, a glob, a placeholder such as `<name>`, `[name]` or `{name}`, or an ellipsis,
+/// `...` or `…`.
 pub(super) fn unreadable(word: &str) -> bool {
-    word.contains(['$', '`', '<', '>', '[', ']', '{', '}', '*', '?']) || word.contains("...")
+    word.contains(['$', '`', '<', '>', '[', ']', '{', '}', '*', '?', '…']) || word.contains("...")
 }
 
 #[cfg(test)]
@@ -830,7 +831,8 @@ mod tests {
     #[test]
     fn what_a_shell_or_a_reader_fills_in_is_unreadable() {
         for word in [
-            "$(T)", "$T", "${T}", "`t`", "<target>", "[target]", "{a,b}", "t*", "t?", "a...",
+            "$(T)", "$T", "${T}", "`t`", "<target>", "[target]", "{a,b}", "t*", "t?", "a...", "…",
+            "a…",
         ] {
             assert!(unreadable(word), "{word}");
         }

@@ -133,7 +133,7 @@ fn an_entry_a_section_refuses_stops_the_run_with_exit_2() {
 }
 
 #[test]
-fn diff_shows_a_failed_entry_when_the_change_touches_its_file() {
+fn diff_shows_a_failed_entry_whatever_the_change_touches() {
     let stale = entry("b.md", "banned_chars", TITLE, "A quoted title.");
     let repo = repo(
         &config(&[
@@ -143,22 +143,13 @@ fn diff_shows_a_failed_entry_when_the_change_touches_its_file() {
         &[("a.md", &format!("{TITLE}\n")), ("b.md", "Plain.\n")],
     );
 
-    // The stale entry was there already, and nothing touched b.md: only the tally is shown.
-    let output = deslag(repo.root(), &["check", "--diff", "main"]);
-    assert_eq!(code(&output), 0, "{}", stderr(&output));
-    assert_eq!(
-        stderr(&output),
-        "deslag: 1 exemption applied; deslag explain <PATH> lists a file's.\n"
-    );
-
-    // Touching a.md leaves b.md's entry hidden, and touching b.md shows it.
-    repo.write("a.md", &format!("{TITLE} More.\n"));
-    let output = deslag(repo.root(), &["check", "--diff", "main"]);
-    assert_eq!(code(&output), 0, "{}", stderr(&output));
-    repo.write("b.md", "Plain, and changed.\n");
-    let output = deslag(repo.root(), &["check", "--diff", "main"]);
+    // The stale entry was there already, and nothing touched b.md. The whole tree fails on it, so
+    // `--diff` does as well: a failed entry is never hidden.
+    let output = deslag(repo.root(), &["check"]);
     assert_eq!(code(&output), 1, "{}", stderr(&output));
+    let output = deslag(repo.root(), &["check", "--diff", "main"]);
     let text = stderr(&output);
+    assert_eq!(code(&output), 1, "{text}");
     assert!(
         text.contains("md.allow[1], which exempts a sentence of b.md"),
         "{text}"
@@ -168,6 +159,39 @@ fn diff_shows_a_failed_entry_when_the_change_touches_its_file() {
         text.contains("deslag: 1 of 2 exemptions did not hold."),
         "{text}"
     );
+
+    // Touching a.md, or b.md, changes nothing about it.
+    repo.write("a.md", &format!("{TITLE} More.\n"));
+    let output = deslag(repo.root(), &["check", "--diff", "main"]);
+    assert_eq!(code(&output), 1, "{}", stderr(&output));
+    repo.write("b.md", "Plain, and changed.\n");
+    let output = deslag(repo.root(), &["check", "--diff", "main"]);
+    let text = stderr(&output);
+    assert_eq!(code(&output), 1, "{text}");
+    assert!(
+        text.contains("md.allow[1], which exempts a sentence of b.md"),
+        "{text}"
+    );
+    let run = run_json(repo.root(), &["check", "--diff", "main"]);
+    assert_eq!(statuses(&run), ["applied", "no_such_sentence"]);
+}
+
+#[test]
+fn diff_and_base_show_an_entry_whose_file_was_renamed() {
+    let repo = repo(
+        &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),
+        &[("a.md", &format!("{TITLE}\n"))],
+    );
+    // A committed rename is one change to the new path, so the old one is not in the change.
+    git(repo.root(), &["checkout", "-q", "-b", "work"]);
+    git(repo.root(), &["mv", "a.md", "c.md"]);
+    commit(repo.root(), "rename");
+    for flag in ["--diff", "--base"] {
+        let run = run_json(repo.root(), &["check", flag, "main"]);
+        assert_eq!(statuses(&run), ["no_such_file"], "{flag}");
+        let output = deslag(repo.root(), &["check", flag, "main"]);
+        assert_eq!(code(&output), 1, "{flag}: {}", stderr(&output));
+    }
 }
 
 #[test]
@@ -577,4 +601,229 @@ fn fix_leaves_an_exempted_dash_and_replaces_the_others() {
     assert_eq!(code(&output), 0, "{}", stderr(&output));
     let text = std::fs::read_to_string(repo.root().join("a.md")).expect("a.md");
     assert_eq!(text, format!("{TITLE} Other - text.\n"));
+}
+
+/// A space of another width than the ASCII one, each banned by the default `spaces` group.
+const SPACES: [char; 4] = ['\u{00A0}', '\u{202F}', '\u{2003}', '\u{205F}'];
+
+#[test]
+fn a_space_added_to_an_exempted_sentence_fails_the_entry_and_brings_every_finding_back() {
+    let repo = repo(
+        &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),
+        &[("a.md", &format!("{TITLE}\n"))],
+    );
+    let output = deslag(repo.root(), &["check"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+
+    for space in SPACES {
+        let added = TITLE.replacen("a dated", &format!("a{space}dated"), 1);
+        repo.write("a.md", &format!("{added}\n"));
+        let output = deslag(repo.root(), &["check"]);
+        let text = stderr(&output);
+        assert_eq!(code(&output), 1, "U+{:04X}: {text}", space as u32);
+        // Neither the dash nor the space rides along with the entry.
+        assert!(text.contains("a.md has 2 banned characters"), "{text}");
+        assert!(text.contains(&format!("U+{:04X}", space as u32)), "{text}");
+        // The report shows what differs from the quote.
+        assert!(
+            text.contains(&format!("a<U+{:04X}>dated", space as u32)),
+            "{text}"
+        );
+        let run = run_json(repo.root(), &["check"]);
+        assert_eq!(statuses(&run), ["no_such_sentence"]);
+    }
+
+    // A quote that holds the space exempts both, since the file's sentence is then the quote.
+    let added = TITLE.replacen("a dated", "a\u{00A0}dated", 1);
+    repo.write(
+        "deslag.toml",
+        &config(&[entry("a.md", "banned_chars", &added, "A quoted title.")]),
+    );
+    repo.write("a.md", &format!("{added}\n"));
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["applied"]);
+    assert_eq!(run["exemptions"][0]["marks"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn a_rewrap_with_tabs_and_crlf_still_matches_the_entry() {
+    let repo = repo(
+        &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),
+        &[("a.md", "The title \u{2014}\ta   dated\r\nrecord.\n")],
+    );
+    let output = deslag(repo.root(), &["check"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+}
+
+#[test]
+fn a_reason_that_shows_as_nothing_stops_the_run_with_exit_2() {
+    // The last is an escape sequence for a terminal, written as TOML escapes it.
+    for reason in ["\u{200B}", "\u{202E}", "\\u001b[2K"] {
+        let repo = repo(
+            &config(&[entry("a.md", "banned_chars", TITLE, reason)]),
+            &[("a.md", &format!("{TITLE}\n"))],
+        );
+        let output = deslag(repo.root(), &["check"]);
+        let text = stderr(&output);
+        assert_eq!(code(&output), 2, "{reason:?}: {text}");
+        assert_eq!(stdout(&output), "");
+        assert!(text.contains("md.allow[0].reason holds U+"), "{text}");
+    }
+}
+
+#[test]
+fn an_entry_names_an_invisible_character_it_exempts_with_a_toml_escape() {
+    let toml = |lint: &str| {
+        format!(
+            "{LINTS}\n[[md.allow]]\npath = \"a.md\"\nlint = \"{lint}\"\n\
+             quote = \"A zero\\u200Bwidth sentence.\"\nreason = \"A quoted example.\"\n"
+        )
+    };
+    let source = "A zero\u{200B}width sentence.\n";
+    let repo = repo(&toml("banned_chars"), &[("a.md", source)]);
+    let output = deslag(repo.root(), &["check"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["applied"]);
+    assert_eq!(
+        run["exemptions"][0]["quote"],
+        "A zero\u{200B}width sentence."
+    );
+
+    // A second zero-width space added later is not the quote's, and the entry fails.
+    repo.write("a.md", "A zero\u{200B}width\u{200B} sentence.\n");
+    let output = deslag(repo.root(), &["check"]);
+    let text = stderr(&output);
+    assert_eq!(code(&output), 1, "{text}");
+    assert!(text.contains("a.md has 2 banned characters"), "{text}");
+    assert!(
+        text.contains("The quote: \"A zero<U+200B>width sentence.\""),
+        "{text}"
+    );
+
+    // Another lint's quote may not hold it, since no finding of that lint is a character.
+    let other = deslag_in(&toml("banned_phrases"), source);
+    assert_eq!(code(&other), 2, "{}", stderr(&other));
+    assert!(stderr(&other).contains("md.allow[0].quote holds U+200B"));
+}
+
+/// The output of `deslag check` in a repo holding `config` and `a.md` as `source`.
+fn deslag_in(config: &str, source: &str) -> Output {
+    let repo = repo(config, &[("a.md", source)]);
+    deslag(repo.root(), &["check"])
+}
+
+#[test]
+fn a_wrapped_block_quote_is_quoted_without_its_markers() {
+    let wrapped = "> The title \u{2014} a dated\n> record that wraps.\n";
+    let quote = "The title \u{2014} a dated record that wraps.";
+    let repo = repo(
+        &config(&[entry("a.md", "banned_chars", quote, "A quoted title.")]),
+        &[("a.md", wrapped)],
+    );
+    let output = deslag(repo.root(), &["check"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+
+    // The quote that holds the `>` is not the sentence, and fails.
+    let marked = "The title \u{2014} a dated\\n> record that wraps.";
+    repo.write(
+        "deslag.toml",
+        &config(&[entry("a.md", "banned_chars", marked, "A quoted title.")]),
+    );
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["no_such_sentence"]);
+    // The report quotes the sentence as an entry would write it.
+    let text = stderr(&deslag(repo.root(), &["check"]));
+    assert!(text.contains(&format!("line 1: \"{quote}\"")), "{text}");
+}
+
+#[test]
+fn the_byte_order_mark_that_opens_a_file_is_no_part_of_the_quote() {
+    let repo = repo(
+        &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),
+        &[("a.md", &format!("\u{FEFF}{TITLE}\n"))],
+    );
+    let output = deslag(repo.root(), &["check"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+
+    // A second one is a character of the sentence, which the quote lacks.
+    repo.write("a.md", &format!("\u{FEFF}\u{FEFF}{TITLE}\n"));
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["no_such_sentence"]);
+}
+
+#[test]
+fn a_failed_entry_quotes_the_three_closest_sentences_and_counts_the_rest() {
+    let reworded = "The title \u{2014} a dated records.";
+    let sentences = [
+        "First \u{2014} nothing alike, a long way off from it.",
+        "The title \u{2014} a dated record!",
+        "Second \u{2014} also unlike the quote, and far from it.",
+        reworded,
+        "Third \u{2014} a different sentence entirely, again.",
+        "The title, \u{2014} a dated record.",
+    ];
+    let repo = repo(
+        &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),
+        &[("a.md", &format!("{}\n", sentences.join("\n\n")))],
+    );
+    let output = deslag(repo.root(), &["check"]);
+    let text = stderr(&output);
+    assert_eq!(code(&output), 1, "{text}");
+    assert!(
+        text.contains("The 3 sentences of a.md closest to the quote that hold a finding"),
+        "{text}"
+    );
+    for near in [sentences[1], sentences[3], sentences[5]] {
+        assert!(text.contains(&format!("\"{near}\"")), "{text}");
+    }
+    for far in [sentences[0], sentences[2], sentences[4]] {
+        assert!(!text.contains(far), "{text}");
+    }
+    assert!(text.contains("\n  and 3 more.\n"), "{text}");
+
+    // Three or fewer are all quoted, as before, with no count.
+    let few = repo_with(&sentences[..3]);
+    let text = stderr(&deslag(few.root(), &["check"]));
+    assert!(
+        text.contains("The sentences of a.md that hold a finding of `banned_chars`:"),
+        "{text}"
+    );
+    assert!(!text.contains(" more."), "{text}");
+}
+
+/// A repo whose `a.md` holds `sentences`, and an entry that matches none.
+fn repo_with(sentences: &[&str]) -> Repo {
+    repo(
+        &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),
+        &[("a.md", &format!("{}\n", sentences.join("\n\n")))],
+    )
+}
+
+/// The section of `ACKNOWLEDGEMENTS.md` headed `## <name>`, up to the next.
+fn acknowledged(name: &str) -> String {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("ACKNOWLEDGEMENTS.md");
+    let text = std::fs::read_to_string(path).expect("ACKNOWLEDGEMENTS.md");
+    let heading = format!("\n## {name}\n");
+    let from = text.find(&heading).expect("a section for the project");
+    let rest = &text[from + heading.len()..];
+    rest.split("\n## ")
+        .next()
+        .unwrap_or(rest)
+        .replace('\n', " ")
+}
+
+#[test]
+fn the_acknowledgements_credit_the_two_designs_the_entry_takes() {
+    let safety = acknowledged("unicode-safety-check");
+    assert!(
+        safety.contains("must give a reason") && safety.contains("`allow` entry"),
+        "{safety}"
+    );
+    let charcheck = acknowledged("charcheck");
+    assert!(
+        charcheck.contains("visible count") && charcheck.contains("`allow` entries applied"),
+        "{charcheck}"
+    );
+    assert!(charcheck.contains("ratchet"), "{charcheck}");
 }

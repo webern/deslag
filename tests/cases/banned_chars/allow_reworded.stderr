@@ -13,7 +13,7 @@ The characters, and what to write instead:
 
 ERROR: deslag detected an exemption that does not hold!
 
-deslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: README.md does not hold a sentence equal to the quote, whitespace aside. The sentence was reworded, or moved out of the text deslag reads.
+deslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: README.md does not hold a sentence equal to the quote, spaces and line breaks aside. The sentence was reworded, or moved out of the text deslag reads.
 
 The quote: "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again."
 The reason: "A dated record of one image; its counts never go stale."

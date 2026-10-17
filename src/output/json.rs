@@ -21,7 +21,10 @@ pub struct Run {
     pub deslag_version: String,
     /// How many files the run examined, including the ones for which no lint had settings.
     pub files_scanned: usize,
-    /// The failures, sorted by path; one file's failures are in the order the lints ran.
+    /// The files a lint failed, sorted by path; one file's failures are in the order the lints
+    /// ran. An `allow` entry that does not hold is not here but in `exemptions`, with a status
+    /// other than `applied`, and it fails the run all the same, so a run that exits 1 can have no
+    /// findings.
     pub findings: Vec<Finding>,
     /// With `--base` or `--diff`, the base the run judged a change from; a run with no base has
     /// none.

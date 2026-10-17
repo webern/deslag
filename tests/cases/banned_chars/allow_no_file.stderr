@@ -13,7 +13,7 @@ The characters, and what to write instead:
 
 ERROR: deslag detected an exemption that does not hold!
 
-deslag.toml has md.allow[0], which exempts a sentence of docs/log.md from `banned_chars`. It fails: docs/log.md is not a file deslag reads: it does not exist, or git ignores it.
+deslag.toml has md.allow[0], which exempts a sentence of docs/log.md from `banned_chars`. It fails: docs/log.md is not a file deslag reads: it does not exist, git ignores it, or it is not a regular file, such as a directory or a link.
 
 The quote: "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again."
 The reason: "A dated record of one image; its counts never go stale."

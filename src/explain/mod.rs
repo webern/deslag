@@ -143,8 +143,8 @@ fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
         } else {
             on_lines(&lines)
         };
-        let quote = toml::Value::String(lint::collapse(&entry.quote));
-        let reason = toml::Value::String(lint::collapse(&entry.reason));
+        let quote = toml::Value::String(allow::shown(&entry.quote));
+        let reason = toml::Value::String(allow::shown(&entry.reason));
         out.push_str(&format!(
             "#   {}: {}, {at}: {quote}, because {reason}\n",
             entry.place(),

@@ -321,14 +321,9 @@ pub(crate) fn on_lines(lines: &[usize]) -> String {
 /// The longest a report quotes the text at a place, in characters.
 pub const QUOTE_CHARS: usize = 60;
 
-/// `source` with each run of whitespace made one space, and none at either end.
-pub(crate) fn collapse(source: &str) -> String {
-    source.split_whitespace().collect::<Vec<_>>().join(" ")
-}
-
 /// `source` on one line, cut to [`QUOTE_CHARS`] characters, as a report quotes it.
 pub(crate) fn quote(source: &str) -> String {
-    let one_line = collapse(source);
+    let one_line = source.split_whitespace().collect::<Vec<_>>().join(" ");
     if one_line.chars().count() <= QUOTE_CHARS {
         return one_line;
     }
@@ -366,7 +361,9 @@ impl Finding {
 pub struct Report {
     /// The path of each file examined, including the ones for which no lint had settings.
     pub scanned: Vec<String>,
-    /// The failures, sorted by path; one file's failures are in the order the lints ran.
+    /// The files a lint failed, sorted by path; one file's failures are in the order the lints
+    /// ran. An `allow` entry that does not hold is not here but in `exemptions`, and fails the run
+    /// all the same.
     pub findings: Vec<Finding>,
     /// The base the run judged a change from, when it had one.
     pub base: Option<Base>,
@@ -504,18 +501,10 @@ impl Report {
             .iter()
             .filter(|path| change.files.contains_key(*path))
             .count();
-        // An entry that holds stays, for the tally. One that does not is shown when the change
-        // touched its file or added it.
-        let exemptions = self
-            .exemptions
-            .iter()
-            .filter(|exemption| {
-                !exemption.failed()
-                    || exemption.added
-                    || change.files.contains_key(&exemption.allow.path)
-            })
-            .cloned()
-            .collect();
+        // Every entry stays. One that holds is in the tally, and one that does not is never
+        // hidden: a rename, or an edit of the config that unselects its file, would otherwise let
+        // a failed entry pass as clean here and fail on the whole tree.
+        let exemptions = self.exemptions.clone();
         Report {
             scanned: self.scanned.clone(),
             findings,
@@ -635,6 +624,10 @@ pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
 /// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
 /// run here, so a file one selects is an error. A path no section selects is read by the section
 /// for its extension, such as `[rust]` for `.rs`, and else as `[md]` reads a file.
+///
+/// The `allow` entries of that section that name `relative` are applied, so the findings they
+/// exempt are not returned, whether or not the section selects the file. An entry that does not
+/// hold is dropped, not reported: [`check_repo`] reports it, and fails the run.
 pub fn check_file(
     config: &Config,
     relative: &str,
@@ -646,7 +639,8 @@ pub fn check_file(
 
 /// [`check_file`], with the phrases of the catalogue held to `stamp` and not to the config's:
 /// [`Version::Next`] puts the whole catalogue in force. For a test or a tool that means the
-/// catalogue as shipped, whatever stamp the config it lints with has.
+/// catalogue as shipped, whatever stamp the config it lints with has. The `allow` entries are as
+/// [`check_file`] has them: applied, and not reported when they fail.
 pub fn check_file_at(
     config: &Config,
     relative: &str,

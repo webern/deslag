@@ -1,0 +1,48 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 1 banned character.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 33,
+          "end": 36,
+          "line": 3,
+          "column": 27,
+          "end_line": 3,
+          "end_column": 28,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "quote": "The first release shipped — it took a long time",
+      "reason": "A quoted title; the quote stops before the end of its sentence.",
+      "status": "no_such_sentence",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: README.md does not hold a sentence equal to the quote, spaces and line breaks aside. The sentence was reworded, or moved out of the text deslag reads.\n\nThe quote: \"The first release shipped — it took a long time\"\nThe reason: \"A quoted title; the quote stops before the end of its sentence.\"\n\nThe sentences of README.md that hold a finding of `banned_chars`:\n  line 3: \"The first release shipped — it took a long time, and nobody minded the wait.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    },
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "quote": "it took a long time, and nobody",
+      "reason": "A quoted title; the quote is the middle of its sentence.",
+      "status": "no_such_sentence",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[1], which exempts a sentence of README.md from `banned_chars`. It fails: README.md does not hold a sentence equal to the quote, spaces and line breaks aside. The sentence was reworded, or moved out of the text deslag reads.\n\nThe quote: \"it took a long time, and nobody\"\nThe reason: \"A quoted title; the quote is the middle of its sentence.\"\n\nThe sentences of README.md that hold a finding of `banned_chars`:\n  line 3: \"The first release shipped — it took a long time, and nobody minded the wait.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    }
+  ]
+}

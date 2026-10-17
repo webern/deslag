@@ -31,7 +31,7 @@
       "status": "no_such_file",
       "marks": [],
       "added": false,
-      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[0], which exempts a sentence of docs/log.md from `banned_chars`. It fails: docs/log.md is not a file deslag reads: it does not exist, or git ignores it.\n\nThe quote: \"`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again.\"\nThe reason: \"A dated record of one image; its counts never go stale.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[0], which exempts a sentence of docs/log.md from `banned_chars`. It fails: docs/log.md is not a file deslag reads: it does not exist, git ignores it, or it is not a regular file, such as a directory or a link.\n\nThe quote: \"`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again.\"\nThe reason: \"A dated record of one image; its counts never go stale.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
     }
   ]
 }

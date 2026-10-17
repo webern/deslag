@@ -7,7 +7,9 @@
 //!
 //! An `allow` entry puts two things in the log. Each occurrence it drops is a result of its lint
 //! with a `suppressions` entry of kind `external`, whose justification is the entry's reason. An
-//! entry that did not hold is a result of the rule `allow`, at the start of the config.
+//! entry that did not hold is a result of the rule `allow`, at the start of the config: serde reads
+//! the config in three formats, and none of them keeps the span of an entry, so the result cannot
+//! point at the entry's line. Its message names the entry as `md.allow[0]`.
 //!
 //! Columns count Unicode code points, and every region also gives its bytes, so a reader that
 //! counts columns another way can still find the place exactly.

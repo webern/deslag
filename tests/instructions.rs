@@ -283,6 +283,20 @@ fn the_guide_says_only_a_human_exempts_a_sentence() {
     assert!(step.contains("only a human exempts a sentence"), "{step}");
 }
 
+/// Step 5 sends the agent to the comment or fence a report names, and says what `--dry-run` does
+/// to `deslag fix`.
+#[test]
+fn the_guide_keeps_what_step_5_says_about_where_to_fix_and_dry_runs() {
+    let guide = guide();
+    let step = guide
+        .split("\n\n")
+        .find(|paragraph| paragraph.starts_with("Fix the prose"))
+        .expect("the paragraph on fixing prose");
+    let step = step.replace('\n', " ");
+    assert!(step.contains("in the comment or fence it names"), "{step}");
+    assert!(step.contains("`--dry-run` writes nothing"), "{step}");
+}
+
 #[test]
 fn every_config_deslag_accepts_fits_the_schema() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));

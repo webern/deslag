@@ -1,8 +1,7 @@
 # Setting up deslag
 
 These instructions are for an agent setting up deslag {version} in a repository, or working in one
-that uses it. To set it up, follow the steps in order. In a repository with a config, you need
-steps 4 and 5.
+that uses it. To set it up, follow the steps in order. With a config, you need steps 4 and 5.
 
 deslag lints LLM-written prose. A lint fails a file that breaks one rule of the config, and its
 report says how to fix it. Every lint is off until the config turns it on. The human who owns the
@@ -25,8 +24,8 @@ which language. With no preference, write `deslag.toml` at the root.
 
 `[md]` lints every `*.md` file unless its `globs` say otherwise. Start with the files agents write
 and read, such as AGENTS.md, CLAUDE.md, skills and design docs. Ask before adding files a human
-writes, such as README.md. It also reads the comments of Rust, C, C++ and TOML code fences in those
-files; `fences.languages = []` turns that off.
+writes, such as README.md. It also reads the comments of Rust, C, C++ and TOML code fences;
+`fences.languages = []` turns that off.
 
 `[rust]`, `[cpp]` and `[toml]` lint the comments of those source files; a config without the
 section does not read them. Offer one only where comments should meet the standard of prose. Rust
@@ -42,8 +41,8 @@ A glob cannot exclude, and an override cannot turn a lint off, so name the hand-
 never read.
 
 deslag does not skip a generated file. It leaves out only licence text, banners and tool
-directives, such as the `@generated` line itself, and reads every other comment of the file. No
-marker suppresses a lint.
+directives, such as the `@generated` line, and reads every other comment. No marker suppresses a
+lint.
 
 ## 3. Write the config
 
@@ -82,13 +81,13 @@ show as selected. Change the globs until every file reads as you mean.
 Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
 no remote. `--base HEAD` judges only uncommitted work, so `list_growth` passes in a clean tree:
 never use it in CI. A failing file gets a report on standard error and exit code 1; exit 2 means
-deslag could not run. Tell the human what each lint fails and propose a limit a little above the
+deslag could not run. Tell the human what each lint fails and propose a limit above the
 file's size: add 10%, at least 500 bytes. A file needing more gets an override.
 
-Fix the prose by the report's advice. Never hide text, split a file, rephrase around a lint or
-write an `allow` entry: only a human exempts a sentence, so give them its text and a reason.
-`deslag fix [PATH]...` replaces banned characters where it can prove the text reads as before. Ask
-before fixing a human's file.
+Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a
+file, rephrase around a lint or write an `allow` entry: only a human exempts a sentence, so give
+them its text and a reason. `deslag fix [PATH]...` replaces banned characters where it can prove
+the text reads as before; `--dry-run` writes nothing. Ask before fixing a human's file.
 
 ## 6. CI, and the next agent
 

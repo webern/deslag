@@ -40,14 +40,15 @@ max_paragraph_chars = 500
 
 # A taste lint, off by default: this repo names a thing and does not count it. An override can turn
 # a lint on but not off, so it is on for the files below and not in the section, which would reach
-# the *.asbuilt.md docs, which stay as they are until the owner opens a reconciliation, the skills,
-# whose wording is the owner's, and ACKNOWLEDGEMENTS.md, which quotes the title of a post that
-# counts lines.
+# the *.asbuilt.md docs, which stay as they are until the owner opens a reconciliation, and the
+# skills, whose wording is the owner's. A counted sentence that has to stay is exempted below, with
+# its reason.
 [[md.overrides]]
 globs = [
   "/AGENTS.md",
   "/tests/AGENTS.md",
   "/tools/AGENTS.md",
+  "/ACKNOWLEDGEMENTS.md",
   "/docs/design/analysis.md",
   "/docs/design/catalog.md",
   "/docs/design/corpus.md",
@@ -56,6 +57,42 @@ globs = [
   "/src/changelog/releases/next/README.md",
 ]
 lints.counted_inventory = {}
+
+[[md.allow]]
+path = "ACKNOWLEDGEMENTS.md"
+lint = "counted_inventory"
+quote = "Used at: the design described in Honnibal's 2013 post, \"A good part-of-speech tagger in about 200 lines of Python\""
+reason = "The title of a post, quoted as its author wrote it."
+
+[[md.allow]]
+path = "docs/design/corpus.md"
+lint = "counted_inventory"
+quote = "The tree, `tests/corpus/`, stays as the build doctrine bounds it: about 400 fixtures of at most 64KB for each collected label, plus `core/`, which is hand-picked."
+reason = "The build doctrine's cap on the tree, a limit."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
+quote = "`2026-09-27-01`: the 1200 collected fixtures of `tests/corpus/`, 400 each of `human/`, `llm/` and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`; 12,034,975 bytes."
+reason = "A dated record of one image, whose counts never go stale."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
+quote = "`2026-09-27-02`: 21,075 fixtures from `collect.py harvest`, 11,473 `human`, 9,003 `llm` and 599 `mixed`, 474 of those with their twin; 203,442,958 bytes."
+reason = "A dated record of one image, whose counts never go stale."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
+quote = "`2026-10-03-01`: licence corrections: 49 fixtures labelled MIT-0 added back as MIT, byte for byte but for `source.license` in the sidecar; those and 16 more whose licence the corpus does not accept or cannot name dropped."
+reason = "A dated record of one image, whose counts never go stale."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
+quote = "`2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again."
+reason = "A dated record of one image, whose counts never go stale."
 
 # A change may not leave the instructions with more list items than they had.
 [[md.overrides]]

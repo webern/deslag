@@ -615,9 +615,9 @@ pub(crate) struct Judging<'a> {
 }
 
 /// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it,
-/// `text`, its `contents` decoded, where the file is `disk`, and what the run `judging` is held to. Returns the document the
-/// lints read with what they found, for a caller that edits it: the section's stack reads the
-/// file, so a fix reads a file as the check does.
+/// `text`, its `contents` decoded, where the file is `disk`, and what the run `judging` is held
+/// to. Returns the document the lints read with what they found, for a caller that edits it: the
+/// section's stack reads the file, so a fix reads a file as the check does.
 pub(crate) fn check_text<'a>(
     config: &Config,
     section: &Section,

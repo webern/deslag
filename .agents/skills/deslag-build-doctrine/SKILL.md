@@ -69,8 +69,9 @@ Target names start with a verb. The vocabulary:
 - test: runs tests
 - clean: deletes build, test and other artifacts; everything the Makefile creates is cleanable
 
-`ci`, the GitHub ci job the release also calls, and `ci-fast`, the pre-push gate of about 20
-seconds, are the non-verb targets. Neither runs everything; `test-python` has its own workflow.
+`ci`, which the release calls and the ci workflow splits into parallel jobs, and `ci-fast`, the
+pre-push gate of about 20 seconds, are the non-verb targets. Neither runs everything; `test-python`
+has its own workflow.
 
 The scope follows the verb: `check-clippy` runs clippy, `fix-fmt` runs rustfmt. The bare verb is the
 "do everything" version: `make build` builds every target, `make test` runs every test, `make check`

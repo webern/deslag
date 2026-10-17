@@ -23,8 +23,8 @@ Have you followed relevant repo skills in your implementation? If not, you may n
 before you are ready to open the PR.
 
 Run `make ci-fast` before every push, and `make test-python` too if you changed
-`scripts/blobstore/` or `scripts/llm-detection/`. GitHub runs `make ci`, and `make test-python`
-when those scripts change.
+`scripts/blobstore/` or `scripts/llm-detection/`. GitHub runs the parts of `make ci` as parallel
+jobs, and `make test-python` when those scripts change.
 
 ## Writing it
 

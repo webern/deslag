@@ -11,7 +11,8 @@ is the image's filesystem, and git ignores it. `blobs.sh` does not know what is 
 image; each consumer names the path it reads under `.blobs/unpacked/`.
 
 The build never fetches. `make build`, `make test` and `make check` run offline with no login.
-Only the targets that read the image fetch it first: today `make test-blobs`, which `make ci` runs.
+Only the targets that read the image fetch it first, such as `make test-blobs`, `make test-tier`
+and `make test-time`.
 
 ```
 .blobs/unpacked/

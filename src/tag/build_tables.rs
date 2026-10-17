@@ -633,10 +633,12 @@ pub fn words() -> Vec<u8> {
     let closed_short = closed::words().filter(|word| word.len() <= SHORT).count();
     let lexicon_short = words.iter().filter(|(word, _)| word.len() <= SHORT).count();
     let mut table = Table {
-        // A bucket for every two short words, a slot for every one at the least.
+        // A bucket for every three short words, as a power of two: a third as many slots again
+        // as words, at the least.
         short: vec![
             [EMPTY_SHORT; 4];
-            ((lexicon_short + closed_short) / 2)
+            (lexicon_short + closed_short)
+                .div_ceil(3)
                 .max(1)
                 .next_power_of_two()
         ],

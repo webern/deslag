@@ -17,7 +17,7 @@
 //! to a 64-byte bucket, each holding the word as one `u64` and its length. Longer words, up to
 //! [`KEY`] bytes, have one of 32-byte slots with three `u64`. A probe folds the case of the word's
 //! bytes eight at a time and compares the key and length whole, so no byte of a word is copied or
-//! looked at twice. Together the two tables are about 4 MB. `build.rs` makes them (see
+//! looked at twice. Together the two tables are about 3 MB. `build.rs` makes them (see
 //! `build_tables.rs`) and the binary holds them as bytes, which a probe reads where they lie, so
 //! the first word costs no more than the rest. `layout.rs` says where each field of a slot is.
 

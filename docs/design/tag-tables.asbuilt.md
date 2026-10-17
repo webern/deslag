@@ -57,7 +57,7 @@ leaves the word to `shape.rs`.
 
 ## The word table
 
-`build.rs` builds one hash table of both, 4 MB that `table.rs` reads in the binary, without the
+`build.rs` builds one hash table of both, 3 MB that `table.rs` reads in the binary, without the
 lexicon's text. Each word has its `Reading` made and a mark byte of the lexicon's: dominance, and
 what a possessive reads of the word as a stem (noun, proper noun, which ranks first, plural). One
 probe answers a lookup. Words of up to eight bytes are in 16-byte slots, four to a 64-byte bucket;

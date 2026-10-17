@@ -73,8 +73,8 @@ the whole file. `list_growth` is an error in `[cpp]` and `[toml]`, and in `[rust
 Run `deslag explain <PATH>...` on a hand-written file and on each generated or vendored file near
 the globs. It prints whether a section selects the path, or why not; a `# reads:` line; the
 matching overrides in the order they merge; the merged table of each lint; and `# prose regions`,
-the comments read, each with its line range and the start of its text. A generated file must not
-show as selected. Change the globs until every file reads as you mean.
+the comments read. A generated file must not show as selected. Change the globs until every file
+reads as you mean.
 
 ## 5. Measure, then fix
 
@@ -94,7 +94,8 @@ the text reads as before; `--dry-run` writes nothing. Ask before fixing a human'
 Add `deslag check --base origin/main` where the repository runs its checks, with `fetch-depth: 0`
 in GitHub Actions. deslag is not on crates.io yet, so ask the human how to install it. `--format
 github` annotates files and `--format sarif` prints a code scanning log. `--diff <BASE>` reports
-only what a change touched; it misses some failures, so never upload its log.
+only what a change touched, and each failed `allow` entry; it misses some failures, so never upload
+its log.
 
 With the human's consent, add a line to AGENTS.md: "Run `deslag check --base origin/main` before
 you push, and fix what it reports."

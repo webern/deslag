@@ -43,10 +43,10 @@ Paths are relative to where deslag runs, and GitHub reads them from the root of 
 
 `deslag check --diff <BASE>` reports only what a change touched: the lines it adds, from the commit
 where `BASE` and `HEAD` meet to the working tree, uncommitted and untracked files included, and a
-verdict on a whole file, such as its size, when the change edits the file. It helps a repository
-that does not pass yet stop getting worse; the whole-tree `deslag check` stays the gate.
-`deslag instructions` says how to run it in CI and what it misses. The config has no setting for
-it.
+verdict on a whole file, such as its size, when the change edits the file. An `allow` entry that
+does not hold fails it wherever its file is. It helps a repository that does not pass yet stop
+getting worse; the whole-tree `deslag check` stays the gate. `deslag instructions` says how to run
+it in CI and what it misses. The config has no setting for it.
 
 `--base <BASE>`, on `check` and `fix`, gives the run the same change without narrowing the report.
 A lint that judges a change, such as `list_growth`, which fails a file left with more list items

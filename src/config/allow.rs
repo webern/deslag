@@ -13,12 +13,14 @@
 //! config loads, each with the setting that bounds it, and a `match` on [`Lint`] without a wildcard
 //! makes every new lint choose.
 //!
-//! What a reviewer reads in an entry must be all there is in it, so the `path`, the `quote` and
-//! the `reason` are refused when they hold a character that shows as nothing or acts on the reader
-//! (`invisible`), checked on the text after parsing, so an escape in the config's own syntax is
-//! no way round it. The one exception is the quote of a `banned_chars` entry, which may hold a
-//! character that lint can ban, since the sentence it exempts then holds it: a zero-width space,
-//! say, written in TOML as `\u200B`. A report shows such a character as `<U+200B>`.
+//! What a reviewer reads in an entry must be all there is in it. A `quote` may hold any character
+//! but a control character other than a tab, CR or LF, since it must equal the sentence, which the
+//! file holds anyway. A `path` or `reason` may not hold a character that shows as nothing or acts
+//! on the reader: a control or format character, another default-ignorable one, or a blank other
+//! than the ASCII space; a `reason` may hold a tab, CR or LF. Reports, notices and `deslag explain`
+//! write each character that shows as nothing or acts on the reader as `<U+XXXX>`. The checks read
+//! the text after parsing, so an escape in the config's own syntax, such as TOML's `\u200B`, is no
+//! way round them.
 
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::Deserialize;
@@ -34,21 +36,32 @@ use crate::lint::banned_chars;
 #[serde(deny_unknown_fields)]
 pub(super) struct AllowFile {
     /// The file the sentence is in, written as a report prints it: relative to the repo root,
-    /// `/`-separated, with no glob. One entry names one file.
+    /// `/`-separated, with no glob. One entry names one file. A `path` or `reason` may not hold a
+    /// character that shows as nothing or acts on the reader: a control or format character,
+    /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
+    /// tab, CR or LF.
     path: String,
     /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases` and
     /// `verbs_no_nouns`. One entry names one lint.
     #[schemars(schema_with = "lint_schema")]
     lint: String,
     /// The sentence, as the file holds it, without the `>` that a block quote starts its lines
-    /// with and the byte order mark that opens a file. A run of spaces, tabs and line breaks counts
-    /// as one space, so a sentence that is wrapped differently still matches; any other character
-    /// must match exactly, a no-break space included. The file must hold the sentence once, and the
-    /// lint must find something in it, or the entry fails the run. A character that shows as
-    /// nothing is refused, but for one that `banned_chars` bans in the quote of its own entry,
-    /// which TOML writes as an escape, such as `\u200B`.
+    /// with and the byte order mark that opens a file. A `>` inside a code span that wraps across
+    /// the lines of a block quote stays, and in a comment read as plain text, which is every C++
+    /// and TOML comment and a Rust comment that is not a doc comment, a `>` is text. Spaces, tabs
+    /// and line breaks fold to one space, so a sentence that is wrapped differently still matches;
+    /// a line break is LF or CR LF, or a lone CR in Markdown, while a lone CR in a comment is a
+    /// character of its line. Any other character must match exactly, a no-break space included.
+    /// The file must hold the sentence once, and the lint must find something in it, or the entry
+    /// fails the run. A `quote` may hold any character but a control character other than a tab, CR
+    /// or LF, since it must equal the sentence, which the file holds anyway. Reports, notices and
+    /// `deslag explain` write each character that shows as nothing or acts on the reader as
+    /// `<U+XXXX>`.
     quote: String,
-    /// Why the sentence must stay as it is. Required, and written in visible characters.
+    /// Why the sentence must stay as it is. Required. A `path` or `reason` may not hold a
+    /// character that shows as nothing or acts on the reader: a control or format character,
+    /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
+    /// tab, CR or LF.
     reason: String,
 }
 
@@ -171,29 +184,35 @@ pub(super) fn compile(
                 ".lint is `{lint}`, which does not take an entry: {instead}"
             )));
         }
-        let fields = [
-            ("path", &file.path, Hidden::Nothing),
-            ("reason", &file.reason, Hidden::Layout),
+        let hidden = [
+            ("path", file.path.chars().find(|ch| invisible(*ch))),
             (
-                "quote",
-                &file.quote,
-                match lint {
-                    Lint::BannedChars => Hidden::Banned,
-                    _ => Hidden::Layout,
-                },
+                "reason",
+                file.reason
+                    .chars()
+                    .find(|ch| invisible(*ch) && !layout(*ch)),
             ),
         ];
-        for (field, text, allowed) in fields {
-            if let Some(ch) = text
-                .chars()
-                .find(|ch| invisible(*ch) && !allowed.holds(*ch))
-            {
+        for (field, found) in hidden {
+            if let Some(ch) = found {
                 return Err(refuse(format!(
                     ".{field} holds {}, a character that shows as nothing or acts on the reader; \
                      write it in visible characters",
                     describe(ch)
                 )));
             }
+        }
+        // Any other character may be in a quote, since the sentence it must equal holds it too.
+        if let Some(ch) = file
+            .quote
+            .chars()
+            .find(|ch| ch.is_control() && !layout(*ch))
+        {
+            return Err(refuse(format!(
+                ".quote holds {}, a control character; a quote may not hold one other than a \
+                 tab, CR or LF",
+                describe(ch)
+            )));
         }
         let entry = Allow {
             section,
@@ -214,28 +233,10 @@ pub(super) fn compile(
     Ok(entries)
 }
 
-/// Which invisible characters a field of an entry may hold.
-#[derive(Clone, Copy)]
-enum Hidden {
-    /// None.
-    Nothing,
-    /// A tab and a line break, which [`fold`] folds into the space they stand for.
-    Layout,
-    /// Those, and the characters `banned_chars` can ban, which the sentence of a `banned_chars`
-    /// entry may hold.
-    Banned,
-}
-
-impl Hidden {
-    /// Whether the field may hold `ch`, which is [`invisible`].
-    fn holds(self, ch: char) -> bool {
-        let layout = matches!(ch, '\t' | '\n' | '\r');
-        match self {
-            Hidden::Nothing => false,
-            Hidden::Layout => layout,
-            Hidden::Banned => layout || banned_chars::name(ch).is_some(),
-        }
-    }
+/// Whether `ch` is a tab, a CR or a line feed, which a `quote` or a `reason` may hold as the layout
+/// of its wrapping.
+fn layout(ch: char) -> bool {
+    matches!(ch, '\t' | '\n' | '\r')
 }
 
 /// The characters, besides those `char` knows as control characters or space, that show as nothing
@@ -273,8 +274,8 @@ const HIDDEN: &[(char, char)] = &[
 
 /// Whether `ch` shows as nothing, or acts on the reader instead of showing as text: a control
 /// character, a space other than the ASCII space, a line or paragraph separator, or one of
-/// [`HIDDEN`]. A tab and a line break are invisible by this, though a quote and a reason may hold
-/// them as layout: [`fold`] folds them.
+/// [`HIDDEN`], the braille blank among them. A tab, a CR and a line feed are invisible by this,
+/// though a `reason` may hold them as [`layout`].
 pub(crate) fn invisible(ch: char) -> bool {
     ch != ' '
         && (ch.is_control()
@@ -457,43 +458,59 @@ mod tests {
     }
 
     #[test]
-    fn a_quote_with_a_character_that_shows_as_nothing_is_refused_but_for_one_banned_chars_bans() {
-        // Only the quote of a `banned_chars` entry may hold what that lint can ban.
-        for lint in ["banned_phrases", "verbs_no_nouns"] {
-            for ch in ['\u{200B}', '\u{00A0}', '\u{202F}', '\u{FEFF}'] {
+    fn a_quote_may_hold_any_character_but_a_control_character_other_than_a_tab_cr_or_lf() {
+        // The sentence the quote must equal holds the character anyway, whatever the lint, and
+        // whether or not the config bans it.
+        for lint in ["banned_chars", "banned_phrases", "verbs_no_nouns"] {
+            for ch in [
+                '\u{200B}',
+                '\u{200C}',
+                '\u{200D}',
+                '\u{00A0}',
+                '\u{202F}',
+                '\u{3000}',
+                '\u{FEFF}',
+                '\u{202E}',
+                '\u{2066}',
+                '\u{FE0E}',
+                '\u{FE0F}',
+                '\u{00AD}',
+                '\u{3164}',
+                '\u{2028}',
+                '\u{E0041}',
+                '\t',
+                '\n',
+                '\r',
+            ] {
+                let quote = format!("A{ch}sentence.");
+                let config = load(&entry("a.md", lint, &quote, "R."))
+                    .unwrap_or_else(|error| panic!("{lint} {ch:?}: {error}"));
+                assert_eq!(config.md().allow()[0].quote, quote, "{lint} {ch:?}");
+            }
+            for ch in ['\u{0}', '\u{7}', '\u{1b}', '\u{7f}', '\u{85}', '\u{9b}'] {
                 let quote = format!("A{ch}sentence.");
                 let said = refused(&entry("a.md", lint, &quote, "R."));
                 assert!(
-                    said.contains(&format!("md.allow[0].quote holds U+{:04X}", ch as u32)),
+                    said.contains(&format!(
+                        "md.allow[0].quote holds U+{:04X}, a control character",
+                        ch as u32
+                    )),
                     "{lint} {ch:?}: {said}"
                 );
             }
         }
-        for ch in [
-            '\u{200B}', '\u{00A0}', '\u{202F}', '\u{2003}', '\u{FEFF}', '\u{00AD}',
-        ] {
-            let quote = format!("A{ch}sentence.");
-            let config = load(&entry("a.md", "banned_chars", &quote, "R.")).expect("a config");
-            assert_eq!(config.md().allow()[0].quote, quote, "{ch:?}");
-        }
-        // A control character, and a character no group of `banned_chars` holds, is refused for
-        // its own lint as well, however the config spells it.
-        for ch in [
-            '\u{1b}', '\u{7}', '\u{0}', '\u{85}', '\u{2028}', '\u{202E}', '\u{3164}',
-        ] {
-            let quote = format!("A{ch}sentence.");
-            let said = refused(&entry("a.md", "banned_chars", &quote, "R."));
-            assert!(said.contains("md.allow[0].quote holds"), "{ch:?}: {said}");
-        }
         // The escape of TOML is how the file names the character; the rule reads the value.
-        let text = "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\nquote = \"A\\u200Bsentence.\"\nreason = \"R.\"\n";
+        let text = "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_phrases\"\nquote = \"A\\u200Dsentence.\"\nreason = \"R.\"\n";
         let config = load(text).expect("a config");
-        assert_eq!(config.md().allow()[0].quote, "A\u{200B}sentence.");
-        let text = text.replace("banned_chars", "banned_phrases");
-        assert!(refused(&text).contains("md.allow[0].quote holds U+200B"));
-        // A quote of only a zero-width space is refused for a lint that cannot ban one.
-        let said = refused(&entry("a.md", "banned_phrases", "\u{200B}", "R."));
-        assert!(said.contains("quote holds U+200B"), "{said}");
+        assert_eq!(config.md().allow()[0].quote, "A\u{200D}sentence.");
+        let said = refused(&text.replace("u200D", "u001B"));
+        assert!(said.contains("md.allow[0].quote holds U+001B"), "{said}");
+        // Only spaces, tabs and line breaks fold, so a quote of another space is not empty.
+        for ch in ['\u{00A0}', '\u{3000}', '\u{200B}'] {
+            let config = load(&entry("a.md", "banned_chars", &ch.to_string(), "R."))
+                .unwrap_or_else(|error| panic!("{ch:?}: {error}"));
+            assert_eq!(config.md().allow()[0].quote, ch.to_string());
+        }
     }
 
     #[test]

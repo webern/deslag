@@ -19,7 +19,7 @@ The quote: "The first release shipped — it took a long time"
 The reason: "A quoted title; the quote stops before the end of its sentence."
 
 The sentences of README.md that hold a finding of `banned_chars`:
-  line 3: "The first release shipped — it took a long time, and nobody minded the wait."
+  line 3: "The first release shipped — it took a long time, and nobody..."
 
 An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
 
@@ -31,7 +31,7 @@ The quote: "it took a long time, and nobody"
 The reason: "A quoted title; the quote is the middle of its sentence."
 
 The sentences of README.md that hold a finding of `banned_chars`:
-  line 3: "The first release shipped — it took a long time, and nobody minded the wait."
+  line 3: "The first release shipped — it took a long time, and nobody..."
 
 An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
 

@@ -403,7 +403,7 @@ impl<'a> Document<'a> {
     }
 
     /// The region that holds all of `range`, if one does.
-    fn region_at(&self, range: &Range<usize>) -> Option<&Region> {
+    pub(crate) fn region_at(&self, range: &Range<usize>) -> Option<&Region> {
         let at = self
             .regions
             .partition_point(|region| region.outer.end <= range.start);

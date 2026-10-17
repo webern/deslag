@@ -3,9 +3,11 @@
 //! An entry holds when its file is selected by its section, its quote is the one sentence of the
 //! file that equals it, and its lint finds something in that sentence. Only spaces, tabs and line
 //! breaks are folded in the comparison, and the markers of a block quote and the byte order mark
-//! that opens a file are no part of a sentence. Any other character must match exactly, a
-//! no-break space included, so a character added to the sentence later stops it matching instead
-//! of riding along with the finding the entry was written for. The entry then drops each
+//! that opens a file are no part of a sentence. A line break is a line feed, a CR and a line feed,
+//! or a lone CR in Markdown, which ends a line there; a lone CR in a comment is a character of its
+//! line, as the comment's reader reads it. Any other character must match exactly, a no-break
+//! space included, so a character added to the sentence later stops it matching instead of riding
+//! along with the finding the entry was written for. The entry then drops each
 //! occurrence of its lint inside the sentence, and no other: the rest of the file stays judged, a
 //! verdict on the whole file is never dropped, and a sentence that is reworded stops matching, so
 //! its finding is back. An entry that does not hold fails the run, with the reason, so that an
@@ -31,7 +33,7 @@ use crate::change::Change;
 use crate::config::allow::invisible;
 use crate::config::{Allow, Config};
 use crate::document::{Document, Location, PointKind, Sentence};
-use crate::lint::{Finding, Keep, MarkKind, Violation, on_lines};
+use crate::lint::{Finding, Keep, MarkKind, QUOTE_CHARS, Violation, on_lines};
 
 /// The line every report of a failed entry opens with.
 pub const HEADING: &str = "ERROR: deslag detected an exemption that does not hold!";
@@ -66,9 +68,11 @@ pub enum Status {
 pub struct Held {
     /// Its line.
     pub line: usize,
-    /// The whole sentence, as an entry would quote it: spaces, tabs and line breaks folded, and
-    /// the markers of a block quote left out.
-    pub sentence: String,
+    /// The start of the sentence, as an entry would quote it, at most [`QUOTE_CHARS`] characters:
+    /// spaces, tabs and line breaks folded, and the markers of a block quote left out.
+    pub start: String,
+    /// Whether the sentence goes on past `start`.
+    pub cut: bool,
 }
 
 /// An entry of the config, and what it did in a run.
@@ -144,8 +148,8 @@ impl Exemption {
     }
 
     /// The sentences of the file that hold a finding of the entry's lint, as a paragraph of the
-    /// report: the [`QUOTED`] closest to the quote, and how many more there are. A file that was
-    /// not read has none to quote.
+    /// report: the [`QUOTED`] closest to the quote, each cut to [`QUOTE_CHARS`] characters, and
+    /// how many more there are. A file that was not read has none to quote.
     fn held(&self) -> Option<String> {
         let read = matches!(
             self.status,
@@ -166,7 +170,14 @@ impl Exemption {
                 };
                 let listed: String = near
                     .iter()
-                    .map(|held| format!("\n  line {}: \"{}\"", held.line, shown(&held.sentence)))
+                    .map(|held| {
+                        let ellipsis = if held.cut { "..." } else { "" };
+                        format!(
+                            "\n  line {}: \"{}{ellipsis}\"",
+                            held.line,
+                            shown(&held.start)
+                        )
+                    })
                     .collect();
                 let rest = if more == 0 {
                     String::new()
@@ -230,36 +241,37 @@ impl Exemption {
 /// How many sentences the report of a failed entry quotes: those closest to the quote.
 const QUOTED: usize = 3;
 
-/// The longest stretch of a sentence that [`closest`] compares, in characters, so that one huge
-/// sentence cannot make a report slow.
-const COMPARED: usize = 300;
-
-/// The [`QUOTED`] sentences of `holding` closest to `quote` by edit distance, in the order of the
-/// file, and how many more there are. Ties go to the earlier line.
+/// The [`QUOTED`] sentences of `holding` closest to `quote`, in the order of the file, and how
+/// many more there are. Closeness is the edit distance between the start of each sentence and the
+/// first [`QUOTE_CHARS`] characters of the quote, so a huge sentence costs no more than a short
+/// one, and the work grows with the number of sentences and no faster. Ties go to the earlier
+/// sentence.
 fn closest<'h>(holding: &'h [Held], quote: &str) -> (Vec<&'h Held>, usize) {
-    let mut ranked: Vec<(usize, &Held)> = holding
-        .iter()
-        .map(|held| (distance(&held.sentence, quote), held))
-        .collect();
-    ranked.sort_by_key(|(far, held)| (*far, held.line));
-    let more = ranked.len().saturating_sub(QUOTED);
-    ranked.truncate(QUOTED);
-    let mut near: Vec<&Held> = ranked.into_iter().map(|(_, held)| held).collect();
-    near.sort_by_key(|held| held.line);
-    (near, more)
+    let quote: Vec<char> = quote.chars().take(QUOTE_CHARS).collect();
+    // The closest so far, closest first: the distance of each and its place in `holding`.
+    let mut near: Vec<(usize, usize)> = Vec::with_capacity(QUOTED + 1);
+    for (at, held) in holding.iter().enumerate() {
+        let far = distance(&held.start, &quote);
+        let rank = near.partition_point(|(other, _)| *other <= far);
+        if rank < QUOTED {
+            near.insert(rank, (far, at));
+            near.truncate(QUOTED);
+        }
+    }
+    near.sort_by_key(|(_, at)| *at);
+    let more = holding.len() - near.len();
+    (near.into_iter().map(|(_, at)| &holding[at]).collect(), more)
 }
 
-/// The edit distance between the first [`COMPARED`] characters of `a` and of `b`.
-fn distance(a: &str, b: &str) -> usize {
-    let a: Vec<char> = a.chars().take(COMPARED).collect();
-    let b: Vec<char> = b.chars().take(COMPARED).collect();
+/// The edit distance between `a` and `b`.
+fn distance(a: &str, b: &[char]) -> usize {
     let mut row: Vec<usize> = (0..=b.len()).collect();
-    for (i, x) in a.iter().enumerate() {
+    for (i, x) in a.chars().enumerate() {
         let mut diagonal = row[0];
         row[0] = i + 1;
         for (j, y) in b.iter().enumerate() {
             let above = row[j + 1];
-            row[j + 1] = (diagonal + usize::from(x != y))
+            row[j + 1] = (diagonal + usize::from(x != *y))
                 .min(above + 1)
                 .min(row[j] + 1);
             diagonal = above;
@@ -268,11 +280,14 @@ fn distance(a: &str, b: &str) -> usize {
     row[b.len()]
 }
 
-/// `text` with each run of spaces, tabs and line breaks made one space, and none at either end.
-/// Any other character is kept as it is, a no-break space and every other Unicode space included:
-/// a quote and a sentence are equal only if they hold the same such characters.
+/// `text` with each run of spaces, tabs and line breaks made one space, and none at either end. A
+/// line break here is a line feed, or a CR and a line feed; a lone CR is kept, as a comment holds
+/// one, and [`sentence_text`] makes each CR of Markdown, where it ends a line, a line feed. Any
+/// other character is kept as it is, a no-break space and every other Unicode space included: a
+/// quote and a sentence are equal only if they hold the same such characters.
 pub(crate) fn fold(text: &str) -> String {
-    text.split([' ', '\t', '\r', '\n'])
+    text.replace("\r\n", "\n")
+        .split([' ', '\t', '\n'])
         .filter(|part| !part.is_empty())
         .collect::<Vec<_>>()
         .join(" ")
@@ -318,36 +333,47 @@ impl Keep for Within {
 /// reads, less the byte order mark that opens the file and the markers that a block quote and a
 /// list item put at the start of the lines after the first. Those hold no text of the sentence, and
 /// they come with its wrapping. Any other character stays, such as a no-break space beside a
-/// marker.
+/// marker, a `>` inside a code span that wraps across the lines of a block quote, and every `>` of
+/// a comment read as plain text, where a `>` does not start a block quote. Each CR of Markdown,
+/// which ends a line there, becomes a line feed; a lone CR in a comment stays, since the comment's
+/// reader keeps it as a character of the line.
 fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
     let range = &sentence.range;
     let tokens = &document.tokens[sentence.tokens.clone()];
     let first = document
         .points
         .partition_point(|point| point.range.start < range.start);
-    // Between a soft break and the next token of the sentence lies the start of the next line.
+    // Between a soft break and the next token of the sentence lies the start of the next line. The
+    // points and the tokens are in the order of the file, so these stretches are too, by their
+    // starts and by their ends.
     let starts: Vec<Range<usize>> = document.points[first..]
         .iter()
         .take_while(|point| point.range.end <= range.end)
         .filter(|point| point.kind == PointKind::SoftBreak)
         .filter_map(|point| {
-            let next = tokens
-                .iter()
-                .find(|token| token.range.start >= point.range.end)?;
-            Some(point.range.end..next.range.start)
+            let next = tokens.partition_point(|token| token.range.start < point.range.end);
+            Some(point.range.end..tokens.get(next)?.range.start)
         })
         .collect();
+    let comment = document.region_at(range).is_some();
     document
         .chars(range.clone())
-        .filter(|(at, ch)| {
-            let opens_file = *ch == '\u{FEFF}' && at.start == 0;
-            let marker = matches!(ch, '>' | ' ' | '\t')
-                && starts
-                    .iter()
-                    .any(|start| start.start <= at.start && at.end <= start.end);
-            !opens_file && !marker
+        .filter_map(|(at, ch)| {
+            let opens_file = ch == '\u{FEFF}' && at.start == 0;
+            // Of the stretches that end at or after the character, the first starts earliest, so
+            // it holds the character if any does.
+            let marker = matches!(ch, '>' | ' ' | '\t') && {
+                let start = starts.partition_point(|start| start.end < at.end);
+                starts
+                    .get(start)
+                    .is_some_and(|start| start.start <= at.start)
+            };
+            match ch {
+                _ if opens_file || marker => None,
+                '\r' if !comment => Some('\n'),
+                _ => Some(ch),
+            }
         })
-        .map(|(_, ch)| ch)
         .collect()
 }
 
@@ -362,28 +388,45 @@ pub(crate) fn matching(document: &Document<'_>, folded: &str) -> Vec<Range<usize
         .collect()
 }
 
-/// The sentences of `document` with an occurrence of `violation` inside, whole.
+/// The sentences of `document` with an occurrence of `violation` inside, whole. The places and
+/// the sentences are both taken in the order of the file, so one pass over each finds them.
 fn held(document: &Document<'_>, violation: Option<&Violation>) -> Vec<Held> {
     let Some(violation) = violation else {
         return Vec::new();
     };
-    let places: Vec<Location> = violation
+    let mut places: Vec<Range<usize>> = violation
         .marks()
         .into_iter()
         .filter(|mark| mark.kind == MarkKind::Occurrence)
-        .map(|mark| mark.location)
+        .map(|mark| mark.location.start..mark.location.end)
         .collect();
+    places.sort_by_key(|place| (place.start, place.end));
+    let mut next = 0;
     document
         .sentences
         .iter()
         .filter(|sentence| {
-            places
+            let range = &sentence.range;
+            // A place that starts before this sentence starts before every later one too.
+            while places
+                .get(next)
+                .is_some_and(|place| place.start < range.start)
+            {
+                next += 1;
+            }
+            places[next..]
                 .iter()
-                .any(|place| sentence.range.start <= place.start && place.end <= sentence.range.end)
+                .take_while(|place| place.start <= range.end)
+                .any(|place| place.end <= range.end)
         })
-        .map(|sentence| Held {
-            line: document.locate(sentence.range.clone()).line,
-            sentence: fold(&sentence_text(document, sentence)),
+        .map(|sentence| {
+            let text = fold(&sentence_text(document, sentence));
+            let start: String = text.chars().take(QUOTE_CHARS).collect();
+            Held {
+                line: document.locate(sentence.range.clone()).line,
+                cut: start.len() < text.len(),
+                start,
+            }
         })
         .collect()
 }
@@ -548,6 +591,9 @@ pub(crate) fn label(root: &Path, config: &Config) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::BannedChars;
+    use crate::document::{Reader, Stack, Surface};
+    use crate::lint::{Lint, banned_chars};
 
     /// A place of `start..end` on one line.
     fn place(start: usize, end: usize) -> Location {
@@ -694,6 +740,62 @@ mod tests {
         // A `>` inside a line is the sentence's too.
         assert_eq!(count("> One \\> two\n> three.\n", "One \\> two three."), 1);
         assert_eq!(count("One > two three.\n", "One two three."), 0);
+        // Only what comes before the first token of a line is markers: a `>`, a space or a tab
+        // inside that token is the sentence's, as is one in a code span that wraps.
+        let span = "> A \u{2014} b\n> `x > y` c.\n";
+        assert_eq!(count(span, "A \u{2014} b `x > y` c."), 1);
+        assert_eq!(count(span, "A \u{2014} b `xy` c."), 0);
+        let wraps = "> A \u{2014} `x\n> y` b.\n";
+        assert_eq!(count(wraps, "A \u{2014} `x > y` b."), 1);
+        assert_eq!(count(wraps, "A \u{2014} `x y` b."), 0);
+        // Many lines, each with its markers.
+        let words: Vec<String> = (0..300).map(|n| format!("w{n}")).collect();
+        let source: String = words.iter().map(|word| format!("> > {word}\n")).collect();
+        let quote = words.join(" ");
+        assert_eq!(count(&source, &quote), 1);
+        let marked = source.replacen("> > w150\n", "> > w150 >\n", 1);
+        assert_eq!(count(&marked, &quote), 0);
+        assert_eq!(count(&marked, &quote.replacen("w150", "w150 >", 1)), 1);
+    }
+
+    /// How many sentences of `source`, read as `reader` reads it, `matching` finds equal to
+    /// `quote`.
+    fn count_in(reader: Reader, source: &str, quote: &str) -> usize {
+        matching(&Stack::new(reader).document(source), &fold(quote)).len()
+    }
+
+    #[test]
+    fn a_lone_cr_ends_a_line_of_markdown_and_never_folds_in_a_comment() {
+        let quote = "A \u{2014} b c d.";
+        let with_cr = "A \u{2014} b\rc d.";
+        assert_eq!(count("A \u{2014} b\rc d.\n", quote), 1);
+        assert_eq!(count("A \u{2014} b\rc d.\n", with_cr), 0);
+        // A Rust comment holds it as a character of its line, which the quote must hold too.
+        let rust = || Reader::Rust {
+            surfaces: vec![Surface::DocComment, Surface::Comment],
+        };
+        for source in [
+            "// A \u{2014} b\rc d.\nfn f() {}\n",
+            "/// A \u{2014} b\rc d.\nfn f() {}\n",
+        ] {
+            assert_eq!(count_in(rust(), source, quote), 0, "{source:?}");
+            assert_eq!(count_in(rust(), source, with_cr), 1, "{source:?}");
+        }
+        // A TOML comment ends at it, so no quote reaches past it.
+        let toml = || Reader::Toml {
+            surfaces: vec![Surface::Comment],
+        };
+        let source = "# A \u{2014} b\rc d.\nk = 1\n";
+        assert_eq!(count_in(toml(), source, quote), 0);
+        assert_eq!(count_in(toml(), source, with_cr), 0);
+        assert_eq!(count_in(toml(), source, "A \u{2014} b"), 1);
+        // A CR and a line feed is a line break in each.
+        assert_eq!(
+            count_in(rust(), "// A \u{2014} b\r\n// c d.\r\nfn f() {}\r\n", quote),
+            1
+        );
+        assert_eq!(count_in(toml(), "# A \u{2014} b\r\n# c d.\r\n", quote), 1);
+        assert_eq!(count("A \u{2014} b\r\nc d.\r\n", quote), 1);
     }
 
     #[test]
@@ -709,30 +811,167 @@ mod tests {
         assert_eq!(count(&format!("\u{FEFF}{inside}\n"), &inside), 1);
     }
 
+    /// A sentence on `line` that holds a finding, as [`held`] makes it.
+    fn held_at(line: usize, sentence: &str) -> Held {
+        Held {
+            line,
+            start: sentence.to_string(),
+            cut: false,
+        }
+    }
+
+    /// The lines of the sentences `closest` quotes from `holding`, and how many more it counts.
+    fn nearest(holding: &[Held], quote: &str) -> (Vec<usize>, usize) {
+        let (near, more) = closest(holding, quote);
+        (near.iter().map(|held| held.line).collect(), more)
+    }
+
     #[test]
     fn a_report_quotes_the_sentences_closest_to_the_quote_and_counts_the_rest() {
-        let held = |line: usize, sentence: &str| Held {
-            line,
-            sentence: sentence.to_string(),
-        };
         let quote = "The title a dated record.";
         let holding = [
-            held(1, "Nothing alike at all, a long way off."),
-            held(2, "The title a dated records."),
-            held(3, "A different sentence."),
-            held(4, "The title a dated record!"),
-            held(5, "The title, a dated record."),
+            held_at(1, "Nothing alike at all, a long way off."),
+            held_at(2, "The title a dated records."),
+            held_at(3, "A different sentence."),
+            held_at(4, "The title a dated record!"),
+            held_at(5, "The title, a dated record."),
         ];
-        let (near, more) = closest(&holding, quote);
-        let lines: Vec<usize> = near.iter().map(|held| held.line).collect();
-        assert_eq!((lines, more), (vec![2, 4, 5], 2));
+        assert_eq!(nearest(&holding, quote), (vec![2, 4, 5], 2));
         // Three or fewer are all quoted.
-        let (near, more) = closest(&holding[..2], quote);
-        assert_eq!((near.len(), more), (2, 0));
-        // A sentence longer than the stretch compared does not make the distance slow or wrong.
-        let long = "a".repeat(10 * COMPARED);
-        assert_eq!(distance(&long, &long), 0);
-        assert_eq!(distance("kitten", "sitting"), 3);
+        assert_eq!(nearest(&holding[..2], quote), (vec![1, 2], 0));
+        assert_eq!(
+            distance("kitten", &"sitting".chars().collect::<Vec<_>>()),
+            3
+        );
+    }
+
+    #[test]
+    fn a_report_lists_the_closest_sentences_in_the_order_of_the_file() {
+        // Closest first would be lines 2, 3, 1.
+        let quote = "abcdef";
+        let holding = [
+            held_at(1, "abcdXY"),
+            held_at(2, "abcdef"),
+            held_at(3, "abcdeX"),
+        ];
+        assert_eq!(nearest(&holding, quote), (vec![1, 2, 3], 0));
+    }
+
+    #[test]
+    fn a_tie_for_the_last_place_in_a_report_goes_to_the_earlier_sentence() {
+        // Lines 1 and 4 are as far from the quote as each other, and only one of them is quoted.
+        let quote = "abcdef";
+        let holding = [
+            held_at(1, "abcdXY"),
+            held_at(2, "abcdef"),
+            held_at(3, "abcdeX"),
+            held_at(4, "abcdYX"),
+        ];
+        assert_eq!(nearest(&holding, quote), (vec![1, 2, 3], 1));
+    }
+
+    /// An entry of `banned_chars` for `a.md` that quotes `quote`.
+    fn entry(quote: &str) -> Allow {
+        Allow {
+            section: "md",
+            index: 0,
+            path: "a.md".to_string(),
+            lint: Lint::BannedChars,
+            quote: quote.to_string(),
+            reason: "A quoted title.".to_string(),
+        }
+    }
+
+    /// The finding of `banned_chars`, with its defaults, in `document`.
+    fn banned(document: &Document<'_>) -> Option<Violation> {
+        banned_chars::check(document, Some(&BannedChars::default())).map(Violation::BannedChars)
+    }
+
+    #[test]
+    fn a_report_compares_and_quotes_only_the_start_of_a_long_sentence() {
+        // The quote and the first sentence share a start longer than the stretch compared, and
+        // differ only past it.
+        let start = "word ".repeat(QUOTE_CHARS);
+        let quote = format!("{start}one \u{2014} end.");
+        let source = format!(
+            "{start}two \u{2014} end.\n\nA near \u{2014} one.\n\nFar \u{2014} off.\n\nFar \u{2014} too.\n"
+        );
+        let document = Document::markdown(&source);
+        let holding = held(&document, banned(&document).as_ref());
+        assert_eq!(holding.len(), 4);
+        assert!(holding[0].cut && !holding[1].cut);
+        assert_eq!(holding[0].start.chars().count(), QUOTE_CHARS);
+        let (lines, more) = nearest(&holding, &quote);
+        assert_eq!((lines[0], more), (1, 1));
+        // The report cuts it where the comparison stops, with an ellipsis.
+        let mut exemption = Exemption::new(&entry(&quote), Status::NoSuchSentence, Vec::new());
+        exemption.holding = holding;
+        let report = exemption.render("deslag.toml").expect("a failed entry");
+        let cut: String = start.chars().take(QUOTE_CHARS).collect();
+        assert!(
+            report.contains(&format!("line 1: \"{}...\"\n", cut.trim_end())),
+            "{report}"
+        );
+        assert!(!report.contains("two"), "{report}");
+    }
+
+    #[test]
+    fn held_finds_each_sentence_with_an_occurrence_inside_once_in_the_order_of_the_file() {
+        let source = "One \u{2014} a \u{2014} b.\n\nNone here.\n\nTwo \u{2014}.\n\n> Three\n> \u{2014} wrapped.\n";
+        let document = Document::markdown(source);
+        let holding = held(&document, banned(&document).as_ref());
+        let found: Vec<(usize, &str)> = holding
+            .iter()
+            .map(|held| (held.line, held.start.as_str()))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                (1, "One \u{2014} a \u{2014} b."),
+                (5, "Two \u{2014}."),
+                (7, "Three \u{2014} wrapped."),
+            ]
+        );
+        assert_eq!(held(&document, None), []);
+    }
+
+    #[test]
+    fn a_place_that_runs_past_a_sentence_does_not_hide_a_later_one_inside_it() {
+        let source = "One two three. Four five six.\n";
+        let document = Document::markdown(source);
+        let at = |text: &str| source.find(text).expect("in the source");
+        // The first place starts in the first sentence and ends in the second; the next is inside
+        // the first.
+        let across = place(at("two"), at("five"));
+        let inside = place(at("three"), at("three") + 5);
+        let violation = Violation::BannedChars(banned_chars::Over {
+            banned: vec![banned_chars::Banned {
+                ch: 't',
+                name: None,
+                instead: None,
+                range_default: false,
+                locations: vec![across, inside],
+            }],
+            message: None,
+        });
+        let holding = held(&document, Some(&violation));
+        let found: Vec<&str> = holding.iter().map(|held| held.start.as_str()).collect();
+        assert_eq!(found, ["One two three."]);
+    }
+
+    #[test]
+    fn a_notice_shows_the_quote_folded_and_its_invisible_characters_as_code_points() {
+        let exemption = Exemption::new(
+            &entry("The title\n   \u{2014} a\u{200B}dated\trecord."),
+            Status::Applied,
+            vec![1],
+        );
+        let notice = exemption.notice("deslag.toml");
+        assert!(
+            notice.contains("Quote: \"The title \u{2014} a<U+200B>dated record.\""),
+            "{notice}"
+        );
+        assert!(notice.contains("Reason: \"A quoted title.\""), "{notice}");
     }
 
     #[test]

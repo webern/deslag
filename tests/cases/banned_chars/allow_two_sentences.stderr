@@ -19,8 +19,8 @@ The quote: "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fix
 The reason: "A dated record of one image; its counts never go stale."
 
 The sentences of README.md that hold a finding of `banned_chars`:
-  line 3: "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again."
-  line 7: "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again."
+  line 3: "`2026-10-03-03`: licence corrections — 856 exclusions, and 3..."
+  line 7: "`2026-10-03-03`: licence corrections — 856 exclusions, and 3..."
 
 An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
 

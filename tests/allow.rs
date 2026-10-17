@@ -701,16 +701,83 @@ fn an_entry_names_an_invisible_character_it_exempts_with_a_toml_escape() {
         "{text}"
     );
 
-    // Another lint's quote may not hold it, since no finding of that lint is a character.
-    let other = deslag_in(&toml("banned_phrases"), source);
-    assert_eq!(code(&other), 2, "{}", stderr(&other));
-    assert!(stderr(&other).contains("md.allow[0].quote holds U+200B"));
+    // Another lint's quote may hold it too, since the sentence does; this one finds nothing there.
+    repo.write("a.md", source);
+    repo.write("deslag.toml", &toml("banned_phrases"));
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["no_finding"]);
 }
 
-/// The output of `deslag check` in a repo holding `config` and `a.md` as `source`.
-fn deslag_in(config: &str, source: &str) -> Output {
-    let repo = repo(config, &[("a.md", source)]);
-    deslag(repo.root(), &["check"])
+/// A config whose `banned_chars` table holds `settings`, with one entry for `a.md` whose quote is
+/// `quote`, written in the escapes of a TOML string.
+fn escaped(settings: &str, quote: &str) -> String {
+    format!(
+        "schema_version = 1\n\n[md.lints.banned_chars]\n{settings}\n\n[[md.allow]]\npath = \"a.md\"\n\
+         lint = \"banned_chars\"\nquote = \"{quote}\"\nreason = \"A quoted title.\"\n"
+    )
+}
+
+#[test]
+fn a_quote_holds_an_invisible_character_whether_or_not_the_config_bans_it() {
+    // Each case: the settings of `banned_chars`, a sentence as TOML escapes write it, what the run
+    // says of the entry, and the character as reports show it.
+    let joined = "The team \\U0001F469\\u200D\\U0001F4BB ships";
+    let cases = [
+        // An emoji sequence with a zero-width joiner, which no group bans.
+        ("", format!("{joined} \\u2014 fast."), "applied", "<U+200D>"),
+        ("", format!("{joined} fast."), "no_finding", "<U+200D>"),
+        // A bidi override, which the config bans or not.
+        (
+            "ban = { \"\\u202E\" = \"\" }",
+            "A \\u202Ereversed title.".to_string(),
+            "applied",
+            "<U+202E>",
+        ),
+        (
+            "",
+            "A \\u202Ereversed title.".to_string(),
+            "no_finding",
+            "<U+202E>",
+        ),
+        // A zero-width space that the config does not ban.
+        (
+            "groups = { invisible = false }",
+            "A zero\\u200Bwidth \\u2014 title.".to_string(),
+            "applied",
+            "<U+200B>",
+        ),
+        (
+            "groups = { invisible = false }",
+            "A zero\\u200Bwidth title.".to_string(),
+            "no_finding",
+            "<U+200B>",
+        ),
+    ];
+    for (settings, quote, status, shown) in cases {
+        let config = escaped(settings, &quote);
+        let value: toml::Value = toml::from_str(&config).expect("TOML");
+        let sentence = value["md"]["allow"][0]["quote"]
+            .as_str()
+            .expect("a quote")
+            .to_string();
+        let repo = repo(&config, &[("a.md", &format!("{sentence}\n"))]);
+        let run = run_json(repo.root(), &["check"]);
+        assert_eq!(statuses(&run), [status], "{quote}: {run}");
+        assert_eq!(run["exemptions"][0]["quote"], sentence.as_str());
+        let explained = stdout(&deslag(repo.root(), &["explain", "a.md"]));
+        assert!(explained.contains(shown), "{quote}: {explained}");
+        if status == "applied" {
+            continue;
+        }
+        let text = stderr(&deslag(repo.root(), &["check"]));
+        let quoted = format!(
+            "The quote: \"{}\"",
+            sentence.replace(['\u{200B}', '\u{200D}', '\u{202E}'], shown)
+        );
+        assert!(text.contains(&quoted), "{quote}: {text}");
+        let report = run["exemptions"][0]["report"].as_str().expect("a report");
+        assert!(report.contains(&quoted), "{quote}: {report}");
+    }
 }
 
 #[test]

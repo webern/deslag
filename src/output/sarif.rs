@@ -6,10 +6,10 @@
 //! file's first character, since GitHub needs a region on every result.
 //!
 //! An `allow` entry puts two things in the log. Each occurrence it drops is a result of its lint
-//! with a `suppressions` entry of kind `external`, whose justification is the entry's reason. An
-//! entry that did not hold is a result of the rule `allow`, at the start of the config: serde reads
-//! the config in three formats, and none of them keeps the span of an entry, so the result cannot
-//! point at the entry's line. Its message names the entry as `md.allow[0]`.
+//! with a `suppressions` entry of kind `external`, whose justification is the entry's reason, as a
+//! report shows it. An entry that did not hold is a result of the rule `allow`, at the start of the
+//! config: serde reads the config in three formats, and none of them keeps the span of an entry, so
+//! the result cannot point at the entry's line. Its message names the entry as `md.allow[0]`.
 //!
 //! Columns count Unicode code points, and every region also gives its bytes, so a reader that
 //! counts columns another way can still find the place exactly.
@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 
 use crate::Report;
 use crate::document::Location;
-use crate::lint::{Finding, Keep, Lint, MarkKind};
+use crate::lint::{Finding, Keep, Lint, MarkKind, allow};
 
 /// The id of the rule of an `allow` entry that did not hold.
 const ALLOW_RULE: &str = "allow";
@@ -67,7 +67,7 @@ pub fn render(report: &Report) -> String {
             };
             let suppression = json!([{
                 "kind": "external",
-                "justification": exemption.allow.reason,
+                "justification": allow::shown(&exemption.allow.reason),
             }]);
             results(&finding).into_iter().map(move |mut result| {
                 result["suppressions"] = suppression.clone();

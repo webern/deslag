@@ -81,6 +81,10 @@ pub enum Item {
         /// The words that may stand between a bound and its number.
         hedges: &'static [&'static str],
     },
+    /// A token that is no end of a range: it does not come right after a number and one of these
+    /// words, folded. With `to` in the set it skips the `15` of `5 to 15 entries`, and not the `15`
+    /// of `5 files to 15 entries` or of `five to 15 entries`.
+    NotRangeEnd(&'static [&'static str]),
     /// A token that does not come right after a word that starts with a capital letter, wherever
     /// that word is in its sentence, unless the word, folded, is in this set: it skips the `3` of
     /// "Python 3 files" and of "Run 3 tests", and not the `13` of `The 13 variants` when `the` is
@@ -228,6 +232,13 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         }
         Item::NotAfter(rows) => !ends_with_row(rows, tokens, folded, at),
         Item::NotBounded { bounds, hedges } => !bounded(bounds, hedges, tokens, folded, at),
+        Item::NotRangeEnd(joiners) => {
+            let joined = at >= 2
+                && tokens[at - 1].kind == TokenKind::Word
+                && joiners.contains(&folded[at - 1].as_str())
+                && tokens[at - 2].kind == TokenKind::Number;
+            !joined
+        }
         Item::NotAfterCapitalised(plain) => !at
             .checked_sub(1)
             .and_then(|before| tokens.get(before).zip(folded.get(before)))
@@ -1028,6 +1039,33 @@ mod tests {
         assert_eq!(found(&P, "It has at most `about` 4 files."), ["4 files"]);
         assert_eq!(found(&P, "It has at most 3 `or` 4 files."), ["4 files"]);
         assert_eq!(found(&P, "It has at most `3` or 4 files."), ["4 files"]);
+    }
+
+    #[test]
+    fn a_not_range_end_item_skips_a_number_after_a_number_and_a_joiner() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::All(&[Item::Kind(TokenKind::Number), Item::NotRangeEnd(&["to"])]),
+                Item::Literal("files"),
+            ],
+        };
+        assert!(found(&P, "It has 5 to 15 files.").is_empty());
+        assert!(found(&P, "It has from 5 to 15 files.").is_empty());
+        assert!(found(&P, "It has 5 To 15 files.").is_empty());
+        assert!(found(&P, "5 to 15 files is fine.").is_empty());
+        assert_eq!(found(&P, "It has 15 files."), ["15 files"]);
+        assert_eq!(found(&P, "It has to 15 files."), ["15 files"]);
+        assert_eq!(found(&P, "It has 5 or 15 files."), ["15 files"]);
+        assert_eq!(
+            found(&P, "It has 5 files to 15 files."),
+            ["5 files", "15 files"]
+        );
+        assert_eq!(found(&P, "It has five to 15 files."), ["15 files"]);
+        assert_eq!(found(&P, "It has 5, to 15 files."), ["15 files"]);
+        assert_eq!(found(&P, "It has 5 to to 15 files."), ["15 files"]);
+        // Only prose is a number or a joiner.
+        assert_eq!(found(&P, "It has `5` to 15 files."), ["15 files"]);
+        assert_eq!(found(&P, "It has 5 `to` 15 files."), ["15 files"]);
     }
 
     #[test]

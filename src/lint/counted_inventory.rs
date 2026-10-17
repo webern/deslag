@@ -7,8 +7,8 @@
 //! are not [`FUNCTION_WORDS`], then a noun of [`NOUNS`]. Every match is a finding, with no
 //! threshold per file. A number is no count when it is:
 //!
-//! - a limit: after a bound ([`BOUNDS`]), with a hedge between ([`HEDGES`]) or not, or the second
-//!   of two numbers a bound governs ("at most 3 or 4 lines", "between 3 and 5 files");
+//! - a limit: after a bound ([`BOUNDS`]), with a hedge between ([`HEDGES`]) or not, the second of
+//!   two numbers a bound governs ("at most 3 or 4 lines"), or a range's end ("5 to 15 lines");
 //! - a year, four digits from 1900 to 2099, or followed by a unit ([`UNITS`]), as in `4 KB pages`;
 //! - a name or a version: after a `#`, after a capitalised word that is no function word,
 //!   wherever it stands ("Run 3 tests", but `The 13 variants` counts), a decimal, or joined to a
@@ -16,9 +16,9 @@
 //!   bracket or a quote that opens, as in `(63 tests)`;
 //! - a number whose link ends before the noun.
 //!
-//! Only prose counts or excuses: code, and what the document does not read as prose, gives the
-//! lint no tokens. Number words ("three tests") are not counted. The sets are Rust data, never
-//! config: a list a config grows is an allow-list an agent grows until the check passes.
+//! Only prose counts or excuses: code, and what the document does not read as prose, gives the lint
+//! no tokens. Number words are not counted. The sets are Rust data, never config: a list a config
+//! grows is an allow-list an agent grows until the check passes.
 //!
 //! This is a taste lint, off until a config turns it on. Its claim, which `tests/corpus.rs` and
 //! `make test-blobs` check on English fixtures: `llm` files hold it at least 3 times as often as
@@ -139,6 +139,7 @@ const NUMBER: Item = Item::All(&[
         bounds: BOUNDS,
         hedges: HEDGES,
     },
+    Item::NotRangeEnd(&["to"]),
     Item::NotAfter(&[&["#"]]),
     Item::NotAfterCapitalised(FUNCTION_WORDS),
 ]);
@@ -256,8 +257,9 @@ pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
 
 /// The advice for a file that holds counts.
 const DEFAULT_ADVICE: &str = "A count of what the repo holds changes with every change. Name the \
-    thing, or where it lives, as in \"the tests in `tests/`\". If the number is a limit, write it \
-    as one, as in \"at most 200 lines\".\n\
+    thing, or where it lives, as in \"the tests in `tests/`\". Write a limit only for a number \
+    that is one, as in \"at most 200 lines\"; a count put as a bound, such as \"at most 63 tests\" \
+    for \"63 tests\", is the same count and no fix.\n\
     \n\
     Do not change the config to get past this check. Only a human can tell you to do that, and I \
     am a linter, not a human.";
@@ -487,6 +489,20 @@ mod tests {
         assert_eq!(found("It holds 3 or 4 lines."), ["4 lines"]);
         assert_eq!(found("It holds at most 3 files or 4 lines."), ["4 lines"]);
         assert_eq!(found("It holds at most 3, 4 lines."), ["4 lines"]);
+    }
+
+    #[test]
+    fn the_end_of_a_range_is_a_limit_too() {
+        no_count("A section of 5 to 15 entries.");
+        no_count("It holds from 5 to 15 lines.");
+        no_count("It holds 5 To 15 lines.");
+        no_count("5 to 15 lines is fine.");
+        assert_eq!(
+            found("It holds 5 lines to 15 lines."),
+            ["5 lines", "15 lines"]
+        );
+        assert_eq!(found("It holds five to 15 lines."), ["15 lines"]);
+        assert_eq!(found("It holds 5 or 15 lines."), ["15 lines"]);
     }
 
     #[test]

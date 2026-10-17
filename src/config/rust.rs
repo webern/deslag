@@ -39,6 +39,15 @@ pub(super) struct RustFile {
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
     overrides: Vec<OverrideFile>,
+    // After `overrides`, so that a section written as a JSON array keeps the keys before it where
+    // they were: the config reads a struct by position.
+    /// Files `globs` match that this section leaves out, such as generated code. A pattern is
+    /// written as in `globs`, from the repo root with a `/`, else by file name, and not needing to
+    /// end in `.rs`. A file the walk skips stays skipped, and nothing re-includes one. Only a human
+    /// adds an exclude; never add one to make a check pass.
+    #[serde(default)]
+    exclude: Vec<String>,
+    // After `exclude` for the same reason.
     /// The sentences of these files that stay as written, each exempted from one lint. Only a
     /// human writes an entry.
     #[serde(default)]
@@ -56,6 +65,7 @@ impl RustFile {
             .collect();
         Parts {
             globs: self.globs,
+            exclude: self.exclude,
             default_globs: DEFAULT_GLOBS,
             extensions: Some(EXTENSIONS),
             stack: Stack::new(Reader::Rust { surfaces }),

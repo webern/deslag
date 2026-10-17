@@ -73,6 +73,9 @@ pub struct Held {
     pub start: String,
     /// Whether the sentence goes on past `start`.
     pub cut: bool,
+    /// Whether the sentence is read as a comment, where a lone CR is a character of its line and
+    /// not a line break. A quote is folded to match, to find the sentences closest to it.
+    pub comment: bool,
 }
 
 /// An entry of the config, and what it did in a run.
@@ -159,7 +162,7 @@ impl Exemption {
         read.then(|| match self.holding.as_slice() {
             [] => format!("No sentence of {path} holds a finding of `{lint}`.\n\n"),
             holding => {
-                let (near, more) = closest(holding, &self.allow.folded());
+                let (near, more) = closest(holding, &self.allow.quote);
                 let heading = if more == 0 {
                     format!("The sentences of {path} that hold a finding of `{lint}`:")
                 } else {
@@ -241,17 +244,23 @@ impl Exemption {
 /// How many sentences the report of a failed entry quotes: those closest to the quote.
 const QUOTED: usize = 3;
 
-/// The [`QUOTED`] sentences of `holding` closest to `quote`, in the order of the file, and how
-/// many more there are. Closeness is the edit distance between the start of each sentence and the
-/// first [`QUOTE_CHARS`] characters of the quote, so a huge sentence costs no more than a short
-/// one, and the work grows with the number of sentences and no faster. Ties go to the earlier
-/// sentence.
+/// The [`QUOTED`] sentences of `holding` closest to `quote`, as an entry writes it, in the order of
+/// the file, and how many more there are. Closeness is the edit distance between the start of each
+/// sentence and the first [`QUOTE_CHARS`] characters of the quote folded as that sentence is read,
+/// so a huge sentence costs no more than a short one, and the work grows with the number of
+/// sentences and no faster. Ties go to the earlier sentence.
 fn closest<'h>(holding: &'h [Held], quote: &str) -> (Vec<&'h Held>, usize) {
-    let quote: Vec<char> = quote.chars().take(QUOTE_CHARS).collect();
+    let start = |comment| -> Vec<char> {
+        fold_quote(quote, comment)
+            .chars()
+            .take(QUOTE_CHARS)
+            .collect()
+    };
+    let (markdown, comment) = (start(false), start(true));
     // The closest so far, closest first: the distance of each and its place in `holding`.
     let mut near: Vec<(usize, usize)> = Vec::with_capacity(QUOTED + 1);
     for (at, held) in holding.iter().enumerate() {
-        let far = distance(&held.start, &quote);
+        let far = distance(&held.start, if held.comment { &comment } else { &markdown });
         let rank = near.partition_point(|(other, _)| *other <= far);
         if rank < QUOTED {
             near.insert(rank, (far, at));
@@ -282,15 +291,27 @@ fn distance(a: &str, b: &[char]) -> usize {
 
 /// `text` with each run of spaces, tabs and line breaks made one space, and none at either end. A
 /// line break here is a line feed, or a CR and a line feed; a lone CR is kept, as a comment holds
-/// one, and [`sentence_text`] makes each CR of Markdown, where it ends a line, a line feed. Any
-/// other character is kept as it is, a no-break space and every other Unicode space included: a
-/// quote and a sentence are equal only if they hold the same such characters.
+/// one, and [`sentence_text`] makes each CR of Markdown, where it ends a line, a line feed, as
+/// [`fold_quote`] does for a quote. Any other character is kept as it is, a no-break space and
+/// every other Unicode space included: a quote and a sentence are equal only if they hold the same
+/// such characters.
 pub(crate) fn fold(text: &str) -> String {
     text.replace("\r\n", "\n")
         .split([' ', '\t', '\n'])
         .filter(|part| !part.is_empty())
         .collect::<Vec<_>>()
         .join(" ")
+}
+
+/// `quote` folded to be compared with the folded text of a sentence that is read as a comment, or
+/// as Markdown when `comment` is false. It reads a lone CR as the sentence does: a character of the
+/// line in a comment, and in Markdown a line break, which folds with the spaces and tabs.
+pub(crate) fn fold_quote(quote: &str, comment: bool) -> String {
+    if comment {
+        fold(quote)
+    } else {
+        fold(&quote.replace('\r', "\n"))
+    }
 }
 
 /// `text` folded, as a report prints it, with each character that shows as nothing or acts on the
@@ -355,7 +376,7 @@ fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
             Some(point.range.end..tokens.get(next)?.range.start)
         })
         .collect();
-    let comment = document.region_at(range).is_some();
+    let comment = in_comment(document, sentence);
     document
         .chars(range.clone())
         .filter_map(|(at, ch)| {
@@ -377,13 +398,27 @@ fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
         .collect()
 }
 
-/// The range of each sentence of `document` equal to `folded`, which is a quote folded, once the
-/// sentence's text is folded too.
-pub(crate) fn matching(document: &Document<'_>, folded: &str) -> Vec<Range<usize>> {
+/// Whether `sentence` is read as a comment, which is so inside a region of `document`. A lone CR is
+/// a character of its line there, and a line break anywhere else.
+fn in_comment(document: &Document<'_>, sentence: &Sentence) -> bool {
+    document.region_at(&sentence.range).is_some()
+}
+
+/// The range of each sentence of `document` equal to `quote`, as an entry writes it, once both are
+/// folded: the quote as the sentence is read, which only a lone CR tells apart.
+pub(crate) fn matching(document: &Document<'_>, quote: &str) -> Vec<Range<usize>> {
+    let (markdown, comment) = (fold_quote(quote, false), fold_quote(quote, true));
     document
         .sentences
         .iter()
-        .filter(|sentence| fold(&sentence_text(document, sentence)) == folded)
+        .filter(|sentence| {
+            let folded = if in_comment(document, sentence) {
+                &comment
+            } else {
+                &markdown
+            };
+            fold(&sentence_text(document, sentence)) == *folded
+        })
         .map(|sentence| sentence.range.clone())
         .collect()
 }
@@ -426,6 +461,7 @@ fn held(document: &Document<'_>, violation: Option<&Violation>) -> Vec<Held> {
                 line: document.locate(sentence.range.clone()).line,
                 cut: start.len() < text.len(),
                 start,
+                comment: in_comment(document, sentence),
             }
         })
         .collect()
@@ -441,7 +477,7 @@ pub(crate) fn apply(
 ) -> (Vec<Finding>, Vec<Exemption>) {
     let mut exemptions = Vec::with_capacity(entries.len());
     for allow in entries {
-        let sentences = matching(document, &allow.folded());
+        let sentences = matching(document, &allow.quote);
         let lines: Vec<usize> = sentences
             .iter()
             .map(|range| document.locate(range.clone()).line)
@@ -592,7 +628,7 @@ pub(crate) fn label(root: &Path, config: &Config) -> String {
 mod tests {
     use super::*;
     use crate::config::BannedChars;
-    use crate::document::{Reader, Stack, Surface};
+    use crate::document::{Fences, Reader, Stack, Surface};
     use crate::lint::{Lint, banned_chars};
 
     /// A place of `start..end` on one line.
@@ -653,7 +689,7 @@ mod tests {
 
     /// How many sentences of `source` `matching` finds equal to `quote`.
     fn count(source: &str, quote: &str) -> usize {
-        matching(&Document::markdown(source), &fold(quote)).len()
+        matching(&Document::markdown(source), quote).len()
     }
 
     #[test]
@@ -761,7 +797,7 @@ mod tests {
     /// How many sentences of `source`, read as `reader` reads it, `matching` finds equal to
     /// `quote`.
     fn count_in(reader: Reader, source: &str, quote: &str) -> usize {
-        matching(&Stack::new(reader).document(source), &fold(quote)).len()
+        matching(&Stack::new(reader).document(source), quote).len()
     }
 
     #[test]
@@ -769,18 +805,27 @@ mod tests {
         let quote = "A \u{2014} b c d.";
         let with_cr = "A \u{2014} b\rc d.";
         assert_eq!(count("A \u{2014} b\rc d.\n", quote), 1);
-        assert_eq!(count("A \u{2014} b\rc d.\n", with_cr), 0);
+        assert_eq!(count("A \u{2014} b\rc d.\n", with_cr), 1);
         // A Rust comment holds it as a character of its line, which the quote must hold too.
         let rust = || Reader::Rust {
             surfaces: vec![Surface::DocComment, Surface::Comment],
         };
-        for source in [
-            "// A \u{2014} b\rc d.\nfn f() {}\n",
-            "/// A \u{2014} b\rc d.\nfn f() {}\n",
-        ] {
-            assert_eq!(count_in(rust(), source, quote), 0, "{source:?}");
-            assert_eq!(count_in(rust(), source, with_cr), 1, "{source:?}");
-        }
+        assert_eq!(
+            count_in(rust(), "// A \u{2014} b\rc d.\nfn f() {}\n", quote),
+            0
+        );
+        assert_eq!(
+            count_in(rust(), "// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
+            1
+        );
+        assert_eq!(
+            count_in(rust(), "/// A \u{2014} b\rc d.\nfn f() {}\n", quote),
+            0
+        );
+        assert_eq!(
+            count_in(rust(), "/// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
+            1
+        );
         // A TOML comment ends at it, so no quote reaches past it.
         let toml = || Reader::Toml {
             surfaces: vec![Surface::Comment],
@@ -796,6 +841,115 @@ mod tests {
         );
         assert_eq!(count_in(toml(), "# A \u{2014} b\r\n# c d.\r\n", quote), 1);
         assert_eq!(count("A \u{2014} b\r\nc d.\r\n", quote), 1);
+    }
+
+    #[test]
+    fn a_quote_with_a_lone_cr_matches_a_markdown_sentence_however_it_is_wrapped() {
+        let with_cr = "A \u{2014} b\rc d.";
+        // The sentence wrapped with a line feed, with a CR and a line feed, and with a lone CR.
+        assert_eq!(count("A \u{2014} b\nc d.\n", with_cr), 1);
+        assert_eq!(count("A \u{2014} b\r\nc d.\r\n", with_cr), 1);
+        assert_eq!(count("A \u{2014} b\rc d.\n", with_cr), 1);
+        // On one line, and in a block quote, where the markers are no part of the sentence.
+        assert_eq!(count("A \u{2014} b c d.\n", with_cr), 1);
+        assert_eq!(count("> A \u{2014} b\n> c d.\n", with_cr), 1);
+        // The CR folds with the spaces, tabs and line breaks beside it, whichever comes first.
+        assert_eq!(count("A \u{2014} b\nc d.\n", "A \u{2014} b \r c d."), 1);
+        assert_eq!(count("A \u{2014} b\nc d.\n", "A \u{2014} b\t\r\nc d."), 1);
+        assert_eq!(count("A \u{2014} b\nc d.\n", "A \u{2014} b\r\r\nc d."), 1);
+        // A quote that wraps with a line feed still matches the sentence wrapped with a lone CR.
+        assert_eq!(count("A \u{2014} b\rc d.\n", "A \u{2014} b\nc d."), 1);
+        // The CR is a break and no more: other words and other characters still must match.
+        assert_eq!(count("A \u{2014} b\nx d.\n", with_cr), 0);
+        assert_eq!(count("A \u{2014} bc d.\n", with_cr), 0);
+        assert_eq!(count("A \u{2014} b\u{00A0}c d.\n", with_cr), 0);
+        // A quote that holds two sentences does not match either of them.
+        assert_eq!(
+            count("A \u{2014} b\nc d. More.\n", "A \u{2014} b\rc d. More."),
+            0
+        );
+    }
+
+    #[test]
+    fn a_quote_with_a_lone_cr_matches_only_a_comment_that_holds_a_lone_cr() {
+        let with_cr = "A \u{2014} b\rc d.";
+        let rust = || Reader::Rust {
+            surfaces: vec![Surface::DocComment, Surface::Comment],
+        };
+        // A Rust line comment and a Rust doc comment that hold a lone CR.
+        assert_eq!(
+            count_in(rust(), "// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
+            1
+        );
+        assert_eq!(
+            count_in(rust(), "/// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
+            1
+        );
+        // The same comment wrapped with a line feed, with a CR and a line feed, and on one line.
+        assert_eq!(
+            count_in(rust(), "// A \u{2014} b\n// c d.\nfn f() {}\n", with_cr),
+            0
+        );
+        assert_eq!(
+            count_in(
+                rust(),
+                "// A \u{2014} b\r\n// c d.\r\nfn f() {}\r\n",
+                with_cr
+            ),
+            0
+        );
+        assert_eq!(
+            count_in(rust(), "// A \u{2014} b c d.\nfn f() {}\n", with_cr),
+            0
+        );
+        assert_eq!(
+            count_in(rust(), "/// A \u{2014} b\n/// c d.\nfn f() {}\n", with_cr),
+            0
+        );
+        assert_eq!(
+            count_in(
+                rust(),
+                "/// A \u{2014} b\r\n/// c d.\r\nfn f() {}\r\n",
+                with_cr
+            ),
+            0
+        );
+        assert_eq!(
+            count_in(rust(), "/// A \u{2014} b c d.\nfn f() {}\n", with_cr),
+            0
+        );
+        // A TOML comment ends at a lone CR, so none holds one, and none matches.
+        let toml = || Reader::Toml {
+            surfaces: vec![Surface::Comment],
+        };
+        assert_eq!(
+            count_in(toml(), "# A \u{2014} b\rc d.\nk = 1\n", with_cr),
+            0
+        );
+        assert_eq!(
+            count_in(toml(), "# A \u{2014} b\n# c d.\nk = 1\n", with_cr),
+            0
+        );
+        assert_eq!(
+            count_in(toml(), "# A \u{2014} b\r\n# c d.\r\nk = 1\r\n", with_cr),
+            0
+        );
+        assert_eq!(count_in(toml(), "# A \u{2014} b c d.\nk = 1\n", with_cr), 0);
+    }
+
+    #[test]
+    fn a_quote_folds_a_lone_cr_by_how_each_sentence_of_a_markdown_file_is_read() {
+        let reader = || Reader::Markdown {
+            fences: Fences::all(),
+        };
+        // The same words, as a paragraph and as a comment in a fence that holds a lone CR.
+        let source = "A \u{2014} b\nc d.\n\n```rust\n// A \u{2014} b\rc d.\n```\n";
+        let with_cr = "A \u{2014} b\rc d.";
+        let spaced = "A \u{2014} b c d.";
+        // A lone CR in the quote is a line break to the paragraph and a character to the comment.
+        assert_eq!(count_in(reader(), source, with_cr), 2);
+        assert_eq!(count_in(reader(), source, spaced), 1);
+        assert_eq!(count_in(reader(), source, "A \u{2014} b\nc d."), 1);
     }
 
     #[test]
@@ -817,6 +971,7 @@ mod tests {
             line,
             start: sentence.to_string(),
             cut: false,
+            comment: false,
         }
     }
 
@@ -843,6 +998,28 @@ mod tests {
             distance("kitten", &"sitting".chars().collect::<Vec<_>>()),
             3
         );
+    }
+
+    #[test]
+    fn a_report_folds_a_lone_cr_of_the_quote_as_each_sentence_is_read() {
+        // A lone CR in the quote is a space to a Markdown sentence and itself to a comment.
+        let quote = "abc\rdef";
+        let comment = |line, sentence| Held {
+            comment: true,
+            ..held_at(line, sentence)
+        };
+        let holding = [
+            comment(1, "abc\rdxf"),
+            comment(2, "abc\rdxx"),
+            held_at(3, "abc def"),
+            held_at(4, "abc dxf"),
+            comment(5, "abc\rxxx"),
+        ];
+        // Lines 3, 1 and 4 are 0, 1 and 1 away. Were the quote left alone for the Markdown
+        // sentences, line 3 would be 1 away and line 4 would be 2, behind line 2.
+        assert_eq!(nearest(&holding, quote), (vec![1, 3, 4], 2));
+        // A line feed in the quote reads as a space in each, so only the Markdown sentences are near.
+        assert_eq!(nearest(&holding, "abc\ndef"), (vec![1, 3, 4], 2));
     }
 
     #[test]
@@ -885,6 +1062,41 @@ mod tests {
     /// The finding of `banned_chars`, with its defaults, in `document`.
     fn banned(document: &Document<'_>) -> Option<Violation> {
         banned_chars::check(document, Some(&BannedChars::default())).map(Violation::BannedChars)
+    }
+
+    /// How the one entry that quotes `quote` came out against `source`, read as Markdown, where
+    /// `banned_chars` finds the em dash.
+    fn status_in(source: &str, quote: &str) -> Status {
+        let document = Document::markdown(source);
+        let finding = Finding {
+            path: "a.md".to_string(),
+            violation: banned(&document).expect("a finding"),
+        };
+        let entry = entry(quote);
+        let (_, exemptions) = apply(&document, &[&entry], vec![finding]);
+        exemptions[0].status
+    }
+
+    #[test]
+    fn an_entry_with_a_lone_cr_in_its_quote_applies_to_a_markdown_sentence_wrapped_any_way() {
+        let quote = "A \u{2014} b\rc d.";
+        assert_eq!(status_in("A \u{2014} b\nc d.\n", quote), Status::Applied);
+        assert_eq!(
+            status_in("A \u{2014} b\r\nc d.\r\n", quote),
+            Status::Applied
+        );
+        assert_eq!(status_in("A \u{2014} b\rc d.\n", quote), Status::Applied);
+        assert_eq!(status_in("A \u{2014} b c d.\n", quote), Status::Applied);
+        // A sentence that is reworded stops matching, as it does for a quote with a line feed.
+        assert_eq!(
+            status_in("A \u{2014} b\nx d.\n", quote),
+            Status::NoSuchSentence
+        );
+        // The same sentence twice is two sentences, however each is wrapped.
+        assert_eq!(
+            status_in("A \u{2014} b\nc d.\n\nA \u{2014} b\rc d.\n", quote),
+            Status::TwoSentences
+        );
     }
 
     #[test]

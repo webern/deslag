@@ -199,6 +199,11 @@ fn chosen<'c>(
             return Err(problem(
                 if config.sole_section_for(&file.relative)?.is_some() {
                     "it is ignored, so deslag check never reads it".to_string()
+                } else if let Some((name, pattern)) = config.excluded_by(&file.relative) {
+                    format!(
+                        "no section selects it; [{name}] excludes it by {:?}",
+                        pattern.as_str()
+                    )
                 } else {
                     "no section selects it".to_string()
                 },

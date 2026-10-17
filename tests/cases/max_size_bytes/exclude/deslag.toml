@@ -1,0 +1,7 @@
+schema_version = 1
+
+[md]
+exclude = ["/docs/adr/**"]
+
+[md.lints.max_size_bytes]
+value = 100

@@ -62,6 +62,10 @@ pub(super) const WEIGHTS_MAGIC: u32 = u32::from_le_bytes(*b"dsw1");
 
 /// The rules version the weights were learned from, in the header of the weights: after the magic.
 pub(super) const fn rules_version(weights: &[u8]) -> u32 {
+    assert!(
+        u32_at(weights, 0) == WEIGHTS_MAGIC,
+        "the weights are not what this build's layout writes"
+    );
     u32_at(weights, 4)
 }
 
@@ -217,8 +221,13 @@ pub(super) const BUCKET: usize = 4 * SHORT_SLOT;
 /// The bytes of a slot of the table of long words: three keys, the reading, the mark and the length.
 pub(super) const LONG_SLOT: usize = 32;
 
-/// The bytes the words' header takes: the count of short buckets and of long slots, as `u32`.
-pub(super) const WORDS_HEADER: usize = 8;
+/// The first four bytes of the word table, which say what it is: `dst` and the version of its
+/// layout, which is raised when the layout changes, as the weights' is.
+pub(super) const WORDS_MAGIC: u32 = u32::from_le_bytes(*b"dst1");
+
+/// The bytes the words' header takes: [`WORDS_MAGIC`], then the count of short buckets and of long
+/// slots, each a `u32`.
+pub(super) const WORDS_HEADER: usize = 12;
 
 /// The bits of the mark byte of a slot, which the lexicon sets and no other table does: the closed-class
 /// table changes a word's reading and leaves its mark.

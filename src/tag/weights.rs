@@ -377,6 +377,10 @@ fn read(bytes: &'static [u8]) -> Weights {
     let vocab_text = section(bytes, &mut at);
     let records = section(bytes, &mut at);
     let slots = section(bytes, &mut at);
+    assert!(
+        (slots.len() / 4).is_power_of_two(),
+        "the slots of the weights are not a power of two, and a mask picks the slot"
+    );
     let history = score_rows(section(bytes, &mut at));
     let rules = score_rows(section(bytes, &mut at));
     assert_eq!(history.len(), HISTORIES * HISTORIES);

@@ -24,8 +24,8 @@
 #[cfg(test)]
 use super::closed;
 use super::layout::{
-    BUCKET, KEY, LONG_SLOT, SHORT_SLOT, WORDS_HEADER, long_hash, long_key, mark, reading_at,
-    short_hash, u32_at, u64_at,
+    BUCKET, KEY, LONG_SLOT, SHORT_SLOT, WORDS_HEADER, WORDS_MAGIC, long_hash, long_key, mark,
+    reading_at, short_hash, u32_at, u64_at,
 };
 pub(super) use super::layout::{SHORT, short_key, short_key_const};
 #[cfg(test)]
@@ -39,26 +39,48 @@ struct Entry {
     mark: u8,
 }
 
-/// The bytes of the table of short words: a power of two of buckets.
-const SHORT_TABLE: &[u8] = {
-    let buckets = u32_at(built::WORDS, 0) as usize;
-    built::WORDS
-        .split_at(WORDS_HEADER)
-        .1
-        .split_at(buckets * BUCKET)
-        .0
+/// The count of buckets of short words, which the header gives. A build that wrote other bytes
+/// than these tables does not compile.
+const BUCKETS: usize = {
+    assert!(
+        u32_at(built::WORDS, 0) == WORDS_MAGIC,
+        "the word table is not what this build's layout writes"
+    );
+    let buckets = u32_at(built::WORDS, 4) as usize;
+    assert!(
+        buckets.is_power_of_two(),
+        "the buckets of short words are not a power of two, and a mask picks the bucket"
+    );
+    buckets
 };
 
-/// The bytes of the table of long words: a power of two of slots.
-const LONG_TABLE: &[u8] = {
-    let buckets = u32_at(built::WORDS, 0) as usize;
-    let slots = u32_at(built::WORDS, 4) as usize;
-    built::WORDS
-        .split_at(WORDS_HEADER + buckets * BUCKET)
-        .1
-        .split_at(slots * LONG_SLOT)
-        .0
+/// The count of slots of long words, which the header gives.
+const SLOTS: usize = {
+    let slots = u32_at(built::WORDS, 8) as usize;
+    assert!(
+        slots.is_power_of_two(),
+        "the slots of long words are not a power of two, and a mask picks the slot"
+    );
+    assert!(
+        built::WORDS.len() == WORDS_HEADER + BUCKETS * BUCKET + slots * LONG_SLOT,
+        "the word table is not the size its header says"
+    );
+    slots
 };
+
+/// The bytes of the table of short words: a power of two of buckets.
+const SHORT_TABLE: &[u8] = built::WORDS
+    .split_at(WORDS_HEADER)
+    .1
+    .split_at(BUCKETS * BUCKET)
+    .0;
+
+/// The bytes of the table of long words: a power of two of slots.
+const LONG_TABLE: &[u8] = built::WORDS
+    .split_at(WORDS_HEADER + BUCKETS * BUCKET)
+    .1
+    .split_at(SLOTS * LONG_SLOT)
+    .0;
 
 /// What the table has for the folded word of `len` bytes whose key is `key`. A bucket is full when
 /// its last slot is in use, and only then can the word be in the next.

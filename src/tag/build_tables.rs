@@ -13,7 +13,8 @@
 
 use super::layout::{
     BUCKET, HISTORIES, KEY, LEVELS, LONG_SLOT, PLACES, Piece, RECORD, SHORT, SHORT_SLOT,
-    WEIGHTS_MAGIC, hash_of, key_of, long_hash, long_key, short_hash, short_key,
+    WEIGHTS_MAGIC, WORDS_HEADER, WORDS_MAGIC, hash_of, key_of, long_hash, long_key, short_hash,
+    short_key,
 };
 use super::{Reading, closed, lexicon};
 
@@ -450,12 +451,23 @@ pub fn weights(text: &str) -> Vec<u8> {
         }
     }
 
+    // Room for twice as many slots as rows, at the least, in a power of two so that a mask picks
+    // the slot.
     let mut slots = vec![0u32; (count * 2).next_power_of_two()];
     let mask = slots.len() - 1;
+    assert!(
+        count * 2 <= slots.len(),
+        "weights.txt has {count} rows for {} slots",
+        slots.len()
+    );
     for (row, &offset) in kept.iter().zip(&offsets) {
         let hash = hash_of(row.template, row.a, row.b, Piece::of(row.text.as_bytes()));
         let mut slot = hash as usize & mask;
+        // The table is not full, so a free slot is found within one turn of it.
+        let mut tried = 0;
         while slots[slot] != 0 {
+            tried += 1;
+            assert!(tried < slots.len(), "no free slot for a row of weights.txt");
             slot = (slot + 1) & mask;
         }
         slots[slot] = offset;
@@ -519,6 +531,20 @@ struct Long {
     len: u8,
 }
 
+/// A slot of the table of short words with no word in it.
+const EMPTY_SHORT: Short = Short {
+    key: 0,
+    entry: NOTHING,
+    len: 0,
+};
+
+/// A slot of the table of long words with no word in it.
+const EMPTY_LONG: Long = Long {
+    key: [0; 3],
+    entry: NOTHING,
+    len: 0,
+};
+
 /// The two tables: the words of up to [`SHORT`] bytes, which most of any text is, and the longer
 /// ones. Each is a power of two of buckets or slots, open addressing with linear probing from the
 /// one the hash names, and a slot with no length is empty. A bucket of short words fills from its
@@ -538,8 +564,10 @@ impl Table {
         );
         if len <= SHORT {
             let key = short_key(word.as_bytes());
-            let mask = self.short.len() - 1;
+            let buckets = self.short.len();
+            let mask = buckets - 1;
             let mut at = short_hash(key, len) & mask;
+            let mut tried = 0;
             // The first slot that is empty or has the word, along the buckets from its own.
             let slot = 'found: loop {
                 for slot in &mut self.short[at] {
@@ -547,6 +575,12 @@ impl Table {
                         break 'found slot;
                     }
                 }
+                // A table with more words than slots would go round for ever.
+                tried += 1;
+                assert!(
+                    tried < buckets,
+                    "the table of short words is full ({buckets} buckets): no slot for {word:?}"
+                );
                 at = (at + 1) & mask;
             };
             let entry = make(slot.entry);
@@ -557,11 +591,18 @@ impl Table {
             };
         } else {
             let key = long_key(word.as_bytes());
-            let mask = self.long.len() - 1;
+            let slots = self.long.len();
+            let mask = slots - 1;
             let mut at = long_hash(&key, len) & mask;
+            let mut tried = 0;
             while self.long[at].len != 0
                 && !(self.long[at].len as usize == len && self.long[at].key == key)
             {
+                tried += 1;
+                assert!(
+                    tried < slots,
+                    "the table of long words is full ({slots} slots): no slot for {word:?}"
+                );
                 at = (at + 1) & mask;
             }
             let entry = make(self.long[at].entry);
@@ -591,26 +632,16 @@ pub fn words() -> Vec<u8> {
     let size = |count: usize| (count * 4 / 3).max(2).next_power_of_two();
     let closed_short = closed::words().filter(|word| word.len() <= SHORT).count();
     let lexicon_short = words.iter().filter(|(word, _)| word.len() <= SHORT).count();
-    let empty_short = Short {
-        key: 0,
-        entry: NOTHING,
-        len: 0,
-    };
-    let empty_long = Long {
-        key: [0; 3],
-        entry: NOTHING,
-        len: 0,
-    };
     let mut table = Table {
         // A bucket for every two short words, a slot for every one at the least.
         short: vec![
-            [empty_short; 4];
+            [EMPTY_SHORT; 4];
             ((lexicon_short + closed_short) / 2)
                 .max(1)
                 .next_power_of_two()
         ],
         long: vec![
-            empty_long;
+            EMPTY_LONG;
             size(words.len() - lexicon_short + closed::words().count() - closed_short)
         ],
     };
@@ -627,7 +658,10 @@ pub fn words() -> Vec<u8> {
         }
     }
 
-    let mut out = Vec::with_capacity(8 + table.short.len() * BUCKET + table.long.len() * LONG_SLOT);
+    let mut out = Vec::with_capacity(
+        WORDS_HEADER + table.short.len() * BUCKET + table.long.len() * LONG_SLOT,
+    );
+    put_u32(&mut out, WORDS_MAGIC);
     put_u32(&mut out, table.short.len() as u32);
     put_u32(&mut out, table.long.len() as u32);
     for bucket in &table.short {
@@ -645,4 +679,64 @@ pub fn words() -> Vec<u8> {
     debug_assert_eq!(SHORT_SLOT, 8 + READING + 2);
     debug_assert_eq!(LONG_SLOT, 24 + READING + 2);
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A table with room for `buckets` of short words and `slots` of long ones.
+    fn table(buckets: usize, slots: usize) -> Table {
+        Table {
+            short: vec![[EMPTY_SHORT; 4]; buckets],
+            long: vec![EMPTY_LONG; slots],
+        }
+    }
+
+    #[test]
+    fn a_table_with_room_takes_every_word_and_takes_a_word_again() {
+        let mut table = table(1, 2);
+        for word in [
+            "a",
+            "b",
+            "c",
+            "d",
+            "a",
+            "abcdefghi",
+            "bcdefghij",
+            "abcdefghi",
+        ] {
+            table.insert(word, |_| NOTHING);
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "the table of short words is full")]
+    fn more_short_words_than_slots_fail_the_build_and_do_not_go_round_for_ever() {
+        let mut table = table(2, 2);
+        for word in ["a", "b", "c", "d", "e", "f", "g", "h", "i"] {
+            table.insert(word, |_| NOTHING);
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "the table of long words is full")]
+    fn more_long_words_than_slots_fail_the_build_and_do_not_go_round_for_ever() {
+        let mut table = table(2, 2);
+        for word in ["abcdefghi", "bcdefghij", "cdefghijk"] {
+            table.insert(word, |_| NOTHING);
+        }
+    }
+
+    #[test]
+    fn the_word_table_opens_with_its_magic_and_its_counts() {
+        let bytes = words();
+        assert_eq!(bytes[..4], WORDS_MAGIC.to_le_bytes());
+        let buckets = u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize;
+        let slots = u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
+        assert_eq!(
+            bytes.len(),
+            WORDS_HEADER + buckets * BUCKET + slots * LONG_SLOT
+        );
+    }
 }

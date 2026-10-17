@@ -1016,7 +1016,12 @@ const LEFT_BY_REASON: &[(&str, usize)] = &[
     ),
     (
         "the replacement is the default for a range of characters, a guess at what this one means",
-        6,
+        4,
+    ),
+    (
+        "there is no replacement for it, since the arrows of its range point every way and only \
+         the writer knows which this one means",
+        2,
     ),
 ];
 

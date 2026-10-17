@@ -36,14 +36,6 @@ fn entries() -> impl Iterator<Item = (&'static Version, &'static Entry)> {
     entries_in(changelog())
 }
 
-/// Every entry of the embedded changelog's `next` release. A released directory is frozen, so a
-/// rule of the repo that arrived after the release is not held against its entries.
-fn unreleased_entries() -> impl Iterator<Item = &'static Entry> {
-    entries()
-        .filter(|(version, _)| matches!(version, Version::Next))
-        .map(|(_, entry)| entry)
-}
-
 /// Where the key `key` of the setting `id`, a table, is in the schema: under the table's items
 /// when the table is a list, as `md.overrides[].globs` is, and folded as the schema paths are.
 fn key_path(paths: &SchemaPaths, id: &str, key: &str) -> String {
@@ -661,9 +653,8 @@ fn every_catalogue_phrase_arrives_in_next_or_a_release_no_later_than_the_crate()
     }
 }
 
-/// The text of each unreleased entry meets the rules deslag holds the instruction files to, which
-/// cannot read it from a TOML file. A released entry is frozen, so it is held to the lints that
-/// shipped with it, not to the ones that came after.
+/// The text of each entry meets the rules deslag holds the instruction files to, which cannot
+/// read it from a TOML file.
 #[test]
 fn every_entry_meets_the_rules_of_the_repo() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -671,7 +662,7 @@ fn every_entry_meets_the_rules_of_the_repo() {
     let text = std::fs::read_to_string(&path).expect(".agents/deslag.toml");
     let config = Config::parse(&text, path, ConfigSource::Explicit).expect("the repo's config");
     let empty = tempfile::tempdir().expect("a temp directory");
-    for entry in unreleased_entries() {
+    for (_, entry) in entries() {
         for (what, text) in [
             ("summary", entry.summary()),
             ("onboarding", entry.onboarding()),
@@ -777,14 +768,14 @@ fn above_the_stamp<'a>(catalogue: &'a Catalogue, config: &Config) -> Vec<&'a Phr
 struct Linted {
     /// The findings, one line each.
     found: Vec<String>,
-    /// The texts of the changelog's unreleased entries that were linted.
+    /// The texts of the changelog's entries that were linted.
     entry_texts: usize,
     /// The files that were linted, from the root of the repo.
     files: Vec<String>,
 }
 
-/// Every finding of the repo's text under `config`: the unreleased entries of the changelog, since
-/// a released one is frozen, and every file the config selects, Rust comments included.
+/// Every finding of the repo's text under `config`: the entries of the changelog, and every file
+/// the config selects, Rust comments included.
 fn findings_in_the_repo(config: &Config) -> Linted {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut linted = Linted {
@@ -792,7 +783,7 @@ fn findings_in_the_repo(config: &Config) -> Linted {
         entry_texts: 0,
         files: Vec::new(),
     };
-    for entry in unreleased_entries() {
+    for (_, entry) in entries() {
         for text in [entry.summary(), entry.onboarding()] {
             let findings =
                 check_file(config, TEXT_PATH, text.as_bytes(), root).expect("the lints run");
@@ -858,11 +849,7 @@ fn the_text_of_the_repo_holds_no_phrase_the_catalogue_will_turn_on() {
         read, selected,
         "the check read other files than the config selects"
     );
-    assert_eq!(
-        linted.entry_texts,
-        2 * unreleased_entries().count(),
-        "the check read other changelog entries than the unreleased ones"
-    );
+    assert!(linted.entry_texts > 0, "the check read no changelog entry");
     let found = linted.found;
     let phrases: Vec<&str> = ahead.iter().map(|phrase| phrase.phrase.as_str()).collect();
     assert!(

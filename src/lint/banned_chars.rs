@@ -558,9 +558,7 @@ fn note(banned: &Banned) -> String {
         what.push_str(&format!(" \"{ch}\""));
     }
     let instead = match banned.instead.as_deref() {
-        None => "no one replacement fits, so write the ASCII arrow that points the same way, such \
-                 as `->`, `<-` or `<->`, or words for what it means"
-            .to_string(),
+        None => "no one fits; write an ASCII arrow pointing the same way, or words".to_string(),
         Some("") => "delete it".to_string(),
         Some(" ") => "write a plain space".to_string(),
         Some(instead) => format!("write `{instead}`"),

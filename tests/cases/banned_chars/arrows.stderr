@@ -10,8 +10,8 @@ Do not write the characters as HTML entities, and do not change the config to ge
 
 The characters, and what to write instead:
   line 3: U+2192 rightwards arrow "→"; write `->`
-  lines 3, 5: U+21A9 arrow "↩"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means
-  line 5: U+21E7 arrow "⇧"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means
-  line 5: U+21C4 arrow "⇄"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means
+  lines 3, 5: U+21A9 arrow "↩"; no one fits; write an ASCII arrow pointing the same way, or words
+  line 5: U+21E7 arrow "⇧"; no one fits; write an ASCII arrow pointing the same way, or words
+  line 5: U+21C4 arrow "⇄"; no one fits; write an ASCII arrow pointing the same way, or words
 
 deslag: 1 of 1 files with banned characters.

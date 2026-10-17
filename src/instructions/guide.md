@@ -5,9 +5,9 @@ that uses it. To set it up, follow the steps in order. In a repository with a co
 steps 4 and 5.
 
 deslag lints LLM-written prose. A lint fails a file that breaks one rule of the config, and its
-report tells the agent that wrote the file how to fix it. Every lint is off until the config turns
-it on. The human who owns the repository owns the limits: propose them, show what each would fail,
-and never raise one, or add an override, only to make a check pass.
+report says how to fix it. Every lint is off until the config turns it on. The human who owns the
+repository owns the limits: propose them, show what each would fail, and never raise one, or add an
+override, only to make a check pass.
 
 ## 1. Find the config
 
@@ -85,9 +85,10 @@ never use it in CI. A failing file gets a report on standard error and exit code
 deslag could not run. Tell the human what each lint fails and propose a limit a little above the
 file's size: add 10%, at least 500 bytes. A file needing more gets an override.
 
-Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a
-file or rephrase around a lint. `deslag fix [PATH]...` replaces banned characters where it can
-prove the text reads as before; `--dry-run` writes nothing. Ask before fixing a human's file.
+Fix the prose by the report's advice. Never hide text, split a file, rephrase around a lint or
+write an `allow` entry: only a human exempts a sentence, so give them its text and a reason.
+`deslag fix [PATH]...` replaces banned characters where it can prove the text reads as before. Ask
+before fixing a human's file.
 
 ## 6. CI, and the next agent
 

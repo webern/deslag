@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: md.allow[0].lint is `max_size_bytes`, which does not take an entry: its finding is the whole file. Set the budget in an override of the file: `lints.max_size_bytes.value`

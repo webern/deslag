@@ -3,6 +3,7 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::config::allow::AllowFile;
 use crate::config::lints::Lints;
 use crate::config::section::{CommentSurface, OverrideFile, Parts};
 use crate::document::{Fences, Language, Reader, Stack};
@@ -89,6 +90,11 @@ pub(super) struct MdFile {
     /// Which fenced code in these files is read for its comments. Overrides cannot change it.
     #[serde(default)]
     fences: FencesFile,
+    // After `fences` for the same reason.
+    /// The sentences of these files that stay as written, each exempted from one lint. Only a
+    /// human writes an entry.
+    #[serde(default)]
+    allow: Vec<AllowFile>,
 }
 
 impl MdFile {
@@ -103,6 +109,7 @@ impl MdFile {
             }),
             lints: self.lints,
             overrides: self.overrides,
+            allow: self.allow,
         }
     }
 }

@@ -4,6 +4,7 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::config::allow::AllowFile;
 use crate::config::lints::Lints;
 use crate::config::section::{CommentSurface, OverrideFile, Parts};
 use crate::document::{Reader, Stack};
@@ -38,6 +39,10 @@ pub(super) struct RustFile {
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
     overrides: Vec<OverrideFile>,
+    /// The sentences of these files that stay as written, each exempted from one lint. Only a
+    /// human writes an entry.
+    #[serde(default)]
+    allow: Vec<AllowFile>,
 }
 
 impl RustFile {
@@ -56,6 +61,7 @@ impl RustFile {
             stack: Stack::new(Reader::Rust { surfaces }),
             lints: self.lints,
             overrides: self.overrides,
+            allow: self.allow,
         }
     }
 }

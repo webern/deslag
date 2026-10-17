@@ -15,7 +15,7 @@ use deslag::changelog::{BASELINE, Entry, Version, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
-use deslag::instructions::{Reading, Start, guide, lints, update_json, update_text};
+use deslag::instructions::{ALLOW, Reading, Start, guide, lints, update_json, update_text};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::{banned_chars, banned_phrases, check_file};
 use deslag::news::News;
@@ -45,12 +45,21 @@ fn lint_names() -> BTreeSet<String> {
         .collect()
 }
 
-/// Each lint's section of `deslag instructions lints` as printed: its heading, the lint's id in a
-/// code span, and its text.
-fn lint_sections(text: &str) -> Vec<(&str, &str)> {
+/// Each section of `deslag instructions lints` as printed: its heading, the lint's id in a code
+/// span, and its text. The last is not a lint's: [`ALLOW`] heads it.
+fn sections(text: &str) -> Vec<(&str, &str)> {
     text.split("\n## ")
         .skip(1)
         .map(|section| section.split_once('\n').expect("a heading and its text"))
+        .collect()
+}
+
+/// Each lint's section of `deslag instructions lints`, which is every section but [`ALLOW`]'s.
+fn lint_sections(text: &str) -> Vec<(&str, &str)> {
+    let allow = format!("`{ALLOW}`");
+    sections(text)
+        .into_iter()
+        .filter(|(heading, _)| *heading != allow)
         .collect()
 }
 
@@ -212,13 +221,66 @@ fn each_lint_section_turns_on_its_lint_alone() {
 fn the_lints_tables_together_are_valid() {
     let text = lints();
     let mut config = format!("schema_version = {SCHEMA_VERSION}\n");
-    for block in toml_blocks(&text) {
-        config.push('\n');
-        config.push_str(block);
+    for (_, section) in lint_sections(&text) {
+        for block in toml_blocks(section) {
+            config.push('\n');
+            config.push_str(block);
+        }
     }
     assert_eq!(lints_turned_on(&config), lint_names());
     assert_eq!(toml_misfit(&config), None);
     assert_runs_clean(&config);
+}
+
+/// The `allow` section ends the lints topic, tells an agent that only a human writes an entry,
+/// names each lint the schema lets an entry exempt, and holds an example that loads.
+#[test]
+fn the_allow_section_ends_the_lints_topic_and_its_example_loads() {
+    let text = lints();
+    let all = sections(&text);
+    let (heading, body) = all.last().expect("a section");
+    assert_eq!(*heading, format!("`{ALLOW}`"));
+    assert!(
+        body.contains("Only a human writes or changes one."),
+        "{body}"
+    );
+
+    let root = schema();
+    let taken: Vec<&str> = root["definitions"]["AllowFile"]["properties"]["lint"]["enum"]
+        .as_array()
+        .expect("the lints an entry takes")
+        .iter()
+        .map(|lint| lint.as_str().expect("a lint"))
+        .collect();
+    assert!(!taken.is_empty());
+    for lint in &taken {
+        assert!(body.contains(&format!("`{lint}`")), "{lint}");
+    }
+    for lint in Lint::ALL.map(Lint::id) {
+        assert_eq!(
+            body.contains(&format!("`{lint}`")),
+            taken.contains(&lint),
+            "{lint}"
+        );
+    }
+
+    let blocks = toml_blocks(body);
+    assert_eq!(blocks.len(), 1, "{body}");
+    let config = format!("schema_version = {SCHEMA_VERSION}\n\n{}", blocks[0]);
+    assert_eq!(toml_misfit(&config), None);
+    Config::parse(&config, "deslag.toml".into(), ConfigSource::Explicit)
+        .expect("the example loads");
+}
+
+/// The guide tells an agent, in step 5, that only a human exempts a sentence.
+#[test]
+fn the_guide_says_only_a_human_exempts_a_sentence() {
+    let guide = guide();
+    let step = guide
+        .split("\n\n")
+        .find(|paragraph| paragraph.contains("`allow` entry"))
+        .expect("a paragraph about the allow entry");
+    assert!(step.contains("only a human exempts a sentence"), "{step}");
 }
 
 #[test]

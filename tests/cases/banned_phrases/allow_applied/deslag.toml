@@ -1,0 +1,10 @@
+schema_version = 1
+
+[md.lints.banned_phrases]
+ban = { "delve into" = "say what you found instead" }
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_phrases"
+quote = "The title is \"Delve Into the Past\"."
+reason = "A quoted title."

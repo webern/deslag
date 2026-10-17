@@ -8,6 +8,7 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 
 use crate::Error;
+use crate::config::allow::{self, Allow, AllowFile};
 use crate::config::lints::{Lints, Merge};
 use crate::document::{Stack, Surface};
 use crate::glob::{self, Pattern};
@@ -63,6 +64,8 @@ pub(super) struct Parts {
     pub(super) lints: Lints,
     /// Settings for the selected files that match a pattern.
     pub(super) overrides: Vec<OverrideFile>,
+    /// The sentences exempted from a lint.
+    pub(super) allow: Vec<AllowFile>,
 }
 
 impl Parts {
@@ -156,6 +159,7 @@ pub struct Section {
     globs: Vec<Pattern>,
     lints: Lints,
     overrides: Vec<Override>,
+    allow: Vec<Allow>,
     /// What reads the files the section selects.
     pub(crate) stack: Stack,
 }
@@ -208,11 +212,14 @@ impl Section {
             })
             .collect::<Result<Vec<_>, Error>>()?;
 
+        let allow = allow::compile(name, parts.allow, config_path)?;
+
         Ok(Section {
             name,
             globs,
             lints: parts.lints,
             overrides,
+            allow,
             stack: parts.stack,
         })
     }
@@ -225,6 +232,18 @@ impl Section {
     /// Whether `rel_path`, a repo-relative `/`-separated path, is a file this section lints.
     pub fn selects(&self, rel_path: &str) -> bool {
         self.globs.iter().any(|pattern| pattern.matches(rel_path))
+    }
+
+    /// The sentences the section exempts from a lint, in the order of the config.
+    pub fn allow(&self) -> &[Allow] {
+        &self.allow
+    }
+
+    /// The entries that name `rel_path`, in the order of the config.
+    pub fn allow_for<'s>(&'s self, rel_path: &'s str) -> impl Iterator<Item = &'s Allow> {
+        self.allow
+            .iter()
+            .filter(move |entry| entry.path == rel_path)
     }
 
     /// The number of overrides, for a caller that wants to say so.
@@ -313,6 +332,7 @@ mod tests {
                     lints: Lints::default(),
                 })
                 .collect(),
+            allow: Vec::new(),
         }
     }
 

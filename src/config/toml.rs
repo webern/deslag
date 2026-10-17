@@ -4,6 +4,7 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::config::allow::AllowFile;
 use crate::config::lints::Lints;
 use crate::config::section::{OverrideFile, Parts};
 use crate::document::{Reader, Stack, Surface};
@@ -48,6 +49,10 @@ pub(super) struct TomlFile {
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
     overrides: Vec<OverrideFile>,
+    /// The sentences of these files that stay as written, each exempted from one lint. Only a
+    /// human writes an entry.
+    #[serde(default)]
+    allow: Vec<AllowFile>,
 }
 
 impl TomlFile {
@@ -66,6 +71,7 @@ impl TomlFile {
             stack: Stack::new(Reader::Toml { surfaces }),
             lints: self.lints,
             overrides: self.overrides,
+            allow: self.allow,
         }
     }
 }

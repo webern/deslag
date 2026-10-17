@@ -6,15 +6,16 @@
 //! file's own frontmatter. For each file this names the config, says whether the walk skips the
 //! file and whether a section selects it, lists the overrides and the frontmatter budget, and shows
 //! every lint's settings as TOML, whatever language the config is written in, then lists the
-//! prose regions the file holds.
+//! `allow` entries that name the file, each with the line of its sentence or "no such sentence",
+//! then the prose regions the file holds.
 
 use std::path::{Path, PathBuf};
 
 use crate::Error;
-use crate::config::Config;
+use crate::config::{Allow, Config};
 use crate::document::Document;
 use crate::glob::{self, RepoFile};
-use crate::lint;
+use crate::lint::{self, allow, on_lines};
 use crate::parse::frontmatter;
 
 /// How many characters of a region's text a row quotes.
@@ -111,10 +112,46 @@ fn block(
             None => out.push_str(&format!("# {name}: off\n")),
         }
     }
-    let document = section.stack.read(&text);
+    let entries: Vec<&Allow> = section.allow_for(relative).collect();
+    // Sentences are the last layer, which only an entry needs.
+    let document = if entries.is_empty() {
+        section.stack.read(&text)
+    } else {
+        section.stack.document(&text)
+    };
+    out.push_str(&exemptions(&document, &entries));
     let is_markdown = section.name() == config.md().name();
     out.push_str(&regions(&document, is_markdown));
     Ok(out)
+}
+
+/// The `allow` entries of the file, as comments after the lint tables: a count, then a row per
+/// entry with its place in the config, its lint, the line of its sentence in `document` or "no such
+/// sentence", its quote and its reason. A file with none gets nothing here.
+fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
+    if entries.is_empty() {
+        return String::new();
+    }
+    let mut out = format!("\n# allow: {}\n", entries.len());
+    for entry in entries {
+        let lines: Vec<usize> = allow::matching(document, &entry.folded())
+            .into_iter()
+            .map(|range| document.locate(range).line)
+            .collect();
+        let at = if lines.is_empty() {
+            "no such sentence".to_string()
+        } else {
+            on_lines(&lines)
+        };
+        let quote = toml::Value::String(lint::collapse(&entry.quote));
+        let reason = toml::Value::String(lint::collapse(&entry.reason));
+        out.push_str(&format!(
+            "#   {}: {}, {at}: {quote}, because {reason}\n",
+            entry.place(),
+            entry.lint
+        ));
+    }
+    out
 }
 
 /// The prose regions of `document` after the lint tables: a count, then a row per region with its

@@ -31,9 +31,11 @@
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
 //!
 //! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`], [`cpp`] and
-//! [`toml`] hold the sections of those names, and [`lints`] the settings of each lint. [`update`]
-//! is the one thing that writes a config, and [`edit`] makes the edits to its text.
+//! [`toml`] hold the sections of those names, and [`lints`] the settings of each lint. [`allow`]
+//! holds the entries that exempt one sentence from a lint. [`update`] is the one thing that writes
+//! a config, and [`edit`] makes the edits to its text.
 
+pub mod allow;
 pub mod cpp;
 pub mod edit;
 pub mod lints;
@@ -56,6 +58,7 @@ use serde::{Deserialize, Deserializer};
 use crate::Error;
 use crate::changelog::{BASELINE, Version, current_release, parse_release};
 
+pub use allow::Allow;
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, Lints, ListGrowth, MaxEmphasis, MaxSizeBytes,
     Merge, PhraseGroups, RepoLayout, VerbsNoNouns,
@@ -442,6 +445,13 @@ impl Config {
         }
     }
 
+    /// Whether any section holds an `allow` entry.
+    pub fn has_allow(&self) -> bool {
+        self.sections
+            .iter()
+            .any(|section| !section.allow().is_empty())
+    }
+
     /// The `[md]` section, which every config has.
     pub fn md(&self) -> &Section {
         self.sections
@@ -536,6 +546,7 @@ mod tests {
                 }),
                 lints: Lints::default(),
                 overrides: Vec::new(),
+                allow: Vec::new(),
             };
             Section::compile(name, parts, "deslag.toml").expect("a section")
         };

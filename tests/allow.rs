@@ -656,6 +656,36 @@ fn a_rewrap_with_tabs_and_crlf_still_matches_the_entry() {
 }
 
 #[test]
+fn a_quote_with_a_lone_cr_exempts_a_markdown_sentence_however_it_is_wrapped() {
+    // The quote holds a lone CR, written as the TOML escape, since a string may not hold one.
+    let quote = "The title \u{2014} a dated\\rrecord.";
+    let repo = repo(
+        &config(&[entry("a.md", "banned_chars", quote, "A quoted title.")]),
+        &[("a.md", "The title \u{2014} a dated\nrecord.\n")],
+    );
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["applied"]);
+    assert_eq!(
+        run["exemptions"][0]["quote"],
+        "The title \u{2014} a dated\rrecord."
+    );
+    // The sentence wrapped with a line feed, with a CR and a line feed, with a lone CR, and on one
+    // line is the same.
+    let exit = |source: &str| {
+        repo.write("a.md", source);
+        code(&deslag(repo.root(), &["check"]))
+    };
+    assert_eq!(exit("The title \u{2014} a dated\nrecord.\n"), 0);
+    assert_eq!(exit("The title \u{2014} a dated\r\nrecord.\r\n"), 0);
+    assert_eq!(exit("The title \u{2014} a dated\rrecord.\n"), 0);
+    assert_eq!(exit("The title \u{2014} a dated record.\n"), 0);
+    // A reworded sentence stops matching, and the entry fails.
+    assert_eq!(exit("The title \u{2014} a dated\rrecords.\n"), 1);
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["no_such_sentence"]);
+}
+
+#[test]
 fn a_reason_that_shows_as_nothing_stops_the_run_with_exit_2() {
     // The last is an escape sequence for a terminal, written as TOML escapes it.
     for reason in ["\u{200B}", "\u{202E}", "\\u001b[2K"] {

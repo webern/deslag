@@ -50,13 +50,13 @@ pub(super) struct AllowFile {
     /// the lines of a block quote stays, and in a comment read as plain text, which is every C++
     /// and TOML comment and a Rust comment that is not a doc comment, a `>` is text. Spaces, tabs
     /// and line breaks fold to one space, so a sentence that is wrapped differently still matches;
-    /// a line break is LF or CR LF, or a lone CR in Markdown, while a lone CR in a comment is a
-    /// character of its line. Any other character must match exactly, a no-break space included.
-    /// The file must hold the sentence once, and the lint must find something in it, or the entry
-    /// fails the run. A `quote` may hold any character but a control character other than a tab, CR
-    /// or LF, since it must equal the sentence, which the file holds anyway. Reports, notices and
-    /// `deslag explain` write each character that shows as nothing or acts on the reader as
-    /// `<U+XXXX>`.
+    /// a line break is LF or CR LF, or a lone CR in Markdown, while a lone CR ends a C++ `//` or
+    /// TOML `#` comment and is a character of its line in any other comment. Any other character
+    /// must match exactly, a no-break space included. The file must hold the sentence once, and
+    /// the lint must find something in it, or the entry fails the run. A `quote` may hold any
+    /// character but a control character other than a tab, CR or LF, since it must equal the
+    /// sentence, which the file holds anyway. Reports, notices and `deslag explain` write each
+    /// character that shows as nothing or acts on the reader as `<U+XXXX>`.
     quote: String,
     /// Why the sentence must stay as it is. Required. A `path` or `reason` may not hold a
     /// character that shows as nothing or acts on the reader: a control or format character,
@@ -127,9 +127,9 @@ impl Allow {
     }
 
     /// Whether `other` is the same entry: the same section, file, lint and quote, whatever the
-    /// reason, and however the quote is wrapped. A lone CR is a character here, as a comment holds
-    /// it, so two quotes that differ only by one are two entries. If both name one sentence of
-    /// Markdown, the second finds nothing left to drop, and fails the run.
+    /// reason, and however the quote is wrapped. A lone CR is a character here, as a Rust comment
+    /// holds it, so two quotes that differ only by one are two entries. If both name one sentence
+    /// of Markdown, the second finds nothing left to drop, and fails the run.
     pub fn is_same_as(&self, other: &Allow) -> bool {
         self.section == other.section
             && self.path == other.path
@@ -628,6 +628,36 @@ mod tests {
         ]
         .concat();
         assert!(load(&text).is_ok());
+    }
+
+    #[test]
+    fn a_lone_cr_makes_a_quote_another_entry_where_a_line_break_does_not() {
+        // A lone CR is a character of the quote here, so it is no space and no line feed.
+        let text = [
+            entry("a.md", "banned_chars", "One two\rthree.", "First."),
+            entry("a.md", "banned_chars", "One  two\rthree.", "Second."),
+        ]
+        .concat();
+        assert!(refused(&text).contains("md.allow[1] repeats md.allow[0]"));
+        let text = [
+            entry("a.md", "banned_chars", "One two\rthree.", "First."),
+            entry("a.md", "banned_chars", "One two three.", "Second."),
+        ]
+        .concat();
+        assert!(load(&text).is_ok());
+        let text = [
+            entry("a.md", "banned_chars", "One two\rthree.", "First."),
+            entry("a.md", "banned_chars", "One two\nthree.", "Second."),
+        ]
+        .concat();
+        assert!(load(&text).is_ok());
+        // A CR and a line feed is a line break, as it is to a sentence.
+        let text = [
+            entry("a.md", "banned_chars", "One two\r\nthree.", "First."),
+            entry("a.md", "banned_chars", "One two three.", "Second."),
+        ]
+        .concat();
+        assert!(refused(&text).contains("md.allow[1] repeats md.allow[0]"));
     }
 
     #[test]

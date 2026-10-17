@@ -17,7 +17,7 @@ from public repositories, sorted by who wrote it. It is where a lint's rule and 
 decided, and where the proof that they hold is kept as tests.
 
 That proof is only as strong as the corpus. A small one fits what one maintainer has seen; a big
-growing one shows which rules hold across thousands of repositories, which new ones the data
+growing one shows which rules hold across many repositories, which new ones the data
 suggests, and whether an old rule still holds as models change.
 
 ## 2. The two tiers

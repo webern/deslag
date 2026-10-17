@@ -1,0 +1,54 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nREADME.md has 4 negations padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"not ship a binary at all\"\n  line 3: \"no runtime dependencies at all\"\n  line 4: \"isn't wired into CI at all\"\n  line 6: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 22,
+          "end": 46,
+          "line": 3,
+          "column": 13,
+          "end_line": 3,
+          "end_column": 37,
+          "note": "\"not ship a binary at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 55,
+          "end": 85,
+          "line": 3,
+          "column": 46,
+          "end_line": 4,
+          "end_column": 4,
+          "note": "\"no runtime dependencies at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 94,
+          "end": 120,
+          "line": 4,
+          "column": 13,
+          "end_line": 4,
+          "end_column": 39,
+          "note": "\"isn't wired into CI at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 136,
+          "end": 146,
+          "line": 6,
+          "column": 14,
+          "end_line": 6,
+          "end_column": 24,
+          "note": "\"not at all\""
+        }
+      ]
+    }
+  ]
+}

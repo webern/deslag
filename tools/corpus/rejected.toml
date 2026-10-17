@@ -341,3 +341,15 @@ reason = "used in human prose in batch 2026-10-03-02"
 [[phrase]]
 phrase = "not merely"
 reason = "used in human prose in batch 2026-10-03-02"
+
+[[phrase]]
+phrase = "whatsoever"
+reason = "16 of 11,873 human files and 12 of 9,403 llm files in the probe of issue 60, both 0.13%, a ratio of 1.0"
+
+[[phrase]]
+phrase = "in the slightest"
+reason = "1 llm file and no human file in the probe of issue 60, too few to measure"
+
+[[phrase]]
+phrase = "in the least"
+reason = "no file, llm or human, in the probe of issue 60"

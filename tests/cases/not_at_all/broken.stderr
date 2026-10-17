@@ -1,0 +1,15 @@
+ERROR: deslag detected negations padded with "at all"!
+
+README.md has 4 negations padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 3: "not ship a binary at all"
+  line 3: "no runtime dependencies at all"
+  line 4: "isn't wired into CI at all"
+  line 6: "not at all"
+
+deslag: 1 of 1 files with negations padded with "at all".

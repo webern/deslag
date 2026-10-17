@@ -40,3 +40,5 @@ production-ready = ""
 [md.lints.density]
 
 [md.lints.verbs_no_nouns]
+
+[md.lints.not_at_all]

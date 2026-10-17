@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nREADME.md has 1 negation padded with \"at all\".\n\nDelete \"at all\" in README.md.\n\nThe places:\n  line 3: \"never needs setup at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 17,
+          "end": 41,
+          "line": 3,
+          "column": 8,
+          "end_line": 3,
+          "end_column": 32,
+          "note": "\"never needs setup at all\""
+        }
+      ]
+    }
+  ]
+}

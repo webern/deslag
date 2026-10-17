@@ -34,7 +34,7 @@ breaking change.
 A `lint` entry lists in `keys` the settings its table had when it arrived, each as a path inside
 the table. A `setting` entry whose id is a table does the same: `md.overrides` lists `globs` and
 `lints`, which stand for `md.overrides[].globs` and `md.overrides[].lints`. A setting that holds a
-value has no `keys`. A setting covers its own path and its listed keys, so a key added to a table
+value has no `keys`. A setting covers its path and its listed keys, so a key added to a table
 later gets a `setting` entry of its own, in the release that adds it.
 
 Every section takes the same lints, so a `lint` entry covers its keys in each section.
@@ -77,7 +77,7 @@ On GitHub, the `bump-version` workflow makes this change and pushes it as the br
 `/deslag-release` skill says how to run both with `gh`.
 
 The first release folds. The crate is at 0.0.1, no tag `v0.0.1` exists and `releases/0.0.1/` does,
-so `prep 0.0.1` runs at the crate's own version. It moves `next/*.toml` into the `0.0.1/` that exists, sets the phrases to
+so `prep 0.0.1` runs at the crate's version. It moves `next/*.toml` into the `0.0.1/` that exists, sets the phrases to
 0.0.1, rewrites `tests/configs/0.0.1/` to name every setting and replaces its hash lines. Once the
 tag `v0.0.1` exists an equal version is refused, so this happens once. A version equal to the
 crate's with no `releases/<version>/` yet, as after a hand bump, is a normal release.
@@ -106,7 +106,7 @@ A test lints the entries and every file the repo's config selects with each phra
 banned, so the change that adds a phrase also rewords the text that uses it, and the release has
 nothing to reword. `docs/design/catalog.md` says how a change adds a phrase.
 
-The repository's own config, `.agents/deslag.toml`, is stamped, and `deslag update` writes the stamp.
+The repository's config, `.agents/deslag.toml`, is stamped, and `deslag update` writes the stamp.
 The release does not move it. After a release `make check-deslag` prints the note and still exits 0,
 until someone has read `deslag instructions update` and run `cargo run -- update --to <version>`.
 

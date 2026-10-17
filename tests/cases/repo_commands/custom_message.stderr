@@ -1,0 +1,10 @@
+ERROR: deslag detected a make target that does not exist!
+
+README.md names 1 make target that no Makefile defines.
+
+Fix README.md: name a target from the Makefile, or add the target.
+
+The calls:
+  line 3: `make release`: no Makefile defines release
+
+deslag: 1 of 1 files naming make targets that no Makefile defines.

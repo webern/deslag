@@ -1,0 +1,54 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 2,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "repo_commands",
+      "report": "ERROR: deslag detected a make target that does not exist!\n\nREADME.md names 4 make targets that no Makefile defines.\n\nAn agent that runs a call like these stops, or hunts for the right target, or edits the doc to match its guess. Open the Makefile and the doc, decide which one is wrong, and fix that one: write the target the Makefile has, or give the Makefile the target the doc names. deslag reads Makefiles and never runs make.\n\nDo not change the language of a code block, a `cd` before the call or the order of the steps to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe calls:\n  line 5: `make check-release`: no Makefile defines check-release\n  line 5: `make ci-fats`: no Makefile defines ci-fats\n  line 9: `make lint build`: no Makefile defines lint\n  line 9: `make lint build`: no Makefile defines build",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 47,
+          "end": 67,
+          "line": 5,
+          "column": 5,
+          "end_line": 5,
+          "end_column": 25,
+          "note": "`make check-release`: no Makefile defines check-release"
+        },
+        {
+          "kind": "occurrence",
+          "start": 88,
+          "end": 102,
+          "line": 5,
+          "column": 46,
+          "end_line": 5,
+          "end_column": 60,
+          "note": "`make ci-fats`: no Makefile defines ci-fats"
+        },
+        {
+          "kind": "occurrence",
+          "start": 150,
+          "end": 154,
+          "line": 9,
+          "column": 6,
+          "end_line": 9,
+          "end_column": 10,
+          "note": "`make lint build`: no Makefile defines lint"
+        },
+        {
+          "kind": "occurrence",
+          "start": 155,
+          "end": 160,
+          "line": 9,
+          "column": 11,
+          "end_line": 9,
+          "end_column": 16,
+          "note": "`make lint build`: no Makefile defines build"
+        }
+      ]
+    }
+  ]
+}

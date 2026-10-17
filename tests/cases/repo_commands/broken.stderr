@@ -1,0 +1,15 @@
+ERROR: deslag detected a make target that does not exist!
+
+README.md names 4 make targets that no Makefile defines.
+
+An agent that runs a call like these stops, or hunts for the right target, or edits the doc to match its guess. Open the Makefile and the doc, decide which one is wrong, and fix that one: write the target the Makefile has, or give the Makefile the target the doc names. deslag reads Makefiles and never runs make.
+
+Do not change the language of a code block, a `cd` before the call or the order of the steps to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The calls:
+  line 5: `make check-release`: no Makefile defines check-release
+  line 5: `make ci-fats`: no Makefile defines ci-fats
+  line 9: `make lint build`: no Makefile defines lint
+  line 9: `make lint build`: no Makefile defines build
+
+deslag: 1 of 2 files naming make targets that no Makefile defines.

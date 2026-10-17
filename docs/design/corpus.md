@@ -22,8 +22,8 @@ suggests, and whether an old rule still holds as models change.
 
 ## 2. The two tiers
 
-The tree, `tests/corpus/`, stays as the build doctrine bounds it: fixtures of at most 64KB, with a
-cap for each collected label, plus `core/`, which is hand-picked. `make test` reads it offline;
+The tree, `tests/corpus/`, stays as the build doctrine bounds it: about 400 fixtures of at most
+64KB for each collected label, plus `core/`, which is hand-picked. `make test` reads it offline;
 every lint's corpus test and the golden set run on it.
 
 The big tier holds far more, outside git, in an OCI image that `scripts/blobstore/blobs.md`

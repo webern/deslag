@@ -263,7 +263,7 @@ const BOTH: &str = "[md]\nglobs = [\"**\"]\n[cpp.lints.banned_chars]\n";
 #[test]
 fn a_file_that_two_sections_select_is_an_error_that_names_both() {
     let said = "src/lib.c is selected by both [md] and [cpp]; narrow their globs so that one of \
-                them selects it\n";
+                them selects it, or exclude it from one of them\n";
     let repo = repo(BOTH);
     for args in [
         &["check"][..],

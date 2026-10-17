@@ -7,7 +7,7 @@ steps 4 and 5.
 deslag lints LLM-written prose. A lint fails a file that breaks one rule of the config, and its
 report tells the agent that wrote the file how to fix it. Every lint is off until the config turns
 it on. The human who owns the repository owns the limits: propose them, show what each would fail,
-and never raise one, or add an override, only to make a check pass.
+and never raise one, or add an override or an exclude, only to make a check pass.
 
 ## 1. Find the config
 
@@ -18,7 +18,7 @@ with one of the extensions {config_extensions}:
 {config_stems}
 ```
 
-If a config exists, read it: you are extending it. If not, ask the human where it should go, and in
+If a config exists, read it. If not, ask the human where it should go, and in
 which language. With no preference, write `deslag.toml` at the root.
 
 ## 2. Choose the files
@@ -32,18 +32,24 @@ files; `fences.languages = []` turns that off.
 section does not read them. Offer one only where comments should meet the standard of prose. Rust
 doc comments are read as Markdown, other comments as plain text.
 
-Keep generated and vendored code out of the globs. A pattern with a `/` matches the path from the
-root, one without matches the file name anywhere, and `**` crosses directories. With no `globs`,
-every file of the kind is read.
+Keep generated and vendored code out. A pattern with a `/` matches the path from the root, one
+without matches the file name anywhere, and `**` crosses directories. With no `globs`, every file
+of the kind is read.
 
-A glob cannot exclude, and an override cannot turn a lint off, so name the hand-written paths:
-`/src/**/*.rs` is too wide where `/src/proto` holds generated code. Find generated files with
-`grep -rlE '@generated|DO NOT EDIT' .`. Files that git ignores, or a `.ignore` file lists, are
-never read.
+An override cannot turn a lint off, so leave generated code out with `exclude`, which takes the
+same patterns as `globs` and works in an override too:
 
-deslag does not skip a generated file. It leaves out only licence text, banners and tool
-directives, such as the `@generated` line itself, and reads every other comment of the file. No
-marker suppresses a lint.
+```toml
+[rust]
+globs = ["/src/**/*.rs"]
+exclude = ["/src/proto/**"]
+```
+
+Find generated files with `grep -rlE '@generated|DO NOT EDIT' .`. Files that git ignores, or a
+`.ignore` file lists, are never read.
+
+deslag does not skip a generated file: it reads every comment but licence text, banners and tool
+directives, such as the `@generated` line. No marker suppresses a lint.
 
 ## 3. Write the config
 

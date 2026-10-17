@@ -18,13 +18,15 @@ use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::changelog::Version;
-use deslag::config::VerbsNoNouns;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
+use deslag::config::{NotAtAll, VerbsNoNouns};
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
-use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis, verbs_no_nouns};
+use deslag::lint::{
+    Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, verbs_no_nouns,
+};
 use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
 
 /// How many fixtures each collected category must hold at least.
@@ -871,6 +873,16 @@ fn the_corpus_locations_hold_what_they_point_at() {
                         );
                     }
                 }
+                Violation::NotAtAll(over) => {
+                    for found in &over.matches {
+                        let held = held(&found.location);
+                        assert!(
+                            held.split_whitespace().next() == found.quote.split_whitespace().next()
+                                && held.to_lowercase().ends_with("all"),
+                            "{context}: {held:?} for {found:?}"
+                        );
+                    }
+                }
                 Violation::Density(over) => {
                     for block in &over.blocks {
                         let held = held(&block.location);
@@ -1196,6 +1208,29 @@ fn verbs_no_nouns_flags_llm_text_far_more_than_human_text() {
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by verbs_no_nouns: human {human}, llm {llm}, mixed {mixed}");
     assert!(llm >= 3 * human, "human {human}, llm {llm}");
+}
+
+/// The tree is too small for the lint's 3 times claim, which `tests/blobs.rs` checks on the big
+/// tier, so the tree asks only that `llm` files hold the padding more often than `human` files.
+#[test]
+fn not_at_all_flags_llm_text_more_than_human_text() {
+    let fixtures = corpus();
+    let settings = NotAtAll::default();
+    let flagged = |category: &str| {
+        fixtures
+            .iter()
+            .filter(|fixture| fixture.category == category)
+            // Its words are English.
+            .filter(|fixture| fixture.sidecar.content.natural_language == "en")
+            .filter(|fixture| {
+                let text = String::from_utf8_lossy(&fixture.bytes);
+                not_at_all::check(&Document::markdown(&text), Some(&settings)).is_some()
+            })
+            .count()
+    };
+    let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
+    eprintln!("flagged by not_at_all: human {human}, llm {llm}, mixed {mixed}");
+    assert!(llm > human, "human {human}, llm {llm}");
 }
 
 /// The number of `llm/` fixtures each phrase group must match, so that no group is dead weight.

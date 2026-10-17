@@ -26,7 +26,8 @@ tree-sitter-cpp = "0.23.4"
 # fails to build (E0080) against them. Drop this line when unicode-properties publishes a release
 # with that Unicode version. It is a manifest line, not `cargo update --precise`, so that a
 # `cargo update` cannot undo it. Dependabot watches this directory, but .github/dependabot.yml
-# ignores unicode-ident and ra-ap-rustc_lexer, so that it does not propose lifting the pin every week.
+# ignores unicode-ident, so that it does not propose lifting this pin every week, and
+# ra-ap-rustc_lexer, since each release of it decides whether the pin can go.
 unicode-ident = "=1.0.24"
 
 # The sweep runs as a debug build in CI, and the cc crate then compiles the parsers at -O0. One run

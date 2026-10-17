@@ -8,9 +8,9 @@
 use std::ops::Range;
 
 use super::rules::{
-    AND_NUMBERS, ARTICLE_NUMBERS, BIG_NUMBERS, BOUNDS, CAPS, COUNT_HEADERS, CURRENCY_SIGNS,
-    FRACTIONS, HEDGES, JOINING_OPERATORS, LIMITS_AFTER, OPERATORS, QUANTITIES, SMALL_NUMBERS,
-    UNITS,
+    AND_NUMBERS, ARTICLE_NUMBERS, BARE_UNITS, BIG_NUMBERS, BOUNDS, CAPS, COUNT_HEADERS,
+    CURRENCY_SIGNS, FRACTIONS, HAVE_VERBS, HEDGES, JOINING_OPERATORS, LIMITS_AFTER, OPERATORS,
+    QUANTITIES, SMALL_NUMBERS, UNITS,
 };
 use crate::document::{Block, BlockKind, Body, Document, Token, TokenKind};
 use crate::tag::{Features, Tag};
@@ -27,6 +27,10 @@ const NOT_JOINING: &[&str] = &[
 /// The marks that join a number to the word or number right after it: `200-line`, `5-10`,
 /// `10:30`. A colon joins a number to a number alone.
 const JOINING_AFTER: &[&str] = &["-", "\u{2013}", ":"];
+
+/// The marks that end a clause, so that no noun follows a number right before one: `It holds 63.`
+/// The dash that sets a phrase apart ends one too.
+const CLAUSE_ENDS: &[&str] = &[".", ",", ";", ":", "!", "?", ")", "\u{2014}"];
 
 /// The token ranges of the counts in `document`, in the order of the file.
 pub(super) fn find(document: &Document<'_>) -> Vec<Range<usize>> {
@@ -94,7 +98,9 @@ fn names_things(tokens: &[Token<'_>]) -> bool {
         .find(|token| token.kind == TokenKind::Word)
         .is_some_and(|token| {
             let folded = token.folded();
-            let unit = UNITS.contains(&folded.as_str()) || FRACTIONS.contains(&folded.as_str());
+            let unit = UNITS.contains(&folded.as_str())
+                || BARE_UNITS.contains(&folded.as_str())
+                || FRACTIONS.contains(&folded.as_str());
             !unit && (plural_noun(token) || COUNT_HEADERS.contains(&folded.as_str()))
         })
 }
@@ -554,7 +560,10 @@ impl Row<'_, '_> {
         if self.is_word(at, "more") && !self.is_word(at + 1, "than") {
             at += 1;
         }
-        self.is_mark(at, "%") || self.in_set(at, UNITS) || self.in_set(at, FRACTIONS)
+        self.is_mark(at, "%")
+            || self.in_set(at, UNITS)
+            || self.in_set(at, BARE_UNITS)
+            || self.in_set(at, FRACTIONS)
     }
 
     /// Whether a second number follows the cardinal after a `/` that touches both, as in `8/8`,
@@ -674,6 +683,9 @@ impl Row<'_, '_> {
         if let Some(start) = self.labelled(cardinal) {
             return Some(start..cardinal.end);
         }
+        if let Some(start) = self.after_have_verb(cardinal) {
+            return Some(start..cardinal.end);
+        }
         let alone = self.counting_cell && cardinal.start == 0 && cardinal.end == self.tokens.len();
         alone.then_some(cardinal.start..cardinal.end)
     }
@@ -710,6 +722,29 @@ impl Row<'_, '_> {
             .all(|token| matches!(token.kind, TokenKind::Punctuation | TokenKind::Symbol));
         let named = plural_noun(&self.tokens[label]) || self.in_set(label, COUNT_HEADERS);
         (self.is_mark(colon, ":") && last && named && !self.capped_label(label)).then_some(label)
+    }
+
+    /// Where a bare number that a verb of having governs starts, as in `It holds 63.`: the verb is
+    /// right before the cardinal, and the clause ends right after it. A number after any other verb
+    /// is a value.
+    fn after_have_verb(&self, cardinal: &Cardinal) -> Option<usize> {
+        let verb = cardinal.start.checked_sub(1)?;
+        let ends = cardinal.end == self.tokens.len()
+            || (CLAUSE_ENDS
+                .iter()
+                .any(|mark| self.is_mark(cardinal.end, mark))
+                && !self.inside_a_word(cardinal.end));
+        (self.in_set(verb, HAVE_VERBS) && ends).then_some(verb)
+    }
+
+    /// Whether token `at` is a mark with a word or a number touching it on each side, as in the `.`
+    /// of `6.x`, which is no end of a clause.
+    fn inside_a_word(&self, at: usize) -> bool {
+        let next = self.tokens.get(at + 1).map(|token| token.kind);
+        at >= 1
+            && self.touches(at - 1, at)
+            && self.touches(at, at + 1)
+            && matches!(next, Some(TokenKind::Word | TokenKind::Number))
     }
 
     /// Whether the label that ends at token `label` is a compound that begins with a bound, as in

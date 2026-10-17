@@ -898,8 +898,8 @@ fn the_catalogue_counts_are_the_big_tiers() {
 
     // What `counted_inventory` flagged in the English files when its rules were frozen, on the
     // image `blobs.lock` pins. It counts true or not, and people write counts too: no ratio.
-    const COUNTING_HUMAN: usize = 687;
-    const COUNTING_LLM: usize = 2132;
+    const COUNTING_HUMAN: usize = 676;
+    const COUNTING_LLM: usize = 2060;
     let counting = |category: &str| {
         held.iter()
             .filter(|held| {

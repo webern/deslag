@@ -4,15 +4,18 @@
 //! `sixty-three`, `a dozen`, `hundreds of`). It counts when a noun phrase follows whose head is a
 //! plural noun, after up to four modifiers (adjectives, nouns, participles, code spans, a hyphen
 //! or slash compound as one), or when no noun follows in a known place: `63 of them`, `5 more`,
-//! `N in total`, `Tests: 63`, `8/8 tests`, a table cell of the number under a header of things.
+//! `N in total`, `Tests: 63`, `8/8 tests`, `It holds 63.`, a table cell of the number under a
+//! header of things.
 //! The tagger tells a plural noun, a modifier and a name.
 //!
 //! It is no count when it is a measure (a unit, `%`, a fraction, as the head too), money, a date, a
 //! version, name, ID or rank (joined to what is before it, a decimal, the text of a link, after `#`
 //! or a noun that is no possessive, lower-case plural or participle), a limit (after a bound,
 //! before `or more` or `+`, a range, a rate), a compound, math, code, or inside double quotes. A
-//! hedge alone is a count. Left: a bare number after a verb (`It holds 63.`), read as a value, and
-//! coordination inside the phrase (`7 theme and period pairs`).
+//! hedge alone is a count. A bare number is a count after a verb of having (`holds`, `has`,
+//! `contains`, `includes`, `lists`, `ships`, `carries`, `keeps`, `gathers` and their forms) when it
+//! ends its clause. After any other verb it is a value (`returns 25`, `defaults to 25`, `takes 10`)
+//! and is left, as is coordination inside the phrase (`7 theme and period pairs`).
 //!
 //! The sets are Rust data in `rules.rs`, never config: a list a config grows is an allow-list an
 //! agent grows until the check passes. This is a taste lint, off until a config turns it on. Its

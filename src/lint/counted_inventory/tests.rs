@@ -149,11 +149,11 @@ fn a_hyphen_or_a_space_joins_the_tens_to_the_units() {
 fn a_number_in_digits_counts_from_five() {
     counts("It holds 5 tests.", &["5 tests"]);
     counts("It holds 63 tests.", &["63 tests"]);
-    counts("It reads 1,075 lines.", &["1,075 lines"]);
-    counts("It reads 12,034,975 lines.", &["12,034,975 lines"]);
-    counts("It reads 1075 lines.", &["1075 lines"]);
-    none("It reads 3.14 lines.");
-    none("It reads 1,2 lines.");
+    counts("It reads 1,075 files.", &["1,075 files"]);
+    counts("It reads 12,034,975 files.", &["12,034,975 files"]);
+    counts("It reads 1075 files.", &["1075 files"]);
+    none("It reads 3.14 files.");
+    none("It reads 1,2 files.");
     none("It reads 4.5 files.");
 }
 
@@ -205,8 +205,8 @@ fn a_bound_folds_case_and_may_open_the_sentence() {
 
 #[test]
 fn a_bound_does_not_reach_a_second_number_it_does_not_join() {
-    counts("It holds at most 200 lines and 63 tests.", &["63 tests"]);
-    counts("Over 200 lines, 63 tests fail.", &["63 tests"]);
+    counts("It holds at most 200 files and 63 tests.", &["63 tests"]);
+    counts("Over 200 files, 63 tests fail.", &["63 tests"]);
 }
 
 #[test]
@@ -279,7 +279,7 @@ fn the_ends_of_a_range_are_limits() {
     none("It holds 5–10 tests.");
 }
 
-/// Each unit, singular and plural, makes the number a measure, and `lines` is none.
+/// Each unit, singular and plural, makes the number a measure.
 #[test]
 fn a_unit_after_the_number_makes_it_a_measure() {
     none("It reads 63 kb files.");
@@ -337,6 +337,7 @@ fn a_unit_after_the_number_makes_it_a_measure() {
     none("It reads 63 character files.");
     none("It reads 63 characters files.");
     none("It reads 63 line files.");
+    none("It reads 63 lines files.");
     none("It reads 63 mm files.");
     none("It reads 63 cm files.");
     none("It reads 63 km files.");
@@ -361,7 +362,21 @@ fn a_unit_after_the_number_makes_it_a_measure() {
     none("It reads 63 gbp files.");
     none("It reads 63 yen files.");
     none("It reads 63 pm files.");
-    counts("It reads 63 lines.", &["63 lines"]);
+}
+
+/// A gap in points is a measure right after the number; with a word before them, points are things.
+#[test]
+fn points_are_a_measure_only_right_after_the_number() {
+    none("It reads 63 point files.");
+    none("It reads 63 points files.");
+    none("It parts 15 points more of them.");
+    none("It has millions of points.");
+    counts("It reads 63 data points.", &["63 data points"]);
+    counts("It reads 63 data point files.", &["63 data point files"]);
+    counts(
+        "It has millions of data points.",
+        &["millions of data points"],
+    );
 }
 
 #[test]
@@ -378,6 +393,7 @@ fn a_unit_that_heads_the_phrase_makes_a_measure() {
     none("It took 5 full months.");
     none("It is 10 logical pixels wide.");
     none("It is 12 nested hours.");
+    none("It reads 170 session-state lines.");
 }
 
 #[test]
@@ -536,6 +552,104 @@ fn a_number_after_a_verb_is_a_count() {
     counts("It is mass-rebasing 17 branches.", &["17 branches"]);
 }
 
+/// Each form of each verb of having, with the number right after it and the clause ending there.
+#[test]
+fn a_bare_number_after_a_verb_of_having_is_a_count() {
+    counts("They hold 63.", &["hold 63"]);
+    counts("It holds 63.", &["holds 63"]);
+    counts("It held 63.", &["held 63"]);
+    counts("It is holding 63.", &["holding 63"]);
+    counts("They have 63.", &["have 63"]);
+    counts("It has 63.", &["has 63"]);
+    counts("It had 63.", &["had 63"]);
+    counts("It is having 63.", &["having 63"]);
+    counts("They contain 63.", &["contain 63"]);
+    counts("It contains 63.", &["contains 63"]);
+    counts("It contained 63.", &["contained 63"]);
+    counts("It is containing 63.", &["containing 63"]);
+    counts("They include 63.", &["include 63"]);
+    counts("It includes 63.", &["includes 63"]);
+    counts("It included 63.", &["included 63"]);
+    counts("It is including 63.", &["including 63"]);
+    counts("They list 63.", &["list 63"]);
+    counts("It lists 63.", &["lists 63"]);
+    counts("It listed 63.", &["listed 63"]);
+    counts("It is listing 63.", &["listing 63"]);
+    counts("They ship 63.", &["ship 63"]);
+    counts("It ships 63.", &["ships 63"]);
+    counts("It shipped 63.", &["shipped 63"]);
+    counts("It is shipping 63.", &["shipping 63"]);
+    counts("They carry 63.", &["carry 63"]);
+    counts("It carries 63.", &["carries 63"]);
+    counts("It carried 63.", &["carried 63"]);
+    counts("It is carrying 63.", &["carrying 63"]);
+    counts("They keep 63.", &["keep 63"]);
+    counts("It keeps 63.", &["keeps 63"]);
+    counts("It kept 63.", &["kept 63"]);
+    counts("It is keeping 63.", &["keeping 63"]);
+    counts("They gather 63.", &["gather 63"]);
+    counts("It gathers 63.", &["gathers 63"]);
+    counts("It gathered 63.", &["gathered 63"]);
+    counts("It is gathering 63.", &["gathering 63"]);
+}
+
+#[test]
+fn a_bare_number_after_a_verb_of_having_is_a_count_in_words_too() {
+    counts("It holds sixty-three.", &["holds sixty-three"]);
+    counts("It holds a dozen.", &["holds a dozen"]);
+    counts("It holds 23 million.", &["holds 23 million"]);
+    none("It holds four.");
+}
+
+/// The clause must end right after the number.
+#[test]
+fn the_number_must_end_the_clause() {
+    counts("It holds 63", &["holds 63"]);
+    counts("It holds 63.", &["holds 63"]);
+    counts("It holds 63, no more.", &["holds 63"]);
+    counts("It holds 63; no more.", &["holds 63"]);
+    counts("It holds 63: no more.", &["holds 63"]);
+    counts("It holds 63!", &["holds 63"]);
+    counts("It holds 63?", &["holds 63"]);
+    none("It holds 63 (no more).");
+    counts("(It holds 63) here.", &["holds 63"]);
+    counts("It holds 63 \u{2014} no more.", &["holds 63"]);
+    none("It holds 63 until it stops.");
+    none("It holds 63 and 12 are skipped.");
+    none("It holds 63 test.");
+    none("It holds 6.x.");
+    none("It holds 6.x, 7.x and 8.x.");
+}
+
+/// Only the verbs of having: after any other verb a bare number is a value.
+#[test]
+fn a_bare_number_after_another_verb_is_a_value() {
+    none("It returns 63.");
+    none("It returns 2.");
+    none("It defaults to 25.");
+    none("It is set to 30.");
+    none("It takes 10.");
+    none("It reads 63.");
+    none("It was 63.");
+    none("The count is 63.");
+}
+
+/// What else makes a number no count still does, after a verb of having.
+#[test]
+fn a_bare_number_after_a_verb_of_having_may_be_no_count() {
+    none("It holds at most 63.");
+    none("It holds 63 or more.");
+    none("It holds 63%.");
+    none("It holds 63 MB.");
+    none("It holds 2026.");
+    none("It holds v63.");
+    none("It holds 63.5.");
+    none("It holds #63.");
+    none("It holds $63.");
+    none("It holds \"63\".");
+    none("It holds 5-10.");
+}
+
 #[test]
 fn a_number_in_double_quotes_is_an_example() {
     none("Say \"it holds 63 tests\" here.");
@@ -596,10 +710,6 @@ fn a_code_span_is_a_modifier_or_a_head() {
 #[test]
 fn a_noun_that_is_not_plural_ends_the_phrase_with_no_count() {
     none("It has 63 test.");
-    none("It has 63.");
-    none("It has 63, tests follow.");
-    none("It has 63. Tests follow.");
-    none("It has 63\n\ntests.");
 }
 
 #[test]
@@ -662,7 +772,7 @@ fn a_rate_per_something_is_no_count() {
 #[test]
 fn a_table_cell_that_holds_a_number_alone_is_a_count_under_a_plural_header() {
     counts("| Tests |\n| --- |\n| 63 |\n", &["63"]);
-    counts("| Name | Lines |\n| --- | --- |\n| a | 63 |\n", &["63"]);
+    counts("| Name | Files |\n| --- | --- |\n| a | 63 |\n", &["63"]);
     counts("| Count |\n| --- |\n| 63 |\n", &["63"]);
     counts("| Total |\n| --- |\n| 63 |\n", &["63"]);
     counts(
@@ -679,6 +789,8 @@ fn a_table_cell_under_another_header_is_no_count() {
     none("| Line |\n| --- |\n| 63 |\n");
     none("| Step |\n| --- |\n| 63 |\n");
     none("| Bits |\n| --- |\n| 63 |\n");
+    none("| Name | Lines |\n| --- | --- |\n| a | 63 |\n");
+    none("| Name | Points |\n| --- | --- |\n| a | 63 |\n");
     none("| Size (bytes) |\n| --- |\n| 63 |\n");
     none("| Tests |\n| --- |\n| 63 ms |\n");
     none("| Tests |\n| --- |\n| about 63, they say |\n");

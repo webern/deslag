@@ -17,6 +17,8 @@ CVE-2024-1234 fixes. In 2026 issues were closed.
 
 It reads 4 KB pages and 100 MB files, and runs 30 second jobs.
 
+A diff of 2269 lines moved the score 15 points, and 200 line files fit.
+
 It has one test, three fixtures and 1 file. The 0 failures are fine.
 
 It holds `63 tests`. See issue 57, step 12 and Rung 6.
@@ -25,4 +27,4 @@ It holds `63 tests`. See issue 57, step 12 and Rung 6.
 63 tests
 ```
 
-It holds 63. Tests follow. Say "it holds 63 tests" in the report.
+It returns 63 and defaults to 25. Tests follow. Say "it holds 63 tests" in the report.

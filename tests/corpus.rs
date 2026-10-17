@@ -1259,8 +1259,8 @@ fn counted_inventory_still_finds_the_numbers_a_reader_called_counts() {
 /// true or not, and people write counts too.
 #[test]
 fn counted_inventory_flags_at_least_the_files_it_did() {
-    const HUMAN: usize = 24;
-    const LLM: usize = 115;
+    const HUMAN: usize = 23;
+    const LLM: usize = 112;
     let settings = CountedInventory::default();
     let flagged = |category: &str| {
         corpus()

@@ -61,10 +61,28 @@ globs = [
 lints.counted_inventory = {}
 
 [[md.allow]]
+path = "docs/design/analysis.md"
+lint = "counted_inventory"
+quote = "On v2 that cap drops 5,901 of 57,304 n-grams."
+reason = "A figure measured on v2."
+
+[[md.allow]]
+path = "docs/design/analysis.md"
+lint = "counted_inventory"
+quote = "On v2 the steps leave 57,304, 51,403, 29,133, 6,895, 6,074 and 4,935 n-grams."
+reason = "A figure measured on v2."
+
+[[md.allow]]
 path = "docs/design/corpus.md"
 lint = "counted_inventory"
 quote = "The tree, `tests/corpus/`, stays as the build doctrine bounds it: about 400 fixtures of at most 64KB for each collected label, plus `core/`, which is hand-picked."
 reason = "The build doctrine's cap on the tree, a limit."
+
+[[md.allow]]
+path = "docs/design/corpus.md"
+lint = "counted_inventory"
+quote = "A commit is taken for one when its body lists two or more commits as GitHub does, in paragraphs that open with `* `, or holds the header `git merge --squash` writes, or ends with a line of nine dashes and then only the trailers GitHub gathers from the squashed commits."
+reason = "The exact shape of a line, a format and no tally."
 
 [[md.allow]]
 path = "scripts/blobstore/blobs.md"
@@ -81,13 +99,37 @@ reason = "A dated record of what one image holds."
 [[md.allow]]
 path = "scripts/blobstore/blobs.md"
 lint = "counted_inventory"
+quote = "It excludes 384 of the first's that `recheck` no longer proves; its `repos.jsonl` lists the 3,232 repositories tried, 1,388 of which gave a fixture."
+reason = "A dated record of what one image holds."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
 quote = "`2026-10-03-01`: licence corrections: 49 fixtures labelled MIT-0 added back as MIT, byte for byte but for `source.license` in the sidecar; those and 16 more whose licence the corpus does not accept or cannot name dropped."
 reason = "A dated record of what one image holds."
 
 [[md.allow]]
 path = "scripts/blobstore/blobs.md"
 lint = "counted_inventory"
+quote = "`2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories."
+reason = "A dated record of what one image holds."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
 quote = "`2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again."
+reason = "A dated record of what one image holds."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
+quote = "`2026-10-03-04`: 200 `llm` stories from one Hugging Face dataset whose publisher names each row's model, a label on the basis of `docs/design/corpus.md` section 3, not a history."
+reason = "A dated record of what one image holds."
+
+[[md.allow]]
+path = "scripts/blobstore/blobs.md"
+lint = "counted_inventory"
+quote = "`2026-10-08-silver`: 4,794 sentences, 45,836 words; 9.9MB, and a 7.7MB archive."
 reason = "A dated record of what one image holds."
 
 # A change may not leave the instructions with more list items than they had.

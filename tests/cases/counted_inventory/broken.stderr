@@ -1,6 +1,6 @@
 ERROR: deslag detected counts of things!
 
-README.md has 14 counts.
+README.md has 15 counts.
 
 A count of things changes with every change, and a wrong one is as bad as a right one. Name the thing, or where it lives, as in "the tests in `tests/`", with no number. A limit, a version, a measure or an ID is no count, as in "at most 200 lines" or "Python 3"; a count put as a bound or a range is the same count and no fix. A sentence that must keep its number is for a human to exempt: leave it, and give the human the sentence and a reason.
 
@@ -10,7 +10,7 @@ The places:
   line 3: "63 tests"
   line 3: "13 variants"
   line 3: "376 fixtures"
-  line 4: "1,075 lines"
+  line 4: "1,075 files"
   line 4: "12 new unit tests"
   line 6: "five tests"
   line 6: "a dozen crates"
@@ -21,5 +21,6 @@ The places:
   line 10: "11,473 `human` fixtures"
   line 11: "12 fixtures"
   line 15: "63"
+  line 17: "holds 63"
 
 deslag: 1 of 1 files with counts of things.

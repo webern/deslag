@@ -10,10 +10,10 @@
 //! - a limit: after a bound ([`BOUNDS`]), with a hedge between ([`HEDGES`]) or not, or the second
 //!   of two numbers a bound governs ("at most 3 or 4 lines", "between 3 and 5 files");
 //! - a year, four digits from 1900 to 2099, or followed by a unit ([`UNITS`]), as in `4 KB pages`;
-//! - a name or a version: after a `#`, after a capitalised word wherever it stands ("Python 3
-//!   files", which spares "Run 3 tests" too), a decimal, or joined to a word or to a mark such
-//!   as `-`, `/` or `.` ("v2", "UTF-8", "5-10 files"), though not to a bracket or a quote that
-//!   opens, as in `(63 tests)`;
+//! - a name or a version: after a `#`, after a capitalised word that is no function word,
+//!   wherever it stands ("Run 3 tests", but `The 13 variants` counts), a decimal, or joined to a
+//!   word or to a mark such as `-`, `/` or `.` ("v2", "UTF-8", "5-10 files"), though not to a
+//!   bracket or a quote that opens, as in `(63 tests)`;
 //! - a number whose link ends before the noun.
 //!
 //! Only prose counts or excuses: code, and what the document does not read as prose, gives the
@@ -140,7 +140,7 @@ const NUMBER: Item = Item::All(&[
         hedges: HEDGES,
     },
     Item::NotAfter(&[&["#"]]),
-    Item::NotAfterCapitalised,
+    Item::NotAfterCapitalised(FUNCTION_WORDS),
 ]);
 
 /// A word between the number and the noun.
@@ -511,7 +511,9 @@ mod tests {
     }
 
     #[test]
-    fn a_capitalised_word_before_the_number_is_a_name_wherever_it_stands() {
+    fn a_capitalised_word_before_the_number_is_a_name_unless_it_is_a_function_word() {
+        no_count("Python 3 scripts");
+        assert_eq!(found("The 13 variants"), ["13 variants"]);
         no_count("Python 3 scripts are supported.");
         no_count("- Python 3 scripts");
         no_count("# Node 18 packages");
@@ -524,6 +526,17 @@ mod tests {
         no_count("Step 2: Run 3 tests");
         no_count("Then Run 3 tests.");
         no_count("> Run 3 tests.");
+        // A capitalised function word is no name: it opens a sentence, a list item or a cell.
+        assert_eq!(found("The 13 variants cover it."), ["13 variants"]);
+        assert_eq!(found("These 12 crates are new."), ["12 crates"]);
+        assert_eq!(found("- The 13 variants"), ["13 variants"]);
+        assert_eq!(found("# The 13 variants"), ["13 variants"]);
+        assert_eq!(found("In 12 files it fails."), ["12 files"]);
+        assert_eq!(found("THE 13 variants cover it."), ["13 variants"]);
+        assert_eq!(
+            found("Python 3 scripts and the 13 variants."),
+            ["13 variants"]
+        );
         // A lower-case word does not, and nor does a word that is no word.
         assert_eq!(found("It adds 12 tests."), ["12 tests"]);
         assert_eq!(found("Step 2: it runs 3 tests."), ["3 tests"]);

@@ -38,6 +38,25 @@ max_paragraph_chars = 500
 # A taste lint, off by default: this repo negates the verb, not its object.
 [md.lints.verbs_no_nouns]
 
+# A taste lint, off by default: this repo names a thing and does not count it. An override can turn a
+# lint on but not off, so it is on for the files below and not in the section, which would reach the
+# *.asbuilt.md docs, which stay as they are until the owner opens a reconciliation, and the skills,
+# whose wording is the owner's.
+[[md.overrides]]
+globs = [
+  "/AGENTS.md",
+  "/tests/AGENTS.md",
+  "/tools/AGENTS.md",
+  "/ACKNOWLEDGEMENTS.md",
+  "/docs/design/analysis.md",
+  "/docs/design/catalog.md",
+  "/docs/design/corpus.md",
+  "/scripts/blobstore/blobs.md",
+  "/src/instructions/**/*.md",
+  "/src/changelog/releases/next/README.md",
+]
+lints.counted_inventory = {}
+
 # A change may not leave the instructions with more list items than they had.
 [[md.overrides]]
 globs = ["/AGENTS.md"]
@@ -125,6 +144,8 @@ groups = { emoji = true }
 
 [rust.lints.verbs_no_nouns]
 
+[rust.lints.counted_inventory]
+
 # The comments of deslag's own TOML outside tests/, and not the golden files of tools/sweep, which
 # the sweep prints. They are held to the same characters and phrases as the Rust comments.
 [toml]
@@ -143,3 +164,5 @@ groups = { emoji = true }
 [toml.lints.banned_phrases]
 
 [toml.lints.verbs_no_nouns]
+
+[toml.lints.counted_inventory]

@@ -31,16 +31,16 @@ The big tier of the corpus: quoted Markdown in batches, each fixture with its JS
 `docs/design/corpus.md` says what it is for and its rules; `docs/design/corpus.asbuilt.md` gives
 the layout. `tests/blobs.rs` reads it.
 
-- `2026-09-27-01`: the 1200 collected fixtures of `tests/corpus/`, 400 each of `human/`, `llm/`
+- `2026-09-27-01`: the collected fixtures of `tests/corpus/`, the same number of `human/`, `llm/`
   and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`; 12,034,975 bytes.
-- `2026-09-27-02`: 21,075 fixtures from `collect.py harvest`, 11,473 `human`, 9,003 `llm` and 599
+- `2026-09-27-02`: the fixtures from `collect.py harvest`: 11,473 `human`, 9,003 `llm` and 599
   `mixed`, 474 of those with their twin; 203,442,958 bytes. It excludes 384 of the first's that `recheck` no
   longer proves; its `repos.jsonl` lists the 3,232 repositories tried, 1,388 of which gave a fixture.
-- `2026-10-03-01`: licence corrections: 49 fixtures labelled MIT-0 added back as MIT, byte for
+- `2026-10-03-01`: licence corrections: the fixtures labelled MIT-0 added back as MIT, byte for
   byte but for `source.license` in the sidecar; those and 16 more whose licence the corpus does not
   accept or cannot name dropped.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories.
-- `2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again.
+- `2026-10-03-03`: licence corrections: 856 exclusions, and the fixtures added again.
 - `2026-10-03-04`: 200 `llm` stories from one Hugging Face dataset whose publisher names each row's
   model, a label on the basis of `docs/design/corpus.md` section 3, not a history.
 

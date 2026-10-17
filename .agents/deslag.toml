@@ -1,4 +1,4 @@
-# deslag's config for its own repository. `make check-deslag` runs it, and `make check` gates CI on
+# deslag's config for this repository. `make check-deslag` runs it, and `make check` gates CI on
 # it.
 
 schema_version = 1
@@ -35,11 +35,14 @@ groups = { emoji = true }
 [md.lints.density]
 max_paragraph_chars = 500
 
-# A taste lint, off by default: this repo negates the verb, not its object.
+# Taste lints, off by default: this repo negates the verb, not its object, writes the plain
+# negation, `does not parse`, and drops `own` from a possessive unless the possessor contrasts with
+# another.
 [md.lints.verbs_no_nouns]
 
-# A taste lint, off by default: this repo writes the plain negation, `does not parse`.
 [md.lints.not_at_all]
+
+[md.lints.possessive_own]
 
 # A change may not leave the instructions with more list items than they had.
 [[md.overrides]]
@@ -93,7 +96,7 @@ lints.max_size_bytes.value = 800
 globs = ["/src/instructions/update.md"]
 lints.max_size_bytes.value = 1472
 
-# corpus.asbuilt.md declares its own budget in its frontmatter.
+# corpus.asbuilt.md declares its budget in its frontmatter.
 [[md.overrides]]
 globs = ["/docs/design/corpus.md"]
 lints.max_size_bytes.value = 17408
@@ -116,7 +119,7 @@ lints.max_size_bytes.value = 8192
 globs = ["/docs/design/*.asbuilt.md"]
 lints.max_size_bytes.value = 4096
 
-# The comments of deslag's own source. A comment may not hold the characters and phrases the
+# The comments of deslag's source. A comment may not hold the characters and phrases the
 # prose of this repo may not.
 [rust]
 globs = ["/src/**/*.rs"]
@@ -130,7 +133,9 @@ groups = { emoji = true }
 
 [rust.lints.not_at_all]
 
-# The comments of deslag's own TOML outside tests/, and not the golden files of tools/sweep, which
+[rust.lints.possessive_own]
+
+# The comments of deslag's TOML outside tests/, and not the golden files of tools/sweep, which
 # the sweep prints. They are held to the same characters and phrases as the Rust comments.
 [toml]
 globs = [
@@ -150,3 +155,5 @@ groups = { emoji = true }
 [toml.lints.verbs_no_nouns]
 
 [toml.lints.not_at_all]
+
+[toml.lints.possessive_own]

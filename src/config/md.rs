@@ -85,12 +85,18 @@ pub(super) struct MdFile {
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
     overrides: Vec<OverrideFile>,
-    // Last, so that a section written as a JSON array keeps `lints` and `overrides` where an
-    // older config had them: the config reads a struct by position.
+    // Last, so that a section written as a JSON array keeps `lints`, `overrides` and `fences` where
+    // an older config had them: the config reads a struct by position.
     /// Which fenced code in these files is read for its comments. Overrides cannot change it.
     #[serde(default)]
     fences: FencesFile,
-    // After `fences` for the same reason.
+    /// Files `globs` match that this section leaves out, such as generated code. A pattern is
+    /// written as in `globs`, from the repo root with a `/`, else by file name, and needing no
+    /// extension. A file the walk skips stays skipped, and nothing re-includes one. Only a human
+    /// adds an exclude; never add one to make a check pass.
+    #[serde(default)]
+    exclude: Vec<String>,
+    // After `exclude` for the same reason.
     /// The sentences of these files that stay as written, each exempted from one lint. Only a
     /// human writes an entry.
     #[serde(default)]
@@ -102,6 +108,7 @@ impl MdFile {
     pub(super) fn into_parts(self) -> Parts {
         Parts {
             globs: self.globs,
+            exclude: self.exclude,
             default_globs: DEFAULT_GLOBS,
             extensions: None,
             stack: Stack::new(Reader::Markdown {

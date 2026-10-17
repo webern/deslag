@@ -649,11 +649,11 @@ mod tests {
     }
 
     /// A section written as a JSON array is read by position, so `allow` must not move the keys
-    /// before it: in `[md]`, `fences` is last of the older keys, and `allow` follows it.
+    /// before it: in `[md]`, `exclude` follows `fences`, and `allow` follows `exclude`.
     #[test]
     fn an_entry_written_as_a_json_array_is_read_by_position() {
         let config = Config::parse(
-            r#"[1, [null, {"banned_chars": {}}, [], [], [["a.md", "banned_chars", "A.", "R."]]]]"#,
+            r#"[1, [null, {"banned_chars": {}}, [], [], [], [["a.md", "banned_chars", "A.", "R."]]]]"#,
             PathBuf::from("deslag.json"),
             ConfigSource::Explicit,
         )

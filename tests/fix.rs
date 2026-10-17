@@ -451,6 +451,31 @@ fn a_path_check_does_not_read_is_an_error_and_nothing_is_written() {
     assert_eq!(read(&elsewhere, "outside.md"), text.as_bytes());
 }
 
+/// A file a section excludes is refused like one no section selects, and the error names the
+/// section and the pattern.
+#[test]
+fn a_path_a_section_excludes_is_refused_with_the_pattern() {
+    let text = "# Notes\n\nA \u{2014} b.\n";
+    let repo = Repo::new();
+    repo.write(
+        "deslag.toml",
+        "schema_version = 1\n\n[md]\nexclude = [\"/docs/adr/**\"]\n\n[md.lints.banned_chars]\n",
+    );
+    repo.write("README.md", text);
+    repo.write("docs/adr/0001.md", text);
+    let output = repo.run(&["fix", "docs/adr/0001.md"]);
+    assert_eq!(
+        (code(&output), stderr(&output)),
+        (
+            2,
+            "deslag: cannot fix docs/adr/0001.md: no section selects it; [md] excludes it by \
+             \"/docs/adr/**\"\n"
+                .to_string()
+        )
+    );
+    assert_eq!(read(&repo, "docs/adr/0001.md"), text.as_bytes());
+}
+
 #[test]
 fn a_run_that_reports_on_no_file_says_so_before_the_check() {
     let repo = repo_with("# Notes\n\nPlain words.\n");

@@ -4,17 +4,17 @@
 //! matches it in the order
 //! [`Section::overrides_for`](crate::config::Section::overrides_for) gives, then a budget in the
 //! file's own frontmatter. For each file this names the config, says whether the walk skips the
-//! file and whether a section selects it, lists the overrides and the frontmatter budget, and shows
-//! every lint's settings as TOML, whatever language the config is written in, then lists the
-//! `allow` entries that name the file, each with the line of its sentence or "no such sentence",
-//! then the prose regions the file holds.
+//! file and whether a section selects it or excludes it, lists the overrides and the frontmatter
+//! budget, and shows every lint's settings as TOML, whatever language the config is written in,
+//! then lists the `allow` entries that name the file, each with the line of its sentence or "no
+//! such sentence", then the prose regions the file holds.
 
 use std::path::{Path, PathBuf};
 
 use crate::Error;
 use crate::config::{Allow, Config};
 use crate::document::Document;
-use crate::glob::{self, RepoFile};
+use crate::glob::{self, Pattern, RepoFile};
 use crate::lint::{self, allow, on_lines};
 use crate::parse::frontmatter;
 
@@ -69,20 +69,28 @@ fn block(
     out.push_str(&format!("# reads: {}\n", section.stack.reads_as()));
 
     let overrides = section.overrides_for(relative);
-    if overrides.is_empty() {
-        out.push_str("# overrides: none\n");
-    } else {
+    let excluding = section.overrides_excluding(relative);
+    if !overrides.is_empty() {
         out.push_str("# overrides, in the order they merge:\n");
+    } else if !excluding.is_empty() {
+        out.push_str("# overrides: no override applies, but these match by globs:\n");
+    } else {
+        out.push_str("# overrides: none\n");
     }
     for (index, entry) in overrides {
-        let globs = toml::Value::Array(
-            entry
-                .patterns
-                .iter()
-                .map(|pattern| toml::Value::String(pattern.as_str().to_string()))
-                .collect(),
-        );
-        out.push_str(&format!("#   override {}: globs = {globs}\n", index + 1));
+        let mut line = format!("globs = {}", array(entry.globs.include()));
+        if !entry.globs.exclude().is_empty() {
+            line.push_str(&format!(", exclude = {}", array(entry.globs.exclude())));
+        }
+        out.push_str(&format!("#   override {}: {line}\n", index + 1));
+    }
+    for (index, entry, dropped_by) in excluding {
+        out.push_str(&format!(
+            "#   override {} does not apply: globs = {} match, but exclude {:?} drops the file\n",
+            index + 1,
+            array(entry.globs.include()),
+            dropped_by.as_str()
+        ));
     }
 
     let mut lints = section.lints_for(relative);
@@ -152,6 +160,16 @@ fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
         ));
     }
     out
+}
+
+/// `patterns` as the TOML array they were written as.
+fn array(patterns: &[Pattern]) -> toml::Value {
+    toml::Value::Array(
+        patterns
+            .iter()
+            .map(|pattern| toml::Value::String(pattern.as_str().to_string()))
+            .collect(),
+    )
 }
 
 /// The prose regions of `document` after the lint tables: a count, then a row per region with its

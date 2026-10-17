@@ -12,15 +12,20 @@
 //! expects is a bug in the build, so each builder panics, and the build fails with its message.
 
 use super::layout::{
-    BUCKET, KEY, LONG_SLOT, ROW, SHORT, SHORT_SLOT, WEIGHTS_MAGIC, long_hash, long_key, short_hash,
-    short_key,
+    BUCKET, HISTORIES, KEY, LEVELS, LONG_SLOT, PLACES, Piece, RECORD, SHORT, SHORT_SLOT,
+    WEIGHTS_MAGIC, hash_of, key_of, lexicon_hash, long_hash, long_key, short_hash, short_key,
 };
-use super::layout::{hash_of, lexicon_hash};
 use super::{Reading, closed, lexicon};
 
-/// The id of the bias template, the first of the file's `templates` line. The others are in
-/// [`super::layout::template`].
+/// The ids of the templates whose rows are folded (see [`folded`]), in the order of the file's
+/// `templates` line. The other ids are in [`super::layout::template`].
 pub const BIAS: u8 = 0;
+pub const PREVIOUS: u8 = 8;
+pub const PREVIOUS_2: u8 = 9;
+pub const PREVIOUS_PAIR: u8 = 10;
+pub const RULES_TAG: u8 = 21;
+pub const RULES_CONFIDENCE: u8 = 22;
+pub const RULES_TAG_CONFIDENCE: u8 = 24;
 
 /// How many templates there are.
 pub const COUNT: usize = 25;
@@ -303,18 +308,108 @@ fn range_bytes(ranges: &[(u32, u32)]) -> Vec<u8> {
     out
 }
 
+/// Whether the weights fold the rows of `template` into score rows rather than keep them in the
+/// table of rows: the features that have no text to read, and so have few values. They are the
+/// bias, the previous tags and the rules' own reading. A word adds one row of each sort whole, so
+/// the table holds none of them and a run does not probe for them.
+pub fn folded(template: u8) -> bool {
+    matches!(
+        template,
+        BIAS | PREVIOUS
+            | PREVIOUS_2
+            | PREVIOUS_PAIR
+            | RULES_TAG
+            | RULES_CONFIDENCE
+            | RULES_TAG_CONFIDENCE
+    )
+}
+
+/// A score for each of the tags, by place.
+pub type Scores = [i64; PLACES];
+
+/// The scores of the folded features, summed into the two rows that score a word.
+pub struct Folded {
+    /// Indexed by the previous tag's id times [`HISTORIES`] plus the one before it: the bias and
+    /// the features `t-1`, `t-2` and `t-1 t-2`.
+    pub history: Vec<Scores>,
+    /// Indexed by the place of the rules' tag times [`LEVELS`] plus their level: the features `d
+    /// tag`, `d conf` and `d tag conf`.
+    pub rules: Vec<Scores>,
+}
+
+/// The sum of the rows, place by place.
+fn sum(rows: &[&Scores]) -> Scores {
+    std::array::from_fn(|place| rows.iter().map(|row| row[place]).sum())
+}
+
+/// Folds the rows of the folded templates. A key that occurs twice would be read as the first of
+/// its rows by a probe and as both by a sum, so it is a bug in the file.
+pub fn fold(rows: &[Row<'_>]) -> Folded {
+    let mut bias = [0; PLACES];
+    let mut previous = vec![[0; PLACES]; HISTORIES];
+    let mut previous_2 = vec![[0; PLACES]; HISTORIES];
+    let mut pairs = vec![[0; PLACES]; HISTORIES * HISTORIES];
+    let mut tags = vec![[0; PLACES]; PLACES];
+    let mut levels = vec![[0; PLACES]; LEVELS];
+    let mut tags_levels = vec![[0; PLACES]; PLACES * LEVELS];
+    let mut seen = std::collections::HashSet::new();
+    for row in rows.iter().filter(|row| folded(row.template)) {
+        let key = (row.template, row.a, row.b);
+        assert!(
+            seen.insert(key),
+            "weights.txt has the feature {key:?} twice"
+        );
+        let (a, b) = (usize::from(row.a), usize::from(row.b));
+        let scores = match row.template {
+            BIAS => &mut bias,
+            PREVIOUS if a < HISTORIES => &mut previous[a],
+            PREVIOUS_2 if a < HISTORIES => &mut previous_2[a],
+            PREVIOUS_PAIR if a < HISTORIES && b < HISTORIES => &mut pairs[a * HISTORIES + b],
+            RULES_TAG if a < PLACES => &mut tags[a],
+            RULES_CONFIDENCE if a < LEVELS => &mut levels[a],
+            RULES_TAG_CONFIDENCE if a < PLACES && b < LEVELS => &mut tags_levels[a * LEVELS + b],
+            _ => panic!("weights.txt has the feature {key:?}, which no score row holds"),
+        };
+        for &cell in &row.cells {
+            scores[(cell & 15) as usize] += i64::from(cell >> 4);
+        }
+    }
+    let mut history = Vec::with_capacity(HISTORIES * HISTORIES);
+    for (first, previous) in previous.iter().enumerate() {
+        for (second, previous_2) in previous_2.iter().enumerate() {
+            let pair = &pairs[first * HISTORIES + second];
+            history.push(sum(&[&bias, previous, previous_2, pair]));
+        }
+    }
+    let mut rules = Vec::with_capacity(PLACES * LEVELS);
+    for (tag, by_tag) in tags.iter().enumerate() {
+        for (level, by_level) in levels.iter().enumerate() {
+            rules.push(sum(&[by_tag, by_level, &tags_levels[tag * LEVELS + level]]));
+        }
+    }
+    Folded { history, rules }
+}
+
+/// The score rows as `i64`s, one row after the other.
+fn score_bytes(rows: &[Scores]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(rows.len() * PLACES * 8);
+    for score in rows.iter().flatten() {
+        out.extend_from_slice(&score.to_le_bytes());
+    }
+    out
+}
+
 /// The weights of `text`, the file `weights.txt`, as bytes: see [`Model`] for what is in them and
 /// `layout.rs` and `weights.rs` for where.
 pub fn weights(text: &str) -> Vec<u8> {
     let model = parse(text);
-    let count = model.rows.len();
-
-    let mut bias = [0i64; 13];
-    if let Some(row) = model.rows.iter().find(|row| row.template == BIAS) {
-        for &cell in &row.cells {
-            bias[(cell & 15) as usize] += i64::from(cell >> 4);
-        }
-    }
+    let scores = fold(&model.rows);
+    let kept: Vec<&Row<'_>> = model
+        .rows
+        .iter()
+        .filter(|row| !folded(row.template))
+        .collect();
+    let count = kept.len();
 
     let mut vocab_ends = Vec::new();
     let mut vocab_text = Vec::new();
@@ -324,33 +419,46 @@ pub fn weights(text: &str) -> Vec<u8> {
         put_u32(&mut vocab_ends, vocab_text.len() as u32);
     }
 
-    // A row's text and cells end where the next row's begin, so one row more closes the last.
-    let mut rows = Vec::with_capacity((count + 1) * ROW);
-    let mut texts = Vec::new();
-    let mut cells = Vec::new();
-    for row in &model.rows {
-        put_u32(&mut rows, texts.len() as u32);
-        put_u32(&mut rows, (cells.len() / 4) as u32);
-        rows.extend_from_slice(&row.a.to_le_bytes());
-        rows.push(row.b);
-        rows.push(row.template);
-        texts.extend_from_slice(row.text.as_bytes());
-        for cell in &row.cells {
-            cells.extend_from_slice(&cell.to_le_bytes());
+    // The records, one after the other, from the fourth byte on: a slot of zero is an empty one,
+    // so no record is at the first byte.
+    let mut records = vec![0u8; 4];
+    let mut offsets = Vec::with_capacity(count);
+    for row in &kept {
+        // The places a row has cells for, as a set, and their totals in the order of the places.
+        let mut places = 0u16;
+        let mut last = None;
+        for &cell in &row.cells {
+            let place = (cell & 15) as u32;
+            assert!(place < PLACES as u32, "a cell for place {place}");
+            assert!(
+                last < Some(place),
+                "the cells of a row are by place, once each"
+            );
+            last = Some(place);
+            places |= 1 << place;
+        }
+        let start = records.len();
+        offsets.push(u32::try_from(start).expect("records that fit"));
+        put_u32(&mut records, key_of(row.template, row.a, row.b));
+        records.extend_from_slice(&places.to_le_bytes());
+        records.push(u8::try_from(row.text.len()).expect("a text of at most 255 bytes"));
+        records.push(0);
+        assert_eq!(records.len() - start, RECORD);
+        records.extend_from_slice(row.text.as_bytes());
+        for &cell in &row.cells {
+            records.extend_from_slice(&(cell >> 4).to_le_bytes());
         }
     }
-    put_u32(&mut rows, texts.len() as u32);
-    put_u32(&mut rows, (cells.len() / 4) as u32);
-    rows.extend_from_slice(&[0; 4]);
 
     let mut slots = vec![0u32; (count * 2).next_power_of_two()];
     let mask = slots.len() - 1;
-    for (n, row) in model.rows.iter().enumerate() {
-        let mut slot = hash_of(row.template, row.a, row.b, row.text, None) as usize & mask;
+    for (row, &offset) in kept.iter().zip(&offsets) {
+        let hash = hash_of(row.template, row.a, row.b, Piece::of(row.text.as_bytes()));
+        let mut slot = hash as usize & mask;
         while slots[slot] != 0 {
             slot = (slot + 1) & mask;
         }
-        slots[slot] = n as u32 + 1;
+        slots[slot] = offset;
     }
     let mut slot_bytes = Vec::with_capacity(slots.len() * 4);
     for slot in slots {
@@ -363,17 +471,14 @@ pub fn weights(text: &str) -> Vec<u8> {
     for cutoff in model.cutoffs {
         out.extend_from_slice(&cutoff.to_le_bytes());
     }
-    for total in bias {
-        out.extend_from_slice(&total.to_le_bytes());
-    }
     put_section(&mut out, &range_bytes(&model.digits));
     put_section(&mut out, &range_bytes(&model.decimals));
     put_section(&mut out, &vocab_ends);
     put_section(&mut out, &vocab_text);
-    put_section(&mut out, &rows);
-    put_section(&mut out, &texts);
-    put_section(&mut out, &cells);
+    put_section(&mut out, &records);
     put_section(&mut out, &slot_bytes);
+    put_section(&mut out, &score_bytes(&scores.history));
+    put_section(&mut out, &score_bytes(&scores.rules));
     out
 }
 

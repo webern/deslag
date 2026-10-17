@@ -28,17 +28,17 @@ retraining adds about 1.3 MB, packed, to git's history.
 
 Measured on macOS x86-64 (an i9-9980HK) with the machine idle, release builds unless named:
 
-- Binary: `deslag` is 18,185,048 bytes. The tables built from this file are in it, and not the
-  file's text: the weights are 3,891,851 bytes, the word table of both lexicons 4,194,312 and the
+- Binary: `deslag` is 17,891,184 bytes. The tables built from this file are in it, and not the
+  file's text: the weights are 3,568,591 bytes, the word table of both lexicons 4,194,312 and the
   index of the lexicon's lines 524,288.
 - Build: `build.rs` parses the file and builds the tables, so no run does. A clean debug build of
-  `deslag` takes 32.4 s and a clean release build 61.2 s.
+  `deslag` takes 32.7 s and a clean release build 61.2 s.
 - First use: none. The reader finds the tables where they lie in the binary, and a run touches only
   the pages it reads.
 - Per run: `deslag check` of one three-line Markdown file takes 24 ms in a debug build and 11 ms in
   a release build (medians of 21 runs).
 - Tagging's share of reading the corpus's big tier, which `cargo run -p deslag-corpus -- time
-  --check` holds under 75%, is 71.5% in debug. That check keeps each file's fastest pass, so it
+  --check` holds under 75%, is 63.0% in debug. That check keeps each file's fastest pass, so it
   leaves out any setup.
 
 ## Training data

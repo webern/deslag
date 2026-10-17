@@ -74,9 +74,6 @@ pub(super) mod template {
     pub(in crate::tag) const SUFFIX_3: u8 = 5;
     pub(in crate::tag) const PREFIX_1: u8 = 6;
     pub(in crate::tag) const SHAPE: u8 = 7;
-    pub(in crate::tag) const PREVIOUS: u8 = 8;
-    pub(in crate::tag) const PREVIOUS_2: u8 = 9;
-    pub(in crate::tag) const PREVIOUS_PAIR: u8 = 10;
     pub(in crate::tag) const PREVIOUS_NORM: u8 = 11;
     pub(in crate::tag) const BEFORE: u8 = 12;
     pub(in crate::tag) const BEFORE_SUFFIX_3: u8 = 13;
@@ -87,40 +84,116 @@ pub(super) mod template {
     pub(in crate::tag) const BEFORE_NORM: u8 = 18;
     pub(in crate::tag) const NORM_AFTER: u8 = 19;
     pub(in crate::tag) const PREVIOUS_SHAPE: u8 = 20;
-    pub(in crate::tag) const RULES_TAG: u8 = 21;
-    pub(in crate::tag) const RULES_CONFIDENCE: u8 = 22;
     pub(in crate::tag) const RULES_KEPT: u8 = 23;
-    pub(in crate::tag) const RULES_TAG_CONFIDENCE: u8 = 24;
 }
 
-/// The bytes of a row of the weights: the offset of its text in the texts, the index of its first
-/// cell, its first integer (`u16`) and second (`u8`), and its template. A row's text ends where the
-/// next row's begins, and so do its cells, so there is one row more than there are features.
-pub(super) const ROW: usize = 12;
+/// A record of the weights is one feature: its key ([`key_of`]) as a `u32`, the set of places it
+/// has a total for as a `u16` with a bit for each, the length of its text in bytes as a `u8`, a
+/// byte of padding, then the text, then the `i32` totals of those places in the order of the
+/// places. A probe that finds the record has read the text and the totals where they lie after it,
+/// so it touches the fewest cache lines.
+pub(super) const RECORD: usize = 8;
 
-/// The FNV-1a hash step over `bytes`, from `hash`.
-#[inline]
-pub(super) fn mix(mut hash: u64, bytes: &[u8]) -> u64 {
-    let mut i = 0;
-    while i < bytes.len() {
-        hash = (hash ^ u64::from(bytes[i])).wrapping_mul(0x0100_0000_01b3);
-        i += 1;
-    }
-    hash
+/// A feature's template and integers as one number: the template, then the second integer, then
+/// the first. A row holds it, so one comparison says a row is the feature's but for the text.
+#[inline(always)]
+pub(super) const fn key_of(template: u8, a: u16, b: u8) -> u32 {
+    template as u32 | (b as u32) << 8 | (a as u32) << 16
 }
 
-/// The hash of a feature: its template, integers, and text as `first`, or `first`, a space and
-/// `second`.
-#[inline]
-pub(super) fn hash_of(template: u8, a: u16, b: u8, first: &str, second: Option<&str>) -> u64 {
-    let head = [template, b, a as u8, (a >> 8) as u8];
-    let mut hash = mix(0xcbf2_9ce4_8422_2325, &head);
-    hash = mix(hash, first.as_bytes());
-    if let Some(second) = second {
-        hash = mix(hash, b" ");
-        hash = mix(hash, second.as_bytes());
+/// How many tags a score row has: the places of [`Tag::ALL`], in the model's alphabetical order.
+pub(super) const PLACES: usize = 13;
+
+/// How many previous-tag ids there are: the 13 tags, then `PUNCT`, `SYM`, `X` and the two pads.
+pub(super) const HISTORIES: usize = 18;
+
+/// How many levels of confidence there are.
+pub(super) const LEVELS: usize = 4;
+
+const _: () = assert!(PLACES == Tag::ALL.len() && LEVELS == Confidence::ALL.len());
+
+/// The base of the polynomial hash of a text, which is odd.
+const BASE: u64 = 0x9e37_79b9_7f4a_7c15;
+
+/// The multiplier that mixes a polynomial hash into the bits a slot takes.
+const MIX: u64 = 0xff51_afd7_ed55_8ccd;
+
+/// A text as the hash of a feature sees it: its bytes as the digits of a number in base [`BASE`],
+/// modulo 2^64, and the base to the power of their count. The hash of a text of two pieces is then
+/// the pieces' combined ([`Piece::then`]), so a text that occurs in several features is hashed
+/// once, and a feature of two texts is hashed without reading either again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) struct Piece {
+    hash: u64,
+    power: u64,
+}
+
+impl Piece {
+    /// The text of no bytes.
+    pub(super) const EMPTY: Piece = Piece { hash: 0, power: 1 };
+
+    /// A single space.
+    const SPACE: Piece = Piece {
+        hash: b' ' as u64,
+        power: BASE,
+    };
+
+    /// The piece of `bytes`.
+    #[inline(always)]
+    pub(super) fn of(bytes: &[u8]) -> Piece {
+        let mut piece = Piece::EMPTY;
+        let mut i = 0;
+        while i < bytes.len() {
+            piece.hash = piece
+                .hash
+                .wrapping_mul(BASE)
+                .wrapping_add(u64::from(bytes[i]));
+            piece.power = piece.power.wrapping_mul(BASE);
+            i += 1;
+        }
+        piece
     }
-    hash ^ (hash >> 32)
+
+    /// The piece of this text followed by `next`.
+    #[inline(always)]
+    pub(super) fn then(self, next: Piece) -> Piece {
+        Piece {
+            hash: self.hash.wrapping_mul(next.power).wrapping_add(next.hash),
+            power: self.power.wrapping_mul(next.power),
+        }
+    }
+
+    /// The piece of this text, a space and `next`.
+    #[inline(always)]
+    pub(super) fn then_spaced(self, next: Piece) -> Piece {
+        self.then(Piece::SPACE).then(next)
+    }
+
+    /// The piece of this text with `byte` put before it.
+    #[inline(always)]
+    pub(super) fn with_front(self, byte: u8) -> Piece {
+        Piece {
+            hash: u64::from(byte)
+                .wrapping_mul(self.power)
+                .wrapping_add(self.hash),
+            power: self.power.wrapping_mul(BASE),
+        }
+    }
+}
+
+/// The hash of a feature: its template, its integers and its text, as the polynomial hash of
+/// their bytes in that order, mixed. Its low bits choose the slot, so it is the same on a machine
+/// of any width.
+#[inline(always)]
+pub(super) fn hash_of(template: u8, a: u16, b: u8, text: Piece) -> u64 {
+    let mut head = u64::from(template);
+    head = head.wrapping_mul(BASE).wrapping_add(u64::from(b));
+    head = head.wrapping_mul(BASE).wrapping_add(u64::from(a & 0xff));
+    head = head.wrapping_mul(BASE).wrapping_add(u64::from(a >> 8));
+    head.wrapping_mul(text.power)
+        .wrapping_add(text.hash)
+        .wrapping_mul(MIX)
+        >> 32
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -12,9 +12,18 @@
 //! holding the total shifted up four bits with the tag's place in `codes` (the alphabetical order,
 //! not [`super::Tag::ALL`]) in the low four.
 //!
-//! **Lookup.** The rows sit in an open-addressing table of `u32` slots, built with the rows. A
-//! probe hashes the template, the integers and the text's bytes, which may arrive in two pieces,
-//! joined as the feature joined them; it compares the same way, so the pieces are never copied.
+//! **Folded features.** The features that have no text to read have few values: the bias, the
+//! previous tags, and the rules' tag and confidence. Their rows are added up when the crate builds
+//! into two tables of score rows, one for each pair of previous tags and one for each tag and
+//! confidence of the rules ([`Weights::history`] and [`Weights::rules`]), so a word adds two rows
+//! and probes for none of them. The sums are of integers, so they are exactly those the rows would
+//! have made.
+//!
+//! **Lookup.** The other rows sit in an open-addressing table of `u32` slots, built with the rows.
+//! A probe hashes the template, the integers and the text's bytes, which may arrive in two pieces,
+//! joined as the feature joined them. The hash composes over pieces ([`Piece`]), so a caller that
+//! reads a text in several features hashes it once; the probe still compares the bytes, so a
+//! collision is never a wrong answer.
 //!
 //! **Size.** The tables are about 4 MB in the binary, which reads them where they lie: the file's
 //! text itself is not in the binary. `layout.rs` says where each field is; `weights.md`, the
@@ -25,7 +34,8 @@ use std::sync::OnceLock;
 use super::built;
 pub(super) use super::layout::template;
 use super::layout::{
-    ROW, WEIGHTS_MAGIC, hash_of, i32_at, i64_at, rules_version, section, u16_at, u32_at,
+    HISTORIES, LEVELS, PLACES, Piece, RECORD, WEIGHTS_MAGIC, hash_of, i32_at, i64_at, key_of,
+    rules_version, section, u16_at, u32_at,
 };
 
 /// Whether the weights were learned from the rules of this build, [`super::RULES_VERSION`]. When
@@ -45,37 +55,72 @@ pub(super) struct Cutoffs {
     pub(super) kept: i64,
 }
 
-/// The cells of one feature: its totals, each as four bytes, read where they lie.
+/// A text a feature reads, with its hash.
 #[derive(Clone, Copy)]
-pub(super) struct Cells(&'static [u8]);
+pub(super) struct Part<'s> {
+    pub(super) text: &'s str,
+    pub(super) piece: Piece,
+}
+
+impl<'s> Part<'s> {
+    /// The part for `text`, hashed here.
+    pub(super) fn of(text: &'s str) -> Part<'s> {
+        Part {
+            text,
+            piece: Piece::of(text.as_bytes()),
+        }
+    }
+}
+
+/// The cells of one feature: its total for each of some places, read where they lie.
+#[derive(Clone, Copy)]
+pub(super) struct Cells {
+    bytes: &'static [u8],
+    /// Where the first total is, in bytes.
+    at: usize,
+    /// The places there is a total for, a bit for each.
+    places: u16,
+}
 
 impl Cells {
     /// The cells of a feature the model does not have.
-    const NONE: Cells = Cells(&[]);
+    const NONE: Cells = Cells {
+        bytes: &[],
+        at: 0,
+        places: 0,
+    };
 
     /// Whether there are none.
     #[cfg(test)]
     pub(super) fn is_empty(self) -> bool {
-        self.0.is_empty()
+        self.places == 0
     }
 
-    /// The cells, as the packed `i32` of the file.
+    /// The cells as the packed `i32` of the weights file: each total shifted up four bits with its
+    /// place in the low four.
     #[cfg(test)]
     pub(super) fn to_vec(self) -> Vec<i32> {
-        (0..self.0.len() / 4)
-            .map(|n| i32_at(self.0, n * 4))
-            .collect()
+        let mut cells = Vec::new();
+        for place in 0..16 {
+            if self.places >> place & 1 != 0 {
+                let before = (self.places & ((1 << place) - 1)).count_ones() as usize;
+                let total = i32_at(self.bytes, self.at + before * 4);
+                cells.push(total << 4 | place);
+            }
+        }
+        cells
     }
 
-    /// Adds the totals to `scores`, by place.
+    /// Adds the totals of the places in `open` to `scores`. The others are left as they were: the
+    /// caller does not read the score of a place it did not open.
     #[inline]
-    pub(super) fn add_to(self, scores: &mut [i64; 13]) {
-        let bytes = self.0;
-        let mut at = 0;
-        while at < bytes.len() {
-            let cell = i32_at(bytes, at);
-            scores[(cell & 15) as usize] += i64::from(cell >> 4);
-            at += 4;
+    pub(super) fn add_to(self, open: u16, scores: &mut [i64; 13]) {
+        let mut found = self.places & open;
+        while found != 0 {
+            let place = found.trailing_zeros() as usize;
+            found &= found - 1;
+            let before = (self.places & ((1 << place) - 1)).count_ones() as usize;
+            scores[place] += i64::from(i32_at(self.bytes, self.at + before * 4));
         }
     }
 }
@@ -83,8 +128,6 @@ impl Cells {
 /// The weights, read from the bytes `build.rs` made.
 pub(super) struct Weights {
     pub(super) cutoffs: Cutoffs,
-    /// The totals of the bias feature, which every word has, by place: where every score starts.
-    pub(super) bias: [i64; 13],
     /// The normal forms the model was trained on, sorted by bytes: where each ends in `vocab_text`,
     /// as `u32`, after a first that is 0.
     vocab_ends: &'static [u8],
@@ -92,14 +135,14 @@ pub(super) struct Weights {
     /// Code point ranges, `lo..=hi`, sorted: those Python's `isdigit` and `isdecimal` hold.
     digits: Vec<(u32, u32)>,
     decimals: Vec<(u32, u32)>,
-    /// The rows, [`ROW`] bytes each, and one more that closes the last.
-    rows: &'static [u8],
-    /// The rows' texts, one after the other.
-    texts: &'static [u8],
-    /// Every row's cells, in order.
-    cells: &'static [u8],
-    /// Row index plus one, as `u32`, or zero for an empty slot.
+    /// The records of the features, one after the other: see [`RECORD`].
+    records: &'static [u8],
+    /// The offset in `records` of a feature's record, as `u32`, or zero for an empty slot.
     slots: &'static [u8],
+    /// The sums of the bias and the previous-tag features, for each pair of previous ids.
+    history: Vec<[i64; PLACES]>,
+    /// The sums of the rules-reading features, for each tag and confidence.
+    rules: Vec<[i64; PLACES]>,
 }
 
 impl Weights {
@@ -109,9 +152,21 @@ impl Weights {
         WEIGHTS.get_or_init(|| read(built::WEIGHTS))
     }
 
+    /// The scores to start a word from: the bias, and the features of the two tags before it, whose
+    /// ids are their places in `learned.rs` (the 13 tags, then `PUNCT`, `SYM`, `X` and the pads).
+    #[inline]
+    pub(super) fn history(&self, previous: u16, before_previous: u16) -> [i64; PLACES] {
+        self.history[usize::from(previous) * HISTORIES + usize::from(before_previous)]
+    }
+
+    /// The scores to add for the rules' reading: their tag's place and their level.
+    #[inline]
+    pub(super) fn rules(&self, tag: u16, level: u8) -> &[i64; PLACES] {
+        &self.rules[usize::from(tag) * LEVELS + usize::from(level)]
+    }
+
     /// The cells of the feature with this template, integers and text, which is `first` alone or
     /// `first`, a space and `second`; none if the model does not have that feature.
-    #[inline]
     pub(super) fn find(
         &self,
         template: u8,
@@ -120,27 +175,73 @@ impl Weights {
         first: &str,
         second: Option<&str>,
     ) -> Cells {
+        match second {
+            None => self.probe(template, a, b, Part::of(first)),
+            Some(second) => self.probe_pair(template, a, b, Part::of(first), Part::of(second)),
+        }
+    }
+
+    /// [`Weights::find`] for a text whose hash the caller has.
+    #[inline]
+    pub(super) fn probe(&self, template: u8, a: u16, b: u8, text: Part<'_>) -> Cells {
+        self.look(
+            template,
+            a,
+            b,
+            hash_of(template, a, b, text.piece),
+            text.text,
+            None,
+        )
+    }
+
+    /// [`Weights::probe`] for a text of two pieces: `first`, a space and `second`.
+    #[inline]
+    pub(super) fn probe_pair(
+        &self,
+        template: u8,
+        a: u16,
+        b: u8,
+        first: Part<'_>,
+        second: Part<'_>,
+    ) -> Cells {
+        let hash = hash_of(template, a, b, first.piece.then_spaced(second.piece));
+        self.look(template, a, b, hash, first.text, Some(second.text))
+    }
+
+    /// The row with this key and this text, whose hash is `hash`. The text is `first`, or
+    /// `first`, a space and `second`.
+    #[inline(always)]
+    fn look(
+        &self,
+        template: u8,
+        a: u16,
+        b: u8,
+        hash: u64,
+        first: &str,
+        second: Option<&str>,
+    ) -> Cells {
         let mask = self.slots.len() / 4 - 1;
-        let mut at = hash_of(template, a, b, first, second) as usize & mask;
-        let want = first.len() + second.map_or(0, |second| 1 + second.len());
+        let mut at = hash as usize & mask;
+        let key = key_of(template, a, b);
+        let want = match second {
+            None => first.len(),
+            Some(second) => first.len() + 1 + second.len(),
+        };
+        let records = self.records;
         loop {
-            let slot = u32_at(self.slots, at * 4) as usize;
-            if slot == 0 {
+            let record = u32_at(self.slots, at * 4) as usize;
+            if record == 0 {
                 return Cells::NONE;
             }
-            let row = (slot - 1) * ROW;
-            let rows = self.rows;
-            let text_at = u32_at(rows, row) as usize;
-            let text_end = u32_at(rows, row + ROW) as usize;
-            if rows[row + 11] == template
-                && u16_at(rows, row + 8) == a
-                && rows[row + 10] == b
-                && text_end - text_at == want
-                && same_text(&self.texts[text_at..text_end], first, second)
+            if u32_at(records, record) == key
+                && records[record + 6] as usize == want
+                && same_text(records, record + RECORD, first, second)
             {
-                let cells_at = u32_at(rows, row + 4) as usize * 4;
-                let cells_end = u32_at(rows, row + ROW + 4) as usize * 4;
-                return Cells(&self.cells[cells_at..cells_end]);
+                return Cells {
+                    bytes: records,
+                    at: record + RECORD + want,
+                    places: u16_at(records, record + 4),
+                };
             }
             at = (at + 1) & mask;
         }
@@ -206,18 +307,33 @@ impl Weights {
     }
 }
 
-/// Whether `stored` is `first`, or `first`, a space and `second`.
-#[inline]
-fn same_text(stored: &[u8], first: &str, second: Option<&str>) -> bool {
-    match second {
-        None => stored == first.as_bytes(),
-        Some(second) => {
-            let split = first.len();
-            stored[..split] == *first.as_bytes()
-                && stored[split] == b' '
-                && stored[split + 1..] == *second.as_bytes()
+/// Whether the bytes of `texts` at `at` are `first`, or `first`, a space and `second`. The caller
+/// has checked the length.
+#[inline(always)]
+fn same_text(texts: &[u8], at: usize, first: &str, second: Option<&str>) -> bool {
+    let first = first.as_bytes();
+    let mut i = 0;
+    while i < first.len() {
+        if texts[at + i] != first[i] {
+            return false;
         }
+        i += 1;
     }
+    let Some(second) = second else {
+        return true;
+    };
+    if texts[at + i] != b' ' {
+        return false;
+    }
+    let second = second.as_bytes();
+    let mut j = 0;
+    while j < second.len() {
+        if texts[at + i + 1 + j] != second[j] {
+            return false;
+        }
+        j += 1;
+    }
+    true
 }
 
 /// Whether `c` is in one of the sorted `ranges`.
@@ -234,6 +350,13 @@ fn ranges_in(bytes: &[u8]) -> Vec<(u32, u32)> {
         .collect()
 }
 
+/// The rows of `PLACES` scores in `bytes`.
+fn score_rows(bytes: &[u8]) -> Vec<[i64; PLACES]> {
+    (0..bytes.len() / (PLACES * 8))
+        .map(|row| std::array::from_fn(|place| i64_at(bytes, (row * PLACES + place) * 8)))
+        .collect()
+}
+
 /// Reads the header of the weights and finds their sections. A file that is not what this build
 /// expects is a bug in the build, so it panics.
 fn read(bytes: &'static [u8]) -> Weights {
@@ -247,30 +370,27 @@ fn read(bytes: &'static [u8]) -> Weights {
         unsure: i64_at(bytes, 16),
         kept: i64_at(bytes, 24),
     };
-    let mut bias = [0i64; 13];
-    for (place, total) in bias.iter_mut().enumerate() {
-        *total = i64_at(bytes, 32 + place * 8);
-    }
-    let mut at = 32 + 13 * 8;
+    let mut at = 32;
     let digits = ranges_in(section(bytes, &mut at));
     let decimals = ranges_in(section(bytes, &mut at));
     let vocab_ends = section(bytes, &mut at);
     let vocab_text = section(bytes, &mut at);
-    let rows = section(bytes, &mut at);
-    let texts = section(bytes, &mut at);
-    let cells = section(bytes, &mut at);
+    let records = section(bytes, &mut at);
     let slots = section(bytes, &mut at);
+    let history = score_rows(section(bytes, &mut at));
+    let rules = score_rows(section(bytes, &mut at));
+    assert_eq!(history.len(), HISTORIES * HISTORIES);
+    assert_eq!(rules.len(), PLACES * LEVELS);
     Weights {
         cutoffs,
-        bias,
         vocab_ends,
         vocab_text,
         digits,
         decimals,
-        rows,
-        texts,
-        cells,
+        records,
         slots,
+        history,
+        rules,
     }
 }
 
@@ -350,14 +470,21 @@ mod tests {
             .collect();
         let sorted = words.windows(2).all(|pair| pair[0] < pair[1]);
         assert!(sorted, "the vocabulary is sorted by bytes, once each");
+        let model = build_tables::parse(TEXT);
         assert_eq!(
-            weights.rows.len() / ROW - 1,
+            model.rows.len(),
             line_of("rows")[0].parse::<usize>().unwrap()
+        );
+        let kept = model
+            .rows
+            .iter()
+            .filter(|row| !build_tables::folded(row.template));
+        assert_eq!(
+            weights.slots.len() / 4,
+            (kept.count() * 2).next_power_of_two()
         );
         assert!(weights.cutoffs.unsure <= weights.cutoffs.sure);
         assert!(weights.cutoffs.kept >= 0);
-        assert!(weights.cells.len() / 4 > weights.rows.len() / ROW);
-        let model = build_tables::parse(TEXT);
         assert_eq!(weights.digits, model.digits);
         assert_eq!(weights.decimals, model.decimals);
         assert_eq!(
@@ -394,20 +521,103 @@ mod tests {
         let model = build_tables::parse(TEXT);
         for (n, row) in model.rows.iter().enumerate() {
             let found = weights.find(row.template, row.a, row.b, row.text, None);
-            assert_eq!(found.to_vec(), row.cells, "row {n}");
-            assert!(!found.is_empty());
+            if build_tables::folded(row.template) {
+                assert!(
+                    found.is_empty(),
+                    "row {n} is folded, so it is not in the table"
+                );
+            } else {
+                assert_eq!(found.to_vec(), row.cells, "row {n}");
+                assert!(!found.is_empty());
+            }
         }
     }
 
-    #[test]
-    fn the_bias_is_the_sum_of_the_bias_row() {
-        let weights = Weights::get();
+    /// The scores of the features of `model` that a word with these values adds, found one by one
+    /// as the rows say: the sum a score row stands for.
+    fn summed(model: &build_tables::Model<'_>, keys: &[(u8, u16, u8)]) -> [i64; 13] {
         let mut scores = [0i64; 13];
-        weights
-            .find(build_tables::BIAS, 0, 0, "", None)
-            .add_to(&mut scores);
-        assert_eq!(scores, weights.bias);
-        assert!(scores.iter().any(|&total| total != 0));
+        for &(template, a, b) in keys {
+            let rows = model
+                .rows
+                .iter()
+                .filter(|row| (row.template, row.a, row.b) == (template, a, b));
+            for row in rows {
+                for &cell in &row.cells {
+                    scores[(cell & 15) as usize] += i64::from(cell >> 4);
+                }
+            }
+        }
+        scores
+    }
+
+    #[test]
+    fn a_score_row_is_the_sum_of_the_rows_it_stands_for() {
+        let weights = Weights::get();
+        let model = build_tables::parse(TEXT);
+        let bias = (build_tables::BIAS, 0, 0);
+        for previous in 0..HISTORIES as u16 {
+            for before in 0..HISTORIES as u16 {
+                let keys = [
+                    bias,
+                    (build_tables::PREVIOUS, previous, 0),
+                    (build_tables::PREVIOUS_2, before, 0),
+                    (build_tables::PREVIOUS_PAIR, previous, before as u8),
+                ];
+                assert_eq!(
+                    weights.history(previous, before),
+                    summed(&model, &keys),
+                    "{previous} {before}"
+                );
+            }
+        }
+        for tag in 0..PLACES as u16 {
+            for level in 0..LEVELS as u8 {
+                let keys = [
+                    (build_tables::RULES_TAG, tag, 0),
+                    (build_tables::RULES_CONFIDENCE, u16::from(level), 0),
+                    (build_tables::RULES_TAG_CONFIDENCE, tag, level),
+                ];
+                assert_eq!(
+                    *weights.rules(tag, level),
+                    summed(&model, &keys),
+                    "{tag} {level}"
+                );
+            }
+        }
+        // The bias is not nothing, and the rows hold features the sums would lose if they were
+        // out of range.
+        assert!(weights.history(0, 0).iter().any(|&total| total != 0));
+        let folded = model
+            .rows
+            .iter()
+            .filter(|row| build_tables::folded(row.template));
+        assert!(folded.count() > 100);
+    }
+
+    #[test]
+    fn a_piece_of_text_is_hashed_as_the_text_it_joins() {
+        let words = ["", "a", "the", "na\u{ef}ve", "n+1 x", "\u{1f980}"];
+        for first in words {
+            assert_eq!(
+                Piece::of(first.as_bytes()).then(Piece::EMPTY),
+                Piece::of(first.as_bytes())
+            );
+            for second in words {
+                let joined = format!("{first} {second}");
+                let spaced = Piece::of(first.as_bytes()).then_spaced(Piece::of(second.as_bytes()));
+                assert_eq!(spaced, Piece::of(joined.as_bytes()), "{joined:?}");
+                let both = format!("{first}{second}");
+                let then = Piece::of(first.as_bytes()).then(Piece::of(second.as_bytes()));
+                assert_eq!(then, Piece::of(both.as_bytes()), "{both:?}");
+            }
+            let mut front = Piece::EMPTY;
+            for &byte in first.as_bytes().iter().rev() {
+                front = front.with_front(byte);
+            }
+            assert_eq!(front, Piece::of(first.as_bytes()), "{first:?}");
+        }
+        assert_ne!(Piece::of(b"dog"), Piece::of(b"god"));
     }
 
     #[test]
@@ -437,7 +647,11 @@ mod tests {
         let weights = Weights::get();
         let none = weights.find(template::NORM, 0, 0, "\u{1f980}\u{1f980}", None);
         assert!(none.is_empty());
-        assert!(!weights.find(build_tables::BIAS, 0, 0, "", None).is_empty());
+        assert!(
+            !weights
+                .find(template::RULES_KEPT, 3, 0, "", None)
+                .is_empty()
+        );
     }
 
     #[test]

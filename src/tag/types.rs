@@ -130,7 +130,6 @@ impl TagSet {
 
     /// The set as one bit for each tag, at its place in [`Tag::ALL`]: how the tables built at
     /// compile time hold it.
-    #[allow(dead_code, reason = "the build script writes the tables with it")]
     pub(super) const fn bits(self) -> u16 {
         self.0
     }

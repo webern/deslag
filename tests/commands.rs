@@ -439,6 +439,112 @@ fn a_cd_counts_after_a_keyword_that_starts_a_command() {
     assert_eq!(claims("Run `then make a`.\n"), []);
 }
 
+/// Checks that `body` has one claim, `make sub-only`, made after a `cd sub`.
+fn after_cd_sub(body: &str) {
+    let found = reading(&sh(body));
+    assert_eq!(found.claims.len(), 1, "{body}");
+    assert_eq!(found.claims[0].text, "make sub-only", "{body}");
+    assert_eq!(found.claims[0].targets[0].name, "sub-only", "{body}");
+    assert_eq!(found.claims[0].cds, ["sub"], "{body}");
+}
+
+#[test]
+fn a_cd_counts_in_a_function_body() {
+    for body in [
+        "f() { cd sub; make sub-only; }",
+        "f(){ cd sub; make sub-only; }",
+        "f () { cd sub; make sub-only; }",
+        "function f { cd sub; make sub-only; }",
+        "function f() { cd sub; make sub-only; }",
+        "function f () { cd sub; make sub-only; }",
+        "f()\n{\n  cd sub\n  make sub-only\n}",
+    ] {
+        after_cd_sub(body);
+    }
+    // After another word, or quoted, a header is no header, and `{` is an argument.
+    for body in [
+        "echo f() { cd sub; make sub-only; }",
+        "\"f()\" { cd sub; make sub-only; }",
+        "echo function f { cd sub; make sub-only; }",
+    ] {
+        let found = reading(&sh(body));
+        assert_eq!(found.claims.len(), 1, "{body}");
+        assert!(found.claims[0].cds.is_empty(), "{body}");
+    }
+}
+
+#[test]
+fn a_cd_counts_in_a_case_arm() {
+    for body in [
+        "case $x in a) cd sub; make sub-only ;; esac",
+        "case $x in a|b) cd sub; make sub-only ;; esac",
+        "case $x in (a) cd sub; make sub-only ;; esac",
+        "case $x in a) true ;; b) cd sub; make sub-only ;& *) true ;; esac",
+        "case $x in\n  a) true ;;\n  b)\n    cd sub\n    make sub-only\n    ;;\nesac",
+        "case $x in a) case $y in b) cd sub; make sub-only ;; esac ;; esac",
+    ] {
+        after_cd_sub(body);
+    }
+    // A label is no command, even when it is named like one.
+    let found = reading(&sh("case $x in cd|make) make a ;; esac\nmake b"));
+    assert_eq!(
+        claims(&sh("case $x in cd|make) make a ;; esac\nmake b")),
+        [claim("make a", &["a"]), claim("make b", &["b"])]
+    );
+    assert_eq!(found.refused, []);
+    assert_eq!(found.calls, 2);
+    // After another word, `case` is an argument.
+    assert_eq!(
+        claims(&sh("echo case x in a) cd sub; make sub-only ;; esac")),
+        [claim("make sub-only", &["sub-only"])]
+    );
+}
+
+#[test]
+fn a_subshell_after_time_coproc_a_function_header_or_a_case_arm_gives_back_its_parenthesis() {
+    for body in [
+        "time (cd sub && make sub-only)",
+        "time -p (cd sub && make sub-only)",
+        "coproc (cd sub && make sub-only)",
+        "case $x in a) (cd sub && make sub-only);; esac",
+        "f() ( cd sub; make sub-only )",
+        "f()( cd sub; make sub-only )",
+        "f () ( cd sub; make sub-only )",
+        "function f() ( cd sub; make sub-only )",
+        "function f () ( cd sub; make sub-only )",
+    ] {
+        after_cd_sub(body);
+    }
+    // The subshell keeps its cd.
+    let found = reading(&sh("time (cd sub && make a); make b"));
+    assert!(found.claims[1].cds.is_empty());
+    // After another word, `time` is an argument, and so is the parenthesis.
+    let found = reading(&sh("echo time (cd sub) && make a"));
+    assert_eq!(found.claims.len(), 1);
+    assert!(found.claims[0].cds.is_empty());
+}
+
+#[test]
+fn the_parenthesis_of_a_case_arm_label_does_not_close_a_subshell() {
+    for body in [
+        "(cd sub; case x in a) true;; esac; make sub-only)",
+        "(cd sub; case x in (a|b) true;; esac; make sub-only)",
+        "(cd sub; case x in a) true ;& b) true ;; esac; make sub-only)",
+        "(cd sub; case x in a) (true);; esac; make sub-only)",
+        "(cd sub; case x in a) case y in b) true;; esac;; esac; make sub-only)",
+    ] {
+        after_cd_sub(body);
+    }
+    // The subshell closes at its own parenthesis, and `esac)` is not a label.
+    let found = reading(&sh("(cd sub; case x in a) true;; esac); make b"));
+    assert!(found.claims[0].cds.is_empty());
+    let found = reading(&sh("(cd sub; case x in a) true;; esac) && make b"));
+    assert!(found.claims[0].cds.is_empty());
+    // A parenthesis before the patterns opens no subshell.
+    let found = reading(&sh("(cd sub; case x in (a) true;; esac); make b"));
+    assert!(found.claims[0].cds.is_empty());
+}
+
 #[test]
 fn a_cd_that_cannot_be_followed_ends_the_claims_of_its_block() {
     for cd in [
@@ -743,6 +849,86 @@ fn a_cd_or_a_subshell_after_a_keyword_moves_the_block_on_disk() {
         in_block("for d in x; do cd $d; make zz; done"),
         Vec::<String>::new()
     );
+}
+
+/// A repo whose root Makefile lacks `sub-only`, which `sub/Makefile` defines.
+fn repo_with_sub_only() -> Repo {
+    let repo = repo_with("root:\n");
+    repo.write("sub/Makefile", "sub-only:\n");
+    repo
+}
+
+#[test]
+fn a_cd_in_a_function_body_moves_the_block_on_disk() {
+    let repo = repo_with_sub_only();
+    let in_block = |body: &str| missing(&repo, "README.md", &sh(body));
+    for body in [
+        "f() { cd sub; make sub-only; }",
+        "f(){ cd sub; make sub-only; }",
+        "f () { cd sub; make sub-only; }",
+        "function f { cd sub; make sub-only; }",
+        "function f() { cd sub; make sub-only; }",
+    ] {
+        assert_eq!(in_block(body), Vec::<String>::new(), "{body}");
+    }
+    assert_eq!(in_block("f() { cd sub; make root zz; }"), ["zz"]);
+}
+
+#[test]
+fn a_cd_in_a_case_arm_moves_the_block_on_disk() {
+    let repo = repo_with_sub_only();
+    let in_block = |body: &str| missing(&repo, "README.md", &sh(body));
+    for body in [
+        "case $x in a) cd sub; make sub-only ;; esac",
+        "case $x in (a|b) cd sub; make sub-only ;; esac",
+    ] {
+        assert_eq!(in_block(body), Vec::<String>::new(), "{body}");
+    }
+    assert_eq!(
+        in_block("case $x in a) cd sub; make root zz ;; esac"),
+        ["zz"]
+    );
+}
+
+#[test]
+fn a_subshell_after_time_coproc_a_function_header_or_a_case_arm_moves_the_block_on_disk() {
+    let repo = repo_with_sub_only();
+    let in_block = |body: &str| missing(&repo, "README.md", &sh(body));
+    for body in [
+        "time (cd sub && make sub-only)",
+        "coproc (cd sub && make sub-only)",
+        "case $x in a) (cd sub && make sub-only);; esac",
+        "f() ( cd sub; make sub-only )",
+    ] {
+        assert_eq!(in_block(body), Vec::<String>::new(), "{body}");
+    }
+    // The target is named without a parenthesis, and the subshell gave the directory back.
+    assert_eq!(in_block("time (cd sub && make zz)"), ["zz"]);
+    assert_eq!(in_block("f() ( cd sub; make zz )"), ["zz"]);
+    assert_eq!(
+        in_block("time (cd sub && make sub-only); make sub-only"),
+        ["sub-only"]
+    );
+}
+
+#[test]
+fn a_case_pattern_in_a_subshell_leaves_the_target_whole_and_the_directory_on_disk() {
+    let repo = repo_with_sub_only();
+    let in_block = |body: &str| missing(&repo, "README.md", &sh(body));
+    assert_eq!(
+        in_block("(cd sub; case x in a) true;; esac; make sub-only)"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        in_block("(cd sub; case x in a) true;; esac; make zz)"),
+        ["zz"]
+    );
+    for body in [
+        "(cd sub; case x in a) true;; esac); make sub-only",
+        "(cd sub; case x in (a) true;; esac); make sub-only",
+    ] {
+        assert_eq!(in_block(body), ["sub-only"], "{body}");
+    }
 }
 
 #[test]

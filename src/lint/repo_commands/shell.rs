@@ -5,8 +5,11 @@
 //! dropped, and a command ends at a newline, `&&`, `||`, `;`, `|` or `&`. A redirection and its
 //! file are dropped, as is the body of a heredoc, whose opener stays. A keyword that starts a
 //! command, such as `then` or `{` ([`OPENERS`]), is a command of its own, so the command after it,
-//! or a `(`, starts there. A `(` that opens a command and the `)` that closes it are items of their
-//! own, since a subshell keeps its `cd` to itself. A block with a `$ ` or `% ` prompt on any line
+//! or a `(`, starts there. A function header (`f()`, `f ()`, `function f`) does the same, and so
+//! does `time` or `coproc` for a `(` or a keyword. The head of a `case` and the label of an arm, up
+//! to its `)`, are left out, and the commands of the arm start after the `)`. A `(` that opens a
+//! command and the `)` that closes it are items of their own, since a subshell keeps its `cd` to
+//! itself; the `)` of an arm's label is not one. A block with a `$ ` or `% ` prompt on any line
 //! holds commands only on the prompted lines and what they continue; the rest is output.
 
 use std::ops::Range;
@@ -22,7 +25,7 @@ pub(super) struct Word {
 
 /// The keywords that start a command without being one: a command begins after each. Quoted, or
 /// after another word, a keyword is an argument.
-pub(super) const OPENERS: [&str; 9] = [
+const OPENERS: [&str; 9] = [
     "if", "elif", "while", "until", "then", "else", "do", "{", "!",
 ];
 
@@ -59,6 +62,7 @@ pub(super) fn read(text: &str) -> Read {
         redirect: None,
         heredocs: Vec::new(),
         depth: 0,
+        cases: Vec::new(),
         unclosed: None,
     };
     scanner.run();
@@ -90,6 +94,17 @@ struct Heredoc {
     strip_tabs: bool,
 }
 
+/// Where a `case` is, from `case` to `esac`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Case {
+    /// After `case`, before `in`.
+    Head,
+    /// In the label of an arm, which ends at an unquoted `)`.
+    Label,
+    /// In the commands of an arm, which end at `;;`, `;&` or `esac`.
+    Body,
+}
+
 struct Scanner<'t> {
     text: &'t str,
     at: usize,
@@ -103,6 +118,8 @@ struct Scanner<'t> {
     heredocs: Vec<Heredoc>,
     /// How many subshells are open.
     depth: usize,
+    /// The `case`s open, the innermost last.
+    cases: Vec<Case>,
     unclosed: Option<usize>,
 }
 
@@ -162,22 +179,101 @@ impl<'t> Scanner<'t> {
                 delimiter: word.text,
                 strip_tabs,
             }),
-            None if self.words.is_empty() && self.is_opener(&word) => {
+            None if self.is_opener(&word) && self.starts_command() => {
+                self.end_command();
                 self.items.push(Item::Command(vec![word]));
             }
-            None => self.words.push(word),
+            None => self.push_word(word),
         }
     }
 
-    /// Whether `word` is a keyword as written, not quoted or escaped.
-    fn is_opener(&self, word: &Word) -> bool {
-        OPENERS.contains(&word.text.as_str())
-            && self.text.get(word.range.clone()) == Some(word.text.as_str())
+    /// Adds `word` to the command, or moves the `case` it is a keyword of: `case` opens one, `in`
+    /// ends its head, and `esac` closes it.
+    fn push_word(&mut self, word: Word) {
+        if self.written(&word) {
+            let first = self.words.is_empty();
+            let top = self.cases.last().copied();
+            match (word.text.as_str(), top) {
+                ("case", _) if first && top != Some(Case::Label) => self.cases.push(Case::Head),
+                ("in", Some(Case::Head)) => {
+                    self.words.clear();
+                    self.set_case(Case::Label);
+                    return;
+                }
+                ("esac", Some(_)) if first => {
+                    self.cases.pop();
+                }
+                _ => {}
+            }
+        }
+        self.words.push(word);
     }
 
+    /// Whether `word` is as written, not quoted or escaped.
+    fn written(&self, word: &Word) -> bool {
+        self.text.get(word.range.clone()) == Some(word.text.as_str())
+    }
+
+    /// Whether `word` is a keyword as written.
+    fn is_opener(&self, word: &Word) -> bool {
+        OPENERS.contains(&word.text.as_str()) && self.written(word)
+    }
+
+    /// Whether the words so far leave a command to start: there are none, or they are `time` or
+    /// `coproc` and the flags of `time`, or a function header (`f()`, `f ()`, `function f`,
+    /// `function f ()`). A `(` or a keyword that comes now opens a command of its own.
+    fn starts_command(&self) -> bool {
+        let is = |word: &Word, text: &str| word.text == text && self.written(word);
+        match self.words.as_slice() {
+            [] => true,
+            [first, flags @ ..] if is(first, "time") || is(first, "coproc") => {
+                flags.iter().all(|flag| flag.text.starts_with('-'))
+            }
+            [name] => name.text.len() > 2 && name.text.ends_with("()") && self.written(name),
+            [function, _] if is(function, "function") => true,
+            [function, _, parens] if is(function, "function") => is(parens, "()"),
+            [_, parens] => is(parens, "()"),
+            _ => false,
+        }
+    }
+
+    /// Whether the word being read, if `()` follows, is a function header: it is the first word, or
+    /// the one after `function`.
+    fn is_header_name(&self) -> bool {
+        let named = self.word.as_ref().is_some_and(|word| !word.text.is_empty());
+        named
+            && match self.words.as_slice() {
+                [] => true,
+                [function] => function.text == "function" && self.written(function),
+                _ => false,
+            }
+    }
+
+    /// Whether the word being read is the `esac` that starts a command, which ends the `case`.
+    fn ends_case(&self) -> bool {
+        self.words.is_empty()
+            && self.word.as_ref().is_some_and(|word| {
+                word.text == "esac" && &self.text[word.range.start..self.at] == "esac"
+            })
+    }
+
+    /// Whether the innermost `case` is reading the label of an arm.
+    fn in_label(&self) -> bool {
+        self.cases.last() == Some(&Case::Label)
+    }
+
+    fn set_case(&mut self, case: Case) {
+        if let Some(top) = self.cases.last_mut() {
+            *top = case;
+        }
+    }
+
+    /// Ends a command. In the label of an arm it is a pattern, not a command, and is dropped.
     fn end_command(&mut self) {
         self.end_word();
-        if !self.words.is_empty() {
+        if self.in_label() {
+            self.words.clear();
+        } else if !self.words.is_empty() {
             self.items
                 .push(Item::Command(std::mem::take(&mut self.words)));
         }
@@ -209,10 +305,31 @@ impl<'t> Scanner<'t> {
                 '&' if self.after(1).starts_with('>') => self.redirection(),
                 ';' | '|' | '&' => self.operator(ch),
                 '<' | '>' => self.redirection(),
-                '(' if self.word.is_none() && self.words.is_empty() => {
+                // The `(` before the patterns of an arm.
+                '(' if self.in_label() && self.word.is_none() && self.words.is_empty() => {
+                    self.at += 1;
+                }
+                // The `()` of `f(){` and `f()(`: the name ends there.
+                '(' if self.after(1).starts_with(')') && self.is_header_name() => {
+                    self.word().text.push_str("()");
+                    self.at += 2;
+                    self.end_word();
+                }
+                '(' if self.word.is_none()
+                    && !self.after(1).starts_with(')')
+                    && self.starts_command() =>
+                {
+                    self.end_command();
                     self.at += 1;
                     self.items.push(Item::Open);
                     self.depth += 1;
+                }
+                // The `)` that ends the label of an arm does not close a subshell. `esac)` is not a label.
+                ')' if self.in_label() && !self.ends_case() => {
+                    self.word = None;
+                    self.words.clear();
+                    self.at += 1;
+                    self.set_case(Case::Body);
                 }
                 ')' if self.depth > 0 => {
                     self.end_command();
@@ -335,13 +452,18 @@ impl<'t> Scanner<'t> {
         self.unclosed = Some(start);
     }
 
-    /// `;`, `|`, `&` and the pairs they make end the command.
+    /// `;`, `|`, `&` and the pairs they make end the command. `;;` and `;&` end the arm of a
+    /// `case`.
     fn operator(&mut self, ch: char) {
         self.end_command();
         self.at += 1;
         let next = self.peek();
-        if next == Some(ch) || (ch == '|' && next == Some('&')) {
+        let arm = ch == ';' && matches!(next, Some(';' | '&'));
+        if arm || next == Some(ch) || (ch == '|' && next == Some('&')) {
             self.at += 1;
+        }
+        if arm && self.cases.last() == Some(&Case::Body) {
+            self.set_case(Case::Label);
         }
     }
 
@@ -742,6 +864,165 @@ mod tests {
         );
         // In the middle of a command, a parenthesis is the word's.
         assert_eq!(commands("make (a) b\n"), lines(&[&["make", "(a)", "b"]]));
+    }
+
+    #[test]
+    fn a_function_header_is_a_command_of_its_own() {
+        let body = lines(&[&["{"], &["cd", "sub"], &["make", "a"], &["}"]]);
+        for (text, header) in [
+            ("f() { cd sub; make a; }", &["f()"][..]),
+            ("f(){ cd sub; make a; }", &["f()"]),
+            ("f () { cd sub; make a; }", &["f", "()"]),
+            ("function f { cd sub; make a; }", &["function", "f"]),
+            ("function f() { cd sub; make a; }", &["function", "f()"]),
+            (
+                "function f () { cd sub; make a; }",
+                &["function", "f", "()"],
+            ),
+        ] {
+            let mut expected = lines(&[header]);
+            expected.extend(body.clone());
+            assert_eq!(commands(text), expected, "{text}");
+        }
+        // A header with a subshell for a body.
+        assert_eq!(
+            commands("f() ( cd sub; make a )\ng()(make b)\n"),
+            lines(&[
+                &["f()"],
+                &["("],
+                &["cd", "sub"],
+                &["make", "a"],
+                &[")"],
+                &["g()"],
+                &["("],
+                &["make", "b"],
+                &[")"],
+            ])
+        );
+        // After another word, or quoted, a header is an argument.
+        assert_eq!(
+            commands("echo f() { cd x\n\"f()\" { cd x\necho function f { cd x\n"),
+            lines(&[
+                &["echo", "f()", "{", "cd", "x"],
+                &["f()", "{", "cd", "x"],
+                &["echo", "function", "f", "{", "cd", "x"],
+            ])
+        );
+    }
+
+    #[test]
+    fn time_and_coproc_leave_a_command_to_start() {
+        assert_eq!(
+            commands("time (cd sub && make a)\ntime -p (make b)\ncoproc (make c)\n"),
+            lines(&[
+                &["time"],
+                &["("],
+                &["cd", "sub"],
+                &["make", "a"],
+                &[")"],
+                &["time", "-p"],
+                &["("],
+                &["make", "b"],
+                &[")"],
+                &["coproc"],
+                &["("],
+                &["make", "c"],
+                &[")"],
+            ])
+        );
+        assert_eq!(
+            commands("time { cd sub; make a; }\n"),
+            lines(&[&["time"], &["{"], &["cd", "sub"], &["make", "a"], &["}"]])
+        );
+        // After another word, quoted, or after an argument, `time` and `(` are words.
+        assert_eq!(
+            commands("echo time (a)\n\"time\" (a)\ntime x (a)\n"),
+            lines(&[
+                &["echo", "time", "(a)"],
+                &["time", "(a)"],
+                &["time", "x", "(a)"]
+            ])
+        );
+    }
+
+    #[test]
+    fn a_case_head_and_a_case_arm_label_are_left_out_and_the_arm_starts_a_command() {
+        let arm = lines(&[&["cd", "sub"], &["make", "a"], &["esac"]]);
+        for text in [
+            "case $x in a) cd sub; make a ;; esac\n",
+            "case $x in a|b) cd sub; make a ;; esac\n",
+            "case $x in (a) cd sub; make a ;; esac\n",
+            "case $x in (a | 'b)' | \"c)\") cd sub; make a ;& esac\n",
+            "case $x in\n  a) cd sub\n     make a\n     ;;\nesac\n",
+            "case \"$x\" in\n  a) cd sub; make a;;\n  *) ;;\nesac\n",
+        ] {
+            assert_eq!(commands(text), arm, "{text:?}");
+        }
+        // A label named like a command, or like a keyword, is no command.
+        assert_eq!(
+            commands("case $x in cd|make) make a ;; then) true ;; esac\n"),
+            lines(&[&["make", "a"], &["true"], &["esac"]])
+        );
+        // Each arm after `;;`, `;&` and `;;&` starts at its label, and a case in an arm ends alone.
+        assert_eq!(
+            commands(
+                "case $x in a) case $y in b) make 1 ;; esac ;; c) make 2 ;;& d) make 3 ;; esac\n"
+            ),
+            lines(&[
+                &["make", "1"],
+                &["esac"],
+                &["make", "2"],
+                &["make", "3"],
+                &["esac"]
+            ])
+        );
+        // The word `case` after another word is an argument.
+        assert_eq!(
+            commands("echo case x in a) y\n"),
+            lines(&[&["echo", "case", "x", "in", "a)", "y"]])
+        );
+    }
+
+    #[test]
+    fn the_parenthesis_of_a_case_arm_label_does_not_close_a_subshell() {
+        assert_eq!(
+            commands("(cd sub; case x in a) true;; esac; make a)\n"),
+            lines(&[
+                &["("],
+                &["cd", "sub"],
+                &["true"],
+                &["esac"],
+                &["make", "a"],
+                &[")"],
+            ])
+        );
+        // An `esac)` closes the case and the subshell; a subshell in an arm closes at its own `)`.
+        assert_eq!(
+            commands("(case x in a) (make a);; b) true;; esac) && make b\n"),
+            lines(&[
+                &["("],
+                &["("],
+                &["make", "a"],
+                &[")"],
+                &["true"],
+                &["esac"],
+                &[")"],
+                &["make", "b"],
+            ])
+        );
+        // Without a case, or after its `esac`, a `)` closes the subshell it finds.
+        assert_eq!(
+            commands("(case x in a) true;; esac) && (make b)\n"),
+            lines(&[
+                &["("],
+                &["true"],
+                &["esac"],
+                &[")"],
+                &["("],
+                &["make", "b"],
+                &[")"],
+            ])
+        );
     }
 
     #[test]

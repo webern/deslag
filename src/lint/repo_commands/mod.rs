@@ -14,7 +14,8 @@
 //! each with every `-C dir` applied. A `cd` to an existing directory under the root moves the
 //! tracked one for the lines after, to the `)` of a subshell; any other `cd`, and `pushd`, ends
 //! the claims of the block, or of the subshell it is in. A `cd` also counts after `then`, `do`,
-//! `{` and the like. A claim passes if any of them defines its targets.
+//! `{` and the like, in the body of a function and in the arm of a `case`. A claim passes if any of
+//! them defines its targets.
 //!
 //! Silent, since silence beats a false positive: no Makefile in any of those directories; an open
 //! Makefile (`$(eval`, a target named by `$`, an include not on disk) for a target it lacks; `-f`;
@@ -129,8 +130,8 @@ pub struct Refused {
     pub why: Why,
 }
 
-/// Why something is left alone. The first three end the claims of the rest of their block, or of
-/// their subshell.
+/// Why something is left alone. `Unclosed` stops all reading of its block. `Cd` and `Pushd` end
+/// the claims of the rest of their block, or of their subshell.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Why {
     /// A quote or substitution is never closed.

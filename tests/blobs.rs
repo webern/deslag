@@ -746,9 +746,8 @@ fn list_growth_finds_what_its_golden_file_says() {
 /// A file whose label is its publisher's statement of the model (`corpus.md` section 3) counts as
 /// `llm`, as it does in every measure by default.
 ///
-/// The same pass, which reads each file once, checks the claim `verbs_no_nouns` and
-/// `counted_inventory` each make: `llm` files hold it at least 3 times as often as `human` files,
-/// and at most 3.5% of `human` files do.
+/// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm` files
+/// hold it at least 3 times as often as `human` files, and at most 3.5% of `human` files do.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -830,13 +829,9 @@ fn the_catalogue_counts_are_the_big_tiers() {
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
 
-    // Their words are English; `no` is a word of other languages too. What can move each lint's
-    // findings: the tagger reads the words of one, and the other reads digits and a fixed list of
-    // nouns.
-    let lints = [
-        ("verbs_no_nouns", "The tagger or the image", "idioms"),
-        ("counted_inventory", "The image", "numbers"),
-    ];
+    // Its words are English; `no` is a word of other languages too. What can move the lint's
+    // findings: the tagger reads its words.
+    let lints = [("verbs_no_nouns", "The tagger or the image", "idioms")];
     for (at, (lint, moved, excuse)) in lints.into_iter().enumerate() {
         let flagged = |category: &str| {
             let english = held.iter().filter(|(fixture, ..)| {

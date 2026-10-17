@@ -55,7 +55,7 @@ pub enum Lint {
     ListGrowth,
     /// `verbs_no_nouns`: a verb negated through its object, as in `bakes no cakes`.
     VerbsNoNouns,
-    /// `counted_inventory`: a count of what the repository holds, as in `63 tests`.
+    /// `counted_inventory`: a count of things, as in `63 tests`.
     CountedInventory,
 }
 
@@ -135,8 +135,7 @@ impl Lint {
                 "A sentence must negate its verb, not its object, as in \"does not bake cakes\"."
             }
             Lint::CountedInventory => {
-                "A file must not count what the repository holds, as in \"63 tests\", which goes \
-                 stale."
+                "A file must not count things, as in \"63 tests\", true or not."
             }
         }
     }
@@ -153,7 +152,7 @@ impl Lint {
             Lint::Density => "with dense text",
             Lint::ListGrowth => "with more list items than at the base",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
-            Lint::CountedInventory => "with counts that go stale",
+            Lint::CountedInventory => "with counts of things",
         }
     }
 }
@@ -216,7 +215,7 @@ pub enum Violation {
     ListGrowth(list_growth::Over),
     /// The file negates a verb through its object.
     VerbsNoNouns(verbs_no_nouns::Over),
-    /// The file counts what the repository holds.
+    /// The file counts things.
     CountedInventory(counted_inventory::Over),
 }
 

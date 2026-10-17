@@ -1,4 +1,4 @@
-ERROR: deslag detected counts that go stale!
+ERROR: deslag detected counts of things!
 
 README.md has 1 count.
 
@@ -7,4 +7,4 @@ Name the thing in README.md.
 The places:
   line 3: "63 tests"
 
-deslag: 1 of 1 files with counts that go stale.
+deslag: 1 of 1 files with counts of things.

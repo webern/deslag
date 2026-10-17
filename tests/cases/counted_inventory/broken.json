@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "counted_inventory",
-      "report": "ERROR: deslag detected counts that go stale!\n\nREADME.md has 7 counts.\n\nA count of what the repo holds changes with every change. Name the thing, or where it lives, as in \"the tests in `tests/`\". Write a limit only for a number that is one, as in \"at most 200 lines\"; a count put as a bound, such as \"at most 63 tests\" for \"63 tests\", is the same count and no fix.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"63 tests\"\n  line 3: \"13 variants\"\n  line 3: \"376 fixtures\"\n  line 4: \"1,075 lines\"\n  line 4: \"12 new unit tests\"\n  line 6: \"3 jobs\"\n  line 7: \"12 fixtures\"",
+      "report": "ERROR: deslag detected counts of things!\n\nREADME.md has 14 counts.\n\nA count of things changes with every change, and a wrong one is as bad as a right one. Name the thing, or where it lives, as in \"the tests in `tests/`\", with no number. A limit, a version, a measure or an ID is no count, as in \"at most 200 lines\" or \"Python 3\"; a count put as a bound or a range is the same count and no fix. A sentence that must keep its number is for a human to exempt: leave it, and give the human the sentence and a reason.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"63 tests\"\n  line 3: \"13 variants\"\n  line 3: \"376 fixtures\"\n  line 4: \"1,075 lines\"\n  line 4: \"12 new unit tests\"\n  line 6: \"five tests\"\n  line 6: \"a dozen crates\"\n  line 6: \"hundreds of files\"\n  line 6: \"12 tests\"\n  line 6: \"63 of them\"\n  line 8: \"Tests: 63\"\n  line 10: \"11,473 `human` fixtures\"\n  line 11: \"12 fixtures\"\n  line 15: \"63\"",
       "marks": [
         {
           "kind": "occurrence",
@@ -60,23 +60,93 @@
         },
         {
           "kind": "occurrence",
-          "start": 121,
-          "end": 127,
+          "start": 126,
+          "end": 136,
           "line": 6,
-          "column": 3,
+          "column": 8,
           "end_line": 6,
-          "end_column": 9,
-          "note": "\"3 jobs\""
+          "end_column": 18,
+          "note": "\"five tests\""
         },
         {
           "kind": "occurrence",
-          "start": 139,
-          "end": 153,
-          "line": 7,
+          "start": 138,
+          "end": 152,
+          "line": 6,
+          "column": 20,
+          "end_line": 6,
+          "end_column": 34,
+          "note": "\"a dozen crates\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 157,
+          "end": 174,
+          "line": 6,
+          "column": 39,
+          "end_line": 6,
+          "end_column": 56,
+          "note": "\"hundreds of files\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 183,
+          "end": 191,
+          "line": 6,
+          "column": 65,
+          "end_line": 6,
+          "end_column": 73,
+          "note": "\"12 tests\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 193,
+          "end": 203,
+          "line": 6,
+          "column": 75,
+          "end_line": 6,
+          "end_column": 85,
+          "note": "\"63 of them\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 211,
+          "end": 220,
+          "line": 8,
+          "column": 1,
+          "end_line": 8,
+          "end_column": 10,
+          "note": "\"Tests: 63\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 224,
+          "end": 247,
+          "line": 10,
+          "column": 3,
+          "end_line": 10,
+          "end_column": 26,
+          "note": "\"11,473 `human` fixtures\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 259,
+          "end": 273,
+          "line": 11,
           "column": 12,
-          "end_line": 7,
+          "end_line": 11,
           "end_column": 26,
           "note": "\"12 fixtures\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 319,
+          "end": 321,
+          "line": 15,
+          "column": 3,
+          "end_line": 15,
+          "end_column": 5,
+          "note": "\"63\""
         }
       ]
     }

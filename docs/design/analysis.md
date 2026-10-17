@@ -73,7 +73,7 @@ any language, and at least 40 focus repositories do: the phrases a catalog can b
 file to argue against. A file in another language can hold an English phrase: on v2, such files
 hold `claude` and `ai coding`.
 
-The gate runs before the merge and merges only the phrases it keeps. Merging first would hide 21
+The gate runs before the merge and merges only the phrases it keeps. Merging first would hide
 phrases on v2, such as `load-bearing` under `bearing`, which four human files hold.
 
 On v2 the gate counts 104, of which 53 hold no rare word. The other 51 are mostly era and topic

@@ -62,7 +62,7 @@ pub struct Lints {
     /// That a sentence negates its verb, not its object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub verbs_no_nouns: Option<VerbsNoNouns>,
-    /// That a file does not count what the repository holds, as in `63 tests`.
+    /// That a file does not count things, as in `63 tests`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub counted_inventory: Option<CountedInventory>,
 }
@@ -765,10 +765,10 @@ impl Merge for VerbsNoNouns {
     }
 }
 
-/// `lints.counted_inventory`: a file fails when it counts what the repository holds, as in `63
-/// tests`: a number in digits, 2 or more, before a noun such as `tests` or `files`.
+/// `lints.counted_inventory`: a file fails when it counts things, as in `63 tests`: a number of
+/// five or more, in digits or words, before a plural noun, or with no noun in a known place.
 ///
-/// The table itself turns the check on. The nouns it counts are the lint's, not the config's.
+/// The table itself turns the check on. What it counts is the lint's, not the config's.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CountedInventory {

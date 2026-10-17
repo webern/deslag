@@ -1,14 +1,14 @@
-ERROR: deslag detected counts that go stale!
+ERROR: deslag detected counts of things!
 
 README.md has 1 count.
 
-A count of what the repo holds changes with every change. Name the thing, or where it lives, as in "the tests in `tests/`". Write a limit only for a number that is one, as in "at most 200 lines"; a count put as a bound, such as "at most 63 tests" for "63 tests", is the same count and no fix.
+A count of things changes with every change, and a wrong one is as bad as a right one. Name the thing, or where it lives, as in "the tests in `tests/`", with no number. A limit, a version, a measure or an ID is no count, as in "at most 200 lines" or "Python 3"; a count put as a bound or a range is the same count and no fix. A sentence that must keep its number is for a human to exempt: leave it, and give the human the sentence and a reason.
 
 Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 
 The places:
   line 5: "13 variants"
 
-deslag: 1 of 1 files with counts that go stale.
+deslag: 1 of 1 files with counts of things.
 deslag: only a human writes or changes an exemption; leave the sentence as it is, and give the human its text and a reason.
 deslag: 1 exemption applied; deslag explain <PATH> lists a file's.

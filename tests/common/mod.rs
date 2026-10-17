@@ -3,6 +3,7 @@
 #![allow(dead_code, unused_imports)]
 
 pub mod blobs;
+pub mod claims;
 pub mod config_toml;
 pub mod corpus;
 pub mod fixture;

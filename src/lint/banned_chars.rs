@@ -17,8 +17,10 @@
 //! that character alone, by `ban` or a rule of one character, and holding no letter or digit. The
 //! edit replaces the character's bytes and no others, and the replacement does not hold a character
 //! the settings ban, as [`contradiction`] makes sure before a file is checked, so the fixed text
-//! passes where the character was. A word such as `yes` or `section`, or the default of a rule for a range of characters, is a
-//! guess at meaning, and is left to the writer.
+//! passes where the character was. A word such as `yes` or `section`, or the default of a rule for a
+//! range of characters, is a guess at meaning, and is left to the writer. A rule for a range of
+//! arrows does not get a default: its characters point every way, so the report names the
+//! character and leaves the choice of an ASCII arrow or words to the writer.
 
 use crate::config::{BannedChars, CharGroups};
 use crate::document::{BlockKind, Body, Document, Edit, Location, PieceKind};
@@ -36,8 +38,9 @@ pub struct Rule {
     pub last: char,
     /// What the report calls them.
     pub name: &'static str,
-    /// What to write instead; empty means delete it.
-    pub instead: &'static str,
+    /// What to write instead; empty means delete it, and `None` means that no one thing fits all
+    /// of the characters, so the writer chooses.
+    pub instead: Option<&'static str>,
 }
 
 impl Rule {
@@ -63,7 +66,7 @@ const fn one(ch: char, name: &'static str, instead: &'static str) -> Rule {
         first: ch,
         last: ch,
         name,
-        instead,
+        instead: Some(instead),
     }
 }
 
@@ -72,7 +75,17 @@ const fn range(first: char, last: char, name: &'static str, instead: &'static st
         first,
         last,
         name,
-        instead,
+        instead: Some(instead),
+    }
+}
+
+/// A range of characters that mean different things, so that none is the replacement for all.
+const fn choice(first: char, last: char, name: &'static str) -> Rule {
+    Rule {
+        first,
+        last,
+        name,
+        instead: None,
     }
 }
 
@@ -117,14 +130,14 @@ pub const GROUPS: &[Group] = &[
             one('\u{2B05}', "leftwards black arrow", "<-"),
             one('\u{2B06}', "upwards black arrow", "up"),
             one('\u{2B07}', "downwards black arrow", "down"),
-            range('\u{2190}', '\u{21FF}', "arrow", "->"),
-            range('\u{27F0}', '\u{27FF}', "arrow", "->"),
-            range('\u{2900}', '\u{297F}', "arrow", "->"),
+            choice('\u{2190}', '\u{21FF}', "arrow"),
+            choice('\u{27F0}', '\u{27FF}', "arrow"),
+            choice('\u{2900}', '\u{297F}', "arrow"),
             // U+2795 to U+2797 are the heavy plus, minus and division signs.
             one('\u{2794}', "heavy wide-headed rightwards arrow", "->"),
-            range('\u{2798}', '\u{27AF}', "arrow", "->"),
-            range('\u{27B1}', '\u{27BE}', "arrow", "->"),
-            range('\u{2B00}', '\u{2B11}', "arrow", "->"),
+            choice('\u{2798}', '\u{27AF}', "arrow"),
+            choice('\u{27B1}', '\u{27BE}', "arrow"),
+            choice('\u{2B00}', '\u{2B11}', "arrow"),
         ],
     },
     Group {
@@ -278,8 +291,9 @@ pub struct Banned {
     pub ch: char,
     /// What the report calls it, when deslag knows.
     pub name: Option<&'static str>,
-    /// What to write instead; empty means delete it.
-    pub instead: String,
+    /// What to write instead; empty means delete it, and `None` means that the character has no
+    /// one replacement, so the writer chooses.
+    pub instead: Option<String>,
     /// Whether `instead` is the default of a rule for a range of characters, rather than named for
     /// this one.
     pub range_default: bool,
@@ -380,9 +394,9 @@ pub fn contradiction(settings: &BannedChars) -> Option<String> {
     })
 }
 
-/// What to write instead of `ch`, and whether that is the default of a rule for a range of
-/// characters; `None` when `settings` do not ban it.
-fn verdict(settings: &BannedChars, ch: char) -> Option<(String, bool)> {
+/// What to write instead of `ch`, which is `None` when no one thing fits, and whether that is the
+/// default of a rule for a range of characters; `None` when `settings` do not ban it.
+fn verdict(settings: &BannedChars, ch: char) -> Option<(Option<String>, bool)> {
     let key = ch.to_string();
     if settings
         .allow
@@ -393,13 +407,13 @@ fn verdict(settings: &BannedChars, ch: char) -> Option<(String, bool)> {
         return None;
     }
     if let Some(instead) = settings.ban.as_ref().and_then(|ban| ban.get(&key)) {
-        return Some((instead.clone(), false));
+        return Some((Some(instead.clone()), false));
     }
     GROUPS
         .iter()
         .filter(|group| (group.switch)(&settings.groups).unwrap_or(group.on_by_default))
         .find_map(|group| rule(group.rules, ch))
-        .map(|rule| (rule.instead.to_string(), rule.first != rule.last))
+        .map(|rule| (rule.instead.map(str::to_string), rule.first != rule.last))
 }
 
 /// What the report calls `ch`, from the first rule of any group that holds it, on or off.
@@ -453,20 +467,17 @@ pub fn edits(over: &Over) -> Vec<(Mark, Result<Edit, &'static str>)> {
         .iter()
         .flat_map(|banned| {
             let note = note(banned);
-            let unfixable = unfixable(banned);
+            let replacement = replacement(banned);
             banned.locations.iter().map(move |location| {
                 let mark = Mark {
                     kind: MarkKind::Occurrence,
                     location: *location,
                     note: note.clone(),
                 };
-                let edit = match unfixable {
-                    Some(why) => Err(why),
-                    None => Ok(Edit {
-                        range: location.start..location.end,
-                        replacement: banned.instead.clone(),
-                    }),
-                };
+                let edit = replacement.map(|replacement| Edit {
+                    range: location.start..location.end,
+                    replacement: replacement.to_string(),
+                });
                 (mark, edit)
             })
         })
@@ -498,21 +509,26 @@ pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
     })
 }
 
-/// Why a fix may not write what the report says to write in place of `banned`, or `None` when it
-/// may.
-fn unfixable(banned: &Banned) -> Option<&'static str> {
+/// What a fix writes in place of `banned`, or why it may not write what the report says.
+fn replacement(banned: &Banned) -> Result<&str, &'static str> {
+    let Some(instead) = &banned.instead else {
+        return Err(
+            "there is no replacement for it, since the arrows of its range point every way \
+             and only the writer knows which this one means",
+        );
+    };
     if banned.range_default {
-        Some(
+        Err(
             "the replacement is the default for a range of characters, a guess at what this one \
              means",
         )
-    } else if banned.instead.chars().any(char::is_alphanumeric) {
-        Some(
+    } else if instead.chars().any(char::is_alphanumeric) {
+        Err(
             "the replacement holds letters or digits, a guess at meaning that can run into the \
              text beside it",
         )
     } else {
-        None
+        Ok(instead)
     }
 }
 
@@ -541,10 +557,13 @@ fn note(banned: &Banned) -> String {
     if !hidden {
         what.push_str(&format!(" \"{ch}\""));
     }
-    let instead = match banned.instead.as_str() {
-        "" => "delete it".to_string(),
-        " " => "write a plain space".to_string(),
-        instead => format!("write `{instead}`"),
+    let instead = match banned.instead.as_deref() {
+        None => "no one replacement fits, so write the ASCII arrow that points the same way, such \
+                 as `->`, `<-` or `<->`, or words for what it means"
+            .to_string(),
+        Some("") => "delete it".to_string(),
+        Some(" ") => "write a plain space".to_string(),
+        Some(instead) => format!("write `{instead}`"),
     };
     format!("{what}; {instead}")
 }

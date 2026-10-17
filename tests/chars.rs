@@ -17,7 +17,7 @@ fn found(text: &str) -> Vec<(usize, char)> {
 
 /// The characters `settings` ban in `text`, each with what to write instead and the line of each
 /// place it is.
-fn banned(text: &str, settings: &BannedChars) -> Vec<(char, String, Vec<usize>)> {
+fn banned(text: &str, settings: &BannedChars) -> Vec<(char, Option<String>, Vec<usize>)> {
     check(&Document::markdown(text), Some(settings))
         .map(|over| over.banned)
         .unwrap_or_default()
@@ -29,7 +29,7 @@ fn banned(text: &str, settings: &BannedChars) -> Vec<(char, String, Vec<usize>)>
         .collect()
 }
 
-fn chars(banned: &[(char, String, Vec<usize>)]) -> Vec<char> {
+fn chars(banned: &[(char, Option<String>, Vec<usize>)]) -> Vec<char> {
     banned.iter().map(|(ch, ..)| *ch).collect()
 }
 
@@ -157,9 +157,9 @@ fn the_groups_switch_on_and_off() {
 fn a_character_in_two_groups_takes_the_first_that_is_on() {
     let text = "done \u{2705}\n";
     let both = settings("groups = { emoji = true }");
-    assert_eq!(banned(text, &both)[0].1, "yes");
+    assert_eq!(banned(text, &both)[0].1.as_deref(), Some("yes"));
     let emoji_only = settings("groups = { checks = false, emoji = true }");
-    assert_eq!(banned(text, &emoji_only)[0].1, "");
+    assert_eq!(banned(text, &emoji_only)[0].1.as_deref(), Some(""));
     let neither = settings("groups = { checks = false }");
     assert_eq!(banned(text, &neither), vec![]);
 }
@@ -182,9 +182,9 @@ fn ban_adds_characters_and_changes_what_to_write() {
     assert_eq!(
         banned(text, &settings),
         vec![
-            ('\u{00AE}', "(R)".to_string(), vec![1]),
-            ('\u{2014}', ", ".to_string(), vec![1]),
-            ('\u{2122}', String::new(), vec![1]),
+            ('\u{00AE}', Some("(R)".to_string()), vec![1]),
+            ('\u{2014}', Some(", ".to_string()), vec![1]),
+            ('\u{2122}', Some(String::new()), vec![1]),
         ]
     );
     let over = check(&Document::markdown(text), Some(&settings)).expect("banned characters");
@@ -203,8 +203,8 @@ fn every_occurrence_counts_and_has_its_place() {
     assert_eq!(
         banned(text, &BannedChars::default()),
         vec![
-            ('\u{2014}', "-".to_string(), vec![1, 1, 3, 4]),
-            ('\u{2192}', "->".to_string(), vec![4]),
+            ('\u{2014}', Some("-".to_string()), vec![1, 1, 3, 4]),
+            ('\u{2192}', Some("->".to_string()), vec![4]),
         ]
     );
 }
@@ -287,10 +287,56 @@ fn the_tables_ban_no_ascii_and_suggest_only_ascii() {
         for rule in group.rules {
             assert!(rule.first <= rule.last, "{rule:?}");
             assert!(!rule.first.is_ascii(), "{rule:?}");
-            assert!(rule.instead.is_ascii(), "{rule:?}");
+            assert!(rule.instead.is_none_or(str::is_ascii), "{rule:?}");
             assert!(rule.name.is_ascii(), "{rule:?}");
         }
     }
+}
+
+/// The arrows in a range point every way, so a rule for a range names no replacement.
+#[test]
+fn no_arrow_range_rule_names_a_replacement() {
+    let arrows = GROUPS
+        .iter()
+        .find(|group| group.name == "arrows")
+        .expect("the arrows group");
+    let ranges: Vec<_> = arrows
+        .rules
+        .iter()
+        .filter(|rule| rule.first != rule.last)
+        .collect();
+    assert!(!ranges.is_empty());
+    for rule in ranges {
+        assert_eq!(rule.instead, None, "{rule:?}");
+    }
+}
+
+#[test]
+fn an_arrow_only_a_range_covers_gets_no_replacement() {
+    let text = "\
+a \u{21A9} b \u{21E7} c \u{21C4}
+d \u{2B01} e \u{279C}
+f \u{2192} g \u{21D0}
+";
+    assert_eq!(
+        banned(text, &BannedChars::default()),
+        vec![
+            ('\u{21A9}', None, vec![1]),
+            ('\u{21E7}', None, vec![1]),
+            ('\u{21C4}', None, vec![1]),
+            ('\u{2B01}', None, vec![2]),
+            ('\u{279C}', None, vec![2]),
+            ('\u{2192}', Some("->".to_string()), vec![3]),
+            ('\u{21D0}', Some("<=".to_string()), vec![3]),
+        ]
+    );
+
+    // The config can still say what to write for an arrow, and then it is named for it.
+    let settings = settings("ban = { \"\\u21a9\" = \"<-\" }");
+    assert_eq!(
+        banned("a \u{21A9} b\n", &settings),
+        vec![('\u{21A9}', Some("<-".to_string()), vec![1])]
+    );
 }
 
 #[test]

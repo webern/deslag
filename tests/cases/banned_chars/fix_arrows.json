@@ -1,0 +1,54 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 4 banned characters.\n\nThis repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 3, 5: U+21A9 arrow \"↩\"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means\n  line 5: U+21E7 arrow \"⇧\"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means\n  line 5: U+21C4 arrow \"⇄\"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 45,
+          "end": 48,
+          "line": 3,
+          "column": 36,
+          "end_line": 3,
+          "end_column": 37,
+          "note": "U+21A9 arrow \"↩\"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means"
+        },
+        {
+          "kind": "occurrence",
+          "start": 124,
+          "end": 127,
+          "line": 5,
+          "column": 54,
+          "end_line": 5,
+          "end_column": 55,
+          "note": "U+21A9 arrow \"↩\"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means"
+        },
+        {
+          "kind": "occurrence",
+          "start": 84,
+          "end": 87,
+          "line": 5,
+          "column": 18,
+          "end_line": 5,
+          "end_column": 19,
+          "note": "U+21E7 arrow \"⇧\"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means"
+        },
+        {
+          "kind": "occurrence",
+          "start": 107,
+          "end": 110,
+          "line": 5,
+          "column": 39,
+          "end_line": 5,
+          "end_column": 40,
+          "note": "U+21C4 arrow \"⇄\"; no one replacement fits, so write the ASCII arrow that points the same way, such as `->`, `<-` or `<->`, or words for what it means"
+        }
+      ]
+    }
+  ]
+}

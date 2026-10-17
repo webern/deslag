@@ -12,6 +12,7 @@ pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod not_at_all;
 pub mod pattern;
+pub mod possessive_own;
 pub mod repo_layout;
 pub mod verbs_no_nouns;
 
@@ -52,11 +53,13 @@ pub enum Lint {
     VerbsNoNouns,
     /// `not_at_all`: a negation padded with "at all", as in `does not parse at all`.
     NotAtAll,
+    /// `possessive_own`: a file that leans on possessives padded with `own`, as in `its own config`.
+    PossessiveOwn,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 9] = [
+    pub const ALL: [Lint; 10] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -66,6 +69,7 @@ impl Lint {
         Lint::ListGrowth,
         Lint::VerbsNoNouns,
         Lint::NotAtAll,
+        Lint::PossessiveOwn,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -80,6 +84,7 @@ impl Lint {
             Lint::ListGrowth => "list_growth",
             Lint::VerbsNoNouns => "verbs_no_nouns",
             Lint::NotAtAll => "not_at_all",
+            Lint::PossessiveOwn => "possessive_own",
         }
     }
 
@@ -95,7 +100,8 @@ impl Lint {
             | Lint::BannedPhrases
             | Lint::Density
             | Lint::VerbsNoNouns
-            | Lint::NotAtAll => false,
+            | Lint::NotAtAll
+            | Lint::PossessiveOwn => false,
         }
     }
 
@@ -104,7 +110,7 @@ impl Lint {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
             Lint::ListGrowth => Need::Structure,
-            Lint::VerbsNoNouns | Lint::NotAtAll => Need::Sentences,
+            Lint::VerbsNoNouns | Lint::NotAtAll | Lint::PossessiveOwn => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
             }
@@ -132,6 +138,9 @@ impl Lint {
             Lint::NotAtAll => {
                 "A negation must not be padded with \"at all\", as in \"does not parse at all\"."
             }
+            Lint::PossessiveOwn => {
+                "A file must not lean on possessives padded with \"own\", as in \"its own config\"."
+            }
         }
     }
 
@@ -148,6 +157,7 @@ impl Lint {
             Lint::ListGrowth => "with more list items than at the base",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
             Lint::NotAtAll => "with negations padded with \"at all\"",
+            Lint::PossessiveOwn => "with possessives padded with \"own\"",
         }
     }
 }
@@ -212,6 +222,8 @@ pub enum Violation {
     VerbsNoNouns(verbs_no_nouns::Over),
     /// The file pads a negation with "at all".
     NotAtAll(not_at_all::Over),
+    /// The file leans on possessives padded with `own`.
+    PossessiveOwn(possessive_own::Over),
 }
 
 impl Violation {
@@ -227,6 +239,7 @@ impl Violation {
             Violation::ListGrowth(_) => Lint::ListGrowth,
             Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
             Violation::NotAtAll(_) => Lint::NotAtAll,
+            Violation::PossessiveOwn(_) => Lint::PossessiveOwn,
         }
     }
 
@@ -243,6 +256,7 @@ impl Violation {
             Violation::ListGrowth(over) => list_growth::marks(over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
             Violation::NotAtAll(over) => not_at_all::marks(over),
+            Violation::PossessiveOwn(over) => possessive_own::marks(over),
         }
     }
 
@@ -261,6 +275,8 @@ impl Violation {
             Violation::ListGrowth(_) => Vec::new(),
             Violation::VerbsNoNouns(_) => Vec::new(),
             Violation::NotAtAll(_) => Vec::new(),
+            // Deleting `own` is not provably safe: a contrast between possessors is a real use.
+            Violation::PossessiveOwn(_) => Vec::new(),
         }
     }
 
@@ -270,9 +286,10 @@ impl Violation {
     pub fn retain(&self, keep: &dyn Keep) -> Option<Violation> {
         match self {
             // A verdict on the whole file, and its evidence.
-            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) | Violation::ListGrowth(_) => {
-                keep.verdict().then(|| self.clone())
-            }
+            Violation::MaxSizeBytes(_)
+            | Violation::MaxEmphasis(_)
+            | Violation::ListGrowth(_)
+            | Violation::PossessiveOwn(_) => keep.verdict().then(|| self.clone()),
             Violation::RepoLayout(over) => {
                 repo_layout::retain(over, keep).map(Violation::RepoLayout)
             }
@@ -355,6 +372,7 @@ impl Finding {
             Violation::ListGrowth(over) => list_growth::render(&self.path, over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
             Violation::NotAtAll(over) => not_at_all::render(&self.path, over),
+            Violation::PossessiveOwn(over) => possessive_own::render(&self.path, over),
         }
     }
 
@@ -681,6 +699,8 @@ pub(crate) fn check_text<'a>(
             Lint::NotAtAll => {
                 not_at_all::check(&document, lints.not_at_all.as_ref()).map(Violation::NotAtAll)
             }
+            Lint::PossessiveOwn => possessive_own::check(&document, lints.possessive_own.as_ref())
+                .map(Violation::PossessiveOwn),
         };
         findings.extend(violation.map(|violation| Finding {
             path: relative.to_string(),

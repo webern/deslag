@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 3 possessives padded with \"own\". 3 or more fail a file.\n\nReword the own phrases in README.md.\n\nThe places:\n  line 3: \"its own config\"\n  line 3: \"project's own docs\"\n  line 3: \"users' own data\"",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 23,
+          "end": 37,
+          "line": 3,
+          "column": 14,
+          "end_line": 3,
+          "end_column": 28,
+          "note": "\"its own config\""
+        },
+        {
+          "kind": "evidence",
+          "start": 53,
+          "end": 71,
+          "line": 3,
+          "column": 44,
+          "end_line": 3,
+          "end_column": 62,
+          "note": "\"project's own docs\""
+        },
+        {
+          "kind": "evidence",
+          "start": 80,
+          "end": 95,
+          "line": 3,
+          "column": 71,
+          "end_line": 3,
+          "end_column": 86,
+          "note": "\"users' own data\""
+        }
+      ]
+    }
+  ]
+}

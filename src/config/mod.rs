@@ -58,7 +58,7 @@ use crate::changelog::{BASELINE, Version, current_release, parse_release};
 
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, Lints, ListGrowth, MaxEmphasis, MaxSizeBytes,
-    Merge, NotAtAll, PhraseGroups, RepoLayout, VerbsNoNouns,
+    Merge, NotAtAll, PhraseGroups, PossessiveOwn, RepoLayout, VerbsNoNouns,
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{

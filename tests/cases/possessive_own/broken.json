@@ -1,0 +1,54 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 4 possessives padded with \"own\". 3 or more fail a file.\n\nA possessive is enough on its own. Delete \"own\" unless the possessor contrasts with another one that the sentence names or implies: \"deslag's own corpus\" is \"deslag's corpus\" when no other corpus is in play. Keep the few that contrast, and delete the rest.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"its own config\"\n  line 3: \"project's own docs\"\n  line 3: \"module's own budget\"\n  line 4: \"users' own data\"",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 23,
+          "end": 37,
+          "line": 3,
+          "column": 14,
+          "end_line": 3,
+          "end_column": 28,
+          "note": "\"its own config\""
+        },
+        {
+          "kind": "evidence",
+          "start": 53,
+          "end": 71,
+          "line": 3,
+          "column": 44,
+          "end_line": 3,
+          "end_column": 62,
+          "note": "\"project's own docs\""
+        },
+        {
+          "kind": "evidence",
+          "start": 78,
+          "end": 97,
+          "line": 3,
+          "column": 69,
+          "end_line": 4,
+          "end_column": 11,
+          "note": "\"module's own budget\""
+        },
+        {
+          "kind": "evidence",
+          "start": 118,
+          "end": 133,
+          "line": 4,
+          "column": 32,
+          "end_line": 4,
+          "end_column": 47,
+          "note": "\"users' own data\""
+        }
+      ]
+    }
+  ]
+}

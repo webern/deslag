@@ -58,7 +58,7 @@ pub enum Lint {
     VerbsNoNouns,
     /// `not_at_all`: a negation padded with "at all", as in `does not parse at all`.
     NotAtAll,
-    /// `counted_inventory`: a count of what the repository holds, as in `63 tests`.
+    /// `counted_inventory`: a count of things, as in `63 tests`.
     CountedInventory,
 }
 
@@ -144,8 +144,7 @@ impl Lint {
                 "A negation must not be padded with \"at all\", as in \"does not parse at all\"."
             }
             Lint::CountedInventory => {
-                "A file must not count what the repository holds, as in \"63 tests\", which goes \
-                 stale."
+                "A file must not count things, as in \"63 tests\", true or not."
             }
         }
     }
@@ -163,7 +162,7 @@ impl Lint {
             Lint::ListGrowth => "with more list items than at the base",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
             Lint::NotAtAll => "with negations padded with \"at all\"",
-            Lint::CountedInventory => "with counts that go stale",
+            Lint::CountedInventory => "with counts of things",
         }
     }
 }
@@ -228,7 +227,7 @@ pub enum Violation {
     VerbsNoNouns(verbs_no_nouns::Over),
     /// The file pads a negation with "at all".
     NotAtAll(not_at_all::Over),
-    /// The file counts what the repository holds.
+    /// The file counts things.
     CountedInventory(counted_inventory::Over),
 }
 

@@ -2,7 +2,7 @@ name: ci
 
 on:
   push:
-    branches: [main, m/deslag-cispeed]
+    branches: [main]
   pull_request:
 
 # A new push to the same branch supersedes the run in progress.

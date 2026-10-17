@@ -18,13 +18,14 @@ use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::changelog::Version;
-use deslag::config::VerbsNoNouns;
-use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
+use deslag::config::{BannedChars, BannedPhrases, CountedInventory, Density, MaxEmphasis};
+use deslag::config::{RepoLayout, VerbsNoNouns};
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
-use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis, verbs_no_nouns};
+use deslag::lint::{Lint, banned_chars, banned_phrases, counted_inventory, density};
+use deslag::lint::{max_emphasis, verbs_no_nouns};
 use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
 
 /// How many fixtures each collected category must hold at least.
@@ -871,6 +872,15 @@ fn the_corpus_locations_hold_what_they_point_at() {
                         );
                     }
                 }
+                Violation::CountedInventory(over) => {
+                    for found in &over.matches {
+                        let held = held(&found.location);
+                        assert!(
+                            held.split_whitespace().next() == found.quote.split_whitespace().next(),
+                            "{context}: {held:?} for {found:?}"
+                        );
+                    }
+                }
                 Violation::Density(over) => {
                     for block in &over.blocks {
                         let held = held(&block.location);
@@ -1195,6 +1205,27 @@ fn verbs_no_nouns_flags_llm_text_far_more_than_human_text() {
     };
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by verbs_no_nouns: human {human}, llm {llm}, mixed {mixed}");
+    assert!(llm >= 3 * human, "human {human}, llm {llm}");
+}
+
+#[test]
+fn counted_inventory_flags_llm_text_far_more_than_human_text() {
+    let fixtures = corpus();
+    let settings = CountedInventory::default();
+    let flagged = |category: &str| {
+        fixtures
+            .iter()
+            .filter(|fixture| fixture.category == category)
+            // Its nouns are English words.
+            .filter(|fixture| fixture.sidecar.content.natural_language == "en")
+            .filter(|fixture| {
+                let text = String::from_utf8_lossy(&fixture.bytes);
+                counted_inventory::check(&Document::markdown(&text), Some(&settings)).is_some()
+            })
+            .count()
+    };
+    let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
+    eprintln!("flagged by counted_inventory: human {human}, llm {llm}, mixed {mixed}");
     assert!(llm >= 3 * human, "human {human}, llm {llm}");
 }
 

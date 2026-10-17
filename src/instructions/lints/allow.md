@@ -10,6 +10,7 @@ quote = "The sentence, as the file holds it."
 reason = "Why it stays."
 ```
 
-`lint` is `banned_chars`, `banned_phrases` or `verbs_no_nouns`. The file must hold the quote as one
-sentence, however it wraps, and the lint must find something in it. An entry that stops holding
-fails the run, and an agent may delete it. `deslag explain <PATH>` lists a file's entries.
+`lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns` or `counted_inventory`. The file must
+hold the quote as one sentence, however it wraps, and the lint must find something in it. An entry
+that stops holding fails the run, and an agent may delete it. `deslag explain <PATH>` lists a file's
+entries.

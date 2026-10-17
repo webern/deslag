@@ -27,8 +27,8 @@ pub(super) struct AllowFile {
     /// The file the sentence is in, written as a report prints it: relative to the repo root,
     /// `/`-separated, with no glob. One entry names one file.
     path: String,
-    /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases` and
-    /// `verbs_no_nouns`. One entry names one lint.
+    /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases`,
+    /// `verbs_no_nouns` and `counted_inventory`. One entry names one lint.
     #[schemars(schema_with = "lint_schema")]
     lint: String,
     /// The sentence, exactly as the file holds it. Whitespace counts as one space, so a sentence
@@ -53,7 +53,9 @@ fn lint_schema(_: &mut SchemaGenerator) -> Schema {
 /// "which does not take an entry:".
 fn takes(lint: Lint) -> Result<(), &'static str> {
     match lint {
-        Lint::BannedChars | Lint::BannedPhrases | Lint::VerbsNoNouns => Ok(()),
+        Lint::BannedChars | Lint::BannedPhrases | Lint::VerbsNoNouns | Lint::CountedInventory => {
+            Ok(())
+        }
         Lint::MaxSizeBytes => Err(
             "its finding is the whole file. Set the budget in an override of the file: \
              `lints.max_size_bytes.value`",
@@ -324,7 +326,9 @@ mod tests {
         let said = refused(&entry("a.md", "banned_char", "A.", "R."));
         assert!(
             said.contains("\"banned_char\", which is no lint")
-                && said.contains("`banned_chars`, `banned_phrases` or `verbs_no_nouns`"),
+                && said.contains(
+                    "`banned_chars`, `banned_phrases`, `verbs_no_nouns` or `counted_inventory`"
+                ),
             "{said}"
         );
     }
@@ -357,7 +361,12 @@ mod tests {
             .clone();
         assert_eq!(
             lint,
-            serde_json::json!(["banned_chars", "banned_phrases", "verbs_no_nouns"])
+            serde_json::json!([
+                "banned_chars",
+                "banned_phrases",
+                "verbs_no_nouns",
+                "counted_inventory"
+            ])
         );
     }
 

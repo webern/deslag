@@ -8,6 +8,7 @@
 pub mod allow;
 pub mod banned_chars;
 pub mod banned_phrases;
+pub mod counted_inventory;
 pub mod density;
 pub mod list_growth;
 pub mod max_emphasis;
@@ -54,11 +55,13 @@ pub enum Lint {
     ListGrowth,
     /// `verbs_no_nouns`: a verb negated through its object, as in `bakes no cakes`.
     VerbsNoNouns,
+    /// `counted_inventory`: a count of what the repository holds, as in `63 tests`.
+    CountedInventory,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 8] = [
+    pub const ALL: [Lint; 9] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -67,6 +70,7 @@ impl Lint {
         Lint::Density,
         Lint::ListGrowth,
         Lint::VerbsNoNouns,
+        Lint::CountedInventory,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -80,6 +84,7 @@ impl Lint {
             Lint::Density => "density",
             Lint::ListGrowth => "list_growth",
             Lint::VerbsNoNouns => "verbs_no_nouns",
+            Lint::CountedInventory => "counted_inventory",
         }
     }
 
@@ -94,7 +99,8 @@ impl Lint {
             | Lint::BannedChars
             | Lint::BannedPhrases
             | Lint::Density
-            | Lint::VerbsNoNouns => false,
+            | Lint::VerbsNoNouns
+            | Lint::CountedInventory => false,
         }
     }
 
@@ -103,7 +109,7 @@ impl Lint {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
             Lint::ListGrowth => Need::Structure,
-            Lint::VerbsNoNouns => Need::Sentences,
+            Lint::VerbsNoNouns | Lint::CountedInventory => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
             }
@@ -128,6 +134,10 @@ impl Lint {
             Lint::VerbsNoNouns => {
                 "A sentence must negate its verb, not its object, as in \"does not bake cakes\"."
             }
+            Lint::CountedInventory => {
+                "A file must not count what the repository holds, as in \"63 tests\", which goes \
+                 stale."
+            }
         }
     }
 
@@ -143,6 +153,7 @@ impl Lint {
             Lint::Density => "with dense text",
             Lint::ListGrowth => "with more list items than at the base",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
+            Lint::CountedInventory => "with counts that go stale",
         }
     }
 }
@@ -205,6 +216,8 @@ pub enum Violation {
     ListGrowth(list_growth::Over),
     /// The file negates a verb through its object.
     VerbsNoNouns(verbs_no_nouns::Over),
+    /// The file counts what the repository holds.
+    CountedInventory(counted_inventory::Over),
 }
 
 impl Violation {
@@ -219,6 +232,7 @@ impl Violation {
             Violation::Density(_) => Lint::Density,
             Violation::ListGrowth(_) => Lint::ListGrowth,
             Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
+            Violation::CountedInventory(_) => Lint::CountedInventory,
         }
     }
 
@@ -234,6 +248,7 @@ impl Violation {
             Violation::Density(over) => density::marks(over),
             Violation::ListGrowth(over) => list_growth::marks(over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
+            Violation::CountedInventory(over) => counted_inventory::marks(over),
         }
     }
 
@@ -251,6 +266,8 @@ impl Violation {
             Violation::Density(_) => Vec::new(),
             Violation::ListGrowth(_) => Vec::new(),
             Violation::VerbsNoNouns(_) => Vec::new(),
+            // The rewrite needs the name of the thing, which the lint does not have.
+            Violation::CountedInventory(_) => Vec::new(),
         }
     }
 
@@ -275,6 +292,9 @@ impl Violation {
             Violation::Density(over) => density::retain(over, keep).map(Violation::Density),
             Violation::VerbsNoNouns(over) => {
                 verbs_no_nouns::retain(over, keep).map(Violation::VerbsNoNouns)
+            }
+            Violation::CountedInventory(over) => {
+                counted_inventory::retain(over, keep).map(Violation::CountedInventory)
             }
         }
     }
@@ -348,6 +368,7 @@ impl Finding {
             Violation::Density(over) => density::render(&self.path, over),
             Violation::ListGrowth(over) => list_growth::render(&self.path, over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
+            Violation::CountedInventory(over) => counted_inventory::render(&self.path, over),
         }
     }
 
@@ -781,6 +802,10 @@ pub(crate) fn check_text<'a>(
             }
             Lint::VerbsNoNouns => verbs_no_nouns::check(&document, lints.verbs_no_nouns.as_ref())
                 .map(Violation::VerbsNoNouns),
+            Lint::CountedInventory => {
+                counted_inventory::check(&document, lints.counted_inventory.as_ref())
+                    .map(Violation::CountedInventory)
+            }
         };
         findings.extend(violation.map(|violation| Finding {
             path: relative.to_string(),

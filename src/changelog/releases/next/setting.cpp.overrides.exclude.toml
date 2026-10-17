@@ -12,6 +12,6 @@ removes files: it does not change how specific the override is, and it cannot br
 [[cpp.overrides]]
 globs = ["/src/**/*.cc"]
 exclude = ["/src/api/**"]
-lints.banned_phrases = {}
+lints.density.max_paragraph_chars = 900
 ```
 '''

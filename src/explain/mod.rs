@@ -69,10 +69,12 @@ fn block(
 
     let overrides = section.overrides_for(relative);
     let excluding = section.overrides_excluding(relative);
-    if overrides.is_empty() {
-        out.push_str("# overrides: none\n");
-    } else {
+    if !overrides.is_empty() {
         out.push_str("# overrides, in the order they merge:\n");
+    } else if !excluding.is_empty() {
+        out.push_str("# overrides: no override applies, but these match by globs:\n");
+    } else {
+        out.push_str("# overrides: none\n");
     }
     for (index, entry) in overrides {
         let mut line = format!("globs = {}", array(entry.globs.include()));

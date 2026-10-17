@@ -90,9 +90,9 @@ pub(super) struct MdFile {
     #[serde(default)]
     fences: FencesFile,
     /// Files `globs` match that this section leaves out, such as generated code. A pattern is
-    /// written as in `globs`, from the repo root with a `/`, else by file name, and needing no extension. A
-    /// file the walk skips stays skipped, and nothing re-includes one. Only a human adds an
-    /// exclude; never add one to make a check pass.
+    /// written as in `globs`, from the repo root with a `/`, else by file name, and needing no
+    /// extension. A file the walk skips stays skipped, and nothing re-includes one. Only a human
+    /// adds an exclude; never add one to make a check pass.
     #[serde(default)]
     exclude: Vec<String>,
 }

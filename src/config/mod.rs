@@ -55,6 +55,7 @@ use serde::{Deserialize, Deserializer};
 
 use crate::Error;
 use crate::changelog::{BASELINE, Version, current_release, parse_release};
+use crate::glob::Pattern;
 
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, Lints, ListGrowth, MaxEmphasis, MaxSizeBytes,
@@ -427,16 +428,20 @@ impl Config {
             })
     }
 
+    /// The name of the first section whose `exclude` drops `rel_path`, and the pattern that does.
+    pub(crate) fn excluded_by(&self, rel_path: &str) -> Option<(&'static str, &Pattern)> {
+        self.sections.iter().find_map(|section| {
+            section
+                .excluded_by(rel_path)
+                .map(|pattern| (section.name(), pattern))
+        })
+    }
+
     /// Why no section selects `rel_path`, as a line for `deslag explain` to print: the section
     /// whose exclude drops it and the pattern, else the section that reads files of its extension
     /// and whether the config has it.
     pub(crate) fn unselected(&self, rel_path: &str) -> String {
-        let excluded = self.sections.iter().find_map(|section| {
-            section
-                .excluded_by(rel_path)
-                .map(|pattern| (section.name(), pattern))
-        });
-        if let Some((name, pattern)) = excluded {
+        if let Some((name, pattern)) = self.excluded_by(rel_path) {
             return format!("no section; [{name}] excludes it by {:?}", pattern.as_str());
         }
         match reading_section(rel_path) {

@@ -344,7 +344,7 @@ fn an_override_shows_its_exclude_and_one_that_drops_the_file_says_so() {
 }
 
 #[test]
-fn an_override_that_drops_the_only_candidate_leaves_overrides_none() {
+fn an_override_that_drops_the_only_candidate_does_not_say_overrides_none() {
     let repo = repo_of(
         "[[md.overrides]]\nglobs = [\"*.md\"]\nexclude = [\"/docs/adr/**\"]\n\
          lints.max_size_bytes.value = 8000\n",
@@ -354,12 +354,13 @@ fn an_override_that_drops_the_only_candidate_leaves_overrides_none() {
     assert_eq!((code, stderr.as_str()), (0, ""));
     assert!(
         stdout.contains(
-            "# overrides: none\n\
+            "# overrides: no override applies, but these match by globs:\n\
              #   override 1 does not apply: globs = [\"*.md\"] match, but exclude \
              \"/docs/adr/**\" drops the file\n"
         ),
         "{stdout}"
     );
+    assert!(!stdout.contains("# overrides: none"), "{stdout}");
     assert!(stdout.contains("# max_size_bytes: off\n"), "{stdout}");
 }
 

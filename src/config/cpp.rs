@@ -47,9 +47,9 @@ pub(super) struct CppFile {
     // Last, so that a section written as a JSON array keeps the keys before it where they were:
     // the config reads a struct by position.
     /// Files `globs` match that this section leaves out, such as generated code. A pattern is
-    /// written as in `globs`, from the repo root with a `/`, else by file name, and not needing a C or C++ extension. A
-    /// file the walk skips stays skipped, and nothing re-includes one. Only a human adds an
-    /// exclude; never add one to make a check pass.
+    /// written as in `globs`, from the repo root with a `/`, else by file name, and not needing a C
+    /// or C++ extension. A file the walk skips stays skipped, and nothing re-includes one. Only a
+    /// human adds an exclude; never add one to make a check pass.
     #[serde(default)]
     exclude: Vec<String>,
 }

@@ -18,12 +18,12 @@
 
 use std::borrow::Cow;
 
-use super::layout::lexicon_hash;
+use super::layout::word_hash;
 use crate::document::Document;
 
 /// The code words of one file: borrowed from its source where it holds them as written.
 ///
-/// A table of its own, hashed as the tables are (FNV), and read with plain loops: a debug build
+/// A table of its own, hashed with FNV, and read with plain loops: a debug build
 /// pays for every call of the standard library's hashing, and a file asks for the set of each of
 /// its words.
 #[derive(Debug, Clone, Default)]
@@ -79,7 +79,7 @@ impl<'a> CodeWords<'a> {
         if self.len == 0 {
             return false;
         }
-        let hash = lexicon_hash(text);
+        let hash = word_hash(text);
         let mask = self.slots.len() - 1;
         let mut at = hash & mask;
         loop {
@@ -147,7 +147,7 @@ impl<'a> CodeWords<'a> {
         if (self.len + 1) * 2 > self.slots.len() {
             self.grow();
         }
-        let hash = lexicon_hash(&word);
+        let hash = word_hash(&word);
         let mask = self.slots.len() - 1;
         let mut at = hash & mask;
         loop {

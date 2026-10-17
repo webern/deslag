@@ -20,6 +20,7 @@ mod function;
 mod infinitive;
 mod layout;
 mod learned;
+#[cfg(test)]
 mod lexicon;
 mod nounverb;
 mod origin;
@@ -117,7 +118,7 @@ pub fn sentence_by_rules_seen(tokens: &mut [Token<'_>], context: Context, seen: 
 
 /// The longest word, in bytes, that either table can hold once folded: the lexicon's longest and a
 /// possessive `'s` after it.
-const LONGEST: usize = lexicon::LONGEST + 2;
+const LONGEST: usize = layout::KEY + 2;
 
 /// `text` folded into `buf` for a lookup: lower case, a curly apostrophe straight. `None` when it
 /// is too long or is not ASCII, so no table can hold it.

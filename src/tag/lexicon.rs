@@ -20,16 +20,16 @@
 //! - **Possessives.** A word `x's` that the lexicon lacks is read from the stem `x`: the stem's
 //!   noun or proper noun, with the stem's number and [`Features::CONTRACTION`]. The generator
 //!   leaves possessives out.
-//! - **Lookup.** The file stays as it is in the binary. The tagger reads a word through
-//!   `table.rs`, which holds this lexicon and the closed-class table in one hash table made from
-//!   [`entries`] when the crate builds. [`lookup`] serves the rest, such as a possessive's stem,
-//!   through a table of line offsets that `build.rs` makes too (see `build_tables.rs`), half a
-//!   megabyte: a lookup costs a hash and a probe or two, and allocates nothing.
+//! - **In the binary.** The file's text is not. `build.rs` reads the [`entries`] and makes the
+//!   word table of `table.rs` from them, which holds each word's reading and a mark byte (see
+//!   [`super::layout::mark`]): the dominance mark, and the four facts of the stem that a
+//!   possessive is read from. The text is here for the build and for the tests, which compare the
+//!   table with it: [`lookup`] is how the tagger read a word before there was a table.
 
 use std::sync::OnceLock;
 
-use super::layout::{lexicon_hash, u32_at};
-use super::{Confidence, Features, Reading, Tag, TagSet, built};
+use super::layout::mark;
+use super::{Confidence, Features, Reading, Tag, TagSet};
 
 /// The lexicon file.
 const TEXT: &str = include_str!("lexicon.txt");
@@ -71,9 +71,6 @@ const FEATURES: [(char, Features); 10] = [
     ('T', Features::SUPERLATIVE),
 ];
 
-/// The most bytes of a word the file holds, which the generator enforces.
-pub const LONGEST: usize = 24;
-
 /// The lines of the file after its header.
 pub(super) fn body() -> &'static str {
     static BODY: OnceLock<&'static str> = OnceLock::new();
@@ -87,38 +84,56 @@ pub(super) fn body() -> &'static str {
 }
 
 /// The readings field of the line for `word`, which must already be folded.
+#[cfg(test)]
 fn find(word: &str) -> Option<&'static str> {
-    let text = body();
-    let slots = built::LEXICON;
-    let mask = slots.len() / 4 - 1;
-    let mut at = lexicon_hash(word) & mask;
-    loop {
-        let slot = u32_at(slots, at * 4) as usize;
-        if slot == 0 {
-            return None;
-        }
-        let line = &text[slot - 1..];
-        if let Some(rest) = line
-            .strip_prefix(word)
-            .and_then(|rest| rest.strip_prefix('\t'))
-        {
-            return Some(rest.split('\n').next().unwrap_or(rest));
-        }
-        at = (at + 1) & mask;
-    }
+    use std::collections::HashMap;
+
+    static LINES: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+    LINES
+        .get_or_init(|| {
+            body()
+                .lines()
+                .filter_map(|line| line.split_once('\t'))
+                .collect()
+        })
+        .get(word)
+        .copied()
 }
 
-/// Every word of the file, in order, with its reading and whether it is marked dominant: see
-/// `dominant`. A line that is not well formed is left out, as [`lookup`] reads it as no word.
-#[allow(
-    dead_code,
-    reason = "the build script reads the entries to make the word table"
-)]
-pub(super) fn entries() -> impl Iterator<Item = (&'static str, Reading, bool)> {
+/// Every word of the file, in order, with its reading and its mark (see [`mark`]): whether it is
+/// dominant, see `dominant`, and the facts a possessive is read from. A line that is not well
+/// formed is left out, as [`lookup`] reads it as no word.
+pub(super) fn entries() -> impl Iterator<Item = (&'static str, Reading, u8)> {
     body().lines().filter_map(|line| {
         let (word, readings) = line.split_once('\t')?;
-        Some((word, parse(readings)?, readings.ends_with('!')))
+        let reading = parse(readings)?;
+        Some((word, reading, mark_of(readings, reading)))
     })
+}
+
+/// The mark byte of a word whose `readings` field is given and whose reading is `reading`.
+fn mark_of(readings: &str, reading: Reading) -> u8 {
+    let mut bits = 0;
+    if readings.ends_with('!') {
+        bits |= mark::DOMINANT;
+    }
+    // The noun or proper noun that ranks first, as the letters of the field have them in order.
+    let mut first = None;
+    for tag in readings.chars().filter_map(tag_of) {
+        match tag {
+            Tag::Noun => bits |= mark::NOUN,
+            Tag::ProperNoun => bits |= mark::PROPER,
+            _ => continue,
+        }
+        first.get_or_insert(tag);
+    }
+    if first == Some(Tag::ProperNoun) {
+        bits |= mark::PROPER_FIRST;
+    }
+    if reading.tag == Tag::Noun && reading.features == Features::PLURAL {
+        bits |= mark::PLURAL;
+    }
+    bits
 }
 
 /// Whether the lexicon's SemCor counts back the best guess of `word`, which must already be
@@ -175,7 +190,9 @@ fn parse(readings: &str) -> Option<Reading> {
 }
 
 /// What the lexicon says of `word`, folded as [`super::fold`] does: its readings if it has the
-/// word, else the reading of the noun `x` has when the word is `x's`.
+/// word, else the reading of the noun `x` has when the word is `x's`. This reads the text, as the
+/// tagger did before it had a table; the tests hold the table to it.
+#[cfg(test)]
 pub fn lookup(word: &str) -> Option<Reading> {
     match find(word) {
         Some(readings) => parse(readings),
@@ -185,6 +202,7 @@ pub fn lookup(word: &str) -> Option<Reading> {
 
 /// The reading of `x's` from the lexicon's `x`: its best noun or proper noun, `Unsure`, with the
 /// stem's number and the second word fused on. `None` when `x` is not a noun there.
+#[cfg(test)]
 fn possessive(word: &str) -> Option<Reading> {
     let stem = word.strip_suffix("'s").filter(|stem| !stem.is_empty())?;
     let readings = find(stem)?;
@@ -215,6 +233,7 @@ fn possessive(word: &str) -> Option<Reading> {
 mod tests {
     use std::collections::HashSet;
 
+    use super::super::layout::KEY;
     use super::*;
 
     /// The lines of the body, split into word and readings.
@@ -229,13 +248,33 @@ mod tests {
         lookup(text).unwrap_or_else(|| panic!("{text} is not in the lexicon"))
     }
 
+    /// The mark byte the table is made with for `text`.
+    fn mark_of_word(text: &str) -> u8 {
+        super::entries()
+            .find(|(word, _, _)| *word == text)
+            .unwrap_or_else(|| panic!("{text} is not in the lexicon"))
+            .2
+    }
+
     #[test]
-    fn the_index_is_what_the_lines_make() {
-        assert!(
-            crate::tag::build_tables::lexicon_index() == built::LEXICON,
-            "the lexicon's index in the binary is not what its lines make: build.rs did not run \
-             again after the file changed"
+    fn a_mark_holds_what_a_possessive_is_read_from_the_stem() {
+        let nouns = mark::NOUN | mark::PROPER;
+        // A noun, a plural noun, a name that ranks first, and a common word with a name after it.
+        assert_eq!(mark_of_word("user") & !mark::DOMINANT, mark::NOUN);
+        let plural = mark::NOUN | mark::PLURAL;
+        assert_eq!(mark_of_word("women") & plural, plural);
+        assert_eq!(
+            mark_of_word("paris") & (nouns | mark::PROPER_FIRST),
+            mark::PROPER | mark::PROPER_FIRST
         );
+        assert_eq!(mark_of_word("march") & nouns, nouns);
+        assert_eq!(mark_of_word("march") & mark::PROPER_FIRST, 0);
+        // Not a noun: nothing to read a possessive from. A singular noun is not plural.
+        assert_eq!(mark_of_word("quickly") & (nouns | mark::PLURAL), 0);
+        assert_eq!(mark_of_word("user") & mark::PLURAL, 0);
+        // The dominance mark is the one `dominant` reads.
+        assert!(mark_of_word("accepted") & mark::DOMINANT != 0);
+        assert_eq!(mark_of_word("work") & mark::DOMINANT, 0);
     }
 
     #[test]
@@ -290,7 +329,7 @@ mod tests {
     #[test]
     fn every_word_is_lower_case_letters_and_apostrophes_the_loader_can_fold() {
         for (word, _) in entries() {
-            assert!(word.len() <= LONGEST, "{word} is too long");
+            assert!(word.len() <= KEY, "{word} is too long");
             assert!(
                 word.bytes().all(|b| b.is_ascii_lowercase() || b == b'\''),
                 "{word}"

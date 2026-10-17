@@ -8,8 +8,10 @@
 //! probe answers both questions and allocates nothing.
 //!
 //! The answers are those of the tables themselves. The closed-class reading wins where both have a
-//! word, and a word in neither is read by [`lexicon::lookup`] as a possessive, or by its shape.
-//! The dominance mark is the lexicon's alone, whatever the reading comes from.
+//! word, and a word in neither is read as a possessive of a stem the lexicon has, or by its shape.
+//! The mark byte beside the reading is the lexicon's alone, whatever the reading comes from: the
+//! dominance mark, and what a possessive of the word as a stem is read from (see
+//! [`layout::mark`]), so the lexicon's text is not in the binary.
 //!
 //! **Layout.** Words of up to eight bytes, most of any text, have a table of 16-byte slots, four
 //! to a 64-byte bucket, each holding the word as one `u64` and its length. Longer words, up to
@@ -22,17 +24,19 @@
 #[cfg(test)]
 use super::closed;
 use super::layout::{
-    BUCKET, KEY, LONG_SLOT, SHORT_SLOT, WORDS_HEADER, long_hash, long_key, reading_at, short_hash,
-    u32_at, u64_at,
+    BUCKET, KEY, LONG_SLOT, SHORT_SLOT, WORDS_HEADER, long_hash, long_key, mark, reading_at,
+    short_hash, u32_at, u64_at,
 };
 pub(super) use super::layout::{SHORT, short_key, short_key_const};
-use super::{Reading, built, lexicon, shape};
+#[cfg(test)]
+use super::lexicon;
+use super::{Confidence, Features, Reading, Tag, TagSet, built, shape};
 
-/// What a slot says of its word: its reading, and whether the lexicon marks it dominant.
+/// What a slot says of its word: its reading, and the lexicon's mark of it (see [`mark`]).
 #[derive(Clone, Copy)]
 struct Entry {
     reading: Reading,
-    dominant: bool,
+    mark: u8,
 }
 
 /// The bytes of the table of short words: a power of two of buckets.
@@ -80,7 +84,7 @@ fn probe_short(key: u64, len: usize) -> Option<Entry> {
             // An empty slot does not have a length, and no word is that short.
             return (len != 0).then(|| Entry {
                 reading: reading_at(buckets, slot + 8),
-                dominant: buckets[slot + 14] != 0,
+                mark: buckets[slot + 14],
             });
         }
         if buckets[bucket + 3 * SHORT_SLOT + 15] == 0 {
@@ -108,7 +112,7 @@ fn probe_long(key: &[u64; 3], len: usize) -> Option<Entry> {
         {
             return Some(Entry {
                 reading: reading_at(slots, slot + 24),
-                dominant: slots[slot + 30] != 0,
+                mark: slots[slot + 30],
             });
         }
         at = (at + 1) & mask;
@@ -273,11 +277,55 @@ pub(super) fn read(text: &str) -> Reading {
 fn miss(text: &str) -> Reading {
     if ends_in_possessive(text.as_bytes()) {
         let mut buf = [0; super::LONGEST];
-        if let Some(reading) = super::fold(text, &mut buf).and_then(lexicon::lookup) {
+        if let Some(reading) = super::fold(text, &mut buf).and_then(possessive) {
             return reading;
         }
     }
     shape::guess(text)
+}
+
+/// The reading of `x's`, which the table lacks and which is folded, from the lexicon's `x`: its
+/// best noun or proper noun, `Unsure`, with the stem's number and the second word fused on. `None`
+/// when the lexicon does not have `x` as a noun, as the mark of the stem says.
+fn possessive(word: &str) -> Option<Reading> {
+    let stem = word.strip_suffix("'s").filter(|stem| !stem.is_empty())?;
+    let bits = stem_mark(stem)?;
+    let (noun, proper) = (bits & mark::NOUN != 0, bits & mark::PROPER != 0);
+    // The first of the two in the stem's rank order, where it has both.
+    let (tag, kept) = match (noun, proper) {
+        (true, true) if bits & mark::PROPER_FIRST != 0 => {
+            (Tag::ProperNoun, TagSet::of(Tag::ProperNoun).with(Tag::Noun))
+        }
+        (true, true) => (Tag::Noun, TagSet::of(Tag::Noun).with(Tag::ProperNoun)),
+        (true, false) => (Tag::Noun, TagSet::of(Tag::Noun)),
+        (false, true) => (Tag::ProperNoun, TagSet::of(Tag::ProperNoun)),
+        (false, false) => return None,
+    };
+    let number = if bits & mark::PLURAL != 0 {
+        Features::PLURAL
+    } else {
+        Features::SINGULAR
+    };
+    Some(Reading {
+        tag,
+        features: number.union(Features::CONTRACTION),
+        confidence: Confidence::Unsure,
+        kept,
+    })
+}
+
+/// The lexicon's mark of the folded word `stem`, or `None` if the table lacks it. A word that only
+/// the closed-class table has gets a mark of zero, which leaves its possessive to the shape.
+fn stem_mark(stem: &str) -> Option<u8> {
+    let bytes = stem.as_bytes();
+    let entry = if bytes.len() <= SHORT {
+        probe_short(short_key(bytes), bytes.len())
+    } else if bytes.len() <= KEY {
+        probe_long(&long_key(bytes), bytes.len())
+    } else {
+        None
+    };
+    entry.map(|entry| entry.mark)
 }
 
 /// Whether `bytes` end in `'s` or `S`, straight or curly: the only words the lexicon reads without
@@ -291,7 +339,7 @@ fn ends_in_possessive(bytes: &[u8]) -> bool {
 
 /// Whether the lexicon marks the word `text` dominant: see `lexicon::dominant`.
 pub(super) fn dominant(text: &str) -> bool {
-    find(text).is_some_and(|entry| entry.dominant)
+    find(text).is_some_and(|entry| entry.mark & mark::DOMINANT != 0)
 }
 
 #[cfg(test)]
@@ -346,17 +394,28 @@ mod tests {
     #[test]
     fn every_word_of_both_tables_reads_as_its_table_says() {
         let mut count = 0;
-        for (word, reading, dominant) in lexicon::entries() {
+        for (word, reading, bits) in lexicon::entries() {
             count += 1;
             let want = closed::lookup(word).unwrap_or(reading);
             assert_eq!(read(word), want, "{word}");
+            let dominant = bits & mark::DOMINANT != 0;
             assert_eq!(super::dominant(word), dominant, "{word}");
             assert_eq!(lexicon::dominant(word), dominant, "{word}");
+            // The table holds the lexicon's mark whole, whether or not a closed-class word has
+            // taken the reading.
+            assert_eq!(stem_mark(word), Some(bits), "{word}");
         }
         assert!(count > 70_000, "{count} words");
+        let in_lexicon: std::collections::HashSet<&str> =
+            lexicon::entries().map(|(word, _, _)| word).collect();
         for word in closed::words() {
             assert_eq!(Some(read(word)), closed::lookup(word), "{word}");
             assert_eq!(super::dominant(word), lexicon::dominant(word), "{word}");
+            // A word only the closed-class table has is no stem: the lexicon lacks it.
+            let bits = stem_mark(word).expect("a closed-class word is in the table");
+            if !in_lexicon.contains(word) {
+                assert_eq!(bits, 0, "{word}");
+            }
         }
     }
 

@@ -6,6 +6,3 @@ pub(super) static WEIGHTS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/wei
 
 /// The word table of both lexicons: see `table.rs`.
 pub(super) static WORDS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/words.bin"));
-
-/// The index of the open-class lexicon's lines: see `lexicon.rs`.
-pub(super) static LEXICON: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/lexicon.bin"));

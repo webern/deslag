@@ -2,8 +2,8 @@
 //! this file as its own `tag` module with `#[path]`, and the crate does not compile it.
 //!
 //! The files are the crate's own, so the tables are built with the code that reads them, and
-//! nothing else comes along: the script does not tag. The index of the lexicon's lines is empty
-//! here, because the script is what makes it, and only the builders of `build_tables.rs` are used.
+//! nothing else comes along: the script does not tag, and only the builders of `build_tables.rs`
+//! are used.
 
 #![allow(dead_code)]
 
@@ -19,8 +19,3 @@ mod lexicon;
 mod types;
 
 use types::{Confidence, Features, Reading, Tag, TagSet};
-
-/// What the crate embeds of the tables.
-mod built {
-    pub static LEXICON: &[u8] = &[];
-}

@@ -1,5 +1,5 @@
-//! Makes the tagger's tables when the crate builds: the weights of the learned stage, the word
-//! table of both lexicons, and the index of the open-class lexicon's lines.
+//! Makes the tagger's tables when the crate builds: the weights of the learned stage, and the word
+//! table of both lexicons.
 //!
 //! `build.rs` includes this file with `#[path]` and writes what it returns to `OUT_DIR`; the crate
 //! compiles it for its tests only, which hold what the build made to what it makes again, and to
@@ -8,12 +8,12 @@
 //! A table is built as it was when a run built it on its first word, and the answers are those it
 //! gave: the weights are parsed from `weights.txt` into rows, their cells and an open-addressing
 //! table of slots; the word table is the lexicon's words with the closed-class words put over
-//! them; the index is the hash table of the lexicon's lines. A file that is not what this build
-//! expects is a bug in the build, so each builder panics, and the build fails with its message.
+//! them. A file that is not what this build expects is a bug in the build, so each builder panics,
+//! and the build fails with its message.
 
 use super::layout::{
     BUCKET, HISTORIES, KEY, LEVELS, LONG_SLOT, PLACES, Piece, RECORD, SHORT, SHORT_SLOT,
-    WEIGHTS_MAGIC, hash_of, key_of, lexicon_hash, long_hash, long_key, short_hash, short_key,
+    WEIGHTS_MAGIC, hash_of, key_of, long_hash, long_key, short_hash, short_key,
 };
 use super::{Reading, closed, lexicon};
 
@@ -482,11 +482,12 @@ pub fn weights(text: &str) -> Vec<u8> {
     out
 }
 
-/// What a slot says of its word: its reading, and whether the lexicon marks it dominant.
+/// What a slot says of its word: its reading, and the lexicon's mark of it (see
+/// [`super::layout::mark`]), which is zero for a word only the closed-class table has.
 #[derive(Clone, Copy)]
 struct Entry {
     reading: Reading,
-    dominant: bool,
+    mark: u8,
 }
 
 /// What an empty slot holds, which no probe reads.
@@ -497,7 +498,7 @@ const NOTHING: Entry = Entry {
         confidence: super::Confidence::Unknown,
         kept: super::TagSet::EMPTY,
     },
-    dominant: false,
+    mark: 0,
 };
 
 /// A slot of the table of short words.
@@ -576,7 +577,7 @@ impl Table {
 /// Appends a slot's entry to `out`: the reading, the mark and the length.
 fn put_entry(out: &mut Vec<u8>, entry: Entry, len: u8) {
     out.extend_from_slice(&reading_bytes(entry.reading));
-    out.push(u8::from(entry.dominant));
+    out.push(entry.mark);
     out.push(len);
 }
 
@@ -585,7 +586,7 @@ fn put_entry(out: &mut Vec<u8>, entry: Entry, len: u8) {
 /// Room for a third as many slots again as words, at the least.
 pub fn words() -> Vec<u8> {
     let mut words: Vec<(&str, Entry)> = lexicon::entries()
-        .map(|(word, reading, dominant)| (word, Entry { reading, dominant }))
+        .map(|(word, reading, mark)| (word, Entry { reading, mark }))
         .collect();
     let size = |count: usize| (count * 4 / 3).max(2).next_power_of_two();
     let closed_short = closed::words().filter(|word| word.len() <= SHORT).count();
@@ -621,7 +622,7 @@ pub fn words() -> Vec<u8> {
             // The closed-class table changes the reading and not the mark.
             table.insert(word, |was| Entry {
                 reading,
-                dominant: was.dominant,
+                mark: was.mark,
             });
         }
     }
@@ -643,30 +644,5 @@ pub fn words() -> Vec<u8> {
     }
     debug_assert_eq!(SHORT_SLOT, 8 + READING + 2);
     debug_assert_eq!(LONG_SLOT, 24 + READING + 2);
-    out
-}
-
-/// The index of the lexicon's lines: a hash table of the offsets of the lines in the body, plus
-/// one, as `u32`, or zero where a slot is empty. Open addressing with linear probing. A line is
-/// about 12 bytes, so there are half as many slots again as words at the least, rounded up to a
-/// power of two so that a mask picks the slot.
-pub fn lexicon_index() -> Vec<u8> {
-    let text = lexicon::body();
-    let mut slots = vec![0u32; (text.len() / 8).next_power_of_two()];
-    let mask = slots.len() - 1;
-    let mut start = 0;
-    for line in text.split_inclusive('\n') {
-        let key = line.split('\t').next().unwrap_or(line);
-        let mut at = lexicon_hash(key) & mask;
-        while slots[at] != 0 {
-            at = (at + 1) & mask;
-        }
-        slots[at] = start as u32 + 1;
-        start += line.len();
-    }
-    let mut out = Vec::with_capacity(slots.len() * 4);
-    for slot in slots {
-        put_u32(&mut out, slot);
-    }
     out
 }

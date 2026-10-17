@@ -1,17 +1,17 @@
 //! The layout of the tables that `build.rs` writes, and the reads of them.
 //!
-//! The tagger needs three tables that were once parsed or built on a run's first word: the
-//! learned stage's weights, the word table of both lexicons, and the index of the open-class
-//! lexicon's lines. `build.rs` makes each when the crate builds, with [`super::build_tables`], and
-//! writes it as bytes to `OUT_DIR`; the crate holds the bytes with `include_bytes!` (see
-//! [`super::built`]) and reads them where they lie, so a run parses nothing. This module is what
-//! the two sides share: the sizes and places of a record, the hashes that choose its slot, and
-//! the reads. Every number is little-endian, whatever the machine that builds or runs.
+//! The tagger needs two tables that were once parsed or built on a run's first word: the learned
+//! stage's weights, and the word table of both lexicons. `build.rs` makes each when the crate
+//! builds, with [`super::build_tables`], and writes it as bytes to `OUT_DIR`; the crate holds the
+//! bytes with `include_bytes!` (see [`super::built`]) and reads them where they lie, so a run
+//! parses nothing. This module is what the two sides share: the sizes and places of a record, the
+//! hashes that choose its slot, and the reads. Every number is little-endian, whatever the machine
+//! that builds or runs.
 //!
 //! The reads are `#[inline(always)]` and index the bytes by hand: the tests run in debug, where a
 //! call to `u32::from_le_bytes` and a `try_into` cost more than the probe that wanted the number.
 
-use super::{Confidence, Features, Reading, Tag, TagSet, lexicon};
+use super::{Confidence, Features, Reading, Tag, TagSet};
 
 /// The `u16` at `at` of `bytes`.
 #[inline(always)]
@@ -199,16 +199,16 @@ pub(super) fn hash_of(template: u8, a: u16, b: u8, text: Piece) -> u64 {
 // ---------------------------------------------------------------------------------------------
 // The word table.
 
-/// The most bytes of a word the table holds: the lexicon's longest.
-pub(super) const KEY: usize = lexicon::LONGEST;
+/// The most bytes of a word the table holds: the lexicon's longest, which its generator enforces.
+pub(super) const KEY: usize = 24;
 
 /// The most bytes of a short word, which fits one `u64`.
 pub(super) const SHORT: usize = 8;
 
 const _: () = assert!(KEY > SHORT && KEY <= 3 * SHORT);
 
-/// The bytes of a slot of the table of short words: the key, the reading, whether the lexicon marks
-/// the word dominant, and its length, which is 0 in an empty slot.
+/// The bytes of a slot of the table of short words: the key, the reading, the lexicon's mark of the
+/// word (see [`mark`]), and its length, which is 0 in an empty slot.
 pub(super) const SHORT_SLOT: usize = 16;
 
 /// Four slots of the table of short words, a cache line, which a probe reads whole.
@@ -219,6 +219,22 @@ pub(super) const LONG_SLOT: usize = 32;
 
 /// The bytes the words' header takes: the count of short buckets and of long slots, as `u32`.
 pub(super) const WORDS_HEADER: usize = 8;
+
+/// The bits of the mark byte of a slot, which the lexicon sets and no other table does: the closed-class
+/// table changes a word's reading and leaves its mark.
+pub(super) mod mark {
+    /// The lexicon's counts back the word's best guess: see `lexicon::dominant`.
+    pub(in crate::tag) const DOMINANT: u8 = 1;
+    /// What a possessive `x's` the tables lack is read from, when the lexicon has `x`: the lexicon
+    /// lists it as a noun.
+    pub(in crate::tag) const NOUN: u8 = 2;
+    /// The lexicon lists it as a proper noun.
+    pub(in crate::tag) const PROPER: u8 = 4;
+    /// The lexicon ranks the proper noun before the noun, where it lists both.
+    pub(in crate::tag) const PROPER_FIRST: u8 = 8;
+    /// Its best guess is a noun, and plural.
+    pub(in crate::tag) const PLURAL: u8 = 16;
+}
 
 /// The reading held at `at`.
 #[inline(always)]
@@ -323,11 +339,12 @@ pub(super) fn long_hash(key: &[u64; 3], len: usize) -> usize {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The lexicon's index.
+// The code words.
 
-/// The FNV-1a hash of `word`, which takes a few steps for a short word. The table is fixed and its
-/// keys are ours, so nothing here needs a hash that resists a chosen input.
-pub(super) fn lexicon_hash(word: &str) -> usize {
+/// The FNV-1a hash of `word`, which takes a few steps for a short word. The table of the code
+/// words of a file is small and its keys are the file's own, so nothing here needs a hash that
+/// resists a chosen input.
+pub(super) fn word_hash(word: &str) -> usize {
     // A plain loop: a debug build runs an iterator's adapters as calls, for every byte.
     let bytes = word.as_bytes();
     let mut hash: u64 = 0xcbf2_9ce4_8422_2325;

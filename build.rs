@@ -7,9 +7,10 @@
 //!   removed or renamed rebuilds the crate.
 //! - The tagger's tables, as bytes that `include_bytes!` embeds and the tagger reads where they
 //!   lie, so that no run parses them: the weights of the learned stage from
-//!   `src/tag/weights.txt`, the word table of the closed-class table and the lexicon, and the
-//!   index of the lexicon's lines. `src/tag/build_tables.rs` makes them and `src/tag/layout.rs`
-//!   says what the bytes are; both are the crate's own source, included below.
+//!   `src/tag/weights.txt`, and the word table of the closed-class table and the lexicon, which
+//!   holds each word's reading and what a possessive is read from. `src/tag/build_tables.rs`
+//!   makes them and `src/tag/layout.rs` says what the bytes are; both are the crate's own source,
+//!   included below. The lexicon's text is read here and is not in the binary.
 
 use std::fmt::Write as _;
 use std::fs;
@@ -73,6 +74,4 @@ fn main() {
     )
     .expect("OUT_DIR is writable");
     fs::write(out.join("words.bin"), tag::build_tables::words()).expect("OUT_DIR is writable");
-    fs::write(out.join("lexicon.bin"), tag::build_tables::lexicon_index())
-        .expect("OUT_DIR is writable");
 }

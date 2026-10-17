@@ -28,14 +28,19 @@ cargo test ${CARGO_FLAGS:-} --profile "$profile" --workspace --all-features --no
     sed -E 's/.*"manifest_path":"([^"]*)".*"src_path":"([^"]*)".*"executable":"([^"]*)".*/\2	\1	\3/' \
         >"$logs/binaries"
 
+# Each binary's pid, name and log, by index, and the indices not yet reported. The poll below forks
+# nothing per binary: it visits every one on each pass.
+pids=()
+names=()
+logfiles=()
+pending=""
 start=$SECONDS
-jobs=""
 total=0
 : >"$logs/took"
 while IFS=$'\t' read -r src manifest exe; do
     name=${src#"$root"/}
     case "$skip" in *" $name "*) continue ;; esac
-    log="$logs/$(echo "$name" | tr / _).log"
+    log="$logs/${name//\//_}.log"
     (
         began=$SECONDS
         status=0
@@ -45,7 +50,10 @@ while IFS=$'\t' read -r src manifest exe; do
         mv "$log.tmp" "$log.done"
         exit "$status"
     ) &
-    jobs="$jobs $!:$name"
+    pids[total]=$!
+    names[total]=$name
+    logfiles[total]=$log
+    pending="$pending $total"
     total=$((total + 1))
 done <"$logs/binaries"
 
@@ -53,13 +61,12 @@ done <"$logs/binaries"
 # killed leaves no .done file; it counts as failed.
 failed=0
 count=0
-pending=$jobs
 while [ -n "$pending" ]; do
     waiting=""
-    for job in $pending; do
-        pid=${job%%:*}
-        name=${job#*:}
-        log="$logs/$(echo "$name" | tr / _).log"
+    for i in $pending; do
+        pid=${pids[i]}
+        name=${names[i]}
+        log=${logfiles[i]}
         alive=0
         kill -0 "$pid" 2>/dev/null && alive=1
         if [ -e "$log.done" ]; then
@@ -68,7 +75,7 @@ while [ -n "$pending" ]; do
             status=1
             secs="?"
         else
-            waiting="$waiting $job"
+            waiting="$waiting $i"
             continue
         fi
         wait "$pid" 2>/dev/null || true

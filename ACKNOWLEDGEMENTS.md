@@ -93,6 +93,8 @@ fix is a guess about prose; deslag instead fixes only where no guess is needed.
 
 Code was not ported, but we took two ideas: a fix is data on the finding, and only a fix that keeps
 what the author meant is made without asking, after which the files are checked again.
+`repo_commands` also takes from it the tracking of `cd` through a shell block, and silence when a
+`cd` cannot be followed.
 
 ## slop-lint
 

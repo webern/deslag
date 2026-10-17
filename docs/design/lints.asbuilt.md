@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-09
+updated: 2026-10-17
 subsystems:
   - lint
   - output
@@ -17,6 +17,7 @@ src/
     max_size_bytes.rs the size lint
     max_emphasis.rs   the emphasis lint
     repo_layout.rs    the layout lint
+    repo_commands/    the make target lint; shell.rs and makefile.rs read text and run nothing
     banned_chars.rs   the character lint and its groups
     banned_phrases.rs the phrase lint and its groups
     banned_phrases.toml the groups' phrases; see catalog.md
@@ -47,7 +48,10 @@ at the base, by `Change::base_text`, into a `Before`, or with no base returns `E
 `Change::commit` is the commit the base names.
 
 A lint keeps what it decides from the file alone in a function of the `Document`, such as
-`repo_layout::read`; what needs the settings or the disk is a thin layer over it.
+`repo_layout::read` and `repo_commands::read`; what needs the settings or the disk is a thin layer
+over it. The disk reaches a lint as a `Disk`: the file's directory, and the repo root when the run
+knows it, which `check_repo` and `fix` do and `check_file_at` does not. A lint reads the disk and
+never runs anything from a repo, so `repo_commands` reads Makefiles and runs no `make`.
 
 ## Marks
 

@@ -1,12 +1,12 @@
 ---
-updated: 2026-10-09
+updated: 2026-10-17
 subsystems:
   - tests
 max_size_bytes: 4096
 ---
 # The tests: as built
 
-The harnesses the tests share, and the data they read.
+The harnesses the tests share, and their data.
 
 ```
 tests/
@@ -31,8 +31,8 @@ lint's table to the schema, and runs them. `tests/frozen.rs`, `stamp.rs`, `updat
 
 ## Cases
 
-`tests/cases.rs` runs the cases. A case is a directory under `tests/cases/<lint>/`: a small repo,
-config included, written to show one behavior. The `.stderr` file beside it is exactly what `deslag
+A case is a directory under `tests/cases/<lint>/`: a small repo, config included, showing one
+behavior. The `.stderr` file beside it is exactly what `deslag
 check` prints in a fresh copy of it, with the temp root as `[ROOT]`; an empty one means the run
 must exit 0, any other 1, unless a `.exit` file holds the code, 2 where deslag cannot run.
 
@@ -43,31 +43,31 @@ runs on a commit of it with `--base HEAD`, the commit as `[BASE]`.
 ## The corpus
 
 `tests/corpus.rs` is end-to-end, and `tests/blobs.rs` checks the big tier under `make test-blobs`,
-which ends with the timing check (`analysis.asbuilt.md`); over budget it measures again, the fastest
-of six passes. A matrix on `core/` crosses configs, canonical locations, layouts and budgets,
-deriving what it expects from the bytes it placed.
+which ends with the timing check (`analysis.asbuilt.md`); over budget it measures again, fastest of
+six passes. A matrix on `core/` crosses configs, locations, layouts and budgets,
+deriving its expectations from the bytes placed.
 
 The whole corpus then runs in its real layout with fences read, under a budget, an emphasis limit,
 the default groups and density, and the binary must report what the library finds. Tokens and
 sentences must keep to their blocks, and each location found under the golden config must hold what
 it names.
 
-`make test-python` runs `scripts/blobstore/test_batches.py` against local git repositories, outside
+`make test-python` runs `scripts/blobstore/test_batches.py` on local git repositories, outside
 `test` and `ci`.
 
 ## The golden set
 
 The golden set pins what each lint finds on the corpus. `tests/golden.rs` runs `check_file` with
 `tests/golden/config.toml` (fences off) on each fixture alone in an empty directory, so
-`repo_layout` finds every path missing; a fixture with no section is left out, as is a lint that
-judges a change.
+`repo_layout` finds every path missing and `repo_commands` no Makefile: its file lists the fixtures
+that hold a claim. A fixture with no section is left out, as is a lint that judges a change.
 
 Each `tests/golden/<lint>.txt` holds the lint's settings, a tally, and each failing fixture with
 what its verdict compared. It fails on a difference, a lint with no table or file, a stray file, or
 a lint failing no fixture or all. `make fix-golden` rewrites the files.
 
 `tests/golden/tags.txt` is the tag stream of `tests/corpus/core/`, written by a second test in
-`tests/golden.rs`; `tag.asbuilt.md` describes it.
+`golden.rs`; `tag.asbuilt.md` describes it.
 
 ## The gates
 

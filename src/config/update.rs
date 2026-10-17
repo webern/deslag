@@ -530,7 +530,7 @@ mod tests {
         .expect("current");
         assert!(again.phrases.is_empty());
 
-        // With no `banned_phrases` table at all, no group is on anywhere.
+        // With no `banned_phrases` table, no group is on anywhere.
         let (dir, _) = repo(stamped);
         let none = update(
             dir.path(),
@@ -647,7 +647,7 @@ mod tests {
         assert_eq!(named, ["load-bearing"]);
 
         // An override that bans the phrase fires on its files before the move, and the section
-        // that allows it does not fire at all.
+        // that allows it does not fire.
         let banned_there = "[md.lints.banned_phrases]\nallow = [\"load-bearing\"]\n\
                             [[md.overrides]]\nglobs = [\"/a.md\"]\n\
                             lints.banned_phrases.ban = { \"load-bearing\" = \"x\" }\n\

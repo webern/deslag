@@ -12,6 +12,7 @@ pub mod density;
 pub mod list_growth;
 pub mod max_emphasis;
 pub mod max_size_bytes;
+pub mod not_at_all;
 pub mod pattern;
 pub mod repo_layout;
 pub mod verbs_no_nouns;
@@ -54,11 +55,13 @@ pub enum Lint {
     ListGrowth,
     /// `verbs_no_nouns`: a verb negated through its object, as in `bakes no cakes`.
     VerbsNoNouns,
+    /// `not_at_all`: a negation padded with "at all", as in `does not parse at all`.
+    NotAtAll,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 8] = [
+    pub const ALL: [Lint; 9] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -67,6 +70,7 @@ impl Lint {
         Lint::Density,
         Lint::ListGrowth,
         Lint::VerbsNoNouns,
+        Lint::NotAtAll,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -80,6 +84,7 @@ impl Lint {
             Lint::Density => "density",
             Lint::ListGrowth => "list_growth",
             Lint::VerbsNoNouns => "verbs_no_nouns",
+            Lint::NotAtAll => "not_at_all",
         }
     }
 
@@ -94,7 +99,8 @@ impl Lint {
             | Lint::BannedChars
             | Lint::BannedPhrases
             | Lint::Density
-            | Lint::VerbsNoNouns => false,
+            | Lint::VerbsNoNouns
+            | Lint::NotAtAll => false,
         }
     }
 
@@ -103,7 +109,7 @@ impl Lint {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
             Lint::ListGrowth => Need::Structure,
-            Lint::VerbsNoNouns => Need::Sentences,
+            Lint::VerbsNoNouns | Lint::NotAtAll => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
             }
@@ -128,6 +134,9 @@ impl Lint {
             Lint::VerbsNoNouns => {
                 "A sentence must negate its verb, not its object, as in \"does not bake cakes\"."
             }
+            Lint::NotAtAll => {
+                "A negation must not be padded with \"at all\", as in \"does not parse at all\"."
+            }
         }
     }
 
@@ -143,6 +152,7 @@ impl Lint {
             Lint::Density => "with dense text",
             Lint::ListGrowth => "with more list items than at the base",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
+            Lint::NotAtAll => "with negations padded with \"at all\"",
         }
     }
 }
@@ -205,6 +215,8 @@ pub enum Violation {
     ListGrowth(list_growth::Over),
     /// The file negates a verb through its object.
     VerbsNoNouns(verbs_no_nouns::Over),
+    /// The file pads a negation with "at all".
+    NotAtAll(not_at_all::Over),
 }
 
 impl Violation {
@@ -219,6 +231,7 @@ impl Violation {
             Violation::Density(_) => Lint::Density,
             Violation::ListGrowth(_) => Lint::ListGrowth,
             Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
+            Violation::NotAtAll(_) => Lint::NotAtAll,
         }
     }
 
@@ -234,6 +247,7 @@ impl Violation {
             Violation::Density(over) => density::marks(over),
             Violation::ListGrowth(over) => list_growth::marks(over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
+            Violation::NotAtAll(over) => not_at_all::marks(over),
         }
     }
 
@@ -251,6 +265,7 @@ impl Violation {
             Violation::Density(_) => Vec::new(),
             Violation::ListGrowth(_) => Vec::new(),
             Violation::VerbsNoNouns(_) => Vec::new(),
+            Violation::NotAtAll(_) => Vec::new(),
         }
     }
 
@@ -276,6 +291,7 @@ impl Violation {
             Violation::VerbsNoNouns(over) => {
                 verbs_no_nouns::retain(over, keep).map(Violation::VerbsNoNouns)
             }
+            Violation::NotAtAll(over) => not_at_all::retain(over, keep).map(Violation::NotAtAll),
         }
     }
 }
@@ -343,6 +359,7 @@ impl Finding {
             Violation::Density(over) => density::render(&self.path, over),
             Violation::ListGrowth(over) => list_growth::render(&self.path, over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
+            Violation::NotAtAll(over) => not_at_all::render(&self.path, over),
         }
     }
 
@@ -775,6 +792,9 @@ pub(crate) fn check_text<'a>(
             }
             Lint::VerbsNoNouns => verbs_no_nouns::check(&document, lints.verbs_no_nouns.as_ref())
                 .map(Violation::VerbsNoNouns),
+            Lint::NotAtAll => {
+                not_at_all::check(&document, lints.not_at_all.as_ref()).map(Violation::NotAtAll)
+            }
         };
         findings.extend(violation.map(|violation| Finding {
             path: relative.to_string(),

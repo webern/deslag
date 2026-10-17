@@ -4,7 +4,7 @@
 # lock into .crates/c/vendor. Its own `[workspace]` keeps cargo from taking it for a member of the
 # root workspace.
 #
-# Dependabot watches the root only, so this lock stays put until someone changes it. A change is a
+# Dependabot watches only the root and tools/sweep, so this lock stays put until changed. A change is a
 # deliberate pull request: bump a pin, run `cargo update --manifest-path scripts/crates/c/Cargo.toml`,
 # and `make test-scanners` proves the scanner again on the new files. The crates are pinned with `=`
 # so that nothing moves unseen.

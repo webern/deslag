@@ -13,7 +13,7 @@ use std::ops::Range;
 
 use deslag::document::{Document, TokenKind};
 use deslag::lint::pattern::{Item, Pattern};
-use deslag::lint::verbs_no_nouns;
+use deslag::lint::{not_at_all, verbs_no_nouns};
 use serde::Serialize;
 
 use crate::candidates::{COMMON_WORDS, masked};
@@ -76,6 +76,7 @@ pub const CANDIDATES: &[(&str, Pattern)] = &[
 pub const SHIPPED: &[(&str, Pattern)] = &[
     ("verbs_no_nouns_s", verbs_no_nouns::PATTERN),
     ("verbs_no_nouns_forms", verbs_no_nouns::FORMS),
+    ("not_at_all", not_at_all::PATTERN),
 ];
 
 /// How many examples a label shows for a pattern, each from a different repository.

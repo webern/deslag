@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nsrc/lib.rs has 3 negations padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"not ship a binary at all\"\n  line 3: \"no runtime dependencies at all\"\n  line 6: \"no configuration at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 19,
+          "end": 43,
+          "line": 1,
+          "column": 20,
+          "end_line": 1,
+          "end_column": 44,
+          "note": "\"not ship a binary at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 57,
+          "end": 87,
+          "line": 3,
+          "column": 12,
+          "end_line": 3,
+          "end_column": 42,
+          "note": "\"no runtime dependencies at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 132,
+          "end": 155,
+          "line": 6,
+          "column": 25,
+          "end_line": 6,
+          "end_column": 48,
+          "note": "\"no configuration at all\""
+        }
+      ]
+    }
+  ]
+}

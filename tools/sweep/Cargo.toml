@@ -16,17 +16,19 @@ license = "MIT"
 publish = false
 
 [dependencies]
-ra-ap-rustc_lexer = "0.176.0"
+ra-ap-rustc_lexer = "0.177.0"
 sha2 = "0.11.0"
 tree-sitter = "0.27.0"
 tree-sitter-c = "0.24.2"
 tree-sitter-cpp = "0.23.4"
-# ra-ap-rustc_lexer 0.176.0 asserts at compile time that unicode-ident and unicode-properties
-# 0.1.4 carry the same Unicode version, and unicode-ident 1.0.25 and later carry a newer one, so it
-# fails to build (E0080) against them. Drop this line when unicode-properties publishes a release
-# with that Unicode version. It is a manifest line, not `cargo update --precise`, so that a
-# `cargo update` cannot undo it. Dependabot does not watch this directory, since it would propose
-# lifting the pin every week.
+# ra-ap-rustc_lexer, in 0.176.0 and 0.177.0, asserts at compile time that unicode-ident and
+# unicode-properties 0.1.4 carry the same Unicode version, and unicode-ident 1.0.25 and later carry
+# a newer one, so it fails to build (E0080) against them. Drop this line when unicode-properties
+# publishes a release with that Unicode version. It is a manifest line, not `cargo update
+# --precise`, so that a `cargo update` cannot undo it. Dependabot watches this directory, but
+# .github/dependabot.yml ignores unicode-ident, so that it does not propose lifting this pin every
+# week. A new ra-ap-rustc_lexer reaches the grouped pull request, and CI shows whether it builds
+# against the pin.
 unicode-ident = "=1.0.24"
 
 # The sweep runs as a debug build in CI, and the cc crate then compiles the parsers at -O0. One run

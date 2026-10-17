@@ -4,8 +4,8 @@ keys = ["path", "lint", "quote", "reason"]
 summary = "Exempts one sentence of a TOML comment from a lint, with a reason"
 onboarding = '''
 `[[toml.allow]]` exempts one sentence of a comment in a TOML file from one lint. An entry holds
-`path`, `lint`, `quote` and `reason`. `lint` is `banned_chars`, `banned_phrases` or
-`verbs_no_nouns`; the other lints are refused when the config loads, each with the setting that
+`path`, `lint`, `quote` and `reason`. `lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns`
+or `not_at_all`; the other lints are refused when the config loads, each with the setting that
 bounds it.
 
 `quote` is the sentence as the comment holds it, and the file must hold it once. Spaces, tabs and

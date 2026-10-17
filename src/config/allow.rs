@@ -41,8 +41,8 @@ pub(super) struct AllowFile {
     /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
     /// tab, CR or LF.
     path: String,
-    /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases` and
-    /// `verbs_no_nouns`. One entry names one lint.
+    /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases`,
+    /// `verbs_no_nouns` and `not_at_all`. One entry names one lint.
     #[schemars(schema_with = "lint_schema")]
     lint: String,
     /// The sentence, as the file holds it, without the `>` that a block quote starts its lines
@@ -79,7 +79,7 @@ fn lint_schema(_: &mut SchemaGenerator) -> Schema {
 /// "which does not take an entry:".
 fn takes(lint: Lint) -> Result<(), &'static str> {
     match lint {
-        Lint::BannedChars | Lint::BannedPhrases | Lint::VerbsNoNouns => Ok(()),
+        Lint::BannedChars | Lint::BannedPhrases | Lint::VerbsNoNouns | Lint::NotAtAll => Ok(()),
         Lint::MaxSizeBytes => Err(
             "its finding is the whole file. Set the budget in an override of the file: \
              `lints.max_size_bytes.value`",
@@ -461,7 +461,12 @@ mod tests {
     fn a_quote_may_hold_any_character_but_a_control_character_other_than_a_tab_cr_or_lf() {
         // The sentence the quote must equal holds the character anyway, whatever the lint, and
         // whether or not the config bans it.
-        for lint in ["banned_chars", "banned_phrases", "verbs_no_nouns"] {
+        for lint in [
+            "banned_chars",
+            "banned_phrases",
+            "verbs_no_nouns",
+            "not_at_all",
+        ] {
             for ch in [
                 '\u{200B}',
                 '\u{200C}',
@@ -600,7 +605,8 @@ mod tests {
         let said = refused(&entry("a.md", "banned_char", "A.", "R."));
         assert!(
             said.contains("\"banned_char\", which is no lint")
-                && said.contains("`banned_chars`, `banned_phrases` or `verbs_no_nouns`"),
+                && said
+                    .contains("`banned_chars`, `banned_phrases`, `verbs_no_nouns` or `not_at_all`"),
             "{said}"
         );
     }
@@ -633,7 +639,12 @@ mod tests {
             .clone();
         assert_eq!(
             lint,
-            serde_json::json!(["banned_chars", "banned_phrases", "verbs_no_nouns"])
+            serde_json::json!([
+                "banned_chars",
+                "banned_phrases",
+                "verbs_no_nouns",
+                "not_at_all"
+            ])
         );
     }
 

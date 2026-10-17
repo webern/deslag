@@ -62,6 +62,9 @@ pub struct Lints {
     /// That a sentence negates its verb, not its object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub verbs_no_nouns: Option<VerbsNoNouns>,
+    /// That a negation drops `at all`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub not_at_all: Option<NotAtAll>,
 }
 
 impl Lints {
@@ -76,6 +79,7 @@ impl Lints {
             Lint::Density => self.density.is_some(),
             Lint::ListGrowth => self.list_growth.is_some(),
             Lint::VerbsNoNouns => self.verbs_no_nouns.is_some(),
+            Lint::NotAtAll => self.not_at_all.is_some(),
         }
     }
 
@@ -166,6 +170,7 @@ impl Merge for Lints {
         self.density.merge(&over.density);
         self.list_growth.merge(&over.list_growth);
         self.verbs_no_nouns.merge(&over.verbs_no_nouns);
+        self.not_at_all.merge(&over.not_at_all);
     }
 }
 
@@ -753,6 +758,27 @@ pub struct VerbsNoNouns {
 }
 
 impl Merge for VerbsNoNouns {
+    fn merge(&mut self, over: &Self) {
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.not_at_all`: a file fails when a sentence pads a negation with "at all", as in `does not
+/// parse at all`.
+///
+/// The table itself turns the check on. The negators it reads and the places it excuses are the
+/// lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NotAtAll {
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl Merge for NotAtAll {
     fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);

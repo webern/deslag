@@ -1,0 +1,10 @@
+ERROR: deslag detected negations padded with "at all"!
+
+README.md has 1 negation padded with "at all".
+
+Delete "at all" in README.md.
+
+The places:
+  line 3: "never needs setup at all"
+
+deslag: 1 of 1 files with negations padded with "at all".

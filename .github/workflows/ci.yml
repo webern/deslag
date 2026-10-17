@@ -45,13 +45,13 @@ jobs:
       # Installs what rust-toolchain.toml names and caches the registry and target dir. Only main saves
       # the cache.
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
         with:
           cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # A prebuilt binary; cargo install would take minutes.
       - name: Install typos
-        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
         with:
           tool: typos
 
@@ -81,12 +81,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
         with:
           cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
-        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
         with:
           tool: typos
 
@@ -110,12 +110,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
         with:
           cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
-        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
         with:
           tool: typos
 
@@ -152,12 +152,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
         with:
           cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
-        uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
         with:
           tool: typos
 

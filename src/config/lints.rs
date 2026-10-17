@@ -65,6 +65,9 @@ pub struct Lints {
     /// That a negation drops `at all`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub not_at_all: Option<NotAtAll>,
+    /// That a file does not count what the repository holds, as in `63 tests`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub counted_inventory: Option<CountedInventory>,
 }
 
 impl Lints {
@@ -80,6 +83,7 @@ impl Lints {
             Lint::ListGrowth => self.list_growth.is_some(),
             Lint::VerbsNoNouns => self.verbs_no_nouns.is_some(),
             Lint::NotAtAll => self.not_at_all.is_some(),
+            Lint::CountedInventory => self.counted_inventory.is_some(),
         }
     }
 
@@ -171,6 +175,7 @@ impl Merge for Lints {
         self.list_growth.merge(&over.list_growth);
         self.verbs_no_nouns.merge(&over.verbs_no_nouns);
         self.not_at_all.merge(&over.not_at_all);
+        self.counted_inventory.merge(&over.counted_inventory);
     }
 }
 
@@ -779,6 +784,26 @@ pub struct NotAtAll {
 }
 
 impl Merge for NotAtAll {
+    fn merge(&mut self, over: &Self) {
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.counted_inventory`: a file fails when it counts what the repository holds, as in `63
+/// tests`: a number in digits, 2 or more, before a noun such as `tests` or `files`.
+///
+/// The table itself turns the check on. The nouns it counts are the lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct CountedInventory {
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    pub message: Option<String>,
+}
+
+impl Merge for CountedInventory {
     fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);

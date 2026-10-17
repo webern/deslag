@@ -8,6 +8,7 @@
 pub mod allow;
 pub mod banned_chars;
 pub mod banned_phrases;
+pub mod counted_inventory;
 pub mod density;
 pub mod list_growth;
 pub mod max_emphasis;
@@ -57,11 +58,13 @@ pub enum Lint {
     VerbsNoNouns,
     /// `not_at_all`: a negation padded with "at all", as in `does not parse at all`.
     NotAtAll,
+    /// `counted_inventory`: a count of what the repository holds, as in `63 tests`.
+    CountedInventory,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 9] = [
+    pub const ALL: [Lint; 10] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -71,6 +74,7 @@ impl Lint {
         Lint::ListGrowth,
         Lint::VerbsNoNouns,
         Lint::NotAtAll,
+        Lint::CountedInventory,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -85,6 +89,7 @@ impl Lint {
             Lint::ListGrowth => "list_growth",
             Lint::VerbsNoNouns => "verbs_no_nouns",
             Lint::NotAtAll => "not_at_all",
+            Lint::CountedInventory => "counted_inventory",
         }
     }
 
@@ -100,7 +105,8 @@ impl Lint {
             | Lint::BannedPhrases
             | Lint::Density
             | Lint::VerbsNoNouns
-            | Lint::NotAtAll => false,
+            | Lint::NotAtAll
+            | Lint::CountedInventory => false,
         }
     }
 
@@ -109,7 +115,7 @@ impl Lint {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
             Lint::ListGrowth => Need::Structure,
-            Lint::VerbsNoNouns | Lint::NotAtAll => Need::Sentences,
+            Lint::VerbsNoNouns | Lint::NotAtAll | Lint::CountedInventory => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
             }
@@ -137,6 +143,10 @@ impl Lint {
             Lint::NotAtAll => {
                 "A negation must not be padded with \"at all\", as in \"does not parse at all\"."
             }
+            Lint::CountedInventory => {
+                "A file must not count what the repository holds, as in \"63 tests\", which goes \
+                 stale."
+            }
         }
     }
 
@@ -153,6 +163,7 @@ impl Lint {
             Lint::ListGrowth => "with more list items than at the base",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
             Lint::NotAtAll => "with negations padded with \"at all\"",
+            Lint::CountedInventory => "with counts that go stale",
         }
     }
 }
@@ -217,6 +228,8 @@ pub enum Violation {
     VerbsNoNouns(verbs_no_nouns::Over),
     /// The file pads a negation with "at all".
     NotAtAll(not_at_all::Over),
+    /// The file counts what the repository holds.
+    CountedInventory(counted_inventory::Over),
 }
 
 impl Violation {
@@ -232,6 +245,7 @@ impl Violation {
             Violation::ListGrowth(_) => Lint::ListGrowth,
             Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
             Violation::NotAtAll(_) => Lint::NotAtAll,
+            Violation::CountedInventory(_) => Lint::CountedInventory,
         }
     }
 
@@ -248,6 +262,7 @@ impl Violation {
             Violation::ListGrowth(over) => list_growth::marks(over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
             Violation::NotAtAll(over) => not_at_all::marks(over),
+            Violation::CountedInventory(over) => counted_inventory::marks(over),
         }
     }
 
@@ -266,6 +281,8 @@ impl Violation {
             Violation::ListGrowth(_) => Vec::new(),
             Violation::VerbsNoNouns(_) => Vec::new(),
             Violation::NotAtAll(_) => Vec::new(),
+            // The rewrite needs the name of the thing, which the lint does not have.
+            Violation::CountedInventory(_) => Vec::new(),
         }
     }
 
@@ -292,6 +309,9 @@ impl Violation {
                 verbs_no_nouns::retain(over, keep).map(Violation::VerbsNoNouns)
             }
             Violation::NotAtAll(over) => not_at_all::retain(over, keep).map(Violation::NotAtAll),
+            Violation::CountedInventory(over) => {
+                counted_inventory::retain(over, keep).map(Violation::CountedInventory)
+            }
         }
     }
 }
@@ -360,6 +380,7 @@ impl Finding {
             Violation::ListGrowth(over) => list_growth::render(&self.path, over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
             Violation::NotAtAll(over) => not_at_all::render(&self.path, over),
+            Violation::CountedInventory(over) => counted_inventory::render(&self.path, over),
         }
     }
 
@@ -794,6 +815,10 @@ pub(crate) fn check_text<'a>(
                 .map(Violation::VerbsNoNouns),
             Lint::NotAtAll => {
                 not_at_all::check(&document, lints.not_at_all.as_ref()).map(Violation::NotAtAll)
+            }
+            Lint::CountedInventory => {
+                counted_inventory::check(&document, lints.counted_inventory.as_ref())
+                    .map(Violation::CountedInventory)
             }
         };
         findings.extend(violation.map(|violation| Finding {

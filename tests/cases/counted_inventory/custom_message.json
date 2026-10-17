@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "counted_inventory",
+      "report": "ERROR: deslag detected counts that go stale!\n\nREADME.md has 1 count.\n\nName the thing in README.md.\n\nThe places:\n  line 3: \"63 tests\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 21,
+          "end": 29,
+          "line": 3,
+          "column": 12,
+          "end_line": 3,
+          "end_column": 20,
+          "note": "\"63 tests\""
+        }
+      ]
+    }
+  ]
+}

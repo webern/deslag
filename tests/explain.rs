@@ -118,6 +118,8 @@ spaces = true
 
 # banned_phrases: off
 
+# counted_inventory: off
+
 [density]
 max_item_chars = 300
 max_paragraph_chars = 500
@@ -153,6 +155,8 @@ min_entries = 5
 
 # banned_phrases: off
 
+# counted_inventory: off
+
 [density]
 max_item_chars = 300
 max_paragraph_chars = 500
@@ -185,6 +189,8 @@ min_entries = 5
 # banned_chars: off
 
 # banned_phrases: off
+
+# counted_inventory: off
 
 [density]
 max_item_chars = 300
@@ -275,6 +281,8 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          # banned_chars: off\n\
          \n\
          # banned_phrases: off\n\
+         \n\
+         # counted_inventory: off\n\
          \n\
          # density: off\n\
          \n\

@@ -79,6 +79,7 @@ fn section(lint: Lint) -> &'static str {
         Lint::ListGrowth => include_str!("lints/list_growth.md"),
         Lint::VerbsNoNouns => include_str!("lints/verbs_no_nouns.md"),
         Lint::NotAtAll => include_str!("lints/not_at_all.md"),
+        Lint::CountedInventory => include_str!("lints/counted_inventory.md"),
     }
 }
 

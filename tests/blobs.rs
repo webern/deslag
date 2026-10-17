@@ -22,9 +22,11 @@ use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
 use deslag::change::{File, Hunk, Status};
 use deslag::changelog::Version;
-use deslag::config::{BannedPhrases, ListGrowth, NotAtAll, PhraseGroups, VerbsNoNouns};
+use deslag::config::{
+    BannedPhrases, CountedInventory, ListGrowth, NotAtAll, PhraseGroups, VerbsNoNouns,
+};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
-use deslag::lint::{Before, list_growth, not_at_all, verbs_no_nouns};
+use deslag::lint::{Before, counted_inventory, list_growth, not_at_all, verbs_no_nouns};
 use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.
@@ -748,12 +750,15 @@ struct Found<'f> {
     negates: bool,
     /// Whether it holds the construction of `not_at_all`.
     pads: bool,
+    /// Whether it holds the construction of `counted_inventory`.
+    counts: bool,
 }
 
 /// Asserts the claim of the taste lint `lint`, for which `holds` says whether a fixture holds its
 /// construction: over the English fixtures, `llm` files hold it at least 3 times as often as
-/// `human` files, and at most 3.5% of `human` files do.
-fn assert_taste_claim(lint: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> bool) {
+/// `human` files, and at most 3.5% of `human` files do. `excuse` names what a human would excuse
+/// more of if the claim failed.
+fn assert_taste_claim(lint: &str, excuse: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> bool) {
     // Their words are English; `no` and `at` are words of other languages too.
     let flagged = |category: &str| {
         let english = held.iter().filter(|held| {
@@ -770,13 +775,13 @@ fn assert_taste_claim(lint: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> b
         "{lint}: llm files hold it less than 3 times as often as human files (human {human} of \
          {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. The \
          tagger or the image moved the lint's findings: a human decides whether to excuse more \
-         idioms or to change the claim in the lint's doc comment."
+         {excuse} or to change the claim in the lint's doc comment."
     );
     assert!(
         human * 1000 <= 35 * humans,
         "{lint}: more than 3.5% of human files hold it (human {human} of {humans}, llm {llm} of \
          {llms}). The lint's claim no longer holds on this image. The tagger or the image moved \
-         the lint's findings: a human decides whether to excuse more idioms or to change the \
+         the lint's findings: a human decides whether to excuse more {excuse} or to change the \
          claim in the lint's doc comment."
     );
 }
@@ -788,9 +793,9 @@ fn assert_taste_claim(lint: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> b
 /// A file whose label is its publisher's statement of the model (`corpus.md` section 3) counts as
 /// `llm`, as it does in every measure by default.
 ///
-/// The same pass, which reads each file once, checks the claim that `verbs_no_nouns` and
-/// `not_at_all` each make: `llm` files hold it at least 3 times as often as `human` files, and at
-/// most 3.5% of `human` files do.
+/// The same pass, which reads each file once, checks the claim that `verbs_no_nouns`, `not_at_all`
+/// and `counted_inventory` each make: `llm` files hold it at least 3 times as often as `human`
+/// files, and at most 3.5% of `human` files do.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -815,6 +820,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
         .collect();
     let negating = VerbsNoNouns::default();
     let padding = NotAtAll::default();
+    let counting = CountedInventory::default();
     // What each fixture holds, each fixture read once, over every core.
     let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
     let held: Vec<Found<'_>> = std::thread::scope(|scope| {
@@ -824,6 +830,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
                 let settings = &settings;
                 let negating = &negating;
                 let padding = &padding;
+                let counting = &counting;
                 scope.spawn(move || {
                     chunk
                         .iter()
@@ -845,6 +852,8 @@ fn the_catalogue_counts_are_the_big_tiers() {
                                 entries,
                                 negates: verbs_no_nouns::check(&document, Some(negating)).is_some(),
                                 pads: not_at_all::check(&document, Some(padding)).is_some(),
+                                counts: counted_inventory::check(&document, Some(counting))
+                                    .is_some(),
                             }
                         })
                         .collect::<Vec<_>>()
@@ -873,8 +882,9 @@ fn the_catalogue_counts_are_the_big_tiers() {
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
 
-    assert_taste_claim("verbs_no_nouns", &held, |held| held.negates);
-    assert_taste_claim("not_at_all", &held, |held| held.pads);
+    assert_taste_claim("verbs_no_nouns", "idioms", &held, |held| held.negates);
+    assert_taste_claim("not_at_all", "idioms", &held, |held| held.pads);
+    assert_taste_claim("counted_inventory", "nouns", &held, |held| held.counts);
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

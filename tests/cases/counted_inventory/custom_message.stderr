@@ -1,0 +1,10 @@
+ERROR: deslag detected counts that go stale!
+
+README.md has 1 count.
+
+Name the thing in README.md.
+
+The places:
+  line 3: "63 tests"
+
+deslag: 1 of 1 files with counts that go stale.

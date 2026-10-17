@@ -42,7 +42,7 @@ pub(super) struct AllowFile {
     /// tab, CR or LF.
     path: String,
     /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases`,
-    /// `verbs_no_nouns` and `not_at_all`. One entry names one lint.
+    /// `verbs_no_nouns`, `not_at_all` and `counted_inventory`. One entry names one lint.
     #[schemars(schema_with = "lint_schema")]
     lint: String,
     /// The sentence, as the file holds it, without the `>` that a block quote starts its lines
@@ -79,7 +79,11 @@ fn lint_schema(_: &mut SchemaGenerator) -> Schema {
 /// "which does not take an entry:".
 fn takes(lint: Lint) -> Result<(), &'static str> {
     match lint {
-        Lint::BannedChars | Lint::BannedPhrases | Lint::VerbsNoNouns | Lint::NotAtAll => Ok(()),
+        Lint::BannedChars
+        | Lint::BannedPhrases
+        | Lint::VerbsNoNouns
+        | Lint::NotAtAll
+        | Lint::CountedInventory => Ok(()),
         Lint::MaxSizeBytes => Err(
             "its finding is the whole file. Set the budget in an override of the file: \
              `lints.max_size_bytes.value`",
@@ -605,8 +609,10 @@ mod tests {
         let said = refused(&entry("a.md", "banned_char", "A.", "R."));
         assert!(
             said.contains("\"banned_char\", which is no lint")
-                && said
-                    .contains("`banned_chars`, `banned_phrases`, `verbs_no_nouns` or `not_at_all`"),
+                && said.contains(
+                    "`banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all` or \
+                     `counted_inventory`"
+                ),
             "{said}"
         );
     }
@@ -643,7 +649,8 @@ mod tests {
                 "banned_chars",
                 "banned_phrases",
                 "verbs_no_nouns",
-                "not_at_all"
+                "not_at_all",
+                "counted_inventory"
             ])
         );
     }

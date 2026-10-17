@@ -6,5 +6,5 @@ covers the files its globs match. The same tables go under `[rust.lints]`, `[cpp
 `[toml.lints]`, where deslag refuses a lint that needs the whole file, or Markdown blocks that the
 comments of the section do not have. Put the tables you choose in the config.
 
-`verbs_no_nouns`, `not_at_all` and `repo_layout` are house style: offer them to the human, and
-never assume them.
+`verbs_no_nouns`, `not_at_all`, `counted_inventory` and `repo_layout` are house style: offer them
+to the human, and never assume them.

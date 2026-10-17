@@ -4,8 +4,9 @@ keys = ["path", "lint", "quote", "reason"]
 summary = "Exempts one sentence of a Markdown file from a lint, with a reason"
 onboarding = '''
 `[[md.allow]]` exempts one sentence of a Markdown file from one lint. An entry holds `path`, `lint`,
-`quote` and `reason`. `lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns` or `not_at_all`;
-the other lints are refused when the config loads, each with the setting that bounds it.
+`quote` and `reason`. `lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all` or
+`counted_inventory`; the other lints are refused when the config loads, each with the setting that
+bounds it.
 
 `quote` is the sentence as the file holds it, and the file must hold it once. Spaces, tabs and line
 breaks fold to one space; the rest must match. The lint must find something in the sentence. An

@@ -5,10 +5,11 @@
 //! comes from the config. Each item matches one token by its kind, its folded text, its folded
 //! text ending, or not ending, in a given string, its folded text being or not being in a listed
 //! set, whether it starts a listed pair of words, the part of speech the tagger read for it, a
-//! feature the tagger read, or its origin, where the word comes from. Items combine: one of several,
-//! or none of them. An item may be optional, a gap skips a bounded number of tokens, and a run
-//! skips a bounded number that each match an item. A check on the token before or after a place
-//! adds nothing to the match. A match never leaves its sentence, and neither does a check.
+//! feature the tagger read, or its origin, where the word comes from. A number is told by its value,
+//! and a token by the words or the capital letter before it. Items combine: one of several, or none
+//! of them. An item may be optional, a gap skips a bounded number of tokens, and a run skips a
+//! bounded number that each match an item. A check on the token before or after a place adds nothing
+//! to the match. A match never leaves its sentence, and neither does a check.
 //!
 //! [`Pattern::find`] tries each start position in turn and reports the first that matches, with
 //! the longest match from there, then resumes after it: leftmost first, then longest, and no two
@@ -56,6 +57,16 @@ pub enum Item {
     /// It reads the token's `origin`, which is not a confidence on a set of tags: a lint that
     /// skips code, or asks for a name to be in a code span, wants this and not [`Item::Tag`].
     Origin(Origin),
+    /// A number of digits alone, such as `63` or `1,075`, whose value is at least this. A decimal,
+    /// a version and a number joined to a word or a `.` before it, as in `foo.5`, are no integer.
+    Integer(u64),
+    /// A token that does not come right after any of these rows of words, folded, in its sentence:
+    /// `&[&["at", "most"]]` skips the `200` of "at most 200 lines".
+    NotAfter(&'static [&'static [&'static str]]),
+    /// A token that does not come right after a word that starts with a capital letter, unless that
+    /// word is the first of its sentence: it skips the `3` of "Python 3 files" and keeps the
+    /// `3` of "Run 3 tests".
+    NotAfterCapitalised,
     /// Every one of these items matches the one token.
     All(&'static [Item]),
     /// At least one of these items matches the one token.
@@ -182,6 +193,25 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
                 .is_some_and(|reading| reading.features.contains(*feature))
         }
         Item::Origin(origin) => word && token.origin == *origin,
+        Item::Integer(least) => {
+            token.kind == TokenKind::Number
+                && integer(&token.text).is_some_and(|value| value >= *least)
+                && !joined_before(tokens, at)
+        }
+        Item::NotAfter(rows) => !rows.iter().any(|row| {
+            at >= row.len()
+                && folded[at - row.len()..at]
+                    .iter()
+                    .zip(*row)
+                    .all(|(a, b)| a == b)
+        }),
+        Item::NotAfterCapitalised => {
+            at < 2
+                || tokens.get(at - 1).is_none_or(|before| {
+                    before.kind != TokenKind::Word
+                        || !before.text.chars().next().is_some_and(char::is_uppercase)
+                })
+        }
         Item::All(items) => items.iter().all(|item| one(item, tokens, folded, at)),
         Item::Any(items) => items.iter().any(|item| one(item, tokens, folded, at)),
         Item::Not(inner) => !one(inner, tokens, folded, at),
@@ -192,6 +222,39 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         | Item::NotFollowedBy(_)
         | Item::NotPrecededBy(_) => false,
     }
+}
+
+/// The value of `text`, a number made of digits alone, grouped by commas in threes if at all, as in
+/// `63` or `1,075`; one too long for a `u64` is `u64::MAX`. `None` for anything else, such as
+/// `3.14` or `1,2`.
+fn integer(text: &str) -> Option<u64> {
+    let digits = |group: &str| !group.is_empty() && group.bytes().all(|byte| byte.is_ascii_digit());
+    let mut groups = text.split(',');
+    let first = groups.next().filter(|first| digits(first))?;
+    let rest: Vec<&str> = groups.collect();
+    if !rest.is_empty() && (first.len() > 3 || rest.iter().any(|g| g.len() != 3 || !digits(g))) {
+        return None;
+    }
+    let value = std::iter::once(first)
+        .chain(rest)
+        .flat_map(str::bytes)
+        .fold(0u64, |value, digit| {
+            value
+                .saturating_mul(10)
+                .saturating_add(u64::from(digit - b'0'))
+        });
+    Some(value)
+}
+
+/// Whether token `at` touches a word or a `.` right before it, as the `5` of `foo.5` does.
+fn joined_before(tokens: &[Token<'_>], at: usize) -> bool {
+    at.checked_sub(1)
+        .and_then(|before| tokens.get(before))
+        .is_some_and(|before| {
+            before.range.end == tokens[at].range.start
+                && (before.kind == TokenKind::Word
+                    || before.kind == TokenKind::Punctuation && before.text == ".")
+        })
 }
 
 #[cfg(test)]
@@ -641,5 +704,74 @@ mod tests {
             items: &[Item::Tag(TagSet::of(Tag::Noun), Confidence::Unknown)],
         };
         assert!(texts(&NOUN, &document).is_empty());
+    }
+
+    #[test]
+    fn an_integer_item_needs_digits_alone_and_a_value_at_least_the_level() {
+        const P: Pattern = Pattern {
+            items: &[Item::Integer(2), Item::Literal("files")],
+        };
+        let two = |text| found(&P, text);
+        assert_eq!(two("It has 63 files."), ["63 files"]);
+        assert_eq!(two("It has 1,075 files."), ["1,075 files"]);
+        assert_eq!(two("It has 002 files."), ["002 files"]);
+        assert!(two("It has 1 files.").is_empty());
+        assert!(two("It has 0 files.").is_empty());
+        assert!(two("It has 01 files.").is_empty());
+        assert!(two("It has 3.5 files.").is_empty());
+        assert!(two("It has 1.2.3 files.").is_empty());
+        assert!(two("It has 1,2 files.").is_empty());
+        assert!(two("It has 1,07 files.").is_empty());
+        assert!(two("It has v2 files.").is_empty());
+        assert!(two("It has x86 files.").is_empty());
+        assert!(two("It has 10x files.").is_empty());
+        assert!(two("See foo.5 files.").is_empty());
+        assert!(two("It has nine files.").is_empty());
+        assert_eq!(
+            found(&P, "It has 99999999999999999999999 files."),
+            ["99999999999999999999999 files"]
+        );
+    }
+
+    #[test]
+    fn a_not_after_item_skips_a_token_after_a_row_of_words() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::All(&[
+                    Item::Kind(TokenKind::Number),
+                    Item::NotAfter(&[&["at", "most"], &["per"]]),
+                ]),
+                Item::Literal("files"),
+            ],
+        };
+        assert_eq!(found(&P, "It has 4 files."), ["4 files"]);
+        assert!(found(&P, "It has at most 4 files.").is_empty());
+        assert!(found(&P, "It has AT Most 4 files.").is_empty());
+        assert!(found(&P, "It reads 4 files per 5 files.").len() == 1);
+        // The row has to be whole, and in the same sentence.
+        assert_eq!(
+            found(&P, "Most 4 files. At 4 files."),
+            ["4 files", "4 files"]
+        );
+        assert_eq!(found(&P, "It is at most. 4 files."), ["4 files"]);
+        assert_eq!(found(&P, "4 files."), ["4 files"]);
+    }
+
+    #[test]
+    fn a_not_after_capitalised_item_keeps_a_token_after_the_first_word() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::All(&[Item::Integer(2), Item::NotAfterCapitalised]),
+                Item::Literal("files"),
+            ],
+        };
+        assert_eq!(found(&P, "Run 3 files."), ["3 files"]);
+        assert_eq!(found(&P, "It runs 3 files."), ["3 files"]);
+        assert_eq!(found(&P, "3 files."), ["3 files"]);
+        assert!(found(&P, "It runs Python 3 files.").is_empty());
+        assert!(found(&P, "It runs NASA 3 files.").is_empty());
+        assert_eq!(found(&P, "It runs the 3 files."), ["3 files"]);
+        // A code span is no word.
+        assert_eq!(found(&P, "It runs `Python` 3 files."), ["3 files"]);
     }
 }

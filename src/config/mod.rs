@@ -60,8 +60,8 @@ use crate::changelog::{BASELINE, Version, current_release, parse_release};
 
 pub use allow::Allow;
 pub use lints::{
-    BannedChars, BannedPhrases, CharGroups, Density, Lints, ListGrowth, MaxEmphasis, MaxSizeBytes,
-    Merge, NotAtAll, PhraseGroups, RepoLayout, VerbsNoNouns,
+    BannedChars, BannedPhrases, CharGroups, CountedInventory, Density, Lints, ListGrowth,
+    MaxEmphasis, MaxSizeBytes, Merge, NotAtAll, PhraseGroups, RepoLayout, VerbsNoNouns,
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{

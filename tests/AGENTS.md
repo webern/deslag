@@ -10,6 +10,7 @@ tests/
   corpus/    <- quoted Markdown, each fixture with a JSON sidecar
   golden/    <- what each lint finds in the corpus, and the tag stream of corpus/core
   gold/      <- the tagger's gold sets, its gates and its frozen word lists
+  labels/    <- corpus numbers marked count or not, for counted_inventory
   common/    <- the temp repo and corpus helpers the test files share
   cases.rs   <- runs the cases
   corpus.rs  <- the corpus, end to end

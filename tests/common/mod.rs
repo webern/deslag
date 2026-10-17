@@ -8,6 +8,7 @@ pub mod corpus;
 pub mod fixture;
 pub mod frozen;
 pub mod git;
+pub mod labels;
 pub mod schema;
 
 use std::path::{Path, PathBuf};

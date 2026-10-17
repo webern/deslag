@@ -16,16 +16,18 @@ use std::path::Path;
 
 use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
+use common::labels;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::changelog::Version;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis};
-use deslag::config::{NotAtAll, RepoLayout, VerbsNoNouns};
+use deslag::config::{CountedInventory, NotAtAll, RepoLayout, VerbsNoNouns};
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{
-    Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, verbs_no_nouns,
+    Lint, banned_chars, banned_phrases, counted_inventory, density, max_emphasis, not_at_all,
+    verbs_no_nouns,
 };
 use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
 
@@ -1242,6 +1244,40 @@ fn not_at_all_flags_llm_text_more_than_human_text() {
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by not_at_all: human {human}, llm {llm}, mixed {mixed}");
     assert!(llm > human, "human {human}, llm {llm}");
+}
+
+/// The numbers of `tests/labels/counted_inventory.tsv` that were sampled from the tree. A reader who
+/// held only the lint's definition marked each a count or not. The lint still finds each it found
+/// that the reader called a count, and finds no more of those called not counts than it did.
+#[test]
+fn counted_inventory_still_finds_the_numbers_a_reader_called_counts() {
+    labels::hold("tree", corpus());
+}
+
+/// What the lint found in the tree's English files when its rules were frozen: it flags at least
+/// that many `human` files and that many `llm` files. It claims no ratio between them: it counts
+/// true or not, and people write counts too.
+#[test]
+fn counted_inventory_flags_at_least_the_files_it_did() {
+    const HUMAN: usize = 24;
+    const LLM: usize = 115;
+    let settings = CountedInventory::default();
+    let flagged = |category: &str| {
+        corpus()
+            .iter()
+            .filter(|fixture| fixture.category == category)
+            // The lint reads English.
+            .filter(|fixture| fixture.sidecar.content.natural_language == "en")
+            .filter(|fixture| {
+                let text = String::from_utf8_lossy(&fixture.bytes);
+                counted_inventory::check(&Document::markdown(&text), Some(&settings)).is_some()
+            })
+            .count()
+    };
+    let (human, llm) = (flagged("human"), flagged("llm"));
+    eprintln!("flagged by counted_inventory: human {human}, llm {llm}");
+    assert!(human >= HUMAN, "human {human}, where it was {HUMAN}");
+    assert!(llm >= LLM, "llm {llm}, where it was {LLM}");
 }
 
 /// The number of `llm/` fixtures each phrase group must match, so that no group is dead weight.

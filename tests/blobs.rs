@@ -19,12 +19,15 @@ use common::Repo;
 use common::blobs::{Entry, Exclusion, Tried, load_blobs};
 use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
+use common::labels;
 use deslag::Document;
 use deslag::change::{File, Hunk, Status};
 use deslag::changelog::Version;
-use deslag::config::{BannedPhrases, ListGrowth, NotAtAll, PhraseGroups, VerbsNoNouns};
+use deslag::config::{
+    BannedPhrases, CountedInventory, ListGrowth, NotAtAll, PhraseGroups, VerbsNoNouns,
+};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
-use deslag::lint::{Before, list_growth, not_at_all, verbs_no_nouns};
+use deslag::lint::{Before, counted_inventory, list_growth, not_at_all, verbs_no_nouns};
 use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.
@@ -739,6 +742,16 @@ fn list_growth_finds_what_its_golden_file_says() {
     );
 }
 
+/// The numbers of `tests/labels/counted_inventory.tsv` that were sampled from the big tier. A
+/// reader who held only the lint's definition marked each a count or not. The lint still finds each
+/// it found that the reader called a count, and finds no more of those called not counts than it
+/// did.
+#[test]
+#[ignore = "needs make fetch-blobs"]
+fn counted_inventory_still_finds_the_numbers_a_reader_called_counts() {
+    labels::hold("big", &load_blobs(Path::new(FETCHED)));
+}
+
 /// What one fixture of the big tier holds, from the one pass that reads it.
 struct Found<'f> {
     fixture: &'f Fixture,
@@ -748,6 +761,8 @@ struct Found<'f> {
     negates: bool,
     /// Whether it holds the construction of `not_at_all`.
     pads: bool,
+    /// Whether it holds the construction of `counted_inventory`.
+    counts: bool,
 }
 
 /// Asserts the claim of the taste lint `lint`, for which `holds` says whether a fixture holds its
@@ -790,7 +805,8 @@ fn assert_taste_claim(lint: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> b
 ///
 /// The same pass, which reads each file once, checks the claim that `verbs_no_nouns` and
 /// `not_at_all` each make: `llm` files hold it at least 3 times as often as `human` files, and at
-/// most 3.5% of `human` files do.
+/// most 3.5% of `human` files do. It checks that `counted_inventory` still flags as many English
+/// `human` and `llm` files as it did when its rules were frozen, and claims no ratio between them.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -815,6 +831,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
         .collect();
     let negating = VerbsNoNouns::default();
     let padding = NotAtAll::default();
+    let counting = CountedInventory::default();
     // What each fixture holds, each fixture read once, over every core.
     let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
     let held: Vec<Found<'_>> = std::thread::scope(|scope| {
@@ -824,6 +841,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
                 let settings = &settings;
                 let negating = &negating;
                 let padding = &padding;
+                let counting = &counting;
                 scope.spawn(move || {
                     chunk
                         .iter()
@@ -845,6 +863,8 @@ fn the_catalogue_counts_are_the_big_tiers() {
                                 entries,
                                 negates: verbs_no_nouns::check(&document, Some(negating)).is_some(),
                                 pads: not_at_all::check(&document, Some(padding)).is_some(),
+                                counts: counted_inventory::check(&document, Some(counting))
+                                    .is_some(),
                             }
                         })
                         .collect::<Vec<_>>()
@@ -875,6 +895,28 @@ fn the_catalogue_counts_are_the_big_tiers() {
 
     assert_taste_claim("verbs_no_nouns", &held, |held| held.negates);
     assert_taste_claim("not_at_all", &held, |held| held.pads);
+
+    // What `counted_inventory` flagged in the English files when its rules were frozen, on the
+    // image `blobs.lock` pins. It counts true or not, and people write counts too: no ratio.
+    const COUNTING_HUMAN: usize = 687;
+    const COUNTING_LLM: usize = 2132;
+    let counting = |category: &str| {
+        held.iter()
+            .filter(|held| {
+                held.fixture.category == category
+                    && held.fixture.sidecar.content.natural_language == "en"
+            })
+            .filter(|held| held.counts)
+            .count()
+    };
+    let (human, llm) = (counting("human"), counting("llm"));
+    eprintln!("flagged by counted_inventory: human {human}, llm {llm}");
+    assert!(
+        human >= COUNTING_HUMAN && llm >= COUNTING_LLM,
+        "counted_inventory: human {human} of {COUNTING_HUMAN}, llm {llm} of {COUNTING_LLM}. It \
+         flags fewer files than when its rules were frozen. The tagger or a rule moved its \
+         findings: a human decides whether the loss is wanted."
+    );
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

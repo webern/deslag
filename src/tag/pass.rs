@@ -92,53 +92,77 @@ impl View<'_, '_> {
     /// The tag of the word at `at` when it is the only one possible there, which is what a rule
     /// may lean on in a neighbour. `None` for a word with more than one tag possible, and for a
     /// token that is no word.
+    #[inline(always)]
     pub(super) fn settled(&self, at: usize) -> Option<Tag> {
-        self.reading(at)
-            .filter(|reading| reading.possible().len() == 1)
-            .map(|reading| reading.tag)
+        match self.tokens[at].reading {
+            Some(reading) if reading.possible().len() == 1 => Some(reading.tag),
+            _ => None,
+        }
     }
 
     /// The best guess of the word at `at` when an earlier rule or a table committed to it: `Sure`
     /// or `Likely`. This is what a rule may lean on in a neighbour at `Likely`, as step 4 allows:
     /// the neighbour's own rule chose, so its guess does not wait on a tag still open. `None` for a
     /// word at `Unsure` or `Unknown`, and for a token that is no word.
+    #[inline(always)]
     pub(super) fn decided(&self, at: usize) -> Option<Tag> {
-        self.reading(at)
-            .filter(|reading| reading.confidence.committed())
-            .map(|reading| reading.tag)
+        match self.tokens[at].reading {
+            Some(reading) if reading.confidence.committed() => Some(reading.tag),
+            _ => None,
+        }
     }
 
     /// Whether the word at `at` is read and every tag possible there is in `tags`. A rule whose
     /// decision is the same for each of those tags does not lean on which of them is right, so it
     /// may use this where it may not use an ambiguous neighbour: a word that can be nothing but a
     /// verb or an auxiliary settles that it is not a noun, though not which of the two it is.
+    #[inline(always)]
     pub(super) fn within(&self, at: usize, tags: TagSet) -> bool {
-        self.reading(at).is_some_and(|reading| {
-            let possible = reading.possible();
-            !possible.is_empty() && possible.intersection(tags) == possible
-        })
+        match self.tokens[at].reading {
+            Some(reading) => {
+                let possible = reading.possible();
+                !possible.is_empty() && possible.intersection(tags) == possible
+            }
+            None => false,
+        }
     }
 
     /// The text of the token at `at` if it is a word.
+    #[inline(always)]
     pub(super) fn text_of_word(&self, at: usize) -> Option<&str> {
-        (self.kind(at) == TokenKind::Word).then(|| self.text(at))
+        if matches!(self.tokens[at].kind, TokenKind::Word) {
+            Some(&self.tokens[at].text)
+        } else {
+            None
+        }
     }
 
     /// The index of the token after `at`, if there is one.
+    #[inline(always)]
     pub(super) fn token_after(&self, at: usize) -> Option<usize> {
-        (at + 1 < self.len()).then_some(at + 1)
+        if at + 1 < self.tokens.len() {
+            Some(at + 1)
+        } else {
+            None
+        }
     }
 
     /// The index of the word right after `at`: the next token, if it is a word.
+    #[inline(always)]
     pub(super) fn next_word(&self, at: usize) -> Option<usize> {
-        self.token_after(at)
-            .filter(|next| self.kind(*next) == TokenKind::Word)
+        if at + 1 < self.tokens.len() && matches!(self.tokens[at + 1].kind, TokenKind::Word) {
+            Some(at + 1)
+        } else {
+            None
+        }
     }
 
     /// Whether the word right after `at` is read and every tag possible there is in `tags`.
     pub(super) fn next_within(&self, at: usize, tags: TagSet) -> bool {
-        self.next_word(at)
-            .is_some_and(|next| self.within(next, tags))
+        match self.next_word(at) {
+            Some(next) => self.within(next, tags),
+            None => false,
+        }
     }
 
     /// Makes the word at `at` `Sure` when `tag` is the one tag the tables give it, it is `Unsure`,

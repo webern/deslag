@@ -133,7 +133,7 @@ fn normal<'t>(weights: &Weights, token: &'t Token<'_>, arena: &mut String) -> No
     };
     // Only a character past ASCII needs the ranges of the digit tables.
     let digit = if lead < 0x80 {
-        lead.is_ascii_digit()
+        lead.wrapping_sub(b'0') < 10
     } else {
         form.chars().next().is_some_and(|c| weights.is_digit(c))
     };
@@ -145,13 +145,21 @@ fn normal<'t>(weights: &Weights, token: &'t Token<'_>, arena: &mut String) -> No
         });
     }
     let start = arena.len();
-    if form.is_ascii() {
-        let bytes = form.as_bytes();
-        let mut at = 0;
-        while at < bytes.len() && !bytes[at].is_ascii_uppercase() {
-            at += 1;
+    // One pass over the bytes says whether the form is ASCII and whether it has a capital.
+    let bytes = form.as_bytes();
+    let (mut ascii, mut upper) = (true, false);
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        if byte >= 0x80 {
+            ascii = false;
+            break;
         }
-        if at == bytes.len() {
+        upper |= byte.wrapping_sub(b'A') < 26;
+        at += 1;
+    }
+    if ascii {
+        if !upper {
             return Norm::Text(form);
         }
         arena.push_str(form);
@@ -189,30 +197,37 @@ fn is_year(weights: &Weights, form: &str) -> bool {
 /// other character as it is, and a run of one kind as one.
 fn shape(weights: &Weights, form: &str, out: &mut String) {
     out.clear();
-    if form.is_ascii() {
-        let bytes = form.as_bytes();
-        // No ASCII byte is 0xff, so it says no kind came before.
-        let mut last = 0xff;
-        let mut at = 0;
-        while at < bytes.len() {
-            let byte = bytes[at];
-            let kind = if byte.is_ascii_uppercase() {
-                b'X'
-            } else if byte.is_ascii_lowercase() {
-                b'x'
-            } else if byte.is_ascii_digit() {
-                b'd'
-            } else {
-                byte
-            };
-            if kind != last {
-                out.push(char::from(kind));
-                last = kind;
-            }
-            at += 1;
+    let bytes = form.as_bytes();
+    // No ASCII byte is 0xff, so it says no kind came before.
+    let mut last = 0xff;
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        if byte >= 0x80 {
+            // Past ASCII, the character tables say the kind of each character.
+            out.clear();
+            shape_of_characters(weights, form, out);
+            return;
         }
-        return;
+        let kind = if byte.wrapping_sub(b'A') < 26 {
+            b'X'
+        } else if byte.wrapping_sub(b'a') < 26 {
+            b'x'
+        } else if byte.wrapping_sub(b'0') < 10 {
+            b'd'
+        } else {
+            byte
+        };
+        if kind != last {
+            out.push(char::from(kind));
+            last = kind;
+        }
+        at += 1;
     }
+}
+
+/// [`shape`] of a form that has a character past ASCII.
+fn shape_of_characters(weights: &Weights, form: &str, out: &mut String) {
     let mut last = None;
     for c in form.chars() {
         let kind = if c.is_uppercase() {

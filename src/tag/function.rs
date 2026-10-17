@@ -33,7 +33,7 @@
 //! none of them.
 
 use super::pass::View;
-use super::{Tag, TagSet};
+use super::{Tag, TagSet, is_one_of, same_word};
 use crate::document::TokenKind;
 
 const AUX_VERB: TagSet = TagSet::of(Tag::Auxiliary).with(Tag::Verb);
@@ -47,49 +47,47 @@ const DEMONSTRATIVES: &[&str] = &["this", "these", "those", "which", "what"];
 
 /// Runs the pass over one sentence.
 pub(super) fn run(view: &mut View<'_, '_>) {
-    for at in 0..view.len() {
-        let Some(reading) = view.reading(at) else {
-            continue;
-        };
-        let possible = reading.possible();
-        let has = |tags: &[Tag]| tags.iter().all(|tag| possible.contains(*tag));
-        // The tags come first: they are a few bit tests, and the text of most words is never read.
-        let verbal = has(&[Tag::Auxiliary, Tag::Verb]);
-        let pronoun_or_determiner = has(&[Tag::Pronoun, Tag::Determiner]);
-        let pronoun_or_conjunction = has(&[Tag::Pronoun, Tag::Conjunction]);
-        let preposition_like = is_preposition(possible);
-        let modal_like = possible.contains(Tag::Auxiliary) && possible.len() > 1;
-        if !(verbal
-            || modal_like
-            || pronoun_or_determiner
-            || pronoun_or_conjunction
-            || preposition_like)
-        {
-            continue;
+    let mut at = 0;
+    while at < view.len() {
+        if let Some(reading) = view.reading(at) {
+            let possible = reading.possible();
+            // The tags come first: they are a few bit tests, and the text of most words is never
+            // read.
+            let verbal = possible.contains(Tag::Auxiliary) && possible.contains(Tag::Verb);
+            let pronoun_or_determiner =
+                possible.contains(Tag::Pronoun) && possible.contains(Tag::Determiner);
+            let pronoun_or_conjunction =
+                possible.contains(Tag::Pronoun) && possible.contains(Tag::Conjunction);
+            let preposition_like = is_preposition(possible);
+            let modal_like = possible.contains(Tag::Auxiliary) && possible.len() > 1;
+            if verbal
+                || modal_like
+                || pronoun_or_determiner
+                || pronoun_or_conjunction
+                || preposition_like
+            {
+                let text = view.text(at);
+                let choice = if verbal && is_one_of(text, BE_FORMS) {
+                    be(view, at)
+                } else if possible.contains(Tag::Auxiliary) && is_one_of(text, AMBIGUOUS_MODALS) {
+                    modal(view, at)
+                } else if verbal && is_one_of(text, HAVE_DO_FORMS) {
+                    have_do(view, at)
+                } else if pronoun_or_determiner && is_one_of(text, DEMONSTRATIVES) {
+                    demonstrative(view, at)
+                } else if pronoun_or_conjunction && same_word(text, "that") {
+                    view.next_within(at, AUX_VERB).then_some(Tag::Pronoun)
+                } else if preposition_like && !same_word(text, "to") && !same_word(text, "about") {
+                    preposition(view, at)
+                } else {
+                    None
+                };
+                if let Some(tag) = choice {
+                    view.narrow(at, possible, tag);
+                }
+            }
         }
-        let text = view.text(at);
-        let is = |list: &[&str]| list.iter().any(|word| text.eq_ignore_ascii_case(word));
-        let choice = if verbal && is(BE_FORMS) {
-            be(view, at)
-        } else if possible.contains(Tag::Auxiliary) && is(AMBIGUOUS_MODALS) {
-            modal(view, at)
-        } else if verbal && is(HAVE_DO_FORMS) {
-            have_do(view, at)
-        } else if pronoun_or_determiner && is(DEMONSTRATIVES) {
-            demonstrative(view, at)
-        } else if pronoun_or_conjunction && text.eq_ignore_ascii_case("that") {
-            view.next_within(at, AUX_VERB).then_some(Tag::Pronoun)
-        } else if preposition_like
-            && !text.eq_ignore_ascii_case("to")
-            && !text.eq_ignore_ascii_case("about")
-        {
-            preposition(view, at)
-        } else {
-            None
-        };
-        if let Some(tag) = choice {
-            view.narrow(at, possible, tag);
-        }
+        at += 1;
     }
 }
 
@@ -98,13 +96,12 @@ pub(super) fn run(view: &mut View<'_, '_>) {
 fn be(view: &View<'_, '_>, at: usize) -> Option<Tag> {
     let before_there = view
         .next_word(at)
-        .is_some_and(|next| view.text(next).eq_ignore_ascii_case("there"));
+        .is_some_and(|next| same_word(view.text(next), "there"));
     if before_there {
         return None;
     }
-    let after_there = at > 0
-        && view.kind(at - 1) == TokenKind::Word
-        && view.text(at - 1).eq_ignore_ascii_case("there");
+    let after_there =
+        at > 0 && view.kind(at - 1) == TokenKind::Word && same_word(view.text(at - 1), "there");
     Some(if after_there {
         Tag::Verb
     } else {
@@ -119,9 +116,7 @@ fn modal(view: &View<'_, '_>, at: usize) -> Option<Tag> {
         .filter(|before| view.kind(*before) == TokenKind::Word);
     let noun_context = before.is_some_and(|before| {
         view.within(before, TagSet::of(Tag::Determiner).with(Tag::Adjective))
-            || POSSESSIVES
-                .iter()
-                .any(|word| view.text(before).eq_ignore_ascii_case(word))
+            || is_one_of(view.text(before), POSSESSIVES)
     });
     (!noun_context).then_some(Tag::Auxiliary)
 }
@@ -130,7 +125,7 @@ fn have_do(view: &View<'_, '_>, at: usize) -> Option<Tag> {
     let next = view.next_word(at)?;
     match view.settled(next) {
         Some(Tag::Verb | Tag::Adverb) => return Some(Tag::Auxiliary),
-        Some(Tag::Particle) if view.text(next).eq_ignore_ascii_case("not") => {
+        Some(Tag::Particle) if same_word(view.text(next), "not") => {
             return Some(Tag::Auxiliary);
         }
         Some(Tag::Determiner) => return Some(Tag::Verb),

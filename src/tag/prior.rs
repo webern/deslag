@@ -38,7 +38,7 @@
 use super::pass::View;
 use crate::document::TokenKind;
 
-use super::{Confidence, Tag, TagSet};
+use super::{Confidence, Tag, TagSet, is_one_of};
 
 const DETERMINER: TagSet = TagSet::of(Tag::Determiner);
 const ADJECTIVE: TagSet = TagSet::of(Tag::Adjective);
@@ -55,18 +55,17 @@ const POSSESSIVES: &[&str] = &["my", "your", "his", "her", "its", "our", "their"
 /// Runs the pass over one sentence.
 pub(super) fn run(view: &mut View<'_, '_>) {
     let mut commits = Vec::new();
-    for at in 0..view.len() {
-        let Some(reading) = view.reading(at) else {
-            continue;
-        };
-        if reading.confidence != Confidence::Unsure
-            || super::starts_upper(view.text(at))
-            || !agrees(view, at, reading.tag)
-            || !is_dominant(view.text(at))
+    let mut at = 0;
+    while at < view.len() {
+        if let Some(reading) = view.reading(at)
+            && matches!(reading.confidence, Confidence::Unsure)
+            && !super::starts_upper(view.text(at))
+            && agrees(view, at, reading.tag)
+            && is_dominant(view.text(at))
         {
-            continue;
+            commits.push((at, reading.tag, reading.possible()));
         }
-        commits.push((at, reading.tag, reading.possible()));
+        at += 1;
     }
     for (at, tag, possible) in commits {
         if possible.len() == 1 {
@@ -96,9 +95,14 @@ impl Near {
         if view.kind(at) != TokenKind::Word {
             return None;
         }
-        view.reading(at).map(|reading| Near {
+        let reading = view.reading(at)?;
+        Some(Near {
             possible: reading.possible(),
-            decided: reading.confidence.committed().then_some(reading.tag),
+            decided: if reading.confidence.committed() {
+                Some(reading.tag)
+            } else {
+                None
+            },
         })
     }
 
@@ -135,13 +139,13 @@ fn agrees(view: &View<'_, '_>, at: usize, tag: Tag) -> bool {
 
 /// Whether the word right before `at` is a possessive.
 fn follows_a_possessive(view: &View<'_, '_>, at: usize) -> bool {
-    at.checked_sub(1)
-        .and_then(|before| view.text_of_word(before))
-        .is_some_and(|text| {
-            POSSESSIVES
-                .iter()
-                .any(|word| text.eq_ignore_ascii_case(word))
-        })
+    if at == 0 {
+        return false;
+    }
+    match view.text_of_word(at - 1) {
+        Some(text) => is_one_of(text, POSSESSIVES),
+        None => false,
+    }
 }
 
 #[cfg(test)]

@@ -41,7 +41,7 @@
 //! so the word is `Likely` and its other tags stay in `kept`.
 
 use super::pass::View;
-use super::{Confidence, Context, Tag, TagSet, starts_upper};
+use super::{Confidence, Context, Tag, TagSet, has_lower_case, starts_upper};
 use crate::document::TokenKind;
 
 /// The tags a capitalised word keeps: those of a word that is a noun, a name or the adjective
@@ -61,34 +61,55 @@ pub(super) fn run(view: &mut View<'_, '_>) {
     if !matches!(view.context(), Context::Prose | Context::ListItem) || title_cased(view) {
         return;
     }
-    for at in 1..view.len() {
-        if view.kind(at) != TokenKind::Word
-            || !is_capitalised(view.text(at))
-            || !follows_a_word_or_comma(view, at)
-        {
-            continue;
-        }
-        let Some(reading) = view.reading(at) else {
-            continue;
-        };
-        if reading.possible().contains(Tag::ProperNoun)
-            && (reading.confidence == Confidence::Unknown || reading.tag == Tag::ProperNoun)
+    // Plain loops here and in the passes below: a debug build runs a range's iterator, and every
+    // adapter after it, as calls, for each token of each sentence.
+    let mut at = 1;
+    while at < view.len() {
+        if matches!(view.kind(at), TokenKind::Word)
+            && is_capitalised(view.text(at))
+            && follows_a_word_or_comma(view, at)
+            && let Some(reading) = view.reading(at)
+            && reading.possible().contains(Tag::ProperNoun)
+            && (matches!(reading.confidence, Confidence::Unknown) || reading.tag == Tag::ProperNoun)
         {
             view.narrow(at, KEPT, Tag::ProperNoun);
         }
+        at += 1;
     }
 }
 
 /// The word without a possessive `'s` after it, straight or curly.
 fn stem(text: &str) -> &str {
+    // Both suffixes end in a lower-case `s`.
+    if text.as_bytes().last() != Some(&b's') {
+        return text;
+    }
     text.strip_suffix("'s")
         .or_else(|| text.strip_suffix("\u{2019}s"))
         .unwrap_or(text)
 }
 
-/// How many letters `text` has.
-fn letters(text: &str) -> usize {
-    text.chars().filter(|c| c.is_alphabetic()).count()
+/// Whether `text` has at least `LONG` letters.
+fn is_long(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    let mut letters = 0;
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        if byte >= 0x80 {
+            // A letter past ASCII asks the character tables.
+            return text.chars().filter(|c| c.is_alphabetic()).count() >= LONG;
+        }
+        // A letter is the same in either case when the bit of its case is set.
+        if (byte | 0x20).wrapping_sub(b'a') < 26 {
+            letters += 1;
+            if letters >= LONG {
+                return true;
+            }
+        }
+        at += 1;
+    }
+    false
 }
 
 /// Whether the word starts with a capital and has a lower-case letter too, which a lone capital
@@ -100,10 +121,12 @@ fn is_capitalised(text: &str) -> bool {
         return false;
     }
     let stem = stem(text);
-    let acronym_plural = stem
-        .strip_suffix('s')
-        .is_some_and(|body| body.chars().count() > 1 && !body.chars().any(char::is_lowercase));
-    starts_upper(stem) && stem.chars().any(char::is_lowercase) && !acronym_plural
+    // The plural of an acronym ends in a lower-case `s`, after two characters or more of capitals.
+    let acronym_plural = stem.as_bytes().last() == Some(&b's')
+        && stem
+            .strip_suffix('s')
+            .is_some_and(|body| body.chars().count() > 1 && !body.chars().any(char::is_lowercase));
+    starts_upper(stem) && has_lower_case(stem) && !acronym_plural
 }
 
 /// Whether the token before the one at `at` is a word or a comma, the places where a capital is
@@ -121,17 +144,24 @@ fn follows_a_word_or_comma(view: &View<'_, '_>, at: usize) -> bool {
 /// [`LONG`] letters or more, not counting the first word, which a capital begins whatever it says,
 /// and every one of them starts with a capital.
 fn title_cased(view: &View<'_, '_>) -> bool {
-    let mut words = (0..view.len()).filter(|at| view.kind(*at) == TokenKind::Word);
-    words.next();
+    let mut first = true;
     let mut long = 0;
-    for at in words {
-        let text = view.text(at);
-        if letters(text) >= LONG {
-            if !starts_upper(text) {
-                return false;
+    let mut at = 0;
+    while at < view.len() {
+        if matches!(view.kind(at), TokenKind::Word) {
+            if first {
+                first = false;
+            } else {
+                let text = view.text(at);
+                if is_long(text) {
+                    if !starts_upper(text) {
+                        return false;
+                    }
+                    long += 1;
+                }
             }
-            long += 1;
         }
+        at += 1;
     }
     long >= FEWEST_LONG
 }

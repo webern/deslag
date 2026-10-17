@@ -108,6 +108,7 @@ impl TagSet {
     }
 
     /// The tags in both this set and `other`.
+    #[inline(always)]
     pub const fn intersection(self, other: TagSet) -> TagSet {
         TagSet(self.0 & other.0)
     }
@@ -119,11 +120,13 @@ impl TagSet {
     }
 
     /// How many tags are in it.
+    #[inline(always)]
     pub fn len(self) -> usize {
         self.0.count_ones() as usize
     }
 
     /// Whether it holds none.
+    #[inline(always)]
     pub fn is_empty(self) -> bool {
         self.0 == 0
     }
@@ -309,6 +312,7 @@ impl Confidence {
     }
 
     /// Its place in [`Confidence::ALL`].
+    #[inline(always)]
     pub fn index(self) -> usize {
         self as usize
     }
@@ -321,6 +325,7 @@ impl Confidence {
     }
 
     /// Whether it is `Sure` or `Likely`: the levels a tagger commits to, and that accuracy counts.
+    #[inline(always)]
     pub fn committed(self) -> bool {
         matches!(self, Confidence::Sure | Confidence::Likely)
     }
@@ -352,6 +357,7 @@ pub struct Reading {
 
 impl Reading {
     /// The tags not ruled out: `kept` and the best guess.
+    #[inline(always)]
     pub fn possible(&self) -> TagSet {
         self.kept.with(self.tag)
     }

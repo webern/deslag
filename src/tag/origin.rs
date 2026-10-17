@@ -493,8 +493,10 @@ pub fn origins_seen(tokens: &[Token<'_>], seen: &CodeWords<'_>) -> Vec<Origin> {
 /// The origin of a word that the cues gave `origin`, in a file that writes the words `seen`
 /// in code: [`Origin::Seen`] if no cue marked it, `seen` holds it, and the tables lack it, which
 /// `confidence` gives, its reading by the tables and shape alone; otherwise `origin`. The tagger
-/// and [`origins_seen`] both ask it, so they agree. `confidence` is called last, as only a word of
-/// `seen` needs it.
+/// and [`origins_seen`] both ask it, so they agree. It asks the cheapest question first: the
+/// origin, then whether `seen` holds this word, which is none at once for a file with no code words
+/// and otherwise hashes the text. `confidence` is called last, as only a word of `seen` needs it.
+#[inline]
 pub(super) fn seen_or(
     origin: Origin,
     text: &str,

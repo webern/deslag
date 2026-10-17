@@ -59,18 +59,17 @@ const DETERMINER_OR_PRONOUN: TagSet = TagSet::of(Tag::Determiner).with(Tag::Pron
 /// Runs the pass over one sentence.
 pub(super) fn run(view: &mut View<'_, '_>) {
     let mut commits = Vec::new();
-    for at in 0..view.len() {
-        let Some(reading) = view.reading(at) else {
-            continue;
-        };
-        if reading.confidence != Confidence::Unsure
-            || reading.possible().len() != 1
-            || super::starts_upper(view.text(at))
-            || !agrees(view, at, reading.tag)
+    let mut at = 0;
+    while at < view.len() {
+        if let Some(reading) = view.reading(at)
+            && matches!(reading.confidence, Confidence::Unsure)
+            && reading.possible().len() == 1
+            && !super::starts_upper(view.text(at))
+            && agrees(view, at, reading.tag)
         {
-            continue;
+            commits.push((at, reading.tag));
         }
-        commits.push((at, reading.tag));
+        at += 1;
     }
     for (at, tag) in commits {
         view.confirm(at, tag);

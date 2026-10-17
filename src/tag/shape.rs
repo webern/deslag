@@ -44,7 +44,7 @@
 //! 10. **Nothing else** is a singular noun that may be a verb or an adjective: the open class is
 //!     open, and a word that no table knows does not have a shape to say which.
 
-use super::{Confidence, Features, Reading, Tag, TagSet, starts_upper};
+use super::{Confidence, Features, Reading, Tag, TagSet, has_lower_case, starts_upper};
 
 /// What a rule says of a word: the best guess, its features, and the tags its shape allows, which
 /// include the best guess.
@@ -150,11 +150,41 @@ pub(super) fn guess(text: &str) -> Reading {
 }
 
 /// What the rules make of `text`.
+///
+/// Most words that reach it are letters alone, so those are read in one pass over their bytes,
+/// with plain loops: a debug build runs an iterator's adapters as calls.
 fn shape(text: &str) -> Shape {
+    let bytes = text.as_bytes();
+    let (mut lower, mut letters, mut camel) = (true, true, false);
+    let mut after_lower = false;
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        let is_lower = byte.wrapping_sub(b'a') < 26;
+        if !is_lower {
+            lower = false;
+            if byte.wrapping_sub(b'A') >= 26 {
+                letters = false;
+                break;
+            }
+            camel |= after_lower;
+        }
+        after_lower = is_lower;
+        at += 1;
+    }
     // Lower-case letters alone never make a possessive, a version, a dotted word, an identifier or
     // a capital, which the rules below would each find out, so only its ending is left to read.
-    if text.bytes().all(|byte| byte.is_ascii_lowercase()) {
+    if lower {
         return ending_of(text).unwrap_or(NO_SHAPE);
+    }
+    // Letters alone are not a possessive, a version, a dotted word or a word with an underscore or
+    // a digit either: only a lower-case letter before a capital makes an identifier of them.
+    if letters {
+        if camel {
+            return Shape::new(Tag::ProperNoun, SINGULAR, NOUN);
+        }
+        let ending = ending_of(text);
+        return capitalised(text, ending).or(ending).unwrap_or(NO_SHAPE);
     }
     if let Some(stem) = possessive_stem(text) {
         return possessive(stem);
@@ -299,12 +329,28 @@ fn is_camel_case(text: &str) -> bool {
 
 /// Whether `text` is a capital and then letters with a lower-case one among them: `Frobnitz`.
 fn is_capitalised_word(text: &str) -> bool {
-    starts_upper(text) && text.chars().any(char::is_lowercase)
+    starts_upper(text) && has_lower_case(text)
 }
 
 /// Whether `text` is two or more letters and no lower case: an acronym, `API`.
 fn is_all_capitals(text: &str) -> bool {
-    text.chars().filter(|c| c.is_alphabetic()).count() >= 2 && !text.chars().any(char::is_lowercase)
+    let bytes = text.as_bytes();
+    let mut letters = 0;
+    let mut at = 0;
+    while at < bytes.len() {
+        let byte = bytes[at];
+        if byte >= 0x80 {
+            // A letter past ASCII asks the character tables.
+            return text.chars().filter(|c| c.is_alphabetic()).count() >= 2
+                && !text.chars().any(char::is_lowercase);
+        }
+        if byte.wrapping_sub(b'a') < 26 {
+            return false;
+        }
+        letters += usize::from(byte.wrapping_sub(b'A') < 26);
+        at += 1;
+    }
+    letters >= 2
 }
 
 /// The shape of an acronym or a capitalised word, or `None` for a word with no capital to read or
@@ -347,32 +393,59 @@ fn intersect(a: TagSet, b: TagSet) -> TagSet {
 
 /// What an ending says of `text`, whatever its case.
 fn ending_of(text: &str) -> Option<Shape> {
-    let letters = text.chars().count();
+    let bytes = text.as_bytes();
+    // How many characters there are: the bytes that do not continue one.
+    let mut letters = 0;
+    let mut at = 0;
+    while at < bytes.len() {
+        letters += usize::from(bytes[at] & 0xc0 != 0x80);
+        at += 1;
+    }
     // Every ending is ASCII, so a word whose last byte is not an ending's last letter, whatever
     // its case, has none of them.
-    let last = text.as_bytes().last()?.to_ascii_lowercase();
-    ENDINGS
-        .iter()
-        .filter(|ending| ending.suffix.as_bytes().last() == Some(&last))
-        .find(|ending| {
-            letters >= ending.suffix.len() + STEM && ends_with_ignore_case(text, ending.suffix)
-        })
-        .map(|ending| ending.shape)
-        .or_else(|| plural(text))
+    let last = bytes.last()?.to_ascii_lowercase();
+    let mut at = 0;
+    while at < ENDINGS.len() {
+        let ending = &ENDINGS[at];
+        let suffix = ending.suffix.as_bytes();
+        if suffix[suffix.len() - 1] == last
+            && letters >= suffix.len() + STEM
+            && ends_with_ignore_case(bytes, suffix)
+        {
+            return Some(ending.shape);
+        }
+        at += 1;
+    }
+    plural(bytes, letters)
 }
 
-/// Whether `text` ends in `suffix`, an ASCII string in lower case, whatever the case of `text`.
-fn ends_with_ignore_case(text: &str, suffix: &str) -> bool {
-    let (text, suffix) = (text.as_bytes(), suffix.as_bytes());
-    text.len() >= suffix.len() && text[text.len() - suffix.len()..].eq_ignore_ascii_case(suffix)
+/// Whether `text` ends in `suffix`, ASCII letters in lower case, whatever the case of `text`.
+fn ends_with_ignore_case(text: &[u8], suffix: &[u8]) -> bool {
+    if text.len() < suffix.len() {
+        return false;
+    }
+    let start = text.len() - suffix.len();
+    let mut at = 0;
+    while at < suffix.len() {
+        // A letter is the same in either case when the bit of its case is set; no other byte is
+        // one of the letters of an ending with it set.
+        if text[start + at] | 0x20 != suffix[at] {
+            return false;
+        }
+        at += 1;
+    }
+    true
 }
 
 /// A plain `-s`: a plural noun, or a verb's third person. Not after `s`, `u` or `i`, which end
-/// singular nouns (`class`, `status`, `analysis`).
-fn plural(text: &str) -> Option<Shape> {
-    let before = text.strip_suffix(['s', 'S'])?;
-    (text.chars().count() >= PLURAL && !before.ends_with(['s', 'S', 'u', 'U', 'i', 'I']))
-        .then_some(Shape::new(Tag::Noun, Features::PLURAL, VERB))
+/// singular nouns (`class`, `status`, `analysis`). `letters` is how many characters there are.
+fn plural(text: &[u8], letters: usize) -> Option<Shape> {
+    let (&last, before) = text.split_last()?;
+    if last != b's' && last != b'S' || letters < PLURAL {
+        return None;
+    }
+    let singular = matches!(before.last(), Some(b's' | b'S' | b'u' | b'U' | b'i' | b'I'));
+    (!singular).then_some(Shape::new(Tag::Noun, Features::PLURAL, VERB))
 }
 
 #[cfg(test)]

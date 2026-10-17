@@ -328,9 +328,13 @@ pub(super) fn long_hash(key: &[u64; 3], len: usize) -> usize {
 /// The FNV-1a hash of `word`, which takes a few steps for a short word. The table is fixed and its
 /// keys are ours, so nothing here needs a hash that resists a chosen input.
 pub(super) fn lexicon_hash(word: &str) -> usize {
+    // A plain loop: a debug build runs an iterator's adapters as calls, for every byte.
+    let bytes = word.as_bytes();
     let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
-    for byte in word.bytes() {
-        hash = (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3);
+    let mut at = 0;
+    while at < bytes.len() {
+        hash = (hash ^ bytes[at] as u64).wrapping_mul(0x0100_0000_01b3);
+        at += 1;
     }
     hash as usize
 }

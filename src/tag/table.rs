@@ -67,11 +67,13 @@ fn probe_short(key: u64, len: usize) -> Option<Entry> {
         // All four compared at once, so that where the word is in the bucket does not cost a
         // branch.
         let mut found = 0;
-        for i in 0..4 {
+        let mut i = 0;
+        while i < 4 {
             let slot = bucket + i * SHORT_SLOT;
             found |=
                 usize::from(u64_at(buckets, slot) == key && buckets[slot + 15] as usize == len)
                     << i;
+            i += 1;
         }
         if found != 0 {
             let slot = bucket + found.trailing_zeros() as usize * SHORT_SLOT;

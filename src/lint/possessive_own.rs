@@ -2,15 +2,17 @@
 //! for `its config`.
 //!
 //! A match is a possessive, `very` or nothing, `own`, and then a word or a code span, in one
-//! sentence. The possessives are [`POSSESSIVES`], any word ending `'s`, and a word ending `s`
-//! followed by `'`, as in `users' own data`. Link and emphasis markup around the next word does
-//! not break the match, and `very own` counts once.
+//! sentence. The possessives are [`POSSESSIVES`], any word ending `'s` but `let's`, a word ending
+//! `s` followed by `'`, as in `users' own data`, and a code span followed by `'s`, as in
+//! `` `Config`'s own file ``. Link and emphasis markup around the next word does not break the
+//! match, and `very own` counts once.
 //!
-//! Not matches: `own` with no word after it, as in `on its own` and `a room of one's own`, where
-//! deleting it breaks the sentence and the idiom means "by itself"; `own` before a word of
-//! [`PREPOSITIONS`], [`CONJUNCTIONS`], [`DETERMINERS`], [`AUXILIARIES`] or [`ADVERBS`], as in `on
-//! its own in production`; `owns`, `owner` and `ownership`; `users own their data`, where nothing
-//! is possessive; and anything in code.
+//! Not matches: a possessive directly after `on`, in any case, as in `on its own`, `on your own`
+//! and `on their very own`, whatever follows, since that is the idiom for "by itself"; `own` with
+//! no word after it, as in `hold its own` and `a room of one's own`, where deleting it breaks the
+//! sentence; `own` before a word of [`PREPOSITIONS`], [`CONJUNCTIONS`], [`DETERMINERS`] or
+//! [`AUXILIARIES`], as in `a place of its own in production`; `owns`, `owner` and `ownership`;
+//! `users own their data`, where nothing is possessive; and anything in code.
 //!
 //! A file fails at [`MIN_OWNS`] matches, so one or two contrastive uses pass. This is a taste lint,
 //! off until a config turns it on. Its claim, which `tests/corpus.rs` and `make test-blobs` check
@@ -65,29 +67,30 @@ pub const AUXILIARIES: &[&str] = &[
     "may", "might", "must", "shall", "should", "was", "were", "will", "would",
 ];
 
-/// Adverbs, among the words after `own` that begin a new phrase, as in `a place of its own here`.
-/// The set is short: an adverb that starts a compound, such as `now-defunct`, is left out.
-pub const ADVERBS: &[&str] = &["again", "also", "anyway", "here", "instead", "there", "too"];
+/// Words that end `'s` and are not possessive: `let's own it` is a verb.
+const NOT_POSSESSIVES: &[&str] = &["let's"];
 
 /// The word or code span after `own`.
 const NEXT: Item = Item::Any(&[
     Item::All(&[
         Item::Kind(TokenKind::Word),
-        Item::NotIn(&[
-            PREPOSITIONS,
-            CONJUNCTIONS,
-            DETERMINERS,
-            AUXILIARIES,
-            ADVERBS,
-        ]),
+        Item::NotIn(&[PREPOSITIONS, CONJUNCTIONS, DETERMINERS, AUXILIARIES]),
     ]),
     Item::Kind(TokenKind::Code),
 ]);
 
+/// The `on` of `on its own`, if the possessive follows one. A match that starts with it is the
+/// idiom for "by itself", and [`ranges`] drops it.
+const ON: Item = Item::Optional(&Item::Literal("on"));
+
 /// A possessive word, `very` or nothing, `own`, and the next word.
 pub const PATTERN: Pattern = Pattern {
     items: &[
-        Item::Any(&[Item::In(POSSESSIVES), Item::Suffix("'s")]),
+        ON,
+        Item::Any(&[
+            Item::In(POSSESSIVES),
+            Item::All(&[Item::Suffix("'s"), Item::NotIn(&[NOT_POSSESSIVES])]),
+        ]),
         Item::Optional(&Item::Literal("very")),
         Item::Literal("own"),
         NEXT,
@@ -97,8 +100,22 @@ pub const PATTERN: Pattern = Pattern {
 /// The same with a plural possessive, which the tokens split in two: `users` and `'`.
 pub const PLURAL: Pattern = Pattern {
     items: &[
+        ON,
         Item::Suffix("s"),
         Item::Mark(&["'"]),
+        Item::Optional(&Item::Literal("very")),
+        Item::Literal("own"),
+        NEXT,
+    ],
+};
+
+/// The same with a code span as the possessor, which the tokens split after the span: `'` and `s`.
+pub const CODE: Pattern = Pattern {
+    items: &[
+        ON,
+        Item::Kind(TokenKind::Code),
+        Item::Punctuation("'"),
+        Item::Literal("s"),
         Item::Optional(&Item::Literal("very")),
         Item::Literal("own"),
         NEXT,
@@ -148,12 +165,13 @@ pub fn matches(document: &Document<'_>) -> Vec<Match> {
         .collect()
 }
 
-/// The token ranges of both patterns' matches, in the order of the file, with a match that
-/// overlaps an earlier one dropped.
+/// The token ranges of the patterns' matches, in the order of the file, with a match that
+/// overlaps an earlier one dropped, and a match of the idiom `on its own`, which starts with `on`.
 fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
     let mut all: Vec<Range<usize>> = PATTERN
         .find(document)
         .chain(PLURAL.find(document))
+        .chain(CODE.find(document))
         .collect();
     all.sort_by_key(|found| found.start);
     let mut kept: Vec<Range<usize>> = Vec::with_capacity(all.len());
@@ -162,6 +180,7 @@ fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
             kept.push(found);
         }
     }
+    kept.retain(|found| document.tokens[found.start].folded() != "on");
     kept
 }
 
@@ -308,15 +327,13 @@ mod tests {
     #[test]
     fn own_before_a_function_word_is_not_a_match() {
         for text in [
-            "It runs on its own in production.",
-            "They run on their own and test it.",
-            "It builds on its own with no setup.",
+            "It keeps a place of its own in production.",
+            "They keep a file of their own and test it.",
+            "It keeps a file of its own with no setup.",
             "It checks its own for drift.",
-            "It lives on its own because it must.",
-            "It lives on its own once it is built.",
-            "It lives on its own when it is run.",
-            "It keeps a place of its own here.",
-            "It runs on its own too.",
+            "It keeps a place of its own because it must.",
+            "It keeps a place of its own once it is built.",
+            "It keeps a place of its own when it is run.",
             "Each worker is its own and is cached.",
         ] {
             assert!(found(text).is_empty(), "{text}");
@@ -325,19 +342,15 @@ mod tests {
 
     #[test]
     fn every_function_word_ends_a_match() {
-        let function_words = [
-            PREPOSITIONS,
-            CONJUNCTIONS,
-            DETERMINERS,
-            AUXILIARIES,
-            ADVERBS,
-        ]
-        .concat();
+        let function_words = [PREPOSITIONS, CONJUNCTIONS, DETERMINERS, AUXILIARIES].concat();
         for word in &function_words {
             assert_eq!(*word, word.to_lowercase(), "{word} is folded");
-            let text = format!("It stands on its own {word} the rest.");
+            let text = format!("It keeps a place of its own {word} the rest.");
             assert!(found(&text).is_empty(), "{text}");
-            let shouted = format!("It stands on its own {} the rest.", word.to_uppercase());
+            let shouted = format!(
+                "It keeps a place of its own {} the rest.",
+                word.to_uppercase()
+            );
             assert!(found(&shouted).is_empty(), "{shouted}");
         }
         let mut sorted = function_words.clone();
@@ -348,6 +361,98 @@ mod tests {
             function_words.len(),
             "no word is listed twice"
         );
+    }
+
+    #[test]
+    fn an_adverb_after_own_is_a_match() {
+        assert_eq!(found("It keeps a place of its own here."), ["its own here"]);
+        assert_eq!(found("It keeps a file of its own too."), ["its own too"]);
+    }
+
+    #[test]
+    fn a_possessive_directly_after_on_is_the_idiom_whatever_follows() {
+        for text in [
+            "You are on your own now.",
+            "On its own it does nothing.",
+            "It runs on its own anymore.",
+            "It has run on its own ever since.",
+            "It runs on its own like a library.",
+            "It runs on its own beyond the core.",
+            "It runs on its own near the core.",
+            "It runs on its own along the way.",
+            "It runs on its own regardless of the core.",
+            "It runs on its own versus the core.",
+            "It runs on its own config.",
+            "It runs on its own in production.",
+            "It runs on its own again.",
+            "It runs on their very own now.",
+            "It runs on my own now.",
+            "One runs on one's own now.",
+            "It runs on it's own now.",
+            "It runs ON ITS OWN NOW.",
+            "It runs On Their Very Own Now.",
+            "It runs on its **own** config.",
+            "It runs on **its** own config.",
+            "It runs on users' own data.",
+            "It runs on `Config`'s own file.",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn on_that_is_not_directly_before_the_possessive_leaves_the_match() {
+        assert_eq!(
+            found("It builds on top of its own config."),
+            ["its own config"]
+        );
+        assert_eq!(found("It relies on, its own config."), ["its own config"]);
+        assert_eq!(
+            found("It runs on. Its own config follows."),
+            ["Its own config"]
+        );
+        assert_eq!(
+            found("It runs on the same page as its own config."),
+            ["its own config"]
+        );
+        assert_eq!(
+            found("It runs on the users' own data."),
+            ["users' own data"]
+        );
+    }
+
+    #[test]
+    fn a_code_span_followed_by_s_is_a_possessor() {
+        assert_eq!(
+            found("It reads `Config`'s own file."),
+            ["`Config`'s own file"]
+        );
+        assert_eq!(
+            found("It reads `Config`\u{2019}s own file."),
+            ["`Config`\u{2019}s own file"]
+        );
+        assert_eq!(
+            found("It reads `Config`'s very own file."),
+            ["`Config`'s very own file"]
+        );
+        assert_eq!(
+            found("It reads `Config`'s own `file`."),
+            ["`Config`'s own `file`"]
+        );
+        assert_eq!(
+            found("It reads **Config**'s own file."),
+            ["Config**'s own file"]
+        );
+        assert!(found("It reads `Config`'s own.").is_empty());
+        assert!(found("It reads `Config`'s own in production.").is_empty());
+        assert!(found("It reads `Config`'s file.").is_empty());
+    }
+
+    #[test]
+    fn lets_is_not_a_possessive() {
+        for text in ["Let's own it.", "Let\u{2019}s own it.", "LET'S own it."] {
+            assert!(found(text).is_empty(), "{text}");
+        }
     }
 
     #[test]

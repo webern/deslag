@@ -603,7 +603,7 @@ struct Scan {
     /// Whether the top-level map is written in braces.
     braced: bool,
     /// Whether the file has an alias or a merge key (`<<`), through which the loader may read a key
-    /// that does not have a place of its own here.
+    /// that does not have a place of its own in the file.
     aliased: bool,
     /// Whether a key is double-quoted with an escape that only YAML has, so the scan has its text as
     /// written and cannot say which key it is.

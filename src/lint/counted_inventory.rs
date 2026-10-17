@@ -5,12 +5,20 @@
 //!
 //! [`PATTERN`] is a number in digits, not 0 or 1 (`1,075` is one number), then up to two words that
 //! are not [`FUNCTION_WORDS`], then a noun of [`NOUNS`]. Every match is a finding, with no
-//! threshold per file. A number is not counted after a bound ([`BOUNDS`]), after a `#`, after a
-//! capitalised word that does not open its sentence ("Python 3 files"), when it is a decimal, a
-//! version such as `v2`, or joined to a word or a `.`, or when its link ends before the noun.
-//! Code, and what the document does not read as prose, gives the lint no tokens. Number words
-//! ("three tests") are not counted. The sets are Rust data, never config: a list a config grows
-//! is an allow-list an agent grows until the check passes.
+//! threshold per file. A number is no count when it is:
+//!
+//! - a limit: after a bound ([`BOUNDS`]), with a hedge between ([`HEDGES`]) or not, or the second
+//!   of two numbers a bound governs ("at most 3 or 4 lines", "between 3 and 5 files");
+//! - a year, four digits from 1900 to 2099, or followed by a unit ([`UNITS`]), as in `4 KB pages`;
+//! - a name or a version: after a `#`, after a capitalised word wherever it stands ("Python 3
+//!   files", which spares "Run 3 tests" too), a decimal, or joined to a word or to a mark such
+//!   as `-`, `/` or `.` ("v2", "UTF-8", "5-10 files"), though not to a bracket or a quote that
+//!   opens, as in `(63 tests)`;
+//! - a number whose link ends before the noun.
+//!
+//! Only prose counts or excuses: code, and what the document does not read as prose, gives the
+//! lint no tokens. Number words ("three tests") are not counted. The sets are Rust data, never
+//! config: a list a config grows is an allow-list an agent grows until the check passes.
 //!
 //! This is a taste lint, off until a config turns it on. Its claim, which `tests/corpus.rs` and
 //! `make test-blobs` check on English fixtures: `llm` files hold it at least 3 times as often as
@@ -91,15 +99,46 @@ pub const BOUNDS: &[&[&str]] = &[
     &["more", "than"],
     &["fewer", "than"],
     &["less", "than"],
+    &["longer", "than"],
+    &["larger", "than"],
+    &["greater", "than"],
+    &["above"],
+    &["below"],
+    &["exceed"],
+    &["exceeds"],
+    &["max"],
+    &["maximum", "of"],
+    &["minimum", "of"],
+    &["limit", "of"],
+    &["capped", "at"],
+    &["between"],
     &["every"],
     &["per"],
     &["each"],
 ];
 
-/// The number a count starts with: digits, 2 or more, that is no limit, version or name.
+/// The words that may stand between a bound and its number without ending the limit, as in "at
+/// most about 200 lines": folded.
+pub const HEDGES: &[&str] = &["about", "around", "roughly", "nearly", "almost"];
+
+/// The words that, right after a number, make it a measure and no count, as in `4 KB pages` or
+/// `30 second jobs`: folded.
+pub const UNITS: &[&str] = &[
+    "kb", "mb", "gb", "tb", "kib", "mib", "gib", "bit", "bits", "byte", "bytes", "ms", "second",
+    "seconds", "minute", "minutes", "hour", "hours", "day", "days", "px", "column", "columns",
+    "percent",
+];
+
+/// The number a count starts with: digits, 2 or more, that is no limit, year, measure, version or
+/// name.
 const NUMBER: Item = Item::All(&[
     Item::Integer(2),
-    Item::NotAfter(BOUNDS),
+    Item::NotYear,
+    Item::NotBefore(UNITS),
+    Item::NotBounded {
+        bounds: BOUNDS,
+        hedges: HEDGES,
+    },
     Item::NotAfter(&[&["#"]]),
     Item::NotAfterCapitalised,
 ]);
@@ -148,9 +187,12 @@ pub fn check(document: &Document<'_>, settings: Option<&CountedInventory>) -> Op
                     .contains(']')
             });
             let range = tokens[0].range.start..tokens[tokens.len() - 1].range.end;
+            // The words of the count as they read, with no emphasis or link markers between them:
+            // each token is a number or a word, so a space stands between any two.
+            let words: Vec<&str> = tokens.iter().map(|token| &*token.text).collect();
             (!crosses_a_link).then(|| Match {
-                location: document.locate(range.clone()),
-                quote: quote(&document.text(range)),
+                location: document.locate(range),
+                quote: quote(&words.join(" ")),
             })
         })
         .collect();
@@ -232,6 +274,44 @@ mod tests {
             .unwrap_or_default()
     }
 
+    /// Asserts that `text` does not hold a count.
+    fn no_count(text: &str) {
+        assert!(found(text).is_empty(), "{text}: {:?}", found(text));
+    }
+
+    /// The nouns, as the lint counts them, in the order of [`NOUNS`] and in groups.
+    const NOUN_GROUPS: &[&[&str]] = &[
+        &[
+            "files", "lines", "tests", "fixtures", "cases", "checks", "rules", "lints",
+        ],
+        &["entries", "records", "rows"],
+        &[
+            "commits",
+            "crates",
+            "modules",
+            "packages",
+            "jobs",
+            "workflows",
+            "scripts",
+            "tools",
+        ],
+        &["docs", "documents", "pages", "sections", "tables"],
+        &["branches", "benchmarks", "subcommands", "targets"],
+        &["warnings", "errors", "failures", "fixes", "issues"],
+        &["calls", "paths", "fields", "variants", "sources"],
+    ];
+
+    /// The function words, as the lint reads them, in the order of [`FUNCTION_WORDS`].
+    const FUNCTION_WORD_LIST: &[&str] = &[
+        "a", "an", "the", "this", "that", "these", "those", "of", "in", "on", "at", "to", "for",
+        "from", "by", "with", "without", "into", "about", "over", "under", "after", "before",
+        "between", "through", "across", "against", "per", "via", "and", "or", "but", "nor", "so",
+        "as", "than", "if", "when", "while", "where", "which", "who", "whom", "whose", "is", "are",
+        "was", "were", "be", "been", "am", "has", "have", "had", "do", "does", "did", "can",
+        "could", "will", "would", "should", "may", "might", "must", "shall", "not", "no", "it",
+        "its", "there", "here", "also", "then",
+    ];
+
     #[test]
     fn a_number_before_a_noun_matches() {
         assert_eq!(found("It holds 63 tests."), ["63 tests"]);
@@ -249,10 +329,22 @@ mod tests {
     }
 
     #[test]
-    fn case_and_markup_do_not_matter() {
+    fn case_is_folded_and_markup_is_not_quoted() {
         assert_eq!(found("It has 63 TESTS."), ["63 TESTS"]);
         assert_eq!(found("It has 63 Tests."), ["63 Tests"]);
-        assert_eq!(found("It has **63** tests."), ["63** tests"]);
+        assert_eq!(found("It has **63** tests."), ["63 tests"]);
+        assert_eq!(found("It has *63* tests."), ["63 tests"]);
+        assert_eq!(found("It has 63 **tests**."), ["63 tests"]);
+        assert_eq!(
+            found("It has 12 [tests](https://example.com)."),
+            ["12 tests"]
+        );
+        assert_eq!(
+            found("It has [12 new unit tests](a)."),
+            ["12 new unit tests"]
+        );
+        assert_eq!(found("It has 63 un**it** tests."), ["63 unit tests"]);
+        assert_eq!(found("It has 63\ntests."), ["63 tests"]);
     }
 
     #[test]
@@ -264,10 +356,19 @@ mod tests {
     }
 
     #[test]
-    fn every_noun_matches() {
-        for noun in NOUNS {
-            let text = format!("It has 5 {noun}.");
-            assert_eq!(found(&text), [format!("5 {noun}")], "{text}");
+    fn the_nouns_are_these() {
+        let listed: Vec<&str> = NOUN_GROUPS.concat();
+        assert_eq!(NOUNS, listed);
+        assert_eq!(NOUNS.len(), 38);
+    }
+
+    #[test]
+    fn every_noun_of_every_group_matches() {
+        for group in NOUN_GROUPS {
+            for noun in *group {
+                let text = format!("It has 5 {noun}.");
+                assert_eq!(found(&text), [format!("5 {noun}")], "{text}");
+            }
         }
     }
 
@@ -282,7 +383,7 @@ mod tests {
     #[test]
     fn zero_and_one_are_no_count() {
         for text in ["It has 0 files.", "It has 1 files.", "It has 01 files."] {
-            assert!(found(text).is_empty(), "{text}");
+            no_count(text);
         }
     }
 
@@ -296,41 +397,96 @@ mod tests {
             "It has 3 ways to fail.",
             "It has 63.",
         ] {
-            assert!(found(text).is_empty(), "{text}");
+            no_count(text);
         }
     }
 
     #[test]
     fn a_bound_before_the_number_makes_it_a_limit() {
-        for bound in BOUNDS {
-            let phrase = bound.join(" ");
-            for text in [
-                format!("Split files {phrase} 200 lines."),
-                format!("Split files {} 200 lines.", phrase.to_uppercase()),
-                format!("{} 200 lines is fine.", capitalised(&phrase)),
-            ] {
-                assert!(found(&text).is_empty(), "{text}");
-            }
-        }
+        no_count("Split files at most 3 files long.");
+        no_count("It runs at least 4 tests.");
+        no_count("It runs up to 4 tests.");
+        no_count("Keep it under 80 lines.");
+        no_count("Keep it over 80 lines.");
+        no_count("It runs more than 5 jobs.");
+        no_count("It runs fewer than 5 jobs.");
+        no_count("It runs less than 5 jobs.");
+        no_count("A line longer than 80 lines is split.");
+        no_count("It holds a file larger than 20 lines.");
+        no_count("It holds a file greater than 20 lines.");
+        no_count("It holds files above 20 lines.");
+        no_count("It holds files below 20 lines.");
+        no_count("A file that exceed 20 lines is split.");
+        no_count("A file that exceeds 20 lines is split.");
+        no_count("A file of max 200 lines.");
+        no_count("A file of a maximum of 200 lines.");
+        no_count("A file of a minimum of 20 lines.");
+        no_count("A file with a limit of 200 lines.");
+        no_count("A file capped at 200 lines.");
+        no_count("A file between 20 lines and the rest.");
+        no_count("Run every 5 tests.");
+        no_count("Run it per 5 tests.");
+        no_count("Run each 5 tests.");
+    }
+
+    #[test]
+    fn a_bound_folds_case_and_may_open_the_sentence() {
+        no_count("Split files At most 200 lines long.");
+        no_count("Split files AT MOST 200 lines long.");
+        no_count("At most 200 lines is fine.");
+        no_count("Up to 200 lines is fine.");
+        no_count("Between 3 and 5 files is fine.");
+        no_count("More than 200 lines is too much.");
+    }
+
+    #[test]
+    fn a_bound_is_a_whole_phrase_and_ends_with_its_sentence() {
         assert_eq!(found("Split files after 200 lines."), ["200 lines"]);
         assert_eq!(found("Split files at 200 lines."), ["200 lines"]);
+        assert_eq!(found("Split files up 200 lines."), ["200 lines"]);
+        assert_eq!(found("Split files most 200 lines."), ["200 lines"]);
+        assert_eq!(found("It has at most. 200 lines."), ["200 lines"]);
+        assert_eq!(found("Keep it small.\n\nOver\n\n200 lines."), ["200 lines"]);
+    }
+
+    #[test]
+    fn a_bound_does_not_reach_a_second_number_it_does_not_join() {
         assert_eq!(
             found("Split files over 80 chars or 200 lines."),
             ["200 lines"]
         );
-    }
-
-    /// `phrase` with its first letter in upper case.
-    fn capitalised(phrase: &str) -> String {
-        let mut chars = phrase.chars();
-        let first = chars.next().map(|first| first.to_uppercase().to_string());
-        first.into_iter().chain(chars.map(String::from)).collect()
+        assert_eq!(
+            found("Split files over 80 files, 200 lines."),
+            ["200 lines"]
+        );
     }
 
     #[test]
-    fn a_bound_ends_with_its_sentence() {
-        assert_eq!(found("It has at most. 200 lines."), ["200 lines"]);
-        assert_eq!(found("Keep it small.\n\nOver\n\n200 lines."), ["200 lines"]);
+    fn a_hedge_may_stand_between_a_bound_and_its_number() {
+        no_count("It holds at most about 200 lines.");
+        no_count("It holds at most around 200 lines.");
+        no_count("It holds at most roughly 200 lines.");
+        no_count("It holds at most nearly 200 lines.");
+        no_count("It holds at most almost 200 lines.");
+        no_count("It holds up to about 200 lines.");
+        // A hedge alone is no limit, and nor are two of them.
+        assert_eq!(found("It holds about 200 lines."), ["200 lines"]);
+        assert_eq!(
+            found("It holds at most about around 200 lines."),
+            ["200 lines"]
+        );
+        assert_eq!(found("It holds at most really 200 lines."), ["200 lines"]);
+    }
+
+    #[test]
+    fn a_second_number_under_the_same_bound_is_a_limit_too() {
+        no_count("It holds at most 3 or 4 lines.");
+        no_count("It holds at least 3 or 4 lines.");
+        no_count("It holds between 3 and 5 files.");
+        no_count("It holds at most about 3 or about 4 lines.");
+        assert_eq!(found("It holds 3 or 4 lines."), ["4 lines"]);
+        assert_eq!(found("It holds at most 3 files or 4 lines."), ["4 lines"]);
+        assert_eq!(found("It holds at most 3, 4 lines."), ["4 lines"]);
     }
 
     #[test]
@@ -347,25 +503,130 @@ mod tests {
             "It has a.2 files.",
             "It has NASA 12 packages.",
             "Issue #34 records the files.",
+            "Issue # 34 records the files.",
             "See #34 files.",
         ] {
-            assert!(found(text).is_empty(), "{text}");
+            no_count(text);
         }
     }
 
     #[test]
-    fn a_capital_that_opens_the_sentence_is_no_name() {
-        assert_eq!(found("Run 3 tests."), ["3 tests"]);
-        assert_eq!(found("Add 12 new tests."), ["12 new tests"]);
-        assert_eq!(found("63 tests pass."), ["63 tests"]);
+    fn a_capitalised_word_before_the_number_is_a_name_wherever_it_stands() {
+        no_count("Python 3 scripts are supported.");
+        no_count("- Python 3 scripts");
+        no_count("# Node 18 packages");
+        no_count("| Name | Needs |\n|---|---|\n| a | Windows 10 tools |\n");
+        no_count("Version 2 records are read.");
+        no_count("It reads Version 2 records.");
+        // The same word opens a sentence of its own, or stands in the middle of one.
+        no_count("Run 3 tests.");
+        no_count("(Run 3 tests)");
+        no_count("Step 2: Run 3 tests");
+        no_count("Then Run 3 tests.");
+        no_count("> Run 3 tests.");
+        // A lower-case word does not, and nor does a word that is no word.
         assert_eq!(found("It adds 12 tests."), ["12 tests"]);
+        assert_eq!(found("Step 2: it runs 3 tests."), ["3 tests"]);
+        assert_eq!(found("- 63 tests"), ["63 tests"]);
+        assert_eq!(found("63 tests pass."), ["63 tests"]);
+        assert_eq!(found("It runs `Python` 3 files."), ["3 files"]);
+        assert_eq!(found("Python, 3 files."), ["3 files"]);
     }
 
     #[test]
-    fn function_words_end_the_run() {
-        for word in FUNCTION_WORDS {
+    fn a_number_joined_to_what_is_before_it_is_no_count() {
+        no_count("It reads UTF-8 files.");
+        no_count("It runs SHA-256 checks.");
+        no_count("It lists COVID-19 cases.");
+        no_count("It runs on macos-14 jobs.");
+        no_count("It lists CVE-2024-1234 fixes.");
+        no_count("It lists IJF-2018 rules.");
+        no_count("It reads 5-10 files.");
+        no_count("It reads 5\u{2013}10 files.");
+        no_count("It reads pkg/12 files.");
+        no_count("It reads a:12 files.");
+        no_count("It reads 2026-10-17 files.");
+        no_count("It reads \u{5171}12 files.");
+    }
+
+    #[test]
+    fn a_number_that_only_touches_a_mark_is_a_count() {
+        assert_eq!(found("The suite (63 tests) passes."), ["63 tests"]);
+        assert_eq!(found("The suite \"63 tests\" passes."), ["63 tests"]);
+        assert_eq!(found("The suite ran\u{2014}63 tests."), ["63 tests"]);
+        assert_eq!(found("The suite ran ~63 tests."), ["63 tests"]);
+        assert_eq!(found("The suite ran, 63 tests."), ["63 tests"]);
+    }
+
+    #[test]
+    fn a_year_is_no_count() {
+        no_count("In 2026 issues were closed.");
+        no_count("It lists the 2024 issues.");
+        no_count("It lists the 1900 issues.");
+        no_count("It lists the 2099 issues.");
+        assert_eq!(found("It lists the 1899 issues."), ["1899 issues"]);
+        assert_eq!(found("It lists the 2100 issues."), ["2100 issues"]);
+        assert_eq!(found("It lists the 20240 issues."), ["20240 issues"]);
+        assert_eq!(found("It lists the 2,024 issues."), ["2,024 issues"]);
+    }
+
+    #[test]
+    fn a_unit_after_the_number_makes_it_a_measure() {
+        for text in [
+            "It reads 4 kb pages.",
+            "It reads 4 KB pages.",
+            "It reads 100 MB files.",
+            "It reads 2 GB files.",
+            "It reads 2 TB files.",
+            "It reads 4 KiB pages.",
+            "It reads 4 MiB pages.",
+            "It reads 4 GiB pages.",
+            "It reads 32 bit files.",
+            "It reads 32 bits files.",
+            "It reads 8 byte fields.",
+            "It reads 8 bytes fields.",
+            "It runs 50 ms jobs.",
+            "It runs 30 second jobs.",
+            "It runs 30 seconds jobs.",
+            "It runs 5 minute jobs.",
+            "It runs 5 minutes jobs.",
+            "It runs 2 hour jobs.",
+            "It runs 2 hours jobs.",
+            "It runs 7 day jobs.",
+            "It runs 7 days jobs.",
+            "It reads 16 px tables.",
+            "It reads 80 column files.",
+            "It reads 80 columns files.",
+            "It reads 50 percent files.",
+        ] {
+            no_count(text);
+        }
+        // Only a unit right after the number.
+        assert_eq!(found("It reads 4 big KB pages."), ["4 big KB pages"]);
+        assert_eq!(found("It reads 4 pages in KB."), ["4 pages"]);
+    }
+
+    #[test]
+    fn only_prose_excuses() {
+        assert_eq!(found("Split the `each` 5 files."), ["5 files"]);
+        assert_eq!(found("Split the `per` 5 files."), ["5 files"]);
+        assert_eq!(found("Split at `most` 200 lines."), ["200 lines"]);
+        assert_eq!(found("Split files `at most` 200 lines."), ["200 lines"]);
+        assert_eq!(found("Issue `#` 34 records."), ["34 records"]);
+        assert_eq!(found("Split `at` most 200 lines."), ["200 lines"]);
+        assert_eq!(found("It reads ![each](a.png) 5 files."), ["5 files"]);
+    }
+
+    #[test]
+    fn the_function_words_are_these() {
+        assert_eq!(FUNCTION_WORDS, FUNCTION_WORD_LIST);
+    }
+
+    #[test]
+    fn a_function_word_ends_the_run() {
+        for word in FUNCTION_WORD_LIST {
             let text = format!("It has 5 {word} tests.");
-            assert!(found(&text).is_empty(), "{text}");
+            no_count(&text);
         }
         assert_eq!(found("It has 5 of 12 tests."), ["12 tests"]);
         assert_eq!(found("It has 5 or more tests."), Vec::<String>::new());
@@ -374,9 +635,9 @@ mod tests {
 
     #[test]
     fn a_match_does_not_cross_sentences_or_blocks() {
-        assert!(found("It has 63. Tests follow.").is_empty());
-        assert!(found("It has 63\n\ntests.").is_empty());
-        assert!(found("It has 63, tests follow.").is_empty());
+        no_count("It has 63. Tests follow.");
+        no_count("It has 63\n\ntests.");
+        no_count("It has 63, tests follow.");
     }
 
     #[test]
@@ -394,7 +655,7 @@ mod tests {
             "[63] tests",
             "It has ![63 tests](https://example.com/a.png)",
         ] {
-            assert!(found(text).is_empty(), "{text}");
+            no_count(text);
         }
     }
 
@@ -426,6 +687,19 @@ mod tests {
         assert_eq!(&markdown[location.start..location.end], "12 unit tests");
         assert_eq!(marks(&over)[0].note, "\"12 unit tests\"");
         assert_eq!(marks(&over)[0].kind, MarkKind::Occurrence);
+    }
+
+    #[test]
+    fn a_location_covers_the_markup_that_the_quote_leaves_out() {
+        let markdown = "It has **63** un**it** [tests](a).\n";
+        let document = Document::markdown(markdown);
+        let over = check(&document, Some(&CountedInventory::default())).expect("a count");
+        let found = &over.matches[0];
+        assert_eq!(found.quote, "63 unit tests");
+        assert_eq!(
+            &markdown[found.location.start..found.location.end],
+            "63** un**it** [tests"
+        );
     }
 
     #[test]

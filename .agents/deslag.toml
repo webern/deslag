@@ -38,16 +38,16 @@ max_paragraph_chars = 500
 # A taste lint, off by default: this repo negates the verb, not its object.
 [md.lints.verbs_no_nouns]
 
-# A taste lint, off by default: this repo names a thing and does not count it. An override can turn a
-# lint on but not off, so it is on for the files below and not in the section, which would reach the
-# *.asbuilt.md docs, which stay as they are until the owner opens a reconciliation, and the skills,
-# whose wording is the owner's.
+# A taste lint, off by default: this repo names a thing and does not count it. An override can turn
+# a lint on but not off, so it is on for the files below and not in the section, which would reach
+# the *.asbuilt.md docs, which stay as they are until the owner opens a reconciliation, the skills,
+# whose wording is the owner's, and ACKNOWLEDGEMENTS.md, which quotes the title of a post that
+# counts lines.
 [[md.overrides]]
 globs = [
   "/AGENTS.md",
   "/tests/AGENTS.md",
   "/tools/AGENTS.md",
-  "/ACKNOWLEDGEMENTS.md",
   "/docs/design/analysis.md",
   "/docs/design/catalog.md",
   "/docs/design/corpus.md",

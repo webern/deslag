@@ -1,6 +1,7 @@
 # Widget
 
-It holds 63 tests. The 13 variants cover 376 fixtures, and the
+It holds 63 tests, and the 13 variants cover 376 fixtures. The
 suite runs 1,075 lines of 12 new unit tests.
 
-- Run 3 jobs
+- 3 jobs
+- It has **12** [fixtures](tests/).

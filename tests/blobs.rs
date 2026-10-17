@@ -830,11 +830,14 @@ fn the_catalogue_counts_are_the_big_tiers() {
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
 
-    // Their words are English; `no` is a word of other languages too.
-    for (at, (lint, excuse)) in [("verbs_no_nouns", "idioms"), ("counted_inventory", "nouns")]
-        .into_iter()
-        .enumerate()
-    {
+    // Their words are English; `no` is a word of other languages too. What can move each lint's
+    // findings: the tagger reads the words of one, and the other reads digits and a fixed list of
+    // nouns.
+    let lints = [
+        ("verbs_no_nouns", "The tagger or the image", "idioms"),
+        ("counted_inventory", "The image", "numbers"),
+    ];
+    for (at, (lint, moved, excuse)) in lints.into_iter().enumerate() {
         let flagged = |category: &str| {
             let english = held.iter().filter(|(fixture, ..)| {
                 fixture.category == category && fixture.sidecar.content.natural_language == "en"
@@ -848,15 +851,15 @@ fn the_catalogue_counts_are_the_big_tiers() {
             llm * humans >= 3 * human * llms,
             "{lint}: llm files hold it less than 3 times as often as human files (human {human} \
              of {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. \
-             The tagger or the image moved the lint's findings: a human decides whether to excuse \
-             more {excuse} or to change the claim in the lint's doc comment."
+             {moved} moved the lint's findings: a human decides whether to excuse more {excuse} \
+             or to change the claim in the lint's doc comment."
         );
         assert!(
             human * 1000 <= 35 * humans,
             "{lint}: more than 3.5% of human files hold it (human {human} of {humans}, llm {llm} \
-             of {llms}). The lint's claim no longer holds on this image. The tagger or the image \
-             moved the lint's findings: a human decides whether to excuse more {excuse} or to \
-             change the claim in the lint's doc comment."
+             of {llms}). The lint's claim no longer holds on this image. {moved} moved the \
+             lint's findings: a human decides whether to excuse more {excuse} or to change the \
+             claim in the lint's doc comment."
         );
     }
 

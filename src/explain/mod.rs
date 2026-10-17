@@ -134,7 +134,7 @@ fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
     }
     let mut out = format!("\n# allow: {}\n", entries.len());
     for entry in entries {
-        let lines: Vec<usize> = allow::matching(document, &entry.folded())
+        let lines: Vec<usize> = allow::matching(document, &entry.quote)
             .into_iter()
             .map(|range| document.locate(range).line)
             .collect();

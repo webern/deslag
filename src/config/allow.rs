@@ -27,7 +27,7 @@ use serde::Deserialize;
 
 use crate::Error;
 use crate::lint::Lint;
-use crate::lint::allow::fold;
+use crate::lint::allow::{fold, fold_quote};
 use crate::lint::banned_chars;
 
 /// An `allow` entry as it is written on disk. The keys are in this order for a config written as a
@@ -126,19 +126,15 @@ impl Allow {
         format!("{}.allow[{}]", self.section, self.index)
     }
 
-    /// The quote with each run of spaces, tabs and line breaks made one space, which is how it is
-    /// compared with a sentence of the file.
-    pub fn folded(&self) -> String {
-        fold(&self.quote)
-    }
-
     /// Whether `other` is the same entry: the same section, file, lint and quote, whatever the
-    /// reason, and however the quote is wrapped.
+    /// reason, and however the quote is wrapped. A lone CR is a character here, as a comment holds
+    /// it, so two quotes that differ only by one are two entries. If both name one sentence of
+    /// Markdown, the second finds nothing left to drop, and fails the run.
     pub fn is_same_as(&self, other: &Allow) -> bool {
         self.section == other.section
             && self.path == other.path
             && self.lint == other.lint
-            && self.folded() == other.folded()
+            && fold(&self.quote) == fold(&other.quote)
     }
 }
 
@@ -161,7 +157,8 @@ pub(super) fn compile(
                 ".reason is empty; an exemption says why the sentence must stay".to_string(),
             ));
         }
-        if fold(&file.quote).is_empty() {
+        // A lone CR counts as layout here, since no sentence is only that.
+        if fold_quote(&file.quote, false).is_empty() {
             return Err(refuse(
                 ".quote is empty; an exemption names the sentence it exempts".to_string(),
             ));
@@ -387,6 +384,9 @@ mod tests {
             "{said}"
         );
         let said = refused(&entry("a.md", "banned_chars", "  ", "A record."));
+        assert!(said.contains("md.allow[0].quote is empty"), "{said}");
+        // A lone CR is layout too, which a sentence of Markdown folds away.
+        let said = refused(&entry("a.md", "banned_chars", " \r\t\n\r", "A record."));
         assert!(said.contains("md.allow[0].quote is empty"), "{said}");
     }
 

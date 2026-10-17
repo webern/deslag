@@ -359,6 +359,12 @@ pub(crate) fn quote(source: &str) -> String {
     format!("{}...", cut.trim_end())
 }
 
+/// `percent` to two decimal places, rounded up: a file just over its limit must not read as at
+/// it, as 1.004% would if it were shown as 1.00%.
+fn shown_percent(percent: f64) -> f64 {
+    (percent * 100.0).ceil() / 100.0
+}
+
 impl Finding {
     /// The report for this finding, with no trailing newline.
     pub fn render(&self) -> String {

@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 3 of its 22 sentences (13.64%) with a possessive padded with \"own\". The limit is 10% of its sentences.\n\nA possessive is enough on its own. Delete \"own\" unless the possessor contrasts with another one that the sentence names or implies: \"deslag's own corpus\" is \"deslag's corpus\" when no other corpus is in play. Keep the few that contrast, and delete the rest.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"its own config\"\n  line 7: \"project's own docs\"\n  line 10: \"their own data\"",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 23,
+          "end": 37,
+          "line": 3,
+          "column": 14,
+          "end_line": 3,
+          "end_column": 28,
+          "note": "\"its own config\""
+        },
+        {
+          "kind": "evidence",
+          "start": 245,
+          "end": 263,
+          "line": 7,
+          "column": 15,
+          "end_line": 7,
+          "end_column": 33,
+          "note": "\"project's own docs\""
+        },
+        {
+          "kind": "evidence",
+          "start": 438,
+          "end": 452,
+          "line": 10,
+          "column": 16,
+          "end_line": 10,
+          "end_column": 30,
+          "note": "\"their own data\""
+        }
+      ]
+    }
+  ]
+}

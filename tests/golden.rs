@@ -88,7 +88,12 @@ fn record_of(violation: &Violation) -> Option<String> {
         Violation::ListGrowth(over) => format!("items:{} base:{}", over.items, over.base_items),
         Violation::VerbsNoNouns(over) => format!("matches:{}", over.matches.len()),
         Violation::NotAtAll(over) => format!("matches:{}", over.matches.len()),
-        Violation::PossessiveOwn(over) => format!("matches:{}", over.matches.len()),
+        Violation::PossessiveOwn(over) => format!(
+            "sentences:{} of:{} percent:{:.2}",
+            over.holding,
+            over.sentences,
+            over.percent()
+        ),
     };
     Some(record)
 }

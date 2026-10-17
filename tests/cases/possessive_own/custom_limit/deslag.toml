@@ -1,0 +1,4 @@
+schema_version = 1
+
+[md.lints.possessive_own]
+max_percent_of_sentences = 10

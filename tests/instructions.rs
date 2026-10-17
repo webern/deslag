@@ -276,6 +276,8 @@ fn the_schema_refuses_what_deslag_refuses() {
         "schema_version = 1\n[md.lints.max_size]\nvalue = 1",
         "schema_version = 1\n[md.lints.max_size_bytes]\nvalue = \"big\"",
         "schema_version = 1\n[md.lints.max_emphasis]\nmax_percent = 101",
+        "schema_version = 1\n[md.lints.possessive_own]\nmax_percent_of_sentences = 101",
+        "schema_version = 1\n[md.lints.possessive_own]\nmax_percent_of_sentences = -1",
         "schema_version = 1\n[md.lints.density]\nmax_item_chars = 0",
         "schema_version = 1\n[md.lints.banned_chars.groups]\ndash = false",
         "schema_version = 1\n[[md.overrides]]\nlints.density = {}",

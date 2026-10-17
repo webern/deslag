@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "possessive_own",
-      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 3 possessives padded with \"own\". 3 or more fail a file.\n\nReword the own phrases in README.md.\n\nThe places:\n  line 3: \"its own config\"\n  line 3: \"project's own docs\"\n  line 3: \"users' own data\"",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 3 of its 26 sentences (11.54%) with a possessive padded with \"own\". The limit is 5% of its sentences.\n\nReword the own phrases in README.md.\n\nThe places:\n  line 3: \"its own config\"\n  line 7: \"project's own docs\"\n  line 7: \"users' own data\"\n  line 11: \"its own budget\"",
       "marks": [
         {
           "kind": "evidence",
@@ -20,23 +20,33 @@
         },
         {
           "kind": "evidence",
-          "start": 53,
-          "end": 71,
-          "line": 3,
-          "column": 44,
-          "end_line": 3,
-          "end_column": 62,
+          "start": 272,
+          "end": 290,
+          "line": 7,
+          "column": 15,
+          "end_line": 7,
+          "end_column": 33,
           "note": "\"project's own docs\""
         },
         {
           "kind": "evidence",
-          "start": 80,
-          "end": 95,
-          "line": 3,
-          "column": 71,
-          "end_line": 3,
-          "end_column": 86,
+          "start": 299,
+          "end": 314,
+          "line": 7,
+          "column": 42,
+          "end_line": 7,
+          "end_column": 57,
           "note": "\"users' own data\""
+        },
+        {
+          "kind": "evidence",
+          "start": 556,
+          "end": 570,
+          "line": 11,
+          "column": 17,
+          "end_line": 11,
+          "end_column": 31,
+          "note": "\"its own budget\""
         }
       ]
     }

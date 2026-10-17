@@ -1,0 +1,14 @@
+ERROR: deslag detected possessives padded with "own"!
+
+README.md has 3 of its 22 sentences (13.64%) with a possessive padded with "own". The limit is 10% of its sentences.
+
+A possessive is enough on its own. Delete "own" unless the possessor contrasts with another one that the sentence names or implies: "deslag's own corpus" is "deslag's corpus" when no other corpus is in play. Keep the few that contrast, and delete the rest.
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 3: "its own config"
+  line 7: "project's own docs"
+  line 10: "their own data"
+
+deslag: 1 of 1 files with possessives padded with "own".

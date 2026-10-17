@@ -41,6 +41,7 @@ pub const CLAIMS: &[Claim] = &[
         lint: "not_at_all",
         fails: |document| not_at_all::check(document, Some(&NotAtAll::default())).is_some(),
         tree_factor: 1,
+        moved_by: "The tagger or the corpus",
     },
     Claim {
         lint: "possessive_own",
@@ -77,6 +78,7 @@ pub enum Broke {
 /// broke it. The claim is a decision of the lint's doc comment, so a human makes the next one.
 pub fn moved(claim: &Claim, tier: &str, broke: Broke, counts: &str) -> String {
     let what = match broke {
+        Broke::Factor(1) => "llm files do not fail it more often than human files".to_string(),
         Broke::Factor(factor) => {
             format!("llm files fail it less than {factor} times as often as human files")
         }

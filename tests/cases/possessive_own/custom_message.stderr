@@ -1,12 +1,13 @@
 ERROR: deslag detected possessives padded with "own"!
 
-README.md has 3 possessives padded with "own". 3 or more fail a file.
+README.md has 3 of its 26 sentences (11.54%) with a possessive padded with "own". The limit is 5% of its sentences.
 
 Reword the own phrases in README.md.
 
 The places:
   line 3: "its own config"
-  line 3: "project's own docs"
-  line 3: "users' own data"
+  line 7: "project's own docs"
+  line 7: "users' own data"
+  line 11: "its own budget"
 
 deslag: 1 of 1 files with possessives padded with "own".

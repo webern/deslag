@@ -302,6 +302,26 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
 }
 
 #[test]
+fn a_table_that_turns_possessive_own_on_shows_its_default_share() {
+    for (table, shown) in [
+        ("", "[possessive_own]\nmax_percent_of_sentences = 5.0\n"),
+        (
+            "max_percent_of_sentences = 2.5\n",
+            "[possessive_own]\nmax_percent_of_sentences = 2.5\n",
+        ),
+    ] {
+        let repo = repo_with(
+            "deslag.toml",
+            &format!("schema_version = 1\n[md.lints.possessive_own]\n{table}"),
+        );
+        let (code, stdout, stderr) = explain(&repo, &["README.md"]);
+        assert_eq!((code, stderr.as_str()), (0, ""), "{table}");
+        assert!(stdout.contains(shown), "{table}: {stdout}");
+        assert!(!stdout.contains("# possessive_own: off"), "{table}");
+    }
+}
+
+#[test]
 fn a_file_the_walk_skips_is_never_read() {
     let repo = repo_with("deslag.toml", TOML);
     repo.write(".gitignore", "drafts/\n");

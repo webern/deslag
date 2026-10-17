@@ -1,6 +1,6 @@
 # Widget
 
-Two uses count: its own config and the project's own docs. Nothing else here does.
+None of these counts, so a limit of 0 passes this file.
 
 Own with no word after it is an idiom for "by itself". The worker runs on its
 own. The users keep files of their own. A cache can hold its own. Nobody needs a

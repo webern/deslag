@@ -100,6 +100,11 @@ impl Lints {
                     .and_then(BannedPhrases::invalid)
             })
             .or_else(|| self.density.as_ref().and_then(Density::invalid))
+            .or_else(|| {
+                self.possessive_own
+                    .as_ref()
+                    .and_then(PossessiveOwn::invalid)
+            })
     }
 
     /// Why these settings, resolved for one file, contradict each other, or `None` when they do
@@ -791,21 +796,50 @@ impl Merge for NotAtAll {
     }
 }
 
-/// `lints.possessive_own`: a file fails when it leans on possessives padded with `own`, as in
-/// `its own config`.
+/// `lints.possessive_own`: a file fails when more than `max_percent_of_sentences` of its sentences
+/// hold a possessive padded with `own`, as in `its own config`.
 ///
-/// The table itself turns the check on. The count that fails a file and the words that excuse a
-/// match are the lint's, not the config's.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+/// The table itself turns the check on, with the default. The shortest file the check reads and the
+/// words that excuse a match are the lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PossessiveOwn {
+    /// The share of a file's sentences, in percent, that may hold a possessive padded with `own`.
+    #[serde(default)]
+    #[schemars(range(min = 0, max = 100), extend("default" = PossessiveOwn::DEFAULT_MAX_PERCENT_OF_SENTENCES))]
+    pub max_percent_of_sentences: Option<f64>,
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
     pub message: Option<String>,
 }
 
+impl PossessiveOwn {
+    /// The share when none is set.
+    pub const DEFAULT_MAX_PERCENT_OF_SENTENCES: f64 = 5.0;
+
+    /// The share, or the default.
+    pub fn max_percent_of_sentences(&self) -> f64 {
+        self.max_percent_of_sentences
+            .unwrap_or(Self::DEFAULT_MAX_PERCENT_OF_SENTENCES)
+    }
+
+    /// Why these settings are unusable, or `None` when they are fine.
+    pub fn invalid(&self) -> Option<String> {
+        match self.max_percent_of_sentences {
+            Some(percent) if !(0.0..=100.0).contains(&percent) => Some(format!(
+                "possessive_own.max_percent_of_sentences is {percent}, which is not between 0 and \
+                 100"
+            )),
+            _ => None,
+        }
+    }
+}
+
 impl Merge for PossessiveOwn {
     fn merge(&mut self, over: &Self) {
+        if over.max_percent_of_sentences.is_some() {
+            self.max_percent_of_sentences = over.max_percent_of_sentences;
+        }
         if over.message.is_some() {
             self.message.clone_from(&over.message);
         }

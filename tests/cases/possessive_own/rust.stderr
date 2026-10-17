@@ -1,6 +1,6 @@
 ERROR: deslag detected possessives padded with "own"!
 
-src/lib.rs has 3 possessives padded with "own". 3 or more fail a file.
+src/lib.rs has 3 of its 21 sentences (14.29%) with a possessive padded with "own". The limit is 5% of its sentences.
 
 A possessive is enough on its own. Delete "own" unless the possessor contrasts with another one that the sentence names or implies: "deslag's own corpus" is "deslag's corpus" when no other corpus is in play. Keep the few that contrast, and delete the rest.
 
@@ -8,7 +8,7 @@ Do not change the config to get past this check. Only a human can tell you to do
 
 The places:
   line 1: "its own config"
-  line 3: "project's own docs"
-  line 6: "users' own data"
+  line 5: "project's own docs"
+  line 9: "users' own data"
 
 deslag: 1 of 1 files with possessives padded with "own".

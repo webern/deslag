@@ -22,7 +22,7 @@ use std::ops::Range;
 
 use crate::config::MaxEmphasis;
 use crate::document::{self, Body, Document, Gathered, Location, PieceKind, PointKind, SpanKind};
-use crate::lint::{Mark, MarkKind, quote};
+use crate::lint::{Mark, MarkKind, quote, shown_percent};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected over-emphasis!";
@@ -274,12 +274,6 @@ pub fn marks(over: &Over) -> Vec<Mark> {
             note: span.quote.clone(),
         })
         .collect()
-}
-
-/// `percent` to two decimal places, rounded up: a file just over its limit must not read as at
-/// it, as 1.004% would if it were shown as 1.00%.
-fn shown_percent(percent: f64) -> f64 {
-    (percent * 100.0).ceil() / 100.0
 }
 
 /// The advice for an over-emphasized file.

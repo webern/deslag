@@ -2,72 +2,27 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 65 of 1230: core 3, human 1, llm 29, mixed 32
+# fails 19 of 1230: core 3, human 0, llm 15, mixed 1
 
 [md.lints.possessive_own]
+max_percent_of_sentences = 5.0
 
-core/den-design-decisions.md matches:30
-core/den-implementation-notes.md matches:6
-core/den-mx-api-gaps.md matches:7
-human/gitlab--drummyfish--anarch/README.md matches:7
-llm/AIQ-Kitware--aiq-dkps-formalization/dev__posthoc-prompt-analysis__findings__aivm-2404-jon__FINDINGS.md matches:3
-llm/BelimbingApp--belimbing/docs__plans__people__15_employees-event-decoupling.md matches:3
-llm/Data-Wise--atlas/BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md matches:4
-llm/GladysAssistant--Gladys/github__CLAUDE_AUTOFIX.md matches:4
-llm/Jwuthri--Tracely-ai/guides__SECURITY_AUDIT.md matches:3
-llm/MicrosoftDocs--azure-dev-docs/github__instructions__java-sample-guidelines.md matches:4
-llm/OpenAgentsInc--openagents/bench__terminal-bench__traces__tb4--coder-one-matched-v8--sound-change-cascade--matched-v8-9567-r3__sound-change-cascade__KUdjBfR.episode__artifacts__persist-1.brief.md matches:4
-llm/Sequel-Ace--Sequel-Ace/docs__development__keychain-secitem-migration-plan.md matches:5
-llm/WillEhrendreich--SageFs/docs__ecosystem-compatibility.md matches:12
-llm/blpsoares--agentistics/docs__superpowers__plans__2026-06-30-team-mode-phase7-ondemand-chat.md matches:4
-llm/caliber-ai-org--ai-setup/LANDING_HERO.md matches:3
-llm/codeceptjs--CodeceptJS/docs__assertions.md matches:3
-llm/commonfabric--labs/docs__common__capabilities__files.md matches:3
-llm/danikf--tik4net/Docs__findings-cli-history.md matches:4
-llm/danikf--tik4net/Docs__findings-routeros-6.md matches:7
-llm/datopian--portaljs/site__content__docs__guides__theming.md matches:3
-llm/dreamiurg--claude-mountaineering-skills/PRIVACY.md matches:4
-llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:4
-llm/i365dev--free4chat/docs__en__patterns__collaboration-patterns.md matches:4
-llm/microsoft--agent-host-protocol/plugins__session-metadata-migration-plugin__skills__session-metadata-migration__SKILL.md matches:4
-llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:10
-llm/radixark--miles/scripts__sandbox_smoke__README.md matches:3
-llm/reidmorrison--semantic_logger/docs__config.md matches:6
-llm/retentioneering--retentioneering-tools/docs__adr__0014-agent-facing-docs-surface.md matches:3
-llm/rlaope--oh-my-hermes/omh__README.md matches:4
-llm/sampathmannam--nilamind/docs__wiki__Features.md matches:3
-llm/spec-kitty--spec-kitty/kitty-specs__read-side-seam-primary-primitive-closure-01KYKMMT__tasks__WP01-suite-states-target-design__review-cycle-3.md matches:3
-llm/streetsidesoftware--inject-markdown/docs__ADRs__relative-links__0003-rebase-base-resolution.md matches:3
-llm/twidi--twicc/src__twicc__agent__plugin__README.md matches:4
-mixed/ColorlibHQ--gentelella/changelog.md matches:7
-mixed/Correia-jpv--fucking-magictools/README.md matches:3
-mixed/JuliaLang--Pkg.jl/docs__src__toml-files.md matches:5
-mixed/MarkMichaelis--ScoopBucket/README.md matches:4
-mixed/SchemaStore--schemastore/CONTRIBUTING.md matches:7
-mixed/WikipediaBrown--napkin/README.md matches:3
-mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md matches:7
-mixed/cksystemsteaching--selfie/assignments__introductory-assignments.md matches:6
-mixed/datahub-project--datahub/docs__developers.md matches:3
-mixed/dependabot--dependabot-core/README.md matches:4
-mixed/dh-tech--awesome-digital-humanities/README.md matches:3
-mixed/dotnet--msbuild/documentation__wiki__Binary-Log.md matches:3
-mixed/getsentry--sentry-python/CONTRIBUTING.md matches:3
-mixed/gitlab--GoogleDriveIndex--Google-Drive-Index/README.md matches:6
-mixed/homebridge--homebridge/CHANGELOG.md matches:7
-mixed/indykish--dotfiles/README.md matches:3
-mixed/knowm--XChart/README.md matches:6
-mixed/msarson--Clarion-Extension/README.md matches:4
-mixed/ncsa--NEAT/ChangeLog.md matches:6
-mixed/nteract--semiotic/README.md matches:4
-mixed/online-ml--river/CONTRIBUTING.md matches:3
-mixed/ontola--atomic-server/README.md matches:3
-mixed/openjournals--joss/docs__installing.md matches:3
-mixed/pnpm--pnpm/CONTRIBUTING.md matches:5
-mixed/quii--learn-go-with-tests/structs-methods-and-interfaces.md matches:5
-mixed/reidmorrison--semantic_logger/docs__api.md matches:3
-mixed/reidmorrison--semantic_logger/docs__appenders.md matches:5
-mixed/ruby-git--ruby-git/CONTRIBUTING.md matches:4
-mixed/tamagui--tamagui/next.md matches:4
-mixed/toshiki670--dotfiles/README.md matches:3
-mixed/ttop32--MouseTooltipTranslator/doc__description.md matches:9
-mixed/ulisesbocchio--jasypt-spring-boot/README.md matches:6
+core/den-accidental-style.md sentences:2 of:21 percent:9.52
+core/den-design-decisions.md sentences:29 of:291 percent:9.97
+core/den-implementation-notes.md sentences:6 of:65 percent:9.23
+llm/Jwuthri--Tracely-ai/guides__SECURITY_AUDIT.md sentences:3 of:52 percent:5.77
+llm/blpsoares--agentistics/docs__superpowers__plans__2026-06-30-team-mode-phase7-ondemand-chat.md sentences:4 of:78 percent:5.13
+llm/commonfabric--labs/docs__common__capabilities__files.md sentences:3 of:33 percent:9.09
+llm/datopian--portaljs/site__content__docs__guides__theming.md sentences:3 of:25 percent:12.00
+llm/dreamiurg--claude-mountaineering-skills/PRIVACY.md sentences:4 of:38 percent:10.53
+llm/i365dev--free4chat/docs__en__patterns__collaboration-patterns.md sentences:3 of:55 percent:5.45
+llm/perftool-incubator--crucible/docs__how-agent-instructions-work.md sentences:2 of:23 percent:8.70
+llm/radixark--miles/scripts__sandbox_smoke__README.md sentences:2 of:25 percent:8.00
+llm/retentioneering--retentioneering-tools/docs__adr__0014-agent-facing-docs-surface.md sentences:3 of:34 percent:8.82
+llm/rlaope--oh-my-hermes/omh__README.md sentences:4 of:58 percent:6.90
+llm/rmstdope--atlantis-hud/docs__releases__v0.14.0.md sentences:2 of:35 percent:5.71
+llm/ruby-git--ruby-git/docs__adr__0003-validation-of-git-semantics-is-delegated-to-git.md sentences:2 of:21 percent:9.52
+llm/sampathmannam--nilamind/docs__wiki__Features.md sentences:3 of:43 percent:6.98
+llm/streetsidesoftware--inject-markdown/docs__ADRs__relative-links__0003-rebase-base-resolution.md sentences:3 of:48 percent:6.25
+llm/toa-io--toa/migrations__262.md sentences:2 of:25 percent:8.00
+mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md sentences:6 of:102 percent:5.88

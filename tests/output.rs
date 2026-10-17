@@ -43,7 +43,8 @@ max_paragraph_chars = 60
 [md.lints.possessive_own]
 ";
 
-/// A file every lint but `max_size_bytes` fails, whose name needs escaping in every format.
+/// A file every lint but `max_size_bytes` and `possessive_own` fails, whose name needs escaping in
+/// every format.
 const EVERY_LINT: &str = "# All
 
 We **must** do this in order to win \u{2014} and DO NOT stop.
@@ -59,8 +60,6 @@ A paragraph that runs on well past sixty characters, which is the limit here.
 
 It ships no binary. It does not build at all.
 
-It has its own x, its own y and their own z.
-
 - An item the change adds.
 ";
 
@@ -74,7 +73,7 @@ fn failing() -> Repo {
     repo.write(ESCAPED, "# All\n");
     repo.write(
         "docs/big.md",
-        &format!("# Big\n\n{}\n", "word ".repeat(100)),
+        &format!("# Big\n\n{}\n", "Its own word. ".repeat(40)),
     );
     git(repo.root(), &["init", "-q"]);
     commit(repo.root(), "base");

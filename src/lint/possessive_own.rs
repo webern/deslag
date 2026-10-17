@@ -14,26 +14,28 @@
 //! [`AUXILIARIES`], as in `a place of its own in production`; `owns`, `owner` and `ownership`;
 //! `users own their data`, where nothing is possessive; and anything in code.
 //!
-//! A file fails at [`MIN_OWNS`] matches, so one or two contrastive uses pass. This is a taste lint,
-//! off until a config turns it on. Its claim, which `tests/corpus.rs` and `make test-blobs` check
-//! on English fixtures: `llm` files fail it at least 3 times as often as `human` files, on the tree
-//! and on the big tier, and at most 3.5% of the big tier's `human` files fail. The number is a
-//! constant and not a setting, since the corpus proves the claim at that number only. Human writers
-//! use the construction too, so the advice owns the rule as the repo's style. The sets are Rust
-//! data, never config, and no tagger reads the text, so a retrained tagger cannot move a finding.
+//! A file fails when more than `max_percent_of_sentences` of its sentences, 5% by default, hold a
+//! match; a sentence with two counts once. A file of fewer than [`MIN_SENTENCES`] sentences is not
+//! checked, since one use would fail it, and without that floor no share keeps the claim below.
+//! This is a taste lint, off until a config turns it on. Its claim, which `tests/corpus.rs` and
+//! `make test-blobs` check on English fixtures: `llm` files fail it at least 3 times as often as
+//! `human` files, on the tree and on the big tier, and at most 3.5% of the big tier's `human`
+//! files fail. The floor is a constant, not a setting, since the corpus proves the claim with it
+//! only. Human writers use the construction too, so the advice owns the rule as the repo's style.
+//! The sets are Rust data, never config, and no tagger reads the text.
 
 use std::ops::Range;
 
 use crate::config::PossessiveOwn;
 use crate::document::{Document, Location, TokenKind};
 use crate::lint::pattern::{Item, Pattern};
-use crate::lint::{Mark, MarkKind, quote};
+use crate::lint::{Mark, MarkKind, quote, shown_percent};
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected possessives padded with \"own\"!";
 
-/// How many matches fail a file.
-pub const MIN_OWNS: usize = 3;
+/// The fewest sentences a file needs to be checked. A file with fewer passes, whatever its share.
+pub const MIN_SENTENCES: usize = 20;
 
 /// The possessive words. Any word ending `'s` is one too, `one's` among them.
 pub const POSSESSIVES: &[&str] = &["my", "your", "his", "her", "its", "our", "their", "whose"];
@@ -114,7 +116,7 @@ pub const CODE: Pattern = Pattern {
     items: &[
         ON,
         Item::Kind(TokenKind::Code),
-        Item::Punctuation("'"),
+        Item::Mark(&["'"]),
         Item::Literal("s"),
         Item::Optional(&Item::Literal("very")),
         Item::Literal("own"),
@@ -131,28 +133,61 @@ pub struct Match {
     pub quote: String,
 }
 
-/// A file that holds [`MIN_OWNS`] matches or more.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// A file with more of its sentences holding the construction than its settings allow.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Over {
     /// Each place, in the order of the file.
     pub matches: Vec<Match>,
+    /// How many sentences hold at least one match.
+    pub holding: usize,
+    /// How many sentences the file has.
+    pub sentences: usize,
+    /// The share of the sentences allowed, in percent.
+    pub max_percent: f64,
     /// The config's replacement for the default advice, if it has one for this file.
     pub message: Option<String>,
 }
 
-/// Checks one file, read into `document`. A file with no settings is not checked.
+impl Over {
+    /// The share of the sentences that hold a match, in percent.
+    pub fn percent(&self) -> f64 {
+        percent_of(self.holding, self.sentences)
+    }
+}
+
+/// `holding` of `sentences`, in percent.
+fn percent_of(holding: usize, sentences: usize) -> f64 {
+    holding as f64 * 100.0 / sentences as f64
+}
+
+/// Checks one file, read into `document`. A file with no settings, or with fewer than
+/// [`MIN_SENTENCES`] sentences, is not checked.
 pub fn check(document: &Document<'_>, settings: Option<&PossessiveOwn>) -> Option<Over> {
     let settings = settings?;
-    let matches = matches(document);
-    (matches.len() >= MIN_OWNS).then(|| Over {
-        matches,
+    let sentences = document.sentences.len();
+    if sentences < MIN_SENTENCES {
+        return None;
+    }
+    let found = ranges(document);
+    let holding = sentences_holding(document, &found);
+    let max_percent = settings.max_percent_of_sentences();
+    (percent_of(holding, sentences) > max_percent).then(|| Over {
+        matches: places(document, found),
+        holding,
+        sentences,
+        max_percent,
         message: settings.message.clone(),
     })
 }
 
 /// Every match in `document`, in the order of the file, whether or not they fail it.
 pub fn matches(document: &Document<'_>) -> Vec<Match> {
-    ranges(document)
+    places(document, ranges(document))
+}
+
+/// The matches at the token ranges `found`.
+fn places(document: &Document<'_>, found: Vec<Range<usize>>) -> Vec<Match> {
+    found
         .into_iter()
         .map(|found| {
             let tokens = &document.tokens[found];
@@ -163,6 +198,22 @@ pub fn matches(document: &Document<'_>) -> Vec<Match> {
             }
         })
         .collect()
+}
+
+/// How many sentences of `document` hold a match among the token ranges `found`, which come in
+/// the order of the file and never cross a sentence.
+fn sentences_holding(document: &Document<'_>, found: &[Range<usize>]) -> usize {
+    let mut holding: Vec<usize> = found
+        .iter()
+        .filter_map(|found| {
+            document
+                .sentences
+                .iter()
+                .position(|sentence| sentence.tokens.contains(&found.start))
+        })
+        .collect();
+    holding.dedup();
+    holding.len()
 }
 
 /// The token ranges of the patterns' matches, in the order of the file, with a match that
@@ -184,8 +235,8 @@ fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
     kept
 }
 
-/// The report for one file at `path` that holds [`MIN_OWNS`] matches or more, with no trailing
-/// newline.
+/// The report for one file at `path` with more of its sentences holding the construction than its
+/// settings allow, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let advice = match &over.message {
         Some(message) => message.replace("{path}", path),
@@ -199,12 +250,16 @@ pub fn render(path: &str, over: &Over) -> String {
     format!(
         "{HEADING}\n\
          \n\
-         {path} has {count} possessives padded with \"own\". {MIN_OWNS} or more fail a file.\n\
+         {path} has {holding} of its {sentences} sentences ({percent:.2}%) with a possessive padded \
+         with \"own\". The limit is {max}% of its sentences.\n\
          \n\
          {advice}\n\
          \n\
          The places:{listed}",
-        count = over.matches.len(),
+        holding = over.holding,
+        sentences = over.sentences,
+        percent = shown_percent(over.percent()),
+        max = over.max_percent,
     )
 }
 
@@ -542,32 +597,103 @@ mod tests {
         );
     }
 
+    /// A paragraph of `sentences` sentences, of which the first `holding` hold a match.
+    fn prose(sentences: usize, holding: usize) -> String {
+        let text: Vec<&str> = (0..sentences)
+            .map(|at| {
+                if at < holding {
+                    "It reads its own config."
+                } else {
+                    "It reads the config."
+                }
+            })
+            .collect();
+        text.join(" ")
+    }
+
+    /// Whether `text` fails at the settings `max_percent_of_sentences`, or the default.
+    fn fails(text: &str, max_percent_of_sentences: Option<f64>) -> bool {
+        let settings = PossessiveOwn {
+            max_percent_of_sentences,
+            ..PossessiveOwn::default()
+        };
+        check(&Document::markdown(text), Some(&settings)).is_some()
+    }
+
     #[test]
-    fn two_matches_pass_and_three_fail() {
-        let settings = PossessiveOwn::default();
-        let fails = |text: &str| check(&Document::markdown(text), Some(&settings)).is_some();
-        let two = "It reads its own config and their own files.";
-        assert!(!fails(two));
-        assert!(fails(&format!("{two} Our own x.")));
-        assert_eq!(MIN_OWNS, 3);
+    fn the_helper_makes_the_sentences_it_says() {
+        for (sentences, holding) in [(19, 19), (20, 1), (40, 3)] {
+            let text = prose(sentences, holding);
+            let document = Document::markdown(&text);
+            assert_eq!(document.sentences.len(), sentences);
+            assert_eq!(matches(&document).len(), holding);
+        }
+    }
+
+    #[test]
+    fn the_limit_defaults_to_5_percent_of_the_sentences() {
+        assert_eq!(PossessiveOwn::default().max_percent_of_sentences(), 5.0);
+    }
+
+    #[test]
+    fn a_file_of_19_sentences_is_not_checked_and_one_of_20_is() {
+        assert!(!fails(&prose(19, 19), None));
+        assert!(fails(&prose(20, 20), None));
+    }
+
+    #[test]
+    fn a_share_at_the_limit_passes() {
+        assert!(!fails(&prose(20, 1), None));
+        assert!(!fails(&prose(40, 2), None));
+    }
+
+    #[test]
+    fn a_share_over_the_limit_fails() {
+        assert!(fails(&prose(20, 2), None));
+        assert!(fails(&prose(39, 2), None));
+        assert!(fails(&prose(40, 3), None));
+    }
+
+    #[test]
+    fn a_sentence_with_two_matches_counts_once() {
+        let text = format!(
+            "It reads its own config and their own files. {}",
+            prose(19, 0)
+        );
+        let document = Document::markdown(&text);
+        assert_eq!(matches(&document).len(), 2);
+        assert!(!fails(&text, None));
+    }
+
+    #[test]
+    fn the_setting_moves_the_limit() {
+        assert!(!fails(&prose(20, 2), Some(10.0)));
+        assert!(fails(&prose(20, 3), Some(10.0)));
+        assert!(fails(&prose(20, 1), Some(0.0)));
+        assert!(!fails(&prose(20, 0), Some(0.0)));
+        assert!(!fails(&prose(20, 20), Some(100.0)));
     }
 
     #[test]
     fn off_without_settings() {
-        let text = "Its own foo, its own bar, its own baz, its own qux.";
-        assert!(check(&Document::markdown(text), None).is_none());
+        assert!(check(&Document::markdown(&prose(20, 20)), None).is_none());
     }
 
     #[test]
-    fn the_report_names_the_count_the_threshold_and_each_place() {
-        let text = "Its own foo.\n\nIt has its own bar and their own baz.\n";
-        let over = check(&Document::markdown(text), Some(&PossessiveOwn::default()))
-            .expect("three matches fail");
+    fn the_report_names_the_share_the_limit_and_each_place() {
+        let text = format!(
+            "Its own foo.\n\nIt has its own bar and their own baz.\n\n{}\n",
+            prose(18, 0)
+        );
+        let over = check(&Document::markdown(&text), Some(&PossessiveOwn::default()))
+            .expect("2 of 20 sentences fail");
+        assert_eq!((over.holding, over.sentences), (2, 20));
         let report = render("docs/x.md", &over);
         assert!(report.starts_with(
             "ERROR: deslag detected possessives padded with \"own\"!\n\
              \n\
-             docs/x.md has 3 possessives padded with \"own\". 3 or more fail a file.\n\
+             docs/x.md has 2 of its 20 sentences (10.00%) with a possessive padded with \"own\". \
+             The limit is 5% of its sentences.\n\
              \n\
              A possessive is enough on its own."
         ));
@@ -583,12 +709,22 @@ mod tests {
     }
 
     #[test]
+    fn a_share_just_over_the_limit_does_not_read_as_at_it() {
+        let over = check(
+            &Document::markdown(&prose(39, 2)),
+            Some(&PossessiveOwn::default()),
+        )
+        .expect("2 of 39 sentences fail");
+        assert!(render("a.md", &over).contains("(5.13%)"));
+    }
+
+    #[test]
     fn a_message_replaces_the_advice() {
         let settings = PossessiveOwn {
             message: Some("Reword {path}.".to_string()),
+            ..PossessiveOwn::default()
         };
-        let text = "Its own foo, its own bar, its own baz.";
-        let over = check(&Document::markdown(text), Some(&settings)).expect("a failure");
+        let over = check(&Document::markdown(&prose(20, 3)), Some(&settings)).expect("a failure");
         let report = render("a.md", &over);
         assert!(
             report.contains("\n\nReword a.md.\n\nThe places:"),

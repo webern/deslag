@@ -1,0 +1,17 @@
+schema_version = 1
+
+[md.lints.banned_chars]
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+quote = "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again."
+reason = "A dated record of one image; its counts never go stale."
+
+[rust.lints.banned_chars]
+
+[[rust.allow]]
+path = "README.md"
+lint = "banned_chars"
+quote = "Anything."
+reason = "The wrong section."

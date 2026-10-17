@@ -5,6 +5,12 @@
 //! whole file is one result, with the places it rests on as its related locations; it sits at the
 //! file's first character, since GitHub needs a region on every result.
 //!
+//! An `allow` entry puts two things in the log. Each occurrence it drops is a result of its lint
+//! with a `suppressions` entry of kind `external`, whose justification is the entry's reason. An
+//! entry that did not hold is a result of the rule `allow`, at the start of the config: serde reads
+//! the config in three formats, and none of them keeps the span of an entry, so the result cannot
+//! point at the entry's line. Its message names the entry as `md.allow[0]`.
+//!
 //! Columns count Unicode code points, and every region also gives its bytes, so a reader that
 //! counts columns another way can still find the place exactly.
 
@@ -14,9 +20,12 @@ use crate::Report;
 use crate::document::Location;
 use crate::lint::{Finding, Keep, Lint, MarkKind};
 
+/// The id of the rule of an `allow` entry that did not hold.
+const ALLOW_RULE: &str = "allow";
+
 /// The log for `report`, as `--format sarif` prints it.
 pub fn render(report: &Report) -> String {
-    let rules: Vec<Value> = Lint::ALL
+    let mut rules: Vec<Value> = Lint::ALL
         .iter()
         .map(|lint| {
             let id = lint.id();
@@ -37,7 +46,45 @@ pub fn render(report: &Report) -> String {
             })
         })
         .collect();
-    let results: Vec<Value> = report.findings.iter().flat_map(results).collect();
+    if !report.exemptions.is_empty() {
+        rules.push(json!({
+            "id": ALLOW_RULE,
+            "shortDescription": { "text": "An allow entry of the config must hold." },
+            "fullDescription": { "text": "An allow entry exempts one sentence from one lint. It \
+                fails the run when its file or its sentence is gone, the sentence is quoted twice, \
+                or the lint finds nothing in it." },
+            "help": { "text": "An agent may delete an entry, which only tightens the check, and \
+                never writes or changes one: only a human exempts a sentence." },
+            "defaultConfiguration": { "level": "error" },
+        }));
+    }
+    let mut all: Vec<Value> = report.findings.iter().flat_map(results).collect();
+    all.extend(report.exemptions.iter().flat_map(|exemption| {
+        let suppressed = exemption.dropped.iter().flat_map(|dropped| {
+            let finding = Finding {
+                path: exemption.allow.path.clone(),
+                violation: dropped.clone(),
+            };
+            let suppression = json!([{
+                "kind": "external",
+                "justification": exemption.allow.reason,
+            }]);
+            results(&finding).into_iter().map(move |mut result| {
+                result["suppressions"] = suppression.clone();
+                result
+            })
+        });
+        let failed = exemption.message(&report.config).map(|text| {
+            json!({
+                "ruleId": ALLOW_RULE,
+                "ruleIndex": Lint::ALL.len(),
+                "level": "error",
+                "message": { "text": text },
+                "locations": [place(&report.config, None)],
+            })
+        });
+        suppressed.chain(failed).collect::<Vec<_>>()
+    }));
     let log = json!({
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
         "version": "2.1.0",
@@ -51,7 +98,7 @@ pub fn render(report: &Report) -> String {
                 },
             },
             "columnKind": "unicodeCodePoints",
-            "results": results,
+            "results": all,
         }],
     });
     let log = serde_json::to_string_pretty(&log).expect("a log is JSON");

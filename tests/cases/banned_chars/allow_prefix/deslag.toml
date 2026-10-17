@@ -1,0 +1,15 @@
+schema_version = 1
+
+[md.lints.banned_chars]
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+quote = "The first release shipped — it took a long time"
+reason = "A quoted title; the quote stops before the end of its sentence."
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+quote = "it took a long time, and nobody"
+reason = "A quoted title; the quote is the middle of its sentence."

@@ -1,0 +1,24 @@
+kind = "setting"
+id = "toml.allow"
+keys = ["path", "lint", "quote", "reason"]
+summary = "Exempts one sentence of a TOML comment from a lint, with a reason"
+onboarding = '''
+`[[toml.allow]]` exempts one sentence of a comment in a TOML file from one lint. An entry holds
+`path`, `lint`, `quote` and `reason`. `lint` is `banned_chars`, `banned_phrases` or
+`verbs_no_nouns`; the other lints are refused when the config loads, each with the setting that
+bounds it. `quote` is the sentence as the comment holds it, ASCII whitespace aside, and the file
+must hold it once. The lint must find something in it. An entry that stops holding fails the run, so
+an exemption does not outlive its text.
+
+Only a human writes or changes an entry. An agent leaves the sentence as it is and gives the human
+its text and a reason. It may delete an entry that stopped holding, which only tightens the check.
+`deslag check --base` shows a reviewer each entry that a change adds or changes.
+
+```toml
+[[toml.allow]]
+path = "Cargo.toml"
+lint = "banned_chars"
+quote = "The sentence, as the comment holds it."
+reason = "Why it stays."
+```
+'''

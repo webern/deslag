@@ -1,0 +1,14 @@
+ERROR: deslag detected an exemption that does not hold!
+
+deslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: the sentence on line 3 of README.md does not hold a finding of `banned_chars`. The lint may be off for the file, or the text may have been fixed.
+
+The quote: "A plain sentence."
+The reason: "The lint is not on."
+
+No sentence of README.md holds a finding of `banned_chars`.
+
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
+
+deslag: 1 of 1 exemption did not hold.
+deslag: only a human writes or changes an exemption; leave the sentence as it is, and give the human its text and a reason.
+deslag: 0 exemptions applied; deslag explain <PATH> lists a file's.

@@ -1,0 +1,10 @@
+schema_version = 1
+
+[md.lints.max_size_bytes]
+value = 10
+
+[[md.allow]]
+path = "README.md"
+lint = "max_size_bytes"
+quote = "A sentence that is far too long for a ten byte budget."
+reason = "A file-level verdict is not a sentence."

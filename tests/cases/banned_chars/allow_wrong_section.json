@@ -1,0 +1,40 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "quote": "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again.",
+      "reason": "A dated record of one image; its counts never go stale.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 44,
+          "end": 47,
+          "line": 3,
+          "column": 38,
+          "end_line": 3,
+          "end_column": 39,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ],
+      "added": false
+    },
+    {
+      "section": "rust",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "quote": "Anything.",
+      "reason": "The wrong section.",
+      "status": "not_selected",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has rust.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: [rust] does not select README.md, and an entry applies only to the files of its own section.\n\nThe quote: \"Anything.\"\nThe reason: \"The wrong section.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    }
+  ]
+}

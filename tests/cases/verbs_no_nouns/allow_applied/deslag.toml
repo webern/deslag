@@ -1,0 +1,9 @@
+schema_version = 1
+
+[md.lints.verbs_no_nouns]
+
+[[md.allow]]
+path = "README.md"
+lint = "verbs_no_nouns"
+quote = "The release notes say the tool ships no binary."
+reason = "A quotation from the notes."

@@ -45,7 +45,7 @@ llm/gotalab--cc-sdd/tools__cc-sdd__templates__agents__gemini-cli-skills__skills_
 llm/groupthinking--EventRelay/docs__CAPABILITIES_AUDIT.md matches:1
 llm/hackiftekhar--IQKeyboardManager/github__copilot-instructions.md matches:1
 llm/henryodibi11--Odibi/docs__journeys__junior-data-engineer.md matches:1
-llm/jagreehal--autotel/apps__example-collector-pipeline__README.md matches:1
+llm/jagreehal--autotel/apps__example-collector-pipeline__README.md matches:2
 llm/jamditis--claude-skills-journalism/docs__HANDOFF.md matches:3
 llm/jasonacox--tinytuya/DESIGN.md matches:1
 llm/mitchdenny--hex1b/docs__tape.md matches:1
@@ -55,7 +55,7 @@ llm/ondata--ckan-mcp-server/openspec__changes__archive__2026-02-28-add-tool-anno
 llm/openatx--uiautomator2/github__copilot-instructions.md matches:10
 llm/peterkrueck--Claude-Code-Development-Kit/skills__image-gen__SKILL.md matches:2
 llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:8
-llm/retentioneering--retentioneering-tools/docs__adr__0014-agent-facing-docs-surface.md matches:1
+llm/retentioneering--retentioneering-tools/docs__adr__0014-agent-facing-docs-surface.md matches:2
 llm/sangrokjung--claude-forge/skills__loop-forge__references__codex-prompt-mechanism.md matches:1
 llm/spec-kitty--spec-kitty/kitty-specs__read-side-seam-primary-primitive-closure-01KYKMMT__tasks__WP01-suite-states-target-design__review-cycle-3.md matches:2
 llm/stacksjs--stx/docs__guide__bun-advantage.md matches:3

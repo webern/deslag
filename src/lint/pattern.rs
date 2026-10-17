@@ -80,8 +80,10 @@ pub enum Item {
         hedges: &'static [&'static str],
     },
     /// A token that does not come right after a word that starts with a capital letter, wherever
-    /// that word is in its sentence: it skips the `3` of "Python 3 files" and of "Run 3 tests".
-    NotAfterCapitalised,
+    /// that word is in its sentence, unless the word, folded, is in this set: it skips the `3` of
+    /// "Python 3 files" and of "Run 3 tests", and not the `13` of `The 13 variants` when `the` is
+    /// in the set.
+    NotAfterCapitalised(&'static [&'static str]),
     /// Every one of these items matches the one token.
     All(&'static [Item]),
     /// This item, or nothing.
@@ -201,12 +203,13 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
         }
         Item::NotAfter(rows) => !ends_with_row(rows, tokens, folded, at),
         Item::NotBounded { bounds, hedges } => !bounded(bounds, hedges, tokens, folded, at),
-        Item::NotAfterCapitalised => !at
+        Item::NotAfterCapitalised(plain) => !at
             .checked_sub(1)
-            .and_then(|before| tokens.get(before))
-            .is_some_and(|before| {
+            .and_then(|before| tokens.get(before).zip(folded.get(before)))
+            .is_some_and(|(before, folded)| {
                 before.kind == TokenKind::Word
                     && before.text.chars().next().is_some_and(char::is_uppercase)
+                    && !plain.contains(&folded.as_str())
             }),
         Item::All(items) => items.iter().all(|item| one(item, tokens, folded, at)),
         Item::Optional(_) | Item::Gap(_) => false,
@@ -906,10 +909,10 @@ mod tests {
     }
 
     #[test]
-    fn a_not_after_capitalised_item_skips_a_token_after_a_capitalised_word_anywhere() {
+    fn a_not_after_capitalised_item_skips_a_token_after_a_capitalised_word_not_in_its_set() {
         const P: Pattern = Pattern {
             items: &[
-                Item::All(&[Item::Integer(2), Item::NotAfterCapitalised]),
+                Item::All(&[Item::Integer(2), Item::NotAfterCapitalised(&["the", "in"])]),
                 Item::Literal("files"),
             ],
         };
@@ -938,6 +941,13 @@ mod tests {
         assert_eq!(found(&P, "It runs the 3 files."), ["3 files"]);
         assert_eq!(found(&P, "Run it with 3 files."), ["3 files"]);
         assert_eq!(found(&P, "Python run 3 files."), ["3 files"]);
+        // A capitalised word in the set excuses nothing, whatever its case.
+        assert_eq!(found(&P, "The 3 files."), ["3 files"]);
+        assert_eq!(found(&P, "THE 3 files."), ["3 files"]);
+        assert_eq!(found(&P, "It runs In 3 files."), ["3 files"]);
+        assert_eq!(found(&P, "In 3 files it runs."), ["3 files"]);
+        assert!(found(&P, "Then 3 files.").is_empty());
+        assert!(found(&P, "Theme 3 files.").is_empty());
         // A mark between, or a word in a code span, is no word right before.
         assert_eq!(found(&P, "Run, 3 files."), ["3 files"]);
         assert_eq!(found(&P, "Run (3 files)."), ["3 files"]);

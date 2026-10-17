@@ -90,7 +90,7 @@ jobs:
       # failure are in the step summary. remeasure.sh says what it does.
       - name: Install Rust
         if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
 
       - name: Install typos
         if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
@@ -145,7 +145,7 @@ jobs:
       # may stand between the image reaching the registry and the lock pinning it.
       # Installs what rust-toolchain.toml names and caches the registry and target dir.
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
 
       # make preflight asks for it, though nothing here spell checks. A prebuilt binary.
       - name: Install typos

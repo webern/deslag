@@ -59,7 +59,7 @@ jobs:
       # test-python builds deslag-gold, so it needs the toolchain rust-toolchain.toml names, and
       # the registry and target dir cached, as in ci.yml.
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
 
       # The train scripts check the learned tagger's golden decisions, and what Python reads as a
       # letter or a digit follows its Unicode version, so the Python is pinned.

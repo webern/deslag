@@ -15,14 +15,15 @@ permissions:
 
 # make ci, which the release runs, takes the sum of its parts. Here the parts are jobs side by side, so a
 # run takes as long as its longest job, the timing check or the tests, whichever the runners made
-# slower. tests/ci_jobs.rs fails unless the `make` lines of the jobs run every recipe line of make ci,
-# the timing check runs alone in its job, and no job or step can be skipped or fail without failing the
-# run. Each job installs and caches only what its line reads, except typos, which make preflight wants
-# in all of them, and each has a target cache of its own, keyed by setup-rust-toolchain on the job and
-# on Cargo.lock, the manifests and the toolchain. Only a push to main saves those caches; a pull request
-# restores main's, so a branch that changes Cargo.lock adds none to the repository's 10 GB, where it
-# would add eight. make ci is not everything: python.yml runs make test-python when the scripts it tests
-# change.
+# slower. tests/ci_jobs.rs fails unless each `run:` is `make` with CARGO_FLAGS=--locked and targets,
+# those lines run every recipe line of make ci and no other, the timing check runs alone in its job, no
+# job or step has `if:` or `continue-on-error:`, and each job runs on a matrix that lists both OSes and
+# has no `exclude:`. Each job installs and caches only what its line reads, except typos, which make
+# preflight wants in all of them, and each has a target cache of its own, keyed by setup-rust-toolchain
+# on the job and on Cargo.lock, the manifests and the toolchain. Only a push to main saves those caches;
+# a pull request restores main's, so a branch that changes Cargo.lock adds none to the repository's
+# 10 GB, where it would add eight. make ci is not everything: python.yml runs make test-python when the
+# scripts it tests change.
 jobs:
   # Fmt, clippy, deslag on its own Markdown, rustdoc, typos, the builds, and the scanners' sweeps.
   check:

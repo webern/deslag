@@ -395,9 +395,7 @@ mod tests {
     /// What `text` is read as. It is a word that no table has, so its reading is the guess.
     fn read(text: &str) -> Reading {
         assert!(table(text).is_none(), "{text} is in a table");
-        let reading = guess(text);
-        assert_eq!(reading, closed::unknown(text), "{text}");
-        reading
+        guess(text)
     }
 
     /// Asserts the best guess, the features and the kept tags of `text`, and that it is `Unknown`.

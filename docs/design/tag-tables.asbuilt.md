@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-04
+updated: 2026-10-17
 subsystems:
   - tag-tables
 max_size_bytes: 5200
@@ -58,8 +58,8 @@ its number and `Contraction`, at `Unsure`; an `x` that is no noun there leaves t
 
 ## The word table
 
-`table.rs` builds one hash table of both on first use, about 9 ms and 4 MB. Each word is held with
-its `Reading` already made and its dominance mark, so a lookup folds and hashes once and one
+`build.rs` builds one hash table of both, 4 MB that `table.rs` reads in the binary. Each word is
+held with its `Reading` made and its dominance mark, so a lookup folds and hashes once and one
 probe answers. Words of up to eight bytes are in a table of 16-byte slots, four to a 64-byte
 bucket; longer words are in a table of 32-byte slots. The closed-class reading wins where both
 tables have a word.

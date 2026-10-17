@@ -11,9 +11,14 @@
 //! is from the way it is written. Then the pruning passes in `pass.rs` read each word in its
 //! sentence, and narrow what the tables left open.
 
+#[cfg(test)]
+mod build_tables;
+mod built;
+#[cfg(test)]
 mod closed;
 mod function;
 mod infinitive;
+mod layout;
 mod learned;
 mod lexicon;
 mod nounverb;

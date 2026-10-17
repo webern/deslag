@@ -31,7 +31,7 @@
 //! - **Words that cannot be names.** A word with no proper noun among its tags: a word of the
 //!   closed-class table, where a capitalised `This` is still `this`, and a word the lexicon knows
 //!   only as a common word, which a capital in running text marks as often by style as by name.
-//!   The lexicon lists the names it knows, and a word it lacks may be one (`closed::unknown`),
+//!   The lexicon lists the names it knows, and a word it lacks may be one (`shape::guess`),
 //!   so a capital settles most where the lexicon is silent or lists the name too.
 //! - **Words with one tag.** A lexicon name such as `Paris` has one tag left, so there is nothing
 //!   to narrow and it stays `Unsure`, as the lexicon left it.

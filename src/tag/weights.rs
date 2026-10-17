@@ -1,9 +1,10 @@
-//! The learned tagger's weights, read from `weights.txt` on first use.
+//! The learned tagger's weights, held in the binary as `build.rs` made them from `weights.txt`.
 //!
 //! `weights.txt` is written by `scripts/train/weights.py` from a trained model and checked in; its
 //! datasheet, `weights.md`, says what it was trained on and under what licence. The header of the
-//! file is documented in the script. This module parses it once into flat tables and answers one
-//! question of them: the totals a feature holds.
+//! file is documented in the script. When the crate builds, `build.rs` parses the file once into
+//! flat tables (see `build_tables.rs`) and writes them as bytes, so a run parses nothing, and this
+//! module answers one question of them: the totals a feature holds.
 //!
 //! A feature is a template and its fields. Where the model had a feature string, a row here has a
 //! template id, up to two small integers (a previous tag, a tag, a confidence, a set of tags) and a
@@ -15,159 +16,23 @@
 //! probe hashes the template, the integers and the text's bytes, which may arrive in two pieces,
 //! joined as the feature joined them; it compares the same way, so the pieces are never copied.
 //!
-//! **Size.** The file is built into the binary like the lexicon, once. The first word that needs
-//! the weights parses it, and the tables take about 4 MB; `weights.md`, the datasheet, gives the
-//! time that takes and what it adds to a run of `deslag check`.
+//! **Size.** The tables are about 4 MB in the binary, which reads them where they lie: the file's
+//! text itself is not in the binary. `layout.rs` says where each field is; `weights.md`, the
+//! datasheet, gives what they add to a run of `deslag check`.
 
 use std::sync::OnceLock;
 
-/// The weights file. A `static`, so the binary holds it once: a `const` is copied into each place
-/// that uses it.
-static TEXT: &str = include_str!("weights.txt");
-
-/// The first line of the file.
-const FORMAT: &str = "deslag-weights 1";
-
-/// The tag rules version the file says it was learned from: the digits after `rules_version<TAB>`
-/// on the second line. A line may end in `\r\n`, as a checkout that rewrites line ends leaves it.
-const fn file_rules_version(bytes: &[u8]) -> u32 {
-    let mut at = 0;
-    while bytes[at] != b'\n' {
-        at += 1;
-    }
-    at += 1;
-    let key = b"rules_version\t";
-    let mut i = 0;
-    while i < key.len() {
-        assert!(
-            bytes[at + i] == key[i],
-            "weights.txt: no rules_version line"
-        );
-        i += 1;
-    }
-    at += key.len();
-    let mut version = 0u32;
-    while bytes[at] != b'\n' && bytes[at] != b'\r' {
-        assert!(
-            bytes[at].is_ascii_digit(),
-            "weights.txt: rules_version is no number"
-        );
-        version = version * 10 + (bytes[at] - b'0') as u32;
-        at += 1;
-    }
-    version
-}
+use super::built;
+pub(super) use super::layout::template;
+use super::layout::{
+    ROW, WEIGHTS_MAGIC, hash_of, i32_at, i64_at, rules_version, section, u16_at, u32_at,
+};
 
 /// Whether the weights were learned from the rules of this build, [`super::RULES_VERSION`]. When
 /// they were not, the learned stage would read readings it was not trained on, so it does not run
 /// and the tagger is the rules alone. A test fails on such a build, so none ships; the build itself
 /// does not fail, so that the tools that write the readings to train new weights from still build.
-pub(super) const OF_THESE_RULES: bool = file_rules_version(TEXT.as_bytes()) == super::RULES_VERSION;
-
-/// The ids of the feature templates, in the order of the file's `templates` line.
-pub(super) mod template {
-    pub(in crate::tag) const BIAS: u8 = 0;
-    pub(in crate::tag) const FORM: u8 = 1;
-    pub(in crate::tag) const NORM: u8 = 2;
-    pub(in crate::tag) const SUFFIX_1: u8 = 3;
-    pub(in crate::tag) const SUFFIX_2: u8 = 4;
-    pub(in crate::tag) const SUFFIX_3: u8 = 5;
-    pub(in crate::tag) const PREFIX_1: u8 = 6;
-    pub(in crate::tag) const SHAPE: u8 = 7;
-    pub(in crate::tag) const PREVIOUS: u8 = 8;
-    pub(in crate::tag) const PREVIOUS_2: u8 = 9;
-    pub(in crate::tag) const PREVIOUS_PAIR: u8 = 10;
-    pub(in crate::tag) const PREVIOUS_NORM: u8 = 11;
-    pub(in crate::tag) const BEFORE: u8 = 12;
-    pub(in crate::tag) const BEFORE_SUFFIX_3: u8 = 13;
-    pub(in crate::tag) const BEFORE_2: u8 = 14;
-    pub(in crate::tag) const AFTER: u8 = 15;
-    pub(in crate::tag) const AFTER_SUFFIX_3: u8 = 16;
-    pub(in crate::tag) const AFTER_2: u8 = 17;
-    pub(in crate::tag) const BEFORE_NORM: u8 = 18;
-    pub(in crate::tag) const NORM_AFTER: u8 = 19;
-    pub(in crate::tag) const PREVIOUS_SHAPE: u8 = 20;
-    pub(in crate::tag) const RULES_TAG: u8 = 21;
-    pub(in crate::tag) const RULES_CONFIDENCE: u8 = 22;
-    pub(in crate::tag) const RULES_KEPT: u8 = 23;
-    pub(in crate::tag) const RULES_TAG_CONFIDENCE: u8 = 24;
-    /// How many there are.
-    pub(in crate::tag) const COUNT: usize = 25;
-    /// The names of the file's `templates` line.
-    #[cfg(test)]
-    pub(in crate::tag) const NAMES: [&str; COUNT] = [
-        "bias",
-        "w",
-        "n",
-        "s1",
-        "s2",
-        "s3",
-        "p1",
-        "shape",
-        "t-1",
-        "t-2",
-        "t-1 t-2",
-        "t-1 n",
-        "n-1",
-        "s3-1",
-        "n-2",
-        "n+1",
-        "s3+1",
-        "n+2",
-        "n-1 n",
-        "n n+1",
-        "t-1 shape",
-        "d tag",
-        "d conf",
-        "d kept",
-        "d tag conf",
-    ];
-}
-
-/// The shape of a template's fields: how many of its small integers a row holds, and whether it
-/// holds text. Index by template id.
-const FIELDS: [(u8, bool); template::COUNT] = [
-    (0, false),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (1, false),
-    (1, false),
-    (2, false),
-    (1, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (0, true),
-    (1, true),
-    (1, false),
-    (1, false),
-    (1, false),
-    (2, false),
-];
-
-/// One feature: where its text is in the file, where its cells are, and its integers.
-#[derive(Clone, Copy)]
-struct Row {
-    /// The text's byte offset in [`TEXT`] and its length.
-    text_at: u32,
-    text_len: u32,
-    /// The index of its first cell. A row's cells end where the next row's begin.
-    cells_at: u32,
-    /// The first integer, or the set of tags.
-    a: u16,
-    /// The second integer.
-    b: u8,
-    template: u8,
-}
+pub(super) const OF_THESE_RULES: bool = rules_version(built::WEIGHTS) == super::RULES_VERSION;
 
 /// The cutoffs on a margin, in units of the total: the difference of two scores.
 #[derive(Debug, Clone, Copy)]
@@ -180,57 +45,72 @@ pub(super) struct Cutoffs {
     pub(super) kept: i64,
 }
 
-/// The weights, parsed.
+/// The cells of one feature: its totals, each as four bytes, read where they lie.
+#[derive(Clone, Copy)]
+pub(super) struct Cells(&'static [u8]);
+
+impl Cells {
+    /// The cells of a feature the model does not have.
+    const NONE: Cells = Cells(&[]);
+
+    /// Whether there are none.
+    #[cfg(test)]
+    pub(super) fn is_empty(self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// The cells, as the packed `i32` of the file.
+    #[cfg(test)]
+    pub(super) fn to_vec(self) -> Vec<i32> {
+        (0..self.0.len() / 4)
+            .map(|n| i32_at(self.0, n * 4))
+            .collect()
+    }
+
+    /// Adds the totals to `scores`, by place.
+    #[inline]
+    pub(super) fn add_to(self, scores: &mut [i64; 13]) {
+        let bytes = self.0;
+        let mut at = 0;
+        while at < bytes.len() {
+            let cell = i32_at(bytes, at);
+            scores[(cell & 15) as usize] += i64::from(cell >> 4);
+            at += 4;
+        }
+    }
+}
+
+/// The weights, read from the bytes `build.rs` made.
 pub(super) struct Weights {
     pub(super) cutoffs: Cutoffs,
     /// The totals of the bias feature, which every word has, by place: where every score starts.
     pub(super) bias: [i64; 13],
-    /// The normal forms the model was trained on, sorted by bytes.
-    vocab: Vec<&'static str>,
+    /// The normal forms the model was trained on, sorted by bytes: where each ends in `vocab_text`,
+    /// as `u32`, after a first that is 0.
+    vocab_ends: &'static [u8],
+    vocab_text: &'static [u8],
     /// Code point ranges, `lo..=hi`, sorted: those Python's `isdigit` and `isdecimal` hold.
     digits: Vec<(u32, u32)>,
     decimals: Vec<(u32, u32)>,
-    rows: Vec<Row>,
-    /// Every row's cells, in order, with one extra row's start at the end.
-    cells: Vec<i32>,
-    /// Row index plus one, or zero for an empty slot.
-    slots: Vec<u32>,
-}
-
-/// The FNV-1a hash step over `bytes`, from `hash`.
-#[inline]
-fn mix(mut hash: u64, bytes: &[u8]) -> u64 {
-    let mut i = 0;
-    while i < bytes.len() {
-        hash = (hash ^ u64::from(bytes[i])).wrapping_mul(0x0100_0000_01b3);
-        i += 1;
-    }
-    hash
-}
-
-/// The hash of a feature: its template, integers, and text as `first`, or `first`, a space and
-/// `second`.
-#[inline]
-fn hash_of(template: u8, a: u16, b: u8, first: &str, second: Option<&str>) -> u64 {
-    let head = [template, b, a as u8, (a >> 8) as u8];
-    let mut hash = mix(0xcbf2_9ce4_8422_2325, &head);
-    hash = mix(hash, first.as_bytes());
-    if let Some(second) = second {
-        hash = mix(hash, b" ");
-        hash = mix(hash, second.as_bytes());
-    }
-    hash ^ (hash >> 32)
+    /// The rows, [`ROW`] bytes each, and one more that closes the last.
+    rows: &'static [u8],
+    /// The rows' texts, one after the other.
+    texts: &'static [u8],
+    /// Every row's cells, in order.
+    cells: &'static [u8],
+    /// Row index plus one, as `u32`, or zero for an empty slot.
+    slots: &'static [u8],
 }
 
 impl Weights {
-    /// The weights, parsed on first use.
+    /// The weights, set up on first use: a few slices of the bytes, and the digit ranges.
     pub(super) fn get() -> &'static Weights {
         static WEIGHTS: OnceLock<Weights> = OnceLock::new();
-        WEIGHTS.get_or_init(|| parse(TEXT))
+        WEIGHTS.get_or_init(|| read(built::WEIGHTS))
     }
 
     /// The cells of the feature with this template, integers and text, which is `first` alone or
-    /// `first`, a space and `second`; empty if the model does not have that feature.
+    /// `first`, a space and `second`; none if the model does not have that feature.
     #[inline]
     pub(super) fn find(
         &self,
@@ -239,24 +119,28 @@ impl Weights {
         b: u8,
         first: &str,
         second: Option<&str>,
-    ) -> &[i32] {
-        let mask = self.slots.len() - 1;
+    ) -> Cells {
+        let mask = self.slots.len() / 4 - 1;
         let mut at = hash_of(template, a, b, first, second) as usize & mask;
         let want = first.len() + second.map_or(0, |second| 1 + second.len());
         loop {
-            let slot = self.slots[at];
+            let slot = u32_at(self.slots, at * 4) as usize;
             if slot == 0 {
-                return &[];
+                return Cells::NONE;
             }
-            let row = &self.rows[slot as usize - 1];
-            if row.template == template
-                && row.a == a
-                && row.b == b
-                && row.text_len as usize == want
-                && same_text(row, first, second)
+            let row = (slot - 1) * ROW;
+            let rows = self.rows;
+            let text_at = u32_at(rows, row) as usize;
+            let text_end = u32_at(rows, row + ROW) as usize;
+            if rows[row + 11] == template
+                && u16_at(rows, row + 8) == a
+                && rows[row + 10] == b
+                && text_end - text_at == want
+                && same_text(&self.texts[text_at..text_end], first, second)
             {
-                let end = self.rows[slot as usize].cells_at;
-                return &self.cells[row.cells_at as usize..end as usize];
+                let cells_at = u32_at(rows, row + 4) as usize * 4;
+                let cells_end = u32_at(rows, row + ROW + 4) as usize * 4;
+                return Cells(&self.cells[cells_at..cells_end]);
             }
             at = (at + 1) & mask;
         }
@@ -269,7 +153,7 @@ impl Weights {
     /// and holds a space after it makes the string of `n n+1` or `n-1 n`; the file holds that
     /// string once, as the longer template, and this looks there for it.
     #[inline]
-    pub(super) fn text(&self, template: u8, text: &str) -> &[i32] {
+    pub(super) fn text(&self, template: u8, text: &str) -> Cells {
         let longer = match template {
             template::NORM => Some((template::NORM_AFTER, "n+1 ")),
             template::BEFORE => Some((template::BEFORE_NORM, "n ")),
@@ -287,7 +171,18 @@ impl Weights {
 
     /// Whether the model was trained on the normal form `norm`.
     pub(super) fn knows(&self, norm: &str) -> bool {
-        self.vocab.binary_search(&norm).is_ok()
+        let norm = norm.as_bytes();
+        let end = |n: usize| u32_at(self.vocab_ends, n * 4) as usize;
+        let (mut low, mut high) = (0, self.vocab_ends.len() / 4 - 1);
+        while low < high {
+            let mid = low + (high - low) / 2;
+            match self.vocab_text[end(mid)..end(mid + 1)].cmp(norm) {
+                std::cmp::Ordering::Less => low = mid + 1,
+                std::cmp::Ordering::Equal => return true,
+                std::cmp::Ordering::Greater => high = mid,
+            }
+        }
+        false
     }
 
     /// Whether Python's `str.isdigit` holds for `c`.
@@ -311,11 +206,9 @@ impl Weights {
     }
 }
 
-/// Whether the row's text is `first`, or `first`, a space and `second`.
+/// Whether `stored` is `first`, or `first`, a space and `second`.
 #[inline]
-fn same_text(row: &Row, first: &str, second: Option<&str>) -> bool {
-    let at = row.text_at as usize;
-    let stored = &TEXT.as_bytes()[at..at + row.text_len as usize];
+fn same_text(stored: &[u8], first: &str, second: Option<&str>) -> bool {
     match second {
         None => stored == first.as_bytes(),
         Some(second) => {
@@ -334,177 +227,48 @@ fn in_ranges(ranges: &[(u32, u32)], c: char) -> bool {
     found < ranges.len() && ranges[found].0 <= at
 }
 
-/// The lines of the file, one at a time.
-struct Lines {
-    rest: &'static str,
-    number: usize,
-}
-
-impl Lines {
-    /// The next line, without its `\n`, or `\r\n` where a checkout rewrote the line ends.
-    fn line(&mut self) -> &'static str {
-        let (line, rest) = self
-            .rest
-            .split_once('\n')
-            .unwrap_or_else(|| panic!("weights.txt ends early, after line {}", self.number));
-        self.rest = rest;
-        self.number += 1;
-        line.strip_suffix('\r').unwrap_or(line)
-    }
-
-    /// The fields of the next line, which must start with `key`.
-    fn keyed(&mut self, key: &str) -> Vec<&'static str> {
-        let line = self.line();
-        let mut fields = line.split('\t');
-        assert_eq!(fields.next(), Some(key), "weights.txt line {}", self.number);
-        fields.collect()
-    }
-
-    /// The number on the next line, which must be `key<TAB>number`.
-    fn number(&mut self, key: &str) -> i64 {
-        let fields = self.keyed(key);
-        assert_eq!(fields.len(), 1, "weights.txt: `{key}` holds one number");
-        fields[0]
-            .parse()
-            .unwrap_or_else(|_| panic!("weights.txt: `{key}` is no number"))
-    }
-}
-
-/// The ranges `lo-hi lo-hi ...` of the hexadecimal code points on a line.
-fn ranges_of(fields: &[&str]) -> Vec<(u32, u32)> {
-    let spans = fields.first().copied().unwrap_or("");
-    spans
-        .split(' ')
-        .filter(|span| !span.is_empty())
-        .map(|span| {
-            let (lo, hi) = span.split_once('-').expect("a range of the digits");
-            let hex = |text: &str| u32::from_str_radix(text, 16).expect("a hexadecimal point");
-            (hex(lo), hex(hi))
-        })
+/// The pairs of `u32` in `bytes`.
+fn ranges_in(bytes: &[u8]) -> Vec<(u32, u32)> {
+    (0..bytes.len() / 8)
+        .map(|n| (u32_at(bytes, n * 8), u32_at(bytes, n * 8 + 4)))
         .collect()
 }
 
-/// The integer in `text`, which is decimal digits and may lead with `-`.
-fn integer(text: &str) -> i64 {
-    let (negative, digits) = match text.strip_prefix('-') {
-        Some(digits) => (true, digits),
-        None => (false, text),
-    };
-    let mut value: i64 = 0;
-    for byte in digits.bytes() {
-        value = value * 10 + i64::from(byte - b'0');
-    }
-    if negative { -value } else { value }
-}
-
-/// Reads the file. A file that is not what this build expects is a bug in the build, so it
-/// panics: the weights are compiled in.
-fn parse(text: &'static str) -> Weights {
-    let mut lines = Lines {
-        rest: text,
-        number: 0,
-    };
-    assert_eq!(lines.line(), FORMAT);
-    lines.number("rules_version");
-    lines.number("steps");
+/// Reads the header of the weights and finds their sections. A file that is not what this build
+/// expects is a bug in the build, so it panics.
+fn read(bytes: &'static [u8]) -> Weights {
+    assert_eq!(
+        u32_at(bytes, 0),
+        WEIGHTS_MAGIC,
+        "the weights are not what the build wrote"
+    );
     let cutoffs = Cutoffs {
-        sure: lines.number("sure"),
-        unsure: lines.number("unsure"),
-        kept: lines.number("kept"),
+        sure: i64_at(bytes, 8),
+        unsure: i64_at(bytes, 16),
+        kept: i64_at(bytes, 24),
     };
-    // The model's hash says which model the file was written from; the exporter checks it. The
-    // names of the codes, histories, levels and templates are fixed in this build; the tests
-    // compare them with the file's.
-    for key in [
-        "model_sha256",
-        "codes",
-        "histories",
-        "confs",
-        "templates",
-        "unicode",
-    ] {
-        lines.keyed(key);
-    }
-    let digits = ranges_of(&lines.keyed("digits"));
-    let decimals = ranges_of(&lines.keyed("decimals"));
-    let count = lines.number("vocab") as usize;
-    let mut vocab = Vec::with_capacity(count);
-    for _ in 0..count {
-        vocab.push(lines.line());
-    }
-    let count = lines.number("rows") as usize;
-    let mut rows = Vec::with_capacity(count + 1);
-    let mut cells: Vec<i32> = Vec::with_capacity(count * 5 / 2);
-    let base = text.as_ptr() as usize;
-    for _ in 0..count {
-        let line = lines.line();
-        let mut fields = line.split('\t');
-        let template = integer(fields.next().expect("a template")) as u8;
-        let (ints, has_text) = FIELDS[template as usize];
-        let (mut a, mut b) = (0u16, 0u8);
-        if ints >= 1 {
-            a = integer(fields.next().expect("an integer")) as u16;
-        }
-        if ints == 2 {
-            b = integer(fields.next().expect("an integer")) as u8;
-        }
-        let (mut text_at, mut text_len) = (0u32, 0u32);
-        if has_text {
-            let field = fields.next().expect("a text");
-            text_at = (field.as_ptr() as usize - base) as u32;
-            text_len = field.len() as u32;
-        }
-        rows.push(Row {
-            text_at,
-            text_len,
-            cells_at: cells.len() as u32,
-            a,
-            b,
-            template,
-        });
-        for cell in fields.next().expect("cells").split(' ') {
-            let (code, total) = cell.split_once(':').expect("a cell");
-            let packed = integer(total) << 4 | integer(code);
-            cells.push(i32::try_from(packed).expect("a total that fits"));
-        }
-    }
-    // The end of the last row's cells, so that a row's end is the next row's start.
-    rows.push(Row {
-        text_at: 0,
-        text_len: 0,
-        cells_at: cells.len() as u32,
-        a: 0,
-        b: 0,
-        template: 0,
-    });
     let mut bias = [0i64; 13];
-    if let Some(row) = rows[..count]
-        .iter()
-        .position(|row| row.template == template::BIAS)
-    {
-        let cells = &cells[rows[row].cells_at as usize..rows[row + 1].cells_at as usize];
-        for &cell in cells {
-            bias[(cell & 15) as usize] += i64::from(cell >> 4);
-        }
+    for (place, total) in bias.iter_mut().enumerate() {
+        *total = i64_at(bytes, 32 + place * 8);
     }
-    let mut slots = vec![0u32; (count * 2).next_power_of_two()];
-    let mask = slots.len() - 1;
-    for (n, row) in rows[..count].iter().enumerate() {
-        let at = row.text_at as usize;
-        let stored = &text[at..at + row.text_len as usize];
-        let mut slot = hash_of(row.template, row.a, row.b, stored, None) as usize & mask;
-        while slots[slot] != 0 {
-            slot = (slot + 1) & mask;
-        }
-        slots[slot] = n as u32 + 1;
-    }
+    let mut at = 32 + 13 * 8;
+    let digits = ranges_in(section(bytes, &mut at));
+    let decimals = ranges_in(section(bytes, &mut at));
+    let vocab_ends = section(bytes, &mut at);
+    let vocab_text = section(bytes, &mut at);
+    let rows = section(bytes, &mut at);
+    let texts = section(bytes, &mut at);
+    let cells = section(bytes, &mut at);
+    let slots = section(bytes, &mut at);
     Weights {
         cutoffs,
         bias,
-        vocab,
+        vocab_ends,
+        vocab_text,
         digits,
         decimals,
         rows,
+        texts,
         cells,
         slots,
     }
@@ -513,6 +277,10 @@ fn parse(text: &'static str) -> Weights {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tag::build_tables;
+
+    /// The weights file.
+    static TEXT: &str = include_str!("weights.txt");
 
     /// The names on the file's line `key`, in order.
     fn line_of(key: &str) -> Vec<&'static str> {
@@ -526,7 +294,7 @@ mod tests {
 
     #[test]
     fn the_weights_were_learned_from_the_rules_of_this_build() {
-        let learned_from = file_rules_version(TEXT.as_bytes());
+        let learned_from = rules_version(built::WEIGHTS);
         assert_eq!(
             learned_from,
             super::super::RULES_VERSION,
@@ -537,82 +305,125 @@ mod tests {
              src/tag/weights.md)."
         );
         assert_eq!(OF_THESE_RULES, learned_from == super::super::RULES_VERSION);
+        assert_eq!(build_tables::parse(TEXT).rules_version, learned_from);
     }
 
     #[test]
-    fn the_rules_version_is_read_from_a_file_with_either_line_end() {
-        assert_eq!(
-            file_rules_version(b"deslag-weights 1\nrules_version\t11\nsteps"),
-            11
+    fn the_bytes_are_what_the_text_makes() {
+        assert!(
+            build_tables::weights(TEXT) == built::WEIGHTS,
+            "the weights in the binary are not what src/tag/weights.txt makes: build.rs did not \
+             run again after the file changed"
         );
-        assert_eq!(
-            file_rules_version(b"deslag-weights 1\r\nrules_version\t11\r\nsteps"),
-            11
-        );
-        let mut lines = Lines {
-            rest: "a\r\nb\n",
-            number: 0,
-        };
-        assert_eq!((lines.line(), lines.line()), ("a", "b"));
+    }
+
+    #[test]
+    fn a_file_with_either_line_end_is_read_the_same() {
+        let crlf = TEXT.replace('\n', "\r\n");
+        let (lf, crlf) = (build_tables::parse(TEXT), build_tables::parse(&crlf));
+        assert_eq!(lf.rules_version, crlf.rules_version);
+        assert_eq!(lf.cutoffs, crlf.cutoffs);
+        assert_eq!(lf.vocab, crlf.vocab);
+        assert_eq!(lf.rows.len(), crlf.rows.len());
+        for (lf, crlf) in lf.rows.iter().zip(&crlf.rows) {
+            let key =
+                |row: &build_tables::Row<'_>| (row.template, row.a, row.b, row.text.to_string());
+            assert_eq!((key(lf), &lf.cells), (key(crlf), &crlf.cells));
+        }
     }
 
     #[test]
     fn the_file_names_the_templates_this_build_has() {
-        assert_eq!(line_of("templates"), template::NAMES);
+        assert_eq!(line_of("templates"), build_tables::NAMES);
     }
 
     #[test]
     fn the_file_is_what_it_says_it_is() {
         let weights = Weights::get();
+        let vocab = weights.vocab_ends.len() / 4 - 1;
+        assert_eq!(vocab, line_of("vocab")[0].parse::<usize>().unwrap());
+        let words: Vec<&[u8]> = (0..vocab)
+            .map(|n| {
+                let end = |n: usize| u32_at(weights.vocab_ends, n * 4) as usize;
+                &weights.vocab_text[end(n)..end(n + 1)]
+            })
+            .collect();
+        let sorted = words.windows(2).all(|pair| pair[0] < pair[1]);
+        assert!(sorted, "the vocabulary is sorted by bytes, once each");
         assert_eq!(
-            weights.vocab.len(),
-            line_of("vocab")[0].parse::<usize>().unwrap()
-        );
-        assert_eq!(
-            weights.rows.len() - 1,
+            weights.rows.len() / ROW - 1,
             line_of("rows")[0].parse::<usize>().unwrap()
         );
-        let sorted = weights.vocab.windows(2).all(|pair| pair[0] < pair[1]);
-        assert!(sorted, "the vocabulary is sorted by bytes, once each");
         assert!(weights.cutoffs.unsure <= weights.cutoffs.sure);
         assert!(weights.cutoffs.kept >= 0);
-        assert!(weights.cells.len() > weights.rows.len());
+        assert!(weights.cells.len() / 4 > weights.rows.len() / ROW);
+        let model = build_tables::parse(TEXT);
+        assert_eq!(weights.digits, model.digits);
+        assert_eq!(weights.decimals, model.decimals);
+        assert_eq!(
+            [
+                weights.cutoffs.sure,
+                weights.cutoffs.unsure,
+                weights.cutoffs.kept
+            ],
+            model.cutoffs
+        );
+    }
+
+    #[test]
+    fn the_model_knows_the_words_it_was_trained_on_and_no_others() {
+        let weights = Weights::get();
+        let model = build_tables::parse(TEXT);
+        for word in &model.vocab {
+            assert!(weights.knows(word), "{word}");
+        }
+        for word in [
+            "",
+            "\u{1f980}",
+            "zzzzzzzzzzzzzzzzzzzzzzzzzz",
+            "!",
+            "the\u{1f980}",
+        ] {
+            assert_eq!(weights.knows(word), model.vocab.contains(&word), "{word}");
+        }
     }
 
     #[test]
     fn every_row_is_found_by_its_own_key() {
         let weights = Weights::get();
-        let rows = &weights.rows[..weights.rows.len() - 1];
-        for (n, row) in rows.iter().enumerate() {
-            let at = row.text_at as usize;
-            let text = &TEXT[at..at + row.text_len as usize];
-            let found = weights.find(row.template, row.a, row.b, text, None);
-            let end = weights.rows[n + 1].cells_at as usize;
-            assert_eq!(found, &weights.cells[row.cells_at as usize..end], "row {n}");
+        let model = build_tables::parse(TEXT);
+        for (n, row) in model.rows.iter().enumerate() {
+            let found = weights.find(row.template, row.a, row.b, row.text, None);
+            assert_eq!(found.to_vec(), row.cells, "row {n}");
             assert!(!found.is_empty());
         }
     }
 
     #[test]
+    fn the_bias_is_the_sum_of_the_bias_row() {
+        let weights = Weights::get();
+        let mut scores = [0i64; 13];
+        weights
+            .find(build_tables::BIAS, 0, 0, "", None)
+            .add_to(&mut scores);
+        assert_eq!(scores, weights.bias);
+        assert!(scores.iter().any(|&total| total != 0));
+    }
+
+    #[test]
     fn a_text_in_two_pieces_is_the_joined_text() {
         let weights = Weights::get();
-        let rows = &weights.rows[..weights.rows.len() - 1];
-        let joined = rows
+        let model = build_tables::parse(TEXT);
+        let joined = model
+            .rows
             .iter()
-            .find(|row| {
-                row.template == template::BEFORE_NORM && {
-                    let at = row.text_at as usize;
-                    TEXT[at..at + row.text_len as usize].contains(' ')
-                }
-            })
+            .find(|row| row.template == template::BEFORE_NORM && row.text.contains(' '))
             .expect("a joined feature");
-        let at = joined.text_at as usize;
-        let text = &TEXT[at..at + joined.text_len as usize];
-        let (first, second) = text.split_once(' ').unwrap();
-        let whole = weights.find(template::BEFORE_NORM, 0, 0, text, None);
+        let (first, second) = joined.text.split_once(' ').unwrap();
+        let whole = weights.find(template::BEFORE_NORM, 0, 0, joined.text, None);
         let pieces = weights.find(template::BEFORE_NORM, 0, 0, first, Some(second));
         assert!(!whole.is_empty());
-        assert_eq!(whole, pieces);
+        assert_eq!(whole.to_vec(), pieces.to_vec());
         assert!(
             weights
                 .find(template::BEFORE_NORM, 0, 0, second, Some(first))
@@ -626,7 +437,7 @@ mod tests {
         let weights = Weights::get();
         let none = weights.find(template::NORM, 0, 0, "\u{1f980}\u{1f980}", None);
         assert!(none.is_empty());
-        assert!(!weights.find(template::BIAS, 0, 0, "", None).is_empty());
+        assert!(!weights.find(build_tables::BIAS, 0, 0, "", None).is_empty());
     }
 
     #[test]

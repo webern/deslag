@@ -214,14 +214,6 @@ fn bits(tags: TagSet) -> u16 {
     bits
 }
 
-/// Adds the totals in `cells` to `scores`, by place.
-#[inline]
-fn add(scores: &mut [i64; 13], cells: &[i32]) {
-    for &cell in cells {
-        scores[(cell & 15) as usize] += i64::from(cell >> 4);
-    }
-}
-
 /// What the features of one word read: the sentence's normal forms, padded by two on each side
 /// so that a neighbour is a lookup with no bounds to check, the word, and the previous tags.
 struct Word<'s> {
@@ -248,97 +240,75 @@ fn score(weights: &Weights, word: &Word<'_>) -> [i64; 13] {
     let tag = place(reading.tag);
     let level = reading.confidence.index() as u8;
     let mut scores = weights.bias;
-    add(
-        &mut scores,
-        weights.find(template::FORM, 0, 0, word.form, None),
-    );
-    add(&mut scores, weights.text(template::NORM, norm));
-    add(
-        &mut scores,
-        weights.find(template::SUFFIX_1, 0, 0, tail(norm, 1), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::SUFFIX_2, 0, 0, tail(norm, 2), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::SUFFIX_3, 0, 0, tail(norm, 3), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREFIX_1, 0, 0, head(norm), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::SHAPE, 0, 0, word.shape, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS, h1, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_2, h2, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_PAIR, h1, h2 as u8, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_NORM, h1, 0, norm, None),
-    );
-    add(&mut scores, weights.text(template::BEFORE, before));
-    add(
-        &mut scores,
-        weights.find(template::BEFORE_SUFFIX_3, 0, 0, tail(before, 3), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::BEFORE_2, 0, 0, before_2, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::AFTER, 0, 0, after, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::AFTER_SUFFIX_3, 0, 0, tail(after, 3), None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::AFTER_2, 0, 0, after_2, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::BEFORE_NORM, 0, 0, before, Some(norm)),
-    );
-    add(
-        &mut scores,
-        weights.find(template::NORM_AFTER, 0, 0, norm, Some(after)),
-    );
-    add(
-        &mut scores,
-        weights.find(template::PREVIOUS_SHAPE, h1, 0, word.shape, None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::RULES_TAG, tag, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::RULES_CONFIDENCE, u16::from(level), 0, "", None),
-    );
+    weights
+        .find(template::FORM, 0, 0, word.form, None)
+        .add_to(&mut scores);
+    weights.text(template::NORM, norm).add_to(&mut scores);
+    weights
+        .find(template::SUFFIX_1, 0, 0, tail(norm, 1), None)
+        .add_to(&mut scores);
+    weights
+        .find(template::SUFFIX_2, 0, 0, tail(norm, 2), None)
+        .add_to(&mut scores);
+    weights
+        .find(template::SUFFIX_3, 0, 0, tail(norm, 3), None)
+        .add_to(&mut scores);
+    weights
+        .find(template::PREFIX_1, 0, 0, head(norm), None)
+        .add_to(&mut scores);
+    weights
+        .find(template::SHAPE, 0, 0, word.shape, None)
+        .add_to(&mut scores);
+    weights
+        .find(template::PREVIOUS, h1, 0, "", None)
+        .add_to(&mut scores);
+    weights
+        .find(template::PREVIOUS_2, h2, 0, "", None)
+        .add_to(&mut scores);
+    weights
+        .find(template::PREVIOUS_PAIR, h1, h2 as u8, "", None)
+        .add_to(&mut scores);
+    weights
+        .find(template::PREVIOUS_NORM, h1, 0, norm, None)
+        .add_to(&mut scores);
+    weights.text(template::BEFORE, before).add_to(&mut scores);
+    weights
+        .find(template::BEFORE_SUFFIX_3, 0, 0, tail(before, 3), None)
+        .add_to(&mut scores);
+    weights
+        .find(template::BEFORE_2, 0, 0, before_2, None)
+        .add_to(&mut scores);
+    weights
+        .find(template::AFTER, 0, 0, after, None)
+        .add_to(&mut scores);
+    weights
+        .find(template::AFTER_SUFFIX_3, 0, 0, tail(after, 3), None)
+        .add_to(&mut scores);
+    weights
+        .find(template::AFTER_2, 0, 0, after_2, None)
+        .add_to(&mut scores);
+    weights
+        .find(template::BEFORE_NORM, 0, 0, before, Some(norm))
+        .add_to(&mut scores);
+    weights
+        .find(template::NORM_AFTER, 0, 0, norm, Some(after))
+        .add_to(&mut scores);
+    weights
+        .find(template::PREVIOUS_SHAPE, h1, 0, word.shape, None)
+        .add_to(&mut scores);
+    weights
+        .find(template::RULES_TAG, tag, 0, "", None)
+        .add_to(&mut scores);
+    weights
+        .find(template::RULES_CONFIDENCE, u16::from(level), 0, "", None)
+        .add_to(&mut scores);
     let kept = bits(reading.possible());
-    add(
-        &mut scores,
-        weights.find(template::RULES_KEPT, kept, 0, "", None),
-    );
-    add(
-        &mut scores,
-        weights.find(template::RULES_TAG_CONFIDENCE, tag, level, "", None),
-    );
+    weights
+        .find(template::RULES_KEPT, kept, 0, "", None)
+        .add_to(&mut scores);
+    weights
+        .find(template::RULES_TAG_CONFIDENCE, tag, level, "", None)
+        .add_to(&mut scores);
     scores
 }
 

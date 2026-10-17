@@ -505,13 +505,6 @@ pub fn lookup(word: &str) -> Option<Reading> {
     })
 }
 
-/// A word no table has, read at `Unknown` by its shape: see `shape.rs`. The best guess and the tags
-/// it keeps come from the way it is written, and a capitalised one keeps a proper noun beside its
-/// noun, whatever else its shape says, so that a pass can name it.
-pub fn unknown(text: &str) -> Reading {
-    super::shape::guess(text)
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
@@ -524,7 +517,7 @@ mod tests {
         let mut buf = [0; super::super::LONGEST];
         super::super::fold(text, &mut buf)
             .and_then(lookup)
-            .unwrap_or_else(|| unknown(text))
+            .unwrap_or_else(|| crate::tag::shape::guess(text))
     }
 
     #[test]

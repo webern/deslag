@@ -19,25 +19,27 @@ integer, so the Rust reader sums with `i64` and uses no floating point. The form
 the top of `scripts/train/weights.py`.
 
 The file is a deliberate exception to the build doctrine's rule of thumb that text data over 1 MB
-is an External Asset fetched outside git: it is three and a half times that. The binary carries
-it, so the build needs it offline, and it is the model as it was trained and graded. Pruning it to
-fit would ship a different model from the one that was measured. Each retraining adds about 1.3 MB,
-packed, to git's history.
+is an External Asset fetched outside git: it is three and a half times that. The build makes the
+binary's tables from it, so the build needs it offline, and it is the model as it was trained and
+graded. Pruning it to fit would ship a different model from the one that was measured. Each
+retraining adds about 1.3 MB, packed, to git's history.
 
 ## What it costs
 
-Measured on Linux arm64 against `main` at `ac0be76`, release builds unless named, but for
-tagging's share, which was measured once code words were marked seen:
+Measured on macOS x86-64 (an i9-9980HK) with the machine idle, release builds unless named:
 
-- Binary: `deslag` is 9,856,248 bytes without the stage and 13,478,368 with it, 3,622,120 more.
-  The file is in it once.
-- First use: the first word that needs the weights parses the file into its tables, which hold
-  about 4 MB. That takes 9.4 ms in a release build and 187 ms in a debug build.
-- Per run: every run that reads prose pays that parse once. `deslag check` of one three-line
-  Markdown file takes 21.8 ms, against 9.9 ms without the stage (medians of 50 runs).
+- Binary: `deslag` is 18,185,048 bytes. The tables built from this file are in it, and not the
+  file's text: the weights are 3,891,851 bytes, the word table of both lexicons 4,194,312 and the
+  index of the lexicon's lines 524,288.
+- Build: `build.rs` parses the file and builds the tables, so no run does. A clean debug build of
+  `deslag` takes 32.4 s and a clean release build 61.2 s.
+- First use: none. The reader finds the tables where they lie in the binary, and a run touches only
+  the pages it reads.
+- Per run: `deslag check` of one three-line Markdown file takes 24 ms in a debug build and 11 ms in
+  a release build (medians of 21 runs).
 - Tagging's share of reading the corpus's big tier, which `cargo run -p deslag-corpus -- time
-  --check` holds under 75%, is 65% in debug and 58% in release. That check keeps each file's
-  fastest pass, so it leaves out the parse.
+  --check` holds under 75%, is 71.5% in debug. That check keeps each file's fastest pass, so it
+  leaves out any setup.
 
 ## Training data
 

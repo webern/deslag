@@ -21,14 +21,15 @@
 //!   noun or proper noun, with the stem's number and [`Features::CONTRACTION`]. The generator
 //!   leaves possessives out.
 //! - **Lookup.** The file stays as it is in the binary. The tagger reads a word through
-//!   `table.rs`, which holds this lexicon and the closed-class table in one hash table built from
-//!   [`entries`]. [`lookup`] serves the rest, such as a possessive's stem. Its first call hashes each
-//!   line's word into a table of line offsets, a few milliseconds and half a megabyte, and a lookup
-//!   after that costs a hash and a probe or two, and allocates nothing.
+//!   `table.rs`, which holds this lexicon and the closed-class table in one hash table made from
+//!   [`entries`] when the crate builds. [`lookup`] serves the rest, such as a possessive's stem,
+//!   through a table of line offsets that `build.rs` makes too (see `build_tables.rs`), half a
+//!   megabyte: a lookup costs a hash and a probe or two, and allocates nothing.
 
 use std::sync::OnceLock;
 
-use super::{Confidence, Features, Reading, Tag, TagSet};
+use super::layout::{lexicon_hash, u32_at};
+use super::{Confidence, Features, Reading, Tag, TagSet, built};
 
 /// The lexicon file.
 const TEXT: &str = include_str!("lexicon.txt");
@@ -74,7 +75,7 @@ const FEATURES: [(char, Features); 10] = [
 pub const LONGEST: usize = 24;
 
 /// The lines of the file after its header.
-fn body() -> &'static str {
+pub(super) fn body() -> &'static str {
     static BODY: OnceLock<&'static str> = OnceLock::new();
     BODY.get_or_init(|| {
         let mut rest = TEXT;
@@ -85,49 +86,18 @@ fn body() -> &'static str {
     })
 }
 
-/// The FNV-1a hash of `word`, which takes a few steps for a short word. The table is fixed and its
-/// keys are ours, so nothing here needs a hash that resists a chosen input.
-fn hash(word: &str) -> usize {
-    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
-    for byte in word.bytes() {
-        hash = (hash ^ u64::from(byte)).wrapping_mul(0x0100_0000_01b3);
-    }
-    hash as usize
-}
-
-/// A hash table of the body's lines, built on first use: open addressing with linear probing, each
-/// slot the offset of a line plus one, or zero when empty. The lines stay where they are, so the
-/// table is four bytes a slot, and a word is found without a copy or an allocation.
-fn table() -> &'static [u32] {
-    static TABLE: OnceLock<Vec<u32>> = OnceLock::new();
-    TABLE.get_or_init(|| {
-        let text = body();
-        // A line is about 12 bytes, so this is half as many slots again as words at the least,
-        // rounded up to a power of two so that a mask picks the slot.
-        let mut slots = vec![0u32; (text.len() / 8).next_power_of_two()];
-        let mask = slots.len() - 1;
-        let mut start = 0;
-        for line in text.split_inclusive('\n') {
-            let key = line.split('\t').next().unwrap_or(line);
-            let mut at = hash(key) & mask;
-            while slots[at] != 0 {
-                at = (at + 1) & mask;
-            }
-            slots[at] = start as u32 + 1;
-            start += line.len();
-        }
-        slots
-    })
-}
-
 /// The readings field of the line for `word`, which must already be folded.
 fn find(word: &str) -> Option<&'static str> {
     let text = body();
-    let slots = table();
-    let mask = slots.len() - 1;
-    let mut at = hash(word) & mask;
-    while slots[at] != 0 {
-        let line = &text[slots[at] as usize - 1..];
+    let slots = built::LEXICON;
+    let mask = slots.len() / 4 - 1;
+    let mut at = lexicon_hash(word) & mask;
+    loop {
+        let slot = u32_at(slots, at * 4) as usize;
+        if slot == 0 {
+            return None;
+        }
+        let line = &text[slot - 1..];
         if let Some(rest) = line
             .strip_prefix(word)
             .and_then(|rest| rest.strip_prefix('\t'))
@@ -136,11 +106,14 @@ fn find(word: &str) -> Option<&'static str> {
         }
         at = (at + 1) & mask;
     }
-    None
 }
 
 /// Every word of the file, in order, with its reading and whether it is marked dominant: see
 /// `dominant`. A line that is not well formed is left out, as [`lookup`] reads it as no word.
+#[allow(
+    dead_code,
+    reason = "the build script reads the entries to make the word table"
+)]
 pub(super) fn entries() -> impl Iterator<Item = (&'static str, Reading, bool)> {
     body().lines().filter_map(|line| {
         let (word, readings) = line.split_once('\t')?;
@@ -254,6 +227,15 @@ mod tests {
 
     fn word(text: &str) -> Reading {
         lookup(text).unwrap_or_else(|| panic!("{text} is not in the lexicon"))
+    }
+
+    #[test]
+    fn the_index_is_what_the_lines_make() {
+        assert!(
+            crate::tag::build_tables::lexicon_index() == built::LEXICON,
+            "the lexicon's index in the binary is not what its lines make: build.rs did not run \
+             again after the file changed"
+        );
     }
 
     #[test]

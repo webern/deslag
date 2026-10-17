@@ -128,6 +128,18 @@ impl TagSet {
         self.0 == 0
     }
 
+    /// The set as one bit for each tag, at its place in [`Tag::ALL`]: how the tables built at
+    /// compile time hold it.
+    #[allow(dead_code, reason = "the build script writes the tables with it")]
+    pub(super) const fn bits(self) -> u16 {
+        self.0
+    }
+
+    /// The set that [`TagSet::bits`] gave `bits` for.
+    pub(super) const fn from_bits(bits: u16) -> TagSet {
+        TagSet(bits)
+    }
+
     /// Its tags, in the fixed order.
     pub fn iter(self) -> impl Iterator<Item = Tag> {
         Tag::ALL.into_iter().filter(move |tag| self.contains(*tag))
@@ -205,6 +217,18 @@ impl Features {
     /// Whether every flag of `other` is set here.
     pub fn contains(self, other: Features) -> bool {
         self.0 & other.0 == other.0
+    }
+
+    /// The flags as one bit each, in the order of [`Features::ALL`]: how the tables built at
+    /// compile time hold them.
+    #[allow(dead_code, reason = "the build script writes the tables with it")]
+    pub(super) const fn bits(self) -> u16 {
+        self.0
+    }
+
+    /// The flags that [`Features::bits`] gave `bits` for.
+    pub(super) const fn from_bits(bits: u16) -> Features {
+        Features(bits)
     }
 
     /// The flags of both.

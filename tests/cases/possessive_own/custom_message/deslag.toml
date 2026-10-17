@@ -1,0 +1,4 @@
+schema_version = 1
+
+[md.lints.possessive_own]
+message = "Reword the own phrases in {path}."

@@ -174,7 +174,8 @@ fn can_run(lint: Lint, surfaces: &[&str]) -> bool {
         | Lint::BannedChars
         | Lint::BannedPhrases
         | Lint::Density
-        | Lint::VerbsNoNouns => !surfaces.is_empty(),
+        | Lint::VerbsNoNouns
+        | Lint::PossessiveOwn => !surfaces.is_empty(),
     }
 }
 

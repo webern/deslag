@@ -14,17 +14,17 @@ use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::path::Path;
 
+use common::claims::{Broke, CLAIMS, is_english, moved};
 use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::changelog::Version;
-use deslag::config::VerbsNoNouns;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
-use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis, verbs_no_nouns};
+use deslag::lint::{Lint, banned_chars, banned_phrases, density, max_emphasis};
 use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
 
 /// How many fixtures each collected category must hold at least.
@@ -871,6 +871,15 @@ fn the_corpus_locations_hold_what_they_point_at() {
                         );
                     }
                 }
+                Violation::PossessiveOwn(over) => {
+                    for found in &over.matches {
+                        let held = held(&found.location);
+                        assert!(
+                            held.split_whitespace().next() == found.quote.split_whitespace().next(),
+                            "{context}: {held:?} for {found:?}"
+                        );
+                    }
+                }
                 Violation::Density(over) => {
                     for block in &over.blocks {
                         let held = held(&block.location);
@@ -1177,25 +1186,38 @@ fn the_default_groups_flag_llm_text_far_more_than_human_text() {
     assert!(llm >= 4 * human, "human {human}, llm {llm}");
 }
 
+/// Each taste lint flags `llm` files far more often than `human` files: the claim of its row in
+/// [`CLAIMS`], on the English fixtures of the tree.
 #[test]
-fn verbs_no_nouns_flags_llm_text_far_more_than_human_text() {
+fn the_taste_lints_flag_llm_text_far_more_than_human_text() {
     let fixtures = corpus();
-    let settings = VerbsNoNouns::default();
-    let flagged = |category: &str| {
-        fixtures
-            .iter()
-            .filter(|fixture| fixture.category == category)
-            // Its words are English; `no` is a word of other languages too.
-            .filter(|fixture| fixture.sidecar.content.natural_language == "en")
-            .filter(|fixture| {
-                let text = String::from_utf8_lossy(&fixture.bytes);
-                verbs_no_nouns::check(&Document::markdown(&text), Some(&settings)).is_some()
-            })
-            .count()
-    };
-    let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
-    eprintln!("flagged by verbs_no_nouns: human {human}, llm {llm}, mixed {mixed}");
-    assert!(llm >= 3 * human, "human {human}, llm {llm}");
+    for claim in CLAIMS {
+        let flagged = |category: &str| {
+            fixtures
+                .iter()
+                .filter(|fixture| fixture.category == category && is_english(fixture))
+                .filter(|fixture| {
+                    let text = String::from_utf8_lossy(&fixture.bytes);
+                    (claim.fails)(&Document::markdown(&text))
+                })
+                .count()
+        };
+        let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
+        eprintln!(
+            "flagged by {}: human {human}, llm {llm}, mixed {mixed}",
+            claim.lint
+        );
+        assert!(
+            llm >= claim.tree_factor * human,
+            "{}",
+            moved(
+                claim,
+                "tree",
+                Broke::Factor(claim.tree_factor),
+                &format!("human {human}, llm {llm}")
+            )
+        );
+    }
 }
 
 /// The number of `llm/` fixtures each phrase group must match, so that no group is dead weight.

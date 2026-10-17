@@ -5,8 +5,9 @@
 //! comes from the config. Each item matches one token by its kind, its folded text, its folded
 //! text ending, or not ending, in a given string, its folded text being or not being in a listed
 //! set, whether it starts a listed pair of words, the part of speech the tagger read for it, a
-//! feature the tagger read, or its origin, where the word comes from. An item may be optional, and
-//! a gap skips a bounded number of tokens. A match never leaves its sentence.
+//! feature the tagger read, or its origin, where the word comes from. An item may be optional, may
+//! be any one of several, and a gap skips a bounded number of tokens. A match never leaves its
+//! sentence.
 //!
 //! [`Pattern::find`] tries each start position in turn and reports the first that matches, with
 //! the longest match from there, then resumes after it: leftmost first, then longest, and no two
@@ -54,8 +55,12 @@ pub enum Item {
     /// It reads the token's `origin`, which is not a confidence on a set of tags: a lint that
     /// skips code, or asks for a name to be in a code span, wants this and not [`Item::Tag`].
     Origin(Origin),
+    /// A punctuation mark whose folded text is this, as the `'` that follows the `s` of `users'`.
+    Punctuation(&'static str),
     /// Every one of these items matches the one token.
     All(&'static [Item]),
+    /// At least one of these items matches the one token.
+    Any(&'static [Item]),
     /// This item, or nothing.
     Optional(&'static Item),
     /// Up to this many tokens of any kind.
@@ -157,7 +162,9 @@ fn one(item: &Item, tokens: &[Token<'_>], folded: &[String], at: usize) -> bool 
                 .is_some_and(|reading| reading.features.contains(*feature))
         }
         Item::Origin(origin) => word && token.origin == *origin,
+        Item::Punctuation(mark) => token.kind == TokenKind::Punctuation && text == mark,
         Item::All(items) => items.iter().all(|item| one(item, tokens, folded, at)),
+        Item::Any(items) => items.iter().any(|item| one(item, tokens, folded, at)),
         Item::Optional(_) | Item::Gap(_) => false,
     }
 }
@@ -271,6 +278,36 @@ mod tests {
             items: &[Item::All(&[Item::Suffix("s"), Item::Without(&['\''])])],
         };
         assert_eq!(found(&P, "it's runs"), ["runs"]);
+    }
+
+    #[test]
+    fn any_needs_one_item() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::Any(&[Item::Literal("my"), Item::Suffix("'s")]),
+                Item::Literal("own"),
+            ],
+        };
+        assert_eq!(
+            found(&P, "My own, the cat's own, her own, the cats own."),
+            ["My own", "cat's own"]
+        );
+    }
+
+    #[test]
+    fn a_punctuation_item_matches_the_mark_and_not_the_word() {
+        const P: Pattern = Pattern {
+            items: &[
+                Item::Suffix("s"),
+                Item::Punctuation("'"),
+                Item::Literal("own"),
+            ],
+        };
+        assert_eq!(
+            found(&P, "The users' own and the users\u{2019} own."),
+            ["users' own", "users\u{2019} own"]
+        );
+        assert!(found(&P, "The users, own it. The users own it.").is_empty());
     }
 
     #[test]

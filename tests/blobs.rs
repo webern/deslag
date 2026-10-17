@@ -17,14 +17,15 @@ use std::path::Path;
 
 use common::Repo;
 use common::blobs::{Entry, Exclusion, Tried, load_blobs};
+use common::claims::{BIG_FACTOR, BIG_HUMAN_PER_MILLE, Broke, CLAIMS, is_english, moved};
 use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
 use deslag::change::{File, Hunk, Status};
 use deslag::changelog::Version;
-use deslag::config::{BannedPhrases, ListGrowth, PhraseGroups, VerbsNoNouns};
+use deslag::config::{BannedPhrases, ListGrowth, PhraseGroups};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
-use deslag::lint::{Before, list_growth, verbs_no_nouns};
+use deslag::lint::{Before, list_growth};
 use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.
@@ -746,8 +747,9 @@ fn list_growth_finds_what_its_golden_file_says() {
 /// A file whose label is its publisher's statement of the model (`corpus.md` section 3) counts as
 /// `llm`, as it does in every measure by default.
 ///
-/// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm`
-/// files hold it at least 3 times as often as `human` files, and at most 3.5% of `human` files do.
+/// The same pass, which reads each file once, checks the claim of each taste lint in [`CLAIMS`]:
+/// `llm` files fail it at least 3 times as often as `human` files, and at most 3.5% of `human`
+/// files do, on the English fixtures.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -770,15 +772,14 @@ fn the_catalogue_counts_are_the_big_tiers() {
             ..BannedPhrases::default()
         })
         .collect();
-    let negating = VerbsNoNouns::default();
-    // Which entries each fixture holds, each fixture read once, over every core.
+    // Which entries each fixture holds, and which taste lints it fails, each fixture read once,
+    // over every core.
     let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
-    let held: Vec<(&Fixture, Vec<usize>, bool)> = std::thread::scope(|scope| {
+    let held: Vec<(&Fixture, Vec<usize>, Vec<bool>)> = std::thread::scope(|scope| {
         let workers: Vec<_> = fixtures
             .chunks(fixtures.len().div_ceil(threads).max(1))
             .map(|chunk| {
                 let settings = &settings;
-                let negating = &negating;
                 scope.spawn(move || {
                     chunk
                         .iter()
@@ -795,9 +796,11 @@ fn the_catalogue_counts_are_the_big_tiers() {
                                     .is_some()
                                 })
                                 .collect();
-                            let negates =
-                                verbs_no_nouns::check(&document, Some(negating)).is_some();
-                            (*fixture, entries, negates)
+                            let failed = CLAIMS
+                                .iter()
+                                .map(|claim| (claim.fails)(&document))
+                                .collect();
+                            (*fixture, entries, failed)
                         })
                         .collect::<Vec<_>>()
                 })
@@ -825,30 +828,31 @@ fn the_catalogue_counts_are_the_big_tiers() {
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
 
-    // Its words are English; `no` is a word of other languages too.
-    let flagged = |category: &str| {
-        let english = held.iter().filter(|(fixture, _, _)| {
-            fixture.category == category && fixture.sidecar.content.natural_language == "en"
-        });
-        let files = english.clone().count();
-        (english.filter(|(_, _, negates)| *negates).count(), files)
-    };
-    let ((human, humans), (llm, llms)) = (flagged("human"), flagged("llm"));
-    eprintln!("flagged by verbs_no_nouns: human {human} of {humans}, llm {llm} of {llms}");
-    assert!(
-        llm * humans >= 3 * human * llms,
-        "verbs_no_nouns: llm files hold it less than 3 times as often as human files (human \
-         {human} of {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. \
-         The tagger or the image moved the lint's findings: a human decides whether to excuse more \
-         idioms or to change the claim in the lint's doc comment."
-    );
-    assert!(
-        human * 1000 <= 35 * humans,
-        "verbs_no_nouns: more than 3.5% of human files hold it (human {human} of {humans}, llm \
-         {llm} of {llms}). The lint's claim no longer holds on this image. The tagger or the image \
-         moved the lint's findings: a human decides whether to excuse more idioms or to change the \
-         claim in the lint's doc comment."
-    );
+    for (at, claim) in CLAIMS.iter().enumerate() {
+        let flagged = |category: &str| {
+            let english = held
+                .iter()
+                .filter(|(fixture, _, _)| fixture.category == category && is_english(fixture));
+            let files = english.clone().count();
+            (english.filter(|(_, _, failed)| failed[at]).count(), files)
+        };
+        let ((human, humans), (llm, llms)) = (flagged("human"), flagged("llm"));
+        eprintln!(
+            "flagged by {}: human {human} of {humans}, llm {llm} of {llms}",
+            claim.lint
+        );
+        let tally = format!("human {human} of {humans}, llm {llm} of {llms}");
+        assert!(
+            llm * humans >= BIG_FACTOR * human * llms,
+            "{}",
+            moved(claim, "big tier", Broke::Factor(BIG_FACTOR), &tally)
+        );
+        assert!(
+            human * 1000 <= BIG_HUMAN_PER_MILLE * humans,
+            "{}",
+            moved(claim, "big tier", Broke::Ceiling, &tally)
+        );
+    }
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

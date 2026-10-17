@@ -412,8 +412,10 @@ test_shapes() {
 # the treebank's test file. Each is read once the table on the dev sets is final, so this refuses any
 # other number of candidates, and refuses to run again over .train/milestone. Both sets are read by
 # the exam alone: `tokens` makes the skeleton, `readings --tokens` deslag's readings of it with no
-# gold, the trainer's `tag` the import, and `score --aggregate` and `compare` print aggregates only.
-# No gate, must-pass list, tic list or trainer runs on them.
+# gold, the trainer's `tag` the import, and `score --holdout` and `compare` print aggregates only.
+# `score --holdout` reads either file as holdout text whatever its header says (the treebank's test
+# file has none) and does all its work under a guard, so a panic or a load error names no word. No
+# gate, must-pass list, tic list or trainer runs on them.
 milestone_dir=.train/milestone
 milestone() {
   if [ $# -ne 2 ]; then
@@ -453,7 +455,7 @@ milestone() {
         --out "$milestone_dir/$set.$name.import.conllu"
       echo "=== $set: $name"
       exam score --gold "$gold" --import "$milestone_dir/$set.$name.import.conllu" \
-        --save "$milestone_dir/$set.$name.run.json" --aggregate | tee "$milestone_dir/$set.$name.report.txt"
+        --save "$milestone_dir/$set.$name.run.json" --holdout | tee "$milestone_dir/$set.$name.report.txt"
     done
     echo "=== $set: $after against $before"
     exam compare "$milestone_dir/$set.$before.run.json" "$milestone_dir/$set.$after.run.json" |

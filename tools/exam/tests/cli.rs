@@ -6,7 +6,9 @@ mod common;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-use common::{FORBIDDEN, assert_no_words, case_path};
+use common::{
+    FORBIDDEN, IMPORT_FIELDS, assert_no_words, case_path, import_with_form_in, line_of_form,
+};
 
 fn exam(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_deslag-exam"))
@@ -427,4 +429,144 @@ fn the_report_adds_a_block_per_origin_only_when_a_word_is_not_english() {
         !plain.contains("origin "),
         "an all-English run has no origin block"
     );
+}
+
+/// `done-when-holdout.conllu` with its `exam.` header cut and `extra` after it, written to `dir`:
+/// a holdout file that lost its header, as the treebank's test file never had one.
+fn headerless(dir: &Path, extra: &str) -> String {
+    let text = std::fs::read_to_string(case_path("done-when-holdout.conllu")).unwrap();
+    let kept: String = text
+        .split_inclusive('\n')
+        .filter(|line| !line.starts_with("# exam.split") && !line.starts_with("# exam.trains"))
+        .collect();
+    let copy = dir.join("lost-header.conllu");
+    std::fs::write(&copy, format!("{extra}{kept}")).unwrap();
+    path(&copy).to_string()
+}
+
+#[test]
+fn score_holdout_prints_aggregates_for_a_gold_that_lost_its_header() {
+    let dir = tempfile::tempdir().unwrap();
+    let gold = headerless(dir.path(), "");
+    let run = dir.path().join("run.json");
+
+    // Without the flag the file looks like any other, and the full report names words.
+    let full = ok(&["score", "--gold", &gold, "--tagger", "noun"]);
+    assert!(full.contains("mode       full"), "{full}");
+
+    for extra in [vec![], vec!["--aggregate"]] {
+        let mut args = vec!["score", "--gold", &gold, "--tagger", "noun", "--holdout"];
+        args.extend(["--save", path(&run)]);
+        args.extend(extra);
+        let report = ok(&args);
+        assert_no_words(&report, "the report");
+        assert!(report.contains("mode       aggregate"), "{report}");
+        assert!(report.contains("7/15") && report.contains("Tier gaps"));
+        let saved = std::fs::read_to_string(&run).unwrap();
+        for word in FORBIDDEN.iter().chain(&["send"]) {
+            assert!(!saved.contains(word), "the saved run names `{word}`");
+        }
+    }
+
+    // An import run takes the same road.
+    let (_, text) = skeleton(dir.path(), &gold);
+    let filled = dir.path().join("filled.conllu");
+    std::fs::write(&filled, fill(&text, "VERB", "Conf=Sure")).unwrap();
+    let report = ok(&[
+        "score",
+        "--gold",
+        &gold,
+        "--import",
+        path(&filled),
+        "--holdout",
+    ]);
+    assert_no_words(&report, "the import report");
+    assert!(report.contains("mode       aggregate"), "{report}");
+}
+
+#[test]
+fn score_holdout_errors_name_neither_a_key_nor_a_value() {
+    let dir = tempfile::tempdir().unwrap();
+    // The path of a tempdir is random and may hold a word, so it is cut out before looking.
+    let shown = |error: &str| error.replace(dir.path().to_str().unwrap(), "");
+    // Each comment, what an ordinary read echoes of it, and what holdout text must not.
+    for (comment, echoed, key, value) in [
+        ("# exam.zzkey = zzvalue\n", "exam.zzkey", "zzkey", "zzvalue"),
+        ("# exam.tier = zzvalue\n", "zzvalue", "exam.tier", "zzvalue"),
+    ] {
+        // A comment after the first sentence's `sent_id` is a sentence's own, so put it there.
+        let gold = headerless(dir.path(), "");
+        let text = std::fs::read_to_string(&gold).unwrap();
+        let text = text.replacen("# text =", &format!("{comment}# text ="), 1);
+        let text = text.replace("# exam.tier = human\n", "");
+        std::fs::write(&gold, text).unwrap();
+
+        // Read as an ordinary file, the error echoes it.
+        let error = fails(&["score", "--gold", &gold, "--tagger", "noun"]);
+        assert!(error.contains(echoed), "{error}");
+
+        let error = fails(&["score", "--gold", &gold, "--tagger", "noun", "--holdout"]);
+        assert_eq!(error.lines().count(), 1, "{error}");
+        assert!(!shown(&error).contains(key), "{error}");
+        assert!(!shown(&error).contains(value), "{error}");
+        assert_no_words(&shown(&error), "the error");
+    }
+}
+
+#[test]
+fn score_holdout_refuses_a_gold_that_names_another_split() {
+    let dir = tempfile::tempdir().unwrap();
+    let text = std::fs::read_to_string(case_path("done-when-holdout.conllu")).unwrap();
+    let copy = dir.path().join("dev.conllu");
+    std::fs::write(
+        &copy,
+        text.replacen("exam.split = holdout", "exam.split = dev", 1),
+    )
+    .unwrap();
+    let error = fails(&[
+        "score",
+        "--gold",
+        path(&copy),
+        "--tagger",
+        "noun",
+        "--holdout",
+    ]);
+    assert_eq!(error.lines().count(), 1, "{error}");
+    assert!(error.contains("`exam.split = dev`"), "{error}");
+}
+
+#[test]
+fn score_holdout_import_errors_name_the_field_and_the_position_never_the_value() {
+    let dir = tempfile::tempdir().unwrap();
+    // The path of a tempdir is random and may hold a word, so it is cut out before looking.
+    let shown = |error: &str| error.replace(dir.path().to_str().unwrap(), "");
+    let holdout = case("done-when-holdout.conllu");
+    let dev = case("done-when.conllu");
+    let (_, holdout_skeleton) = skeleton(dir.path(), &holdout);
+    let (_, dev_skeleton) = skeleton(dir.path(), &dev);
+    let filled = dir.path().join("import.conllu");
+    for field in IMPORT_FIELDS {
+        // An ordinary read quotes the value: a plain import keeps its message.
+        std::fs::write(&filled, import_with_form_in(&dev_skeleton, "cats", field)).unwrap();
+        let plain = fails(&["score", "--gold", &dev, "--import", path(&filled)]);
+        assert!(plain.contains("cats"), "{field}: {plain}");
+
+        // Holdout text, by the flag or by the gold's own header, names the field and the position.
+        let import = import_with_form_in(&holdout_skeleton, "cats", field);
+        std::fs::write(&filled, &import).unwrap();
+        let at = format!(
+            "/import.conllu:{}: sentence 1: ",
+            line_of_form(&import, "cats")
+        );
+        for flag in [Some("--holdout"), None] {
+            let mut args = vec!["score", "--gold", &holdout, "--import", path(&filled)];
+            args.extend(flag);
+            let error = shown(&fails(&args));
+            assert_eq!(error.lines().count(), 1, "{field} {flag:?}: {error}");
+            assert!(error.contains(&at), "{field} {flag:?}: {error}");
+            assert!(error.contains(field), "{field} {flag:?}: {error}");
+            assert!(!error.contains("cats"), "{field} {flag:?}: {error}");
+            assert_no_words(&error, "the error");
+        }
+    }
 }

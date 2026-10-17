@@ -176,7 +176,12 @@ impl Imported {
                     );
                 }
                 readings.push(if token.kind == TokenKind::Word {
-                    Some(reading(path, line, &mut imported.outside)?)
+                    Some(reading(
+                        path,
+                        line,
+                        quiet.then_some(position),
+                        &mut imported.outside,
+                    )?)
                 } else {
                     None
                 });
@@ -191,9 +196,30 @@ fn last_line(block: &Block) -> usize {
     block.lines.last().map_or(block.first_line, |l| l.number)
 }
 
-/// The reading a filled `Word` line says; a tag outside the 13 counts in `outside`.
-fn reading(path: &str, line: &Line, outside: &mut usize) -> Result<Reading, Error> {
-    let bad = |message: String| Error::at(path, line.number, message);
+/// The reading a filled `Word` line says; a tag outside the 13 counts in `outside`. When `quiet`
+/// holds the sentence's position, an error names that position, the line and the field, never the
+/// file's value, since the gold may be holdout text and a value may be one of its words.
+fn reading(
+    path: &str,
+    line: &Line,
+    quiet: Option<usize>,
+    outside: &mut usize,
+) -> Result<Reading, Error> {
+    let bad = |message: String| {
+        let message = match quiet {
+            Some(position) => format!("sentence {position}: {message}"),
+            None => message,
+        };
+        Error::at(path, line.number, message)
+    };
+    // A message that quotes the file's value; quiet, `field` says what is wrong alone.
+    let quoting = |message: String, field: &str| {
+        bad(if quiet.is_some() {
+            field.into()
+        } else {
+            message
+        })
+    };
     let tag = match map_upos(&line.upos) {
         Some(Class::Tagged(tag)) => tag,
         Some(Class::Punctuation | Class::X) => {
@@ -208,13 +234,14 @@ fn reading(path: &str, line: &Line, outside: &mut usize) -> Result<Reading, Erro
         }
         None if line.upos == "_" => return Err(bad("a Word line with no UPOS".into())),
         None => {
-            return Err(bad(format!(
-                "UPOS `{}` is not one of the 17 UD tags",
-                line.upos
-            )));
+            return Err(quoting(
+                format!("UPOS `{}` is not one of the 17 UD tags", line.upos),
+                "UPOS is not one of the 17 UD tags",
+            ));
         }
     };
-    let features = from_ud(&line.feats).map_err(bad)?;
+    let features =
+        from_ud(&line.feats).map_err(|message| quoting(message, "a FEATS entry has no value"))?;
     let mut confidence = Confidence::Likely;
     let mut score = None;
     let mut kept = TagSet::EMPTY;
@@ -222,17 +249,24 @@ fn reading(path: &str, line: &Line, outside: &mut usize) -> Result<Reading, Erro
         match key {
             "Conf" => {
                 confidence = Confidence::from_name(value).ok_or_else(|| {
-                    bad(format!(
-                        "Conf `{value}` is not Sure, Likely, Unsure or Unknown"
-                    ))
+                    quoting(
+                        format!("Conf `{value}` is not Sure, Likely, Unsure or Unknown"),
+                        "Conf is not Sure, Likely, Unsure or Unknown",
+                    )
                 })?;
             }
             "Score" => {
-                let number: f32 = value
-                    .parse()
-                    .map_err(|_| bad(format!("Score `{value}` is not a number")))?;
+                let number: f32 = value.parse().map_err(|_| {
+                    quoting(
+                        format!("Score `{value}` is not a number"),
+                        "Score is not a number",
+                    )
+                })?;
                 if !(0.0..=1.0).contains(&number) {
-                    return Err(bad(format!("Score {value} is outside 0.0 to 1.0")));
+                    return Err(quoting(
+                        format!("Score {value} is outside 0.0 to 1.0"),
+                        "Score is outside 0.0 to 1.0",
+                    ));
                 }
                 score = Some(number);
             }
@@ -242,7 +276,10 @@ fn reading(path: &str, line: &Line, outside: &mut usize) -> Result<Reading, Erro
                     .filter(|code| !code.is_empty())
                     .map(|code| {
                         Tag::from_code(code).ok_or_else(|| {
-                            bad(format!("Kept names `{code}`, which is no tag code"))
+                            quoting(
+                                format!("Kept names `{code}`, which is no tag code"),
+                                "Kept names something that is no tag code",
+                            )
                         })
                     })
                     .collect::<Result<TagSet, Error>>()?;

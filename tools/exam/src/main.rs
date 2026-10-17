@@ -11,13 +11,14 @@ use deslag_exam::disputes::Disputes;
 use deslag_exam::gate::{self, Gates};
 use deslag_exam::gold::Gold;
 use deslag_exam::harper::{DEFAULT_MODEL, Harper};
+use deslag_exam::holdout;
 use deslag_exam::import::Imported;
 use deslag_exam::most_common::{self, MostCommonTag};
 use deslag_exam::mustpass::MustPass;
 use deslag_exam::readings;
 use deslag_exam::report;
 use deslag_exam::saved::SavedRun;
-use deslag_exam::score::{Source, score};
+use deslag_exam::score::{Input, Source, score};
 use deslag_exam::skeleton::skeleton;
 use deslag_exam::tagger::{BUILT_IN, Deslag, Tagger, built_in};
 use deslag_exam::ticlist;
@@ -46,7 +47,8 @@ enum Command {
     /// rate has a 95% interval from a bootstrap over sentences, with a fixed seed.
     ///
     /// A gold file that says `exam.split = holdout`, or `--aggregate`, prints aggregates only:
-    /// nothing that names a word, a sentence or a `sent_id`.
+    /// nothing that names a word, a sentence or a `sent_id`. `--holdout` is for a gold that is
+    /// holdout whatever its header says.
     Score {
         /// The gold file, CoNLL-U.
         #[arg(long)]
@@ -68,6 +70,13 @@ enum Command {
         /// Print aggregates only, as a holdout gold does always.
         #[arg(long)]
         aggregate: bool,
+        /// The gold is holdout text, whatever its header says, such as the holdout gold or the
+        /// treebank's test file, which has no header. It is read as holdout from its first byte,
+        /// and all the work is done under a guard: a panic exits 2 with one fixed line, and no
+        /// error names a word or a comment. It prints aggregates only, with or without
+        /// `--aggregate`. A header naming another split is refused.
+        #[arg(long)]
+        holdout: bool,
         /// Write the run, one tally per sentence, to this JSON file for `compare`.
         #[arg(long, value_name = "RUN.json")]
         save: Option<PathBuf>,
@@ -260,6 +269,24 @@ fn main() -> ExitCode {
     }
 }
 
+/// The tagger `score --tagger` names: a built-in, `mct`, or `harper` with its model.
+fn named_tagger(name: &str, harper_model: Option<PathBuf>) -> Result<Box<dyn Tagger>, Error> {
+    Ok(match name {
+        most_common::NAME => Box::new(MostCommonTag::from_cache()?),
+        "harper" => {
+            let model = harper_model.unwrap_or_else(|| PathBuf::from(DEFAULT_MODEL));
+            Box::new(Harper::read(&model)?)
+        }
+        _ => built_in(name).ok_or_else(|| {
+            Error::Cannot(format!(
+                "no built-in tagger `{name}`; the taggers are {}, {}, harper",
+                BUILT_IN.join(", "),
+                most_common::NAME
+            ))
+        })?,
+    })
+}
+
 /// Whether every gate held, which only `gate` can say no to.
 fn run(cli: Cli) -> Result<bool, Error> {
     match cli.command {
@@ -280,10 +307,31 @@ fn run(cli: Cli) -> Result<bool, Error> {
             harper_model,
             import,
             aggregate,
+            holdout,
             save,
             disputes,
             words,
         } => {
+            if holdout {
+                let tagger = tagger
+                    .as_deref()
+                    .map(|name| named_tagger(name, harper_model))
+                    .transpose()?;
+                let input = match (&tagger, &import) {
+                    (Some(tagger), _) => Input::Tagger(tagger.as_ref()),
+                    (None, Some(path)) => Input::Import(path),
+                    (None, None) => unreachable!("clap needs one of --tagger and --import"),
+                };
+                let report = holdout::score_report(
+                    &gold,
+                    disputes.as_deref(),
+                    &input,
+                    save.as_deref(),
+                    words,
+                )?;
+                print!("{report}");
+                return Ok(true);
+            }
             let disputes = Disputes::read(&gold, disputes.as_deref())?;
             let gold = Gold::read(&gold)?;
             // Full mode names words and sentences, and a holdout gold never allows it.
@@ -291,21 +339,7 @@ fn run(cli: Cli) -> Result<bool, Error> {
             let aligned = align_all(&gold);
             let scoring = match (&tagger, &import) {
                 (Some(name), _) => {
-                    let tagger: Box<dyn Tagger> = match name.as_str() {
-                        most_common::NAME => Box::new(MostCommonTag::from_cache()?),
-                        "harper" => {
-                            let model =
-                                harper_model.unwrap_or_else(|| PathBuf::from(DEFAULT_MODEL));
-                            Box::new(Harper::read(&model)?)
-                        }
-                        _ => built_in(name).ok_or_else(|| {
-                            Error::Cannot(format!(
-                                "no built-in tagger `{name}`; the taggers are {}, {}, harper",
-                                BUILT_IN.join(", "),
-                                most_common::NAME
-                            ))
-                        })?,
-                    };
+                    let tagger = named_tagger(name, harper_model)?;
                     score(&gold, &aligned, &Source::Tagger(tagger.as_ref()), full)?
                 }
                 (None, Some(path)) => {

@@ -19,16 +19,15 @@
 
 use std::collections::BTreeMap;
 use std::fmt::Write;
-use std::panic::{self, AssertUnwindSafe};
 use std::path::Path;
 
 use crate::align::align_all;
 use crate::error::Error;
 use crate::gold::{Gold, Split};
-use crate::import::Imported;
+use crate::holdout::withholding;
 use crate::metrics::{METRICS, Metric, TOKENS, WIDTH, level_metrics};
 use crate::mustpass::{self, MustPass};
-use crate::score::{ScoredToken, Scoring, Source, score};
+use crate::score::{Input, ScoredToken, Scoring, Source, score};
 use crate::tagger::Tagger;
 use crate::tags::Confidence;
 
@@ -37,8 +36,6 @@ const GROUPS: usize = 20;
 /// How many `sent_id`s a group lists.
 const IDS: usize = 3;
 
-/// What the shipped holdout line says when reading or tagging a set panics.
-const PANIC: &str = "holdout: reading or tagging the set panicked; the message is withheld because it may quote the text";
 /// The line a failing holdout adds.
 const REVERT: &str =
     "A holdout failure is not fixed by tuning against it: revert the change and have it reviewed.";
@@ -394,14 +391,6 @@ struct Row {
     judged: Judged,
 }
 
-/// Where a gate's readings come from.
-enum Input<'a> {
-    /// A built-in tagger, run on every set.
-    Tagger(&'a dyn Tagger),
-    /// An import file, which fills the skeleton of one gold file.
-    Import(&'a Path),
-}
-
 /// Runs each of `names`, sets of `gates`, with `tagger`, reading gold files from under `root`.
 /// Every set runs, even after a failure.
 pub fn run(
@@ -480,7 +469,7 @@ fn run_input(
                 )));
             }
             if let Some(spec) = &set.must_pass {
-                let scoring = score_set(&gold, input, true)?;
+                let scoring = input.score(&gold, &align_all(&gold), true)?;
                 let list = MustPass::read(&root.join(&spec.list))?;
                 let misses = list.misses(&gold, &scoring);
                 text.push('\n');
@@ -490,7 +479,7 @@ fn run_input(
                 }
                 continue;
             }
-            let scoring = score_set(&gold, input, true)?;
+            let scoring = input.score(&gold, &align_all(&gold), true)?;
             (sum(&scoring), Some((gold, scoring)))
         };
         if let Some(pinned) = set.tokens
@@ -559,18 +548,6 @@ fn run_input(
         passed,
         failed,
     })
-}
-
-/// Scores `gold` from `input`, keeping the scored tokens when `names`.
-fn score_set(gold: &Gold, input: &Input<'_>, names: bool) -> Result<Scoring, Error> {
-    let aligned = align_all(gold);
-    match input {
-        Input::Tagger(tagger) => score(gold, &aligned, &Source::Tagger(*tagger), names),
-        Input::Import(path) => {
-            let imported = Imported::read(path, gold, !names)?;
-            score(gold, &aligned, &Source::Import(&imported), names)
-        }
-    }
 }
 
 /// A mustpass set: its count of misses against the bound, then the words missed.
@@ -646,20 +623,6 @@ fn holdout_counts(
         let scoring = score(&gold, &aligned, &Source::Tagger(tagger), false)?;
         Ok(sum(&scoring))
     })
-}
-
-/// Runs `work`, which reads and scores a holdout set, with its panic caught and silent. A panic
-/// message can quote the text, as a bad `str` slice does, so the hook that prints it is replaced
-/// for the run and put back after. The hook is process-wide: call this once per set.
-fn withholding(work: impl FnOnce() -> Result<Vec<u64>, Error>) -> Result<Vec<u64>, Error> {
-    let hook = panic::take_hook();
-    panic::set_hook(Box::new(|_| {}));
-    let caught = panic::catch_unwind(AssertUnwindSafe(work));
-    panic::set_hook(hook);
-    match caught {
-        Ok(counts) => counts,
-        Err(_) => Err(Error::Cannot(PANIC.to_string())),
-    }
 }
 
 /// A holdout set: a verdict per metric, from the names and verdicts alone.
@@ -918,9 +881,8 @@ fn example_lines(out: &mut String, scoring: &Scoring) {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
-
     use super::*;
+    use crate::holdout::{PANIC, alone};
 
     #[test]
     fn a_floor_holds_at_exactly_its_bound() {
@@ -982,59 +944,6 @@ mod tests {
         );
         // A count gate has a numerator to judge, whatever the denominator.
         assert_eq!(judge(Bound::MaxCount(0), None, 0, 0).verdict, Verdict::Pass);
-    }
-
-    /// The panic hook is process-wide, and the boundary swaps it: a test that runs the boundary
-    /// or reads the hook holds this.
-    static HOOK: Mutex<()> = Mutex::new(());
-
-    /// Takes [`HOOK`], whether or not a failed test poisoned it.
-    fn alone() -> MutexGuard<'static, ()> {
-        HOOK.lock().unwrap_or_else(PoisonError::into_inner)
-    }
-
-    #[test]
-    fn a_panic_in_the_boundary_is_withheld_every_time() {
-        let _alone = alone();
-        let sentinel = "secret-sentinel";
-        for _ in 0..2 {
-            let error = withholding(|| panic!("cannot slice `{sentinel}`"));
-            let Err(Error::Cannot(message)) = error else {
-                panic!("a panic is Error::Cannot, not {error:?}");
-            };
-            assert_eq!(message, PANIC);
-            assert!(!message.contains(sentinel), "{message}");
-        }
-        // An error and a count cross the boundary as they are.
-        assert_eq!(withholding(|| Ok(vec![1, 2])).unwrap(), [1, 2]);
-        let error = withholding(|| Err(Error::Cannot("kept".to_string())));
-        assert_eq!(error.unwrap_err().to_string(), "kept");
-    }
-
-    #[test]
-    fn the_hook_in_place_before_the_boundary_is_in_place_after_it() {
-        let _alone = alone();
-        let heard = Arc::new(Mutex::new(Vec::new()));
-        let before = panic::take_hook();
-        let marker = Arc::clone(&heard);
-        panic::set_hook(Box::new(move |info| {
-            // Only the panics of this test count: others run beside it and may panic too.
-            if let Some(message) = info.payload().downcast_ref::<&str>()
-                && message.starts_with("marker:")
-            {
-                marker.lock().unwrap().push(message.to_string());
-            }
-        }));
-        let inside = withholding(|| panic!("marker: inside"));
-        let _ = panic::catch_unwind(|| panic!("marker: after"));
-        // Put the hook back first, so a failed assertion below is printed.
-        panic::set_hook(before);
-        assert!(inside.is_err());
-        assert_eq!(
-            *heard.lock().unwrap(),
-            ["marker: after"],
-            "the boundary silences the hook inside it, and puts the one it found back"
-        );
     }
 
     #[test]

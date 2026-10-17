@@ -66,8 +66,8 @@ lints.max_size_bytes.value = 8000
 ```
 
 In `[rust]`, `[cpp]` and `[toml]`, `max_size_bytes` and `repo_layout` are an error, since they need
-the whole file. `list_growth` and `repo_commands` are errors in `[cpp]` and `[toml]`, and in
-`[rust]` without the `doc_comment` surface. The rest read comments.
+the whole file. So are `list_growth` and `repo_commands`, except in `[rust]` with the `doc_comment`
+surface. The rest read comments.
 
 ## 4. See what each file reads
 
@@ -82,7 +82,7 @@ show as selected. Change the globs until every file reads as you mean.
 Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
 no remote. `--base HEAD` judges only uncommitted work, so `list_growth` passes in a clean tree:
 never use it in CI. A failing file gets a report on standard error and exit code 1; exit 2 means
-deslag could not run. Tell the human what each lint fails and propose a limit just above the
+deslag could not run. Tell the human what each lint fails and propose a limit a little above the
 file's size: add 10%, at least 500 bytes. A file needing more gets an override.
 
 Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a
@@ -96,7 +96,7 @@ in GitHub Actions. deslag is not on crates.io yet, so ask the human how to insta
 github` annotates files and `--format sarif` prints a code scanning log. `--diff <BASE>` reports
 only what a change touched; it misses some failures, so never upload its log.
 
-With the human's consent, add to AGENTS.md: "Run `deslag check --base origin/main` before
+With the human's consent, add a line to AGENTS.md: "Run `deslag check --base origin/main` before
 you push, and fix what it reports."
 
 When a command notes that an older deslag last updated the config, run

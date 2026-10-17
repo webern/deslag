@@ -2,7 +2,8 @@
 # where the repository's own config selects only the repository's files, and holds that config's
 # `[md.lints]` settings, so a lint fails a corpus file as it would fail one of deslag's own. It
 # leaves out the byte budget and every lint that judges a change: a corpus file is judged alone,
-# against no earlier version.
+# against no earlier version. It holds `repo_commands` too, which the tool leaves out, since the
+# repository of a corpus file is not there to read.
 
 schema_version = 1
 
@@ -22,3 +23,5 @@ groups = { emoji = true }
 max_paragraph_chars = 500
 
 [md.lints.verbs_no_nouns]
+
+[md.lints.repo_commands]

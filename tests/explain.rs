@@ -132,6 +132,8 @@ max_percent = 1.0
 message = "Trim {path}."
 value = 8000
 
+# repo_commands: off
+
 [repo_layout]
 heading = "Repository layout"
 max_entries = 15
@@ -164,6 +166,8 @@ max_percent = 1.0
 [max_size_bytes]
 value = 8000
 
+# repo_commands: off
+
 [repo_layout]
 heading = "Repository layout"
 max_entries = 15
@@ -194,6 +198,8 @@ max_percent = 1.0
 
 [max_size_bytes]
 value = 20000
+
+# repo_commands: off
 
 # repo_layout: off
 
@@ -278,6 +284,8 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          \n\
          [max_size_bytes]\n\
          value = 300\n\
+         \n\
+         # repo_commands: off\n\
          \n\
          # repo_layout: off\n\
          \n\

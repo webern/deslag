@@ -88,7 +88,7 @@ enum Command {
     },
     /// What a config's lints find, per label and per tool: the share of files each lint fails,
     /// and which. Each file is checked at its path in its repository, so overrides apply;
-    /// repo_layout is left out.
+    /// repo_layout and repo_commands are left out.
     Lints {
         #[command(flatten)]
         filters: Filters,

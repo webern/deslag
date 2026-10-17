@@ -1,5 +1,5 @@
 ---
-updated: 2026-10-11
+updated: 2026-10-17
 subsystems:
   - analysis
 max_size_bytes: 8192
@@ -110,14 +110,14 @@ The sieve, each step counted in its funnel:
 6. an n-gram that holds a shorter survivor merges into it.
 
 A compared tool alone marked the llm files of at least 25 repositories. Each candidate shows how
-many of its focus files each compared tool and each kind holds, each word's reference files (a
+many focus files each compared tool and each kind holds, each word's reference files (a
 word fewer than 20 hold is flagged rare), the longer n-grams merged into it, and up to three
 examples from distinct repositories. An example keeps the 200 words most files hold and masks the
 others as `_`, and a code span as `` `_` ``.
 
 The catalog gate takes the n-grams through steps 1 to 5 that no reference file holds, in any
-language, and at least 40 focus repositories do, then merges them among themselves, so none hides
-under a phrase it drops. It counts them, and those with no rare word. `Comparison::elsewhere` holds
+language, and at least 40 focus repositories do, then merges them, so none hides under a phrase it
+drops. It counts them, and those with no rare word. `Comparison::elsewhere` holds
 the reference side's other files, which no rate reads.
 
 ## Lints
@@ -125,9 +125,10 @@ the reference side's other files, which no rate reads.
 `lints` loads a config as `deslag` does, from `--config` or the repository at `--root`, less each
 lint whose `reads_change()` is true, such as `list_growth`: no corpus file has a base. Each file
 its globs select, or every file with `--every-file`, is checked with `check_file` at its path in
-its source repository, so overrides apply. `repo_layout` is left out too. Each lint that fails a
-file, then `any`, gets a rate per label and per compared tool: failing files, their share, and the
-share weighed by repository.
+its source repository, so overrides apply. `repo_layout` and `repo_commands` are left out too.
+
+Each lint that fails a file, then `any`, gets a rate per label and per compared tool: failing
+files, their share, and the share weighed by repository.
 
 `report` runs the lints at `tools/corpus/report.toml` unless given `--config`. It selects every
 file and holds the repository config's `[md.lints]`, with no budget.

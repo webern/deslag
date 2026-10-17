@@ -335,6 +335,7 @@ fn lints_check_the_files_the_config_selects() {
         assert_eq!(rate.paths.len() as u64, rate.failing);
     }
     assert!(found.lints.iter().all(|row| row.lint != "repo_layout"));
+    assert!(found.lints.iter().all(|row| row.lint != "repo_commands"));
 }
 
 #[test]
@@ -351,7 +352,10 @@ fn lints_leave_out_the_lints_that_judge_a_change() {
     assert_eq!(config.path, Path::new(".agents/deslag.toml"));
     let found = lints(tree(), &Filters::default(), &config, true)
         .unwrap_or_else(|problem| panic!("{problem}"));
-    assert_eq!(found.left_out, ["repo_layout", "list_growth"]);
+    assert_eq!(
+        found.left_out,
+        ["repo_layout", "repo_commands", "list_growth"]
+    );
     assert!(found.lints.iter().all(|row| row.lint != "list_growth"));
 }
 

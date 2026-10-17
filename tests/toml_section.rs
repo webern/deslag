@@ -169,7 +169,7 @@ fn every_glob_of_the_toml_section_ends_in_toml_and_an_override_glob_need_not() {
 /// either, since no TOML comment has them, and prose by the one surface.
 fn can_run(lint: Lint, surfaces: &[&str]) -> bool {
     match lint {
-        Lint::MaxSizeBytes | Lint::RepoLayout | Lint::ListGrowth => false,
+        Lint::MaxSizeBytes | Lint::RepoLayout | Lint::RepoCommands | Lint::ListGrowth => false,
         Lint::MaxEmphasis
         | Lint::BannedChars
         | Lint::BannedPhrases

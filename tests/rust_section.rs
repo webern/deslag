@@ -161,7 +161,7 @@ fn the_md_section_keeps_any_glob() {
 fn can_run(lint: Lint, surfaces: &[&str]) -> bool {
     match lint {
         Lint::MaxSizeBytes | Lint::RepoLayout => false,
-        Lint::ListGrowth => surfaces.contains(&"doc_comment"),
+        Lint::RepoCommands | Lint::ListGrowth => surfaces.contains(&"doc_comment"),
         Lint::MaxEmphasis
         | Lint::BannedChars
         | Lint::BannedPhrases

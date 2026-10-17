@@ -11,6 +11,7 @@ pub mod list_growth;
 pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod pattern;
+pub mod repo_commands;
 pub mod repo_layout;
 pub mod verbs_no_nouns;
 
@@ -39,6 +40,8 @@ pub enum Lint {
     MaxEmphasis,
     /// `repo_layout`: the index of the repo.
     RepoLayout,
+    /// `repo_commands`: the make targets a file tells an agent to run.
+    RepoCommands,
     /// `banned_chars`: the characters the config bans.
     BannedChars,
     /// `banned_phrases`: the phrases the config bans.
@@ -53,10 +56,11 @@ pub enum Lint {
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 8] = [
+    pub const ALL: [Lint; 9] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
+        Lint::RepoCommands,
         Lint::BannedChars,
         Lint::BannedPhrases,
         Lint::Density,
@@ -70,6 +74,7 @@ impl Lint {
             Lint::MaxSizeBytes => "max_size_bytes",
             Lint::MaxEmphasis => "max_emphasis",
             Lint::RepoLayout => "repo_layout",
+            Lint::RepoCommands => "repo_commands",
             Lint::BannedChars => "banned_chars",
             Lint::BannedPhrases => "banned_phrases",
             Lint::Density => "density",
@@ -86,6 +91,7 @@ impl Lint {
             Lint::MaxSizeBytes
             | Lint::MaxEmphasis
             | Lint::RepoLayout
+            | Lint::RepoCommands
             | Lint::BannedChars
             | Lint::BannedPhrases
             | Lint::Density
@@ -97,7 +103,7 @@ impl Lint {
     pub(crate) fn needs(self) -> Need {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
-            Lint::ListGrowth => Need::Structure,
+            Lint::RepoCommands | Lint::ListGrowth => Need::Structure,
             Lint::VerbsNoNouns => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
@@ -111,6 +117,9 @@ impl Lint {
             Lint::MaxSizeBytes => "A file must not be larger than its byte budget.",
             Lint::MaxEmphasis => "A file must not lean on bold, italics and capitals.",
             Lint::RepoLayout => "A file must hold a short index of the repository that is true.",
+            Lint::RepoCommands => {
+                "A file must not tell an agent to run a make target that no Makefile defines."
+            }
             Lint::BannedChars => {
                 "A file must not hold characters, such as the em dash, that have something plain \
                  to write instead."
@@ -133,6 +142,7 @@ impl Lint {
             Lint::MaxSizeBytes => "over budget",
             Lint::MaxEmphasis => "over-emphasized",
             Lint::RepoLayout => "with a broken repository layout",
+            Lint::RepoCommands => "naming make targets that no Makefile defines",
             Lint::BannedChars => "with banned characters",
             Lint::BannedPhrases => "with banned phrases",
             Lint::Density => "with dense text",
@@ -190,6 +200,8 @@ pub enum Violation {
     MaxEmphasis(max_emphasis::Over),
     /// The file's index of the repo is missing, too long or too short, out of format, or stale.
     RepoLayout(repo_layout::Over),
+    /// The file tells an agent to run make targets that no Makefile defines.
+    RepoCommands(repo_commands::Over),
     /// The file holds characters the config bans.
     BannedChars(banned_chars::Over),
     /// The file holds phrases the config bans.
@@ -209,6 +221,7 @@ impl Violation {
             Violation::MaxSizeBytes(_) => Lint::MaxSizeBytes,
             Violation::MaxEmphasis(_) => Lint::MaxEmphasis,
             Violation::RepoLayout(_) => Lint::RepoLayout,
+            Violation::RepoCommands(_) => Lint::RepoCommands,
             Violation::BannedChars(_) => Lint::BannedChars,
             Violation::BannedPhrases(_) => Lint::BannedPhrases,
             Violation::Density(_) => Lint::Density,
@@ -224,6 +237,7 @@ impl Violation {
             Violation::MaxSizeBytes(_) => Vec::new(),
             Violation::MaxEmphasis(over) => max_emphasis::marks(over),
             Violation::RepoLayout(over) => repo_layout::marks(over),
+            Violation::RepoCommands(over) => repo_commands::marks(over),
             Violation::BannedChars(over) => banned_chars::marks(over),
             Violation::BannedPhrases(over) => banned_phrases::marks(over),
             Violation::Density(over) => density::marks(over),
@@ -240,6 +254,8 @@ impl Violation {
             Violation::MaxSizeBytes(_) => Vec::new(),
             Violation::MaxEmphasis(_) => Vec::new(),
             Violation::RepoLayout(_) => Vec::new(),
+            // Which side lies, the doc or the Makefile, is for a writer to say.
+            Violation::RepoCommands(_) => Vec::new(),
             Violation::BannedChars(over) => banned_chars::edits(over),
             // Its values are advice, not replacements, and a match's words can cross markup.
             Violation::BannedPhrases(_) => Vec::new(),
@@ -260,6 +276,9 @@ impl Violation {
             }
             Violation::RepoLayout(over) => {
                 repo_layout::retain(over, keep).map(Violation::RepoLayout)
+            }
+            Violation::RepoCommands(over) => {
+                repo_commands::retain(over, keep).map(Violation::RepoCommands)
             }
             Violation::BannedChars(over) => {
                 banned_chars::retain(over, keep).map(Violation::BannedChars)
@@ -333,6 +352,7 @@ impl Finding {
             Violation::MaxSizeBytes(over) => max_size_bytes::render(&self.path, over),
             Violation::MaxEmphasis(over) => max_emphasis::render(&self.path, over),
             Violation::RepoLayout(over) => repo_layout::render(&self.path, over),
+            Violation::RepoCommands(over) => repo_commands::render(&self.path, over),
             Violation::BannedChars(over) => banned_chars::render(&self.path, over),
             Violation::BannedPhrases(over) => banned_phrases::render(&self.path, over),
             Violation::Density(over) => density::render(&self.path, over),
@@ -464,7 +484,10 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         report.scanned.push(file.relative.clone());
 
         let contents = read(&file)?;
-        let dir = file.absolute.parent().unwrap_or(root);
+        let disk = Disk {
+            dir: file.absolute.parent().unwrap_or(root),
+            root: Some(root),
+        };
         let text = decode(&contents);
         let (_, findings) = check_text(
             config,
@@ -472,7 +495,7 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
             &file.relative,
             &contents,
             &text,
-            dir,
+            disk,
             judging,
         )?;
         report.findings.extend(findings);
@@ -552,7 +575,8 @@ pub fn check_file_at(
         change: None,
         phrases_at: stamp,
     };
-    Ok(check_text(config, section, relative, contents, &text, dir, judging)?.1)
+    let disk = Disk { dir, root: None };
+    Ok(check_text(config, section, relative, contents, &text, disk, judging)?.1)
 }
 
 /// A file as it was at the base of a run, which a lint that judges a change compares it with.
@@ -570,6 +594,16 @@ pub struct Before<'a> {
     pub file: &'a change::File,
 }
 
+/// Where a file is on disk, for the lints that look there.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Disk<'a> {
+    /// The directory the file is in.
+    pub dir: &'a Path,
+    /// The root of the repo, when the run knows it. A run on one file does not, and a lint then
+    /// stays within `dir`.
+    pub root: Option<&'a Path>,
+}
+
 /// What a run judges its files by besides the config.
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Judging<'a> {
@@ -581,7 +615,7 @@ pub(crate) struct Judging<'a> {
 }
 
 /// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it,
-/// `text`, its `contents` decoded, and what the run `judging` is held to. Returns the document the
+/// `text`, its `contents` decoded, where the file is `disk`, and what the run `judging` is held to. Returns the document the
 /// lints read with what they found, for a caller that edits it: the section's stack reads the
 /// file, so a fix reads a file as the check does.
 pub(crate) fn check_text<'a>(
@@ -590,7 +624,7 @@ pub(crate) fn check_text<'a>(
     relative: &str,
     contents: &[u8],
     text: &'a str,
-    dir: &Path,
+    disk: Disk<'_>,
     judging: Judging<'_>,
 ) -> Result<(Document<'a>, Vec<Finding>), Error> {
     let Judging {
@@ -644,8 +678,12 @@ pub(crate) fn check_text<'a>(
             }
             Lint::MaxEmphasis => max_emphasis::check(&document, lints.max_emphasis.as_ref())
                 .map(Violation::MaxEmphasis),
-            Lint::RepoLayout => repo_layout::check(&document, dir, lints.repo_layout.as_ref())
+            Lint::RepoLayout => repo_layout::check(&document, disk.dir, lints.repo_layout.as_ref())
                 .map(Violation::RepoLayout),
+            Lint::RepoCommands => {
+                repo_commands::check(&document, disk.dir, disk.root, lints.repo_commands.as_ref())
+                    .map(Violation::RepoCommands)
+            }
             Lint::BannedChars => banned_chars::check(&document, lints.banned_chars.as_ref())
                 .map(Violation::BannedChars),
             Lint::BannedPhrases => {
@@ -716,7 +754,12 @@ mod tests {
         }
         assert_eq!(
             refused,
-            [Lint::MaxSizeBytes, Lint::RepoLayout, Lint::ListGrowth]
+            [
+                Lint::MaxSizeBytes,
+                Lint::RepoLayout,
+                Lint::RepoCommands,
+                Lint::ListGrowth
+            ]
         );
     }
 

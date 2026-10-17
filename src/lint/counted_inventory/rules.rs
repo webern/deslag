@@ -74,9 +74,7 @@ pub const BOUNDS: &[&[&str]] = &[
     &["below"],
     &["exceed"],
     &["exceeds"],
-    &["max"],
     &["max", "of"],
-    &["min"],
     &["min", "of"],
     &["maximum"],
     &["maximum", "of"],
@@ -198,7 +196,6 @@ pub const UNITS: &[&str] = &[
     "eur",
     "gbp",
     "yen",
-    "am",
     "pm",
 ];
 

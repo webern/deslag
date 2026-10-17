@@ -340,7 +340,8 @@ impl Merge for RepoLayout {
 }
 
 /// `lints.banned_chars`: a file fails when its text outside code holds a banned character, such
-/// as an em dash, each of which has something plain to write instead.
+/// as an em dash. Most have a plain character to write instead; an arrow that only a range rule
+/// covers has none, so the report leaves the choice to the writer.
 ///
 /// Like `repo_layout`, the table itself turns the check on: an empty one bans the groups that are
 /// on by default. A character in `allow` is never banned; one in `ban` is banned whatever the

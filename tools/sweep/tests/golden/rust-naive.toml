@@ -1,7 +1,5 @@
 corpus = "sha256:614f498dd7b6b7e4f2a1cedd85a7bf88a6ffa5e9fac611bc7966d603b4d205c4"
-lock = "sha256:d5f981ef8e56e90742a9ef0371726b4fe789b408e462529c493c0e5d2812fd01"
 lang = "rust"
-oracles = ["ra-ap-rustc_lexer 0.176.0"]
 scanner = true
 files = 7
 bytes = 1109

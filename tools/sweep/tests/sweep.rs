@@ -1,9 +1,10 @@
 //! The sweep end to end: through the library with a scanner defined here, and through the binary
 //! with none, over the fixtures in `tests/fixtures/`.
 //!
-//! The golden files hold what the sweep prints. The comparison skips the `lock` and `oracles` lines,
-//! which say which lockfile and oracle versions printed it, so updating `Cargo.lock` fails no test.
-//! Every other line is a verdict, and an oracle that changes one fails. Rerun with
+//! The golden files hold what the sweep prints, less its `lock` and `oracles` lines, which say which
+//! lockfile and oracle versions printed it. The test strips those lines before it compares or
+//! writes, so a dependency update that changes no verdict fails nothing and touches no golden file.
+//! Every line left is a verdict, and an oracle that changes one fails. Rerun with
 //! `DESLAG_FIX_GOLDEN=1`, or `make fix-golden`, to rewrite them, and read the diff.
 
 use std::path::{Path, PathBuf};
@@ -52,31 +53,31 @@ const STAMPS: [&str; 2] = ["lock = ", "oracles = "];
 
 /// `report` without its stamp lines, which leaves the verdicts.
 fn verdicts(report: &str) -> String {
-    let verdicts: Vec<&str> = report
-        .lines()
+    report
+        .split_inclusive('\n')
         .filter(|line| !STAMPS.iter().any(|stamp| line.starts_with(stamp)))
-        .collect();
-    verdicts.join("\n")
+        .collect()
 }
 
-/// Compares the verdicts of `actual` with those of the golden file `name`, or rewrites the file when
-/// `DESLAG_FIX_GOLDEN` is set.
+/// Compares the verdicts of `actual` with the golden file `name`, or rewrites the file with them
+/// when `DESLAG_FIX_GOLDEN` is set.
 fn assert_golden(name: &str, actual: &str) {
+    // The sweep still prints its stamps. The golden files do not hold them.
     for stamp in STAMPS {
         assert!(
             actual.lines().any(|line| line.starts_with(stamp)),
             "the sweep printed no `{stamp}` line"
         );
     }
+    let verdicts = verdicts(actual);
     let path = manifest_dir().join("tests/golden").join(name);
     if std::env::var_os("DESLAG_FIX_GOLDEN").is_some() {
-        std::fs::write(&path, actual).unwrap();
+        std::fs::write(&path, &verdicts).unwrap();
         return;
     }
     let expected = std::fs::read_to_string(&path).unwrap_or_default();
     assert_eq!(
-        verdicts(actual),
-        verdicts(&expected),
+        verdicts, expected,
         "{name} differs from what the sweep prints; rerun with DESLAG_FIX_GOLDEN=1 to rewrite it"
     );
 }

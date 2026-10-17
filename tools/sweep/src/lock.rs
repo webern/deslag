@@ -59,14 +59,13 @@ mod tests {
         assert_eq!(lock.version("b"), None);
     }
 
+    /// Only what `Cargo.toml` pins. The other crates float with `cargo update`, and a release that
+    /// changes a verdict fails the golden files instead.
     #[test]
-    fn the_oracles_are_locked_at_their_pins() {
+    fn the_pinned_crates_are_locked_at_their_pins() {
         let lock = Lock::own();
         assert_eq!(lock.version("ra-ap-rustc_lexer"), Some("0.176.0"));
         assert_eq!(lock.version("unicode-ident"), Some("1.0.24"));
-        assert_eq!(lock.version("tree-sitter"), Some("0.27.0"));
-        assert_eq!(lock.version("tree-sitter-c"), Some("0.24.2"));
-        assert_eq!(lock.version("tree-sitter-cpp"), Some("0.23.4"));
     }
 
     #[test]

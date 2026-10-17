@@ -14,11 +14,15 @@ permissions:
   contents: read
 
 # make ci, which the release runs, takes the sum of its parts. Here the parts are jobs side by side, so a
-# run takes as long as the slowest, the timing check. tests/ci_jobs.rs fails unless the `make` lines of
-# the jobs run every recipe line of make ci. Each job installs and caches only what its line reads,
-# except typos, which make preflight wants in all of them, and each has a target cache of its own, keyed
-# by setup-rust-toolchain on the job. make ci is not everything: python.yml runs make test-python when
-# the scripts it tests change.
+# run takes as long as its longest job, the timing check or the tests, whichever the runners made
+# slower. tests/ci_jobs.rs fails unless the `make` lines of the jobs run every recipe line of make ci,
+# the timing check runs alone in its job, and no job or step can be skipped or fail without failing the
+# run. Each job installs and caches only what its line reads, except typos, which make preflight wants
+# in all of them, and each has a target cache of its own, keyed by setup-rust-toolchain on the job and
+# on Cargo.lock, the manifests and the toolchain. Only a push to main saves those caches; a pull request
+# restores main's, so a branch that changes Cargo.lock adds none to the repository's 10 GB, where it
+# would add eight. make ci is not everything: python.yml runs make test-python when the scripts it tests
+# change.
 jobs:
   # Fmt, clippy, deslag on its own Markdown, rustdoc, typos, the builds, and the scanners' sweeps.
   check:
@@ -37,9 +41,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Installs what rust-toolchain.toml names and caches the registry and target dir.
+      # Installs what rust-toolchain.toml names and caches the registry and target dir. Only main saves
+      # the cache.
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # A prebuilt binary; cargo install would take minutes.
       - name: Install typos
@@ -74,6 +81,8 @@ jobs:
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
         uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
@@ -101,6 +110,8 @@ jobs:
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
         uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15
@@ -123,7 +134,8 @@ jobs:
         run: make CARGO_FLAGS=--locked test-silver test-tier
 
   # The timing check, alone on its runner: it measures seconds on one thread, so nothing else may
-  # share the machine. It is the longest job, and so the length of a run.
+  # share the machine. A run lasts as long as its longest job, which is this one or `test`: on some
+  # runs `test` took as long, or longer.
   time:
     strategy:
       fail-fast: false
@@ -140,6 +152,8 @@ jobs:
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-18
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
         uses: taiki-e/install-action@f7e5d7c961414b23f5b25b2da9294395d08513ad # v2.87.13, 2026-09-15

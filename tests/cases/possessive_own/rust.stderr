@@ -4,6 +4,8 @@ src/lib.rs has 3 of its 21 sentences (14.29%) with a possessive padded with "own
 
 A possessive is enough on its own. Delete "own" unless the possessor contrasts with another one that the sentence names or implies: "deslag's own corpus" is "deslag's corpus" when no other corpus is in play. Keep the few that contrast, and delete the rest.
 
+Adding sentences to lower the share is no fix: remove the padding "own" instead.
+
 Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
 
 The places:

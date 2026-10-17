@@ -82,7 +82,7 @@ co-author. `agent-session`: a line an agent writes into a commit it made, such a
 session. Both count. An `assist` never counts: it is a tool's suggestion that a person committed,
 such as a Copilot Autofix or an editor's completion.
 
-Only marks a tool writes itself, or its account, are listed. A trailer one project invents
+Only marks a tool writes itself, or its own account, are listed. A trailer one project invents
 for its agents, or an account a person runs an agent under, proves nothing about another project.
 `MARKS` in `collect.py` holds the regular expressions, matched whole and ignoring case. Below,
 `...` is any text, `N` a number, `<id>` an id, `@gh` is `@users.noreply.github.com`, and "robot"

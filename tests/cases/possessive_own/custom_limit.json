@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "possessive_own",
-      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 3 of its 22 sentences (13.64%) with a possessive padded with \"own\". The limit is 10% of its sentences.\n\nA possessive is enough on its own. Delete \"own\" unless the possessor contrasts with another one that the sentence names or implies: \"deslag's own corpus\" is \"deslag's corpus\" when no other corpus is in play. Keep the few that contrast, and delete the rest.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"its own config\"\n  line 7: \"project's own docs\"\n  line 10: \"their own data\"",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 3 of its 22 sentences (13.64%) with a possessive padded with \"own\". The limit is 10% of its sentences.\n\nA possessive is enough on its own. Delete \"own\" unless the possessor contrasts with another one that the sentence names or implies: \"deslag's own corpus\" is \"deslag's corpus\" when no other corpus is in play. Keep the few that contrast, and delete the rest.\n\nAdding sentences to lower the share is no fix: remove the padding \"own\" instead.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"its own config\"\n  line 7: \"project's own docs\"\n  line 10: \"their own data\"",
       "marks": [
         {
           "kind": "evidence",

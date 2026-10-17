@@ -1201,6 +1201,7 @@ fn the_default_groups_flag_llm_text_far_more_than_human_text() {
 #[test]
 fn the_taste_lints_flag_llm_text_far_more_than_human_text() {
     let fixtures = corpus();
+    let mut broken = Vec::new();
     for claim in CLAIMS {
         let flagged = |category: &str| {
             fixtures
@@ -1217,17 +1218,16 @@ fn the_taste_lints_flag_llm_text_far_more_than_human_text() {
             "flagged by {}: human {human}, llm {llm}, mixed {mixed}",
             claim.lint
         );
-        assert!(
-            llm > human && llm >= claim.tree_factor * human,
-            "{}",
-            moved(
+        if llm <= human || llm < claim.tree_factor * human {
+            broken.push(moved(
                 claim,
                 "tree",
                 Broke::Factor(claim.tree_factor),
-                &format!("human {human}, llm {llm}")
-            )
-        );
+                &format!("human {human}, llm {llm}"),
+            ));
+        }
     }
+    assert!(broken.is_empty(), "{}", broken.join("\n\n"));
 }
 
 /// The number of `llm/` fixtures each phrase group must match, so that no group is dead weight.

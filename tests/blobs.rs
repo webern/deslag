@@ -828,6 +828,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
 
+    let mut broken = Vec::new();
     for (at, claim) in CLAIMS.iter().enumerate() {
         let flagged = |category: &str| {
             let english = held
@@ -842,17 +843,14 @@ fn the_catalogue_counts_are_the_big_tiers() {
             claim.lint
         );
         let tally = format!("human {human} of {humans}, llm {llm} of {llms}");
-        assert!(
-            llm * humans >= BIG_FACTOR * human * llms,
-            "{}",
-            moved(claim, "big tier", Broke::Factor(BIG_FACTOR), &tally)
-        );
-        assert!(
-            human * 1000 <= BIG_HUMAN_PER_MILLE * humans,
-            "{}",
-            moved(claim, "big tier", Broke::Ceiling, &tally)
-        );
+        if llm * humans < BIG_FACTOR * human * llms {
+            broken.push(moved(claim, "big tier", Broke::Factor(BIG_FACTOR), &tally));
+        }
+        if human * 1000 > BIG_HUMAN_PER_MILLE * humans {
+            broken.push(moved(claim, "big tier", Broke::Ceiling, &tally));
+        }
     }
+    assert!(broken.is_empty(), "{}", broken.join("\n\n"));
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

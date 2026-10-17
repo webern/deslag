@@ -201,15 +201,17 @@ fn places(document: &Document<'_>, found: Vec<Range<usize>>) -> Vec<Match> {
 }
 
 /// How many sentences of `document` hold a match among the token ranges `found`, which come in
-/// the order of the file and never cross a sentence.
+/// the order of the file and never cross a sentence. The sentences are in the order of the file
+/// too, so each match finds its sentence by a binary search.
 fn sentences_holding(document: &Document<'_>, found: &[Range<usize>]) -> usize {
     let mut holding: Vec<usize> = found
         .iter()
         .filter_map(|found| {
-            document
+            let at = document
                 .sentences
-                .iter()
-                .position(|sentence| sentence.tokens.contains(&found.start))
+                .partition_point(|sentence| sentence.tokens.end <= found.start);
+            let sentence = document.sentences.get(at)?;
+            sentence.tokens.contains(&found.start).then_some(at)
         })
         .collect();
     holding.dedup();
@@ -281,6 +283,8 @@ const DEFAULT_ADVICE: &str = "A possessive is enough on its own. Delete \"own\" 
     possessor contrasts with another one that the sentence names or implies: \"deslag's own \
     corpus\" is \"deslag's corpus\" when no other corpus is in play. Keep the few that contrast, \
     and delete the rest.\n\
+    \n\
+    Adding sentences to lower the share is no fix: remove the padding \"own\" instead.\n\
     \n\
     Do not change the config to get past this check. Only a human can tell you to do that, and I \
     am a linter, not a human.";
@@ -710,12 +714,60 @@ mod tests {
 
     #[test]
     fn a_share_just_over_the_limit_does_not_read_as_at_it() {
+        // 51 of 1019 is 5.0049%. Rounded up it reads 5.01%; rounded to the nearest it would read
+        // 5.00%, the limit itself.
         let over = check(
-            &Document::markdown(&prose(39, 2)),
+            &Document::markdown(&prose(1019, 51)),
             Some(&PossessiveOwn::default()),
         )
-        .expect("2 of 39 sentences fail");
-        assert!(render("a.md", &over).contains("(5.13%)"));
+        .expect("51 of 1019 sentences fail");
+        assert_eq!((over.holding, over.sentences), (51, 1019));
+        let report = render("a.md", &over);
+        assert!(report.contains("(5.01%)"), "{report}");
+        assert!(!report.contains("(5.00%)"), "{report}");
+    }
+
+    #[test]
+    fn the_advice_says_that_adding_sentences_is_no_fix() {
+        let over = check(
+            &Document::markdown(&prose(20, 3)),
+            Some(&PossessiveOwn::default()),
+        )
+        .expect("3 of 20 sentences fail");
+        assert!(render("a.md", &over).contains(
+            "\n\nAdding sentences to lower the share is no fix: remove the padding \"own\" \
+                 instead.\n\n"
+        ));
+    }
+
+    #[test]
+    fn a_limit_of_negative_zero_is_a_limit_of_zero() {
+        let settings = PossessiveOwn {
+            max_percent_of_sentences: Some(-0.0),
+            ..PossessiveOwn::default()
+        };
+        assert_eq!(settings.invalid(), None);
+        assert!(settings.max_percent_of_sentences().is_sign_positive());
+        let over = check(&Document::markdown(&prose(20, 1)), Some(&settings))
+            .expect("1 of 20 sentences fails a limit of 0");
+        let report = render("a.md", &over);
+        assert!(
+            report.contains("The limit is 0% of its sentences."),
+            "{report}"
+        );
+    }
+
+    #[test]
+    fn a_match_is_counted_in_its_sentence_among_blocks_that_hold_none() {
+        // Sentences are not all the tokens there are: headings and code sit between them.
+        let text = "It reads its own config.\n\n```\nlet x = 1;\n```\n\n# A title\n\nIt reads the \
+                    config. It reads its own config and their own files.\n\nIt reads the config.\n\n\
+                    ```\nlet y = 2;\n```\n\nIt reads its own config.\n";
+        let document = Document::markdown(text);
+        let found = ranges(&document);
+        assert_eq!(found.len(), 4);
+        assert_eq!(sentences_holding(&document, &found), 3);
+        assert_eq!(sentences_holding(&document, &[]), 0);
     }
 
     #[test]
@@ -731,5 +783,6 @@ mod tests {
             "{report}"
         );
         assert!(!report.contains("contrasts"));
+        assert!(!report.contains("Adding sentences"));
     }
 }

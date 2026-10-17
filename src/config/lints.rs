@@ -817,10 +817,13 @@ impl PossessiveOwn {
     /// The share when none is set.
     pub const DEFAULT_MAX_PERCENT_OF_SENTENCES: f64 = 5.0;
 
-    /// The share, or the default.
+    /// The share, or the default. The loader accepts `-0.0`, as it does for
+    /// `max_emphasis.max_percent`, and it is 0 here, so a report never reads "-0%".
     pub fn max_percent_of_sentences(&self) -> f64 {
-        self.max_percent_of_sentences
-            .unwrap_or(Self::DEFAULT_MAX_PERCENT_OF_SENTENCES)
+        let percent = self
+            .max_percent_of_sentences
+            .unwrap_or(Self::DEFAULT_MAX_PERCENT_OF_SENTENCES);
+        if percent == 0.0 { 0.0 } else { percent }
     }
 
     /// Why these settings are unusable, or `None` when they are fine.

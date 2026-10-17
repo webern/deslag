@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 43 of 1230: core 3, human 8, llm 19, mixed 13
+# fails 42 of 1230: core 3, human 8, llm 19, mixed 12
 
 [md.lints.not_at_all]
 
@@ -37,7 +37,6 @@ llm/streetsidesoftware--inject-markdown/docs__ADRs__relative-links__0003-rebase-
 llm/tokens-studio--figma-plugin/tools__figma-bridge__docs__BEST-PRACTICES.md matches:1
 llm/tuhde--Periph/sigrok__PROBING.md matches:1
 mixed/HumanSignal--label-studio/docs__source__guide__quality.md matches:1
-mixed/LambdaHack--LambdaHack/GameDefinition__PLAYING.md matches:1
 mixed/NotePlan--plugins/dwertheimer.Favorites__CHANGELOG.md matches:1
 mixed/amir20--dozzle/README.md matches:1
 mixed/authgear--authgear-server/docs__specs__oidc.md matches:1

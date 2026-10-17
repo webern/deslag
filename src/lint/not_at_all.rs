@@ -10,7 +10,7 @@
 //!   sentence is `?`;
 //! - `all` before a noun the tagger reads at `Likely` or above, as in `at all times`;
 //! - a negator right after `or`, the elliptic alternative, as in `whole or not at all`;
-//! - a sentence of nothing but `not at all`, an answer.
+//! - a sentence of nothing but `not at all`, an answer, with or without a short label such as `A:`.
 //!
 //! `hardly`, `scarcely` and `barely` are no negators, and a plain `if` clause has none, so neither
 //! matches; a negated condition does. The sets are Rust data, never config: a list a config grows
@@ -89,7 +89,7 @@ pub fn check(document: &Document<'_>, settings: Option<&NotAtAll>) -> Option<Ove
             let range = tokens[0].range.start..tokens[tokens.len() - 1].range.end;
             Match {
                 location: document.locate(range.clone()),
-                quote: quote(&document.text(range)),
+                quote: quote(&without_cut_links(&document.text(range))),
             }
         })
         .collect();
@@ -97,6 +97,43 @@ pub fn check(document: &Document<'_>, settings: Option<&NotAtAll>) -> Option<Ove
         matches,
         message: settings.message.clone(),
     })
+}
+
+/// `source`, the text of a match, without the link markup that the match cuts through: a `[` whose
+/// `]` is past the end of the match, and a `]` with its `(destination)` whose `[` is before the
+/// match. A link the match holds whole stays as written, and so does a bracket in a code span.
+fn without_cut_links(source: &str) -> String {
+    let chars: Vec<char> = source.chars().collect();
+    let mut cut = vec![false; chars.len()];
+    let mut open = Vec::new();
+    let mut in_code = false;
+    let mut at = 0;
+    while at < chars.len() {
+        match chars[at] {
+            '`' => in_code = !in_code,
+            '[' if !in_code => open.push(at),
+            ']' if !in_code && open.pop().is_none() => {
+                cut[at] = true;
+                let destination = chars.get(at + 1) == Some(&'(');
+                if let Some(close) = chars[at..].iter().position(|ch| *ch == ')') {
+                    if destination {
+                        cut[at + 1..=at + close].fill(true);
+                        at += close;
+                    }
+                }
+            }
+            _ => {}
+        }
+        at += 1;
+    }
+    for at in open {
+        cut[at] = true;
+    }
+    chars
+        .into_iter()
+        .zip(cut)
+        .filter_map(|(ch, cut)| (!cut).then_some(ch))
+        .collect()
 }
 
 /// The token ranges of the matches of [`PATTERN`] that no excuse covers, in the order of the file.
@@ -135,15 +172,37 @@ fn asks(after: &[Token<'_>]) -> bool {
         .is_some_and(|token| token.text == "?")
 }
 
+/// The most tokens in the label that may open an answer, as in `Reviewer 2: Not at all.`
+const MAX_LABEL: usize = 3;
+
 /// Whether the match, tokens `start` to `end` of the sentence `tokens`, is `not at all` and the
 /// sentence holds nothing else but marks, such as quotes and the full stop, as in the answer `Not
-/// at all.`
+/// at all.`, or a short label that ends in `:` as well, as in `A: Not at all.`
 fn is_the_sentence(tokens: &[Token<'_>], start: usize, end: usize) -> bool {
-    let mark = |token: &Token<'_>| token.kind == TokenKind::Punctuation;
     end - start == 3
         && tokens[start].folded() == "not"
-        && tokens[..start].iter().all(mark)
-        && tokens[end..].iter().all(mark)
+        && is_a_label_or_marks(&tokens[..start])
+        && tokens[end..].iter().all(is_a_mark)
+}
+
+/// Whether `token` is a mark, such as a quote or a full stop.
+fn is_a_mark(token: &Token<'_>) -> bool {
+    token.kind == TokenKind::Punctuation
+}
+
+/// Whether `before`, the tokens of a sentence ahead of a bare `not at all`, are marks alone, or
+/// hold a label of at most [`MAX_LABEL`] tokens that are no marks and then a `:`, such as `A:`,
+/// between marks.
+fn is_a_label_or_marks(before: &[Token<'_>]) -> bool {
+    let marks = before.iter().take_while(|token| is_a_mark(token)).count();
+    let rest = &before[marks..];
+    if rest.is_empty() {
+        return true;
+    }
+    let label = rest.iter().take_while(|token| !is_a_mark(token)).count();
+    (1..=MAX_LABEL).contains(&label)
+        && rest.get(label).is_some_and(|token| token.text == ":")
+        && rest[label + 1..].iter().all(is_a_mark)
 }
 
 /// The report for one file at `path` that holds the construction, with no trailing newline.
@@ -361,6 +420,56 @@ mod tests {
             assert!(!found(text).is_empty(), "{text}");
         }
         assert!(found("It works. Not at all.").is_empty());
+    }
+
+    #[test]
+    fn a_short_label_before_a_bare_not_at_all_is_not_a_match() {
+        for text in [
+            "A: Not at all.",
+            "Answer: not at all.",
+            "Reviewer 2: Not at all.",
+            "A: \"Not at all.\"",
+            "Q: Is autoexplore safe?\n\nA: Not at all. It doesn't try to guess which hazardous \
+             terrain you want to avoid and which to barge through.",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
+        }
+        for text in [
+            "A: Not at all clear.",
+            "A: No, not at all.",
+            "A: It is. Not at all clear.",
+            "A: Not at all, really.",
+            "The reply from the whole team: Not at all.",
+            "Not at all: A.",
+            ": Not at all clear.",
+        ] {
+            assert!(!found(text).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn a_quote_holds_no_half_of_a_link() {
+        assert_eq!(
+            found("The tool does not [work at all](https://x.y/z) here."),
+            ["not work at all"]
+        );
+        assert_eq!(
+            found("It does [not work](https://x.y/z) at all."),
+            ["not work at all"]
+        );
+        assert_eq!(
+            found("It does [not work at](https://x.y/z) all."),
+            ["not work at all"]
+        );
+        // A link the match holds whole, and a bracket in code, stay as written.
+        assert_eq!(
+            found("It does not see [the docs](https://x.y/z) at all."),
+            ["not see [the docs](https://x.y/z) at all"]
+        );
+        assert_eq!(
+            found("It is not `a[` or `b` at all."),
+            ["not `a[` or `b` at all"]
+        );
     }
 
     #[test]

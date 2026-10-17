@@ -48,6 +48,14 @@ pub(super) struct TomlFile {
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
     overrides: Vec<OverrideFile>,
+    // Last, so that a section written as a JSON array keeps the keys before it where they were:
+    // the config reads a struct by position.
+    /// Files `globs` match that this section leaves out, such as generated code. A pattern is
+    /// written as in `globs`, from the repo root with a `/`, else by file name, and not needing to
+    /// end in `.toml`. A file the walk skips stays skipped, and nothing re-includes one. Only a
+    /// human adds an exclude; never add one to make a check pass.
+    #[serde(default)]
+    exclude: Vec<String>,
 }
 
 impl TomlFile {
@@ -61,6 +69,7 @@ impl TomlFile {
             .collect();
         Parts {
             globs: self.globs,
+            exclude: self.exclude,
             default_globs: DEFAULT_GLOBS,
             extensions: Some(EXTENSIONS),
             stack: Stack::new(Reader::Toml { surfaces }),

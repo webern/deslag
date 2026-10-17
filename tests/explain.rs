@@ -250,6 +250,140 @@ fn explain_reads_the_config_path() {
     );
 }
 
+/// A repo with the config `text` after `schema_version = 1`, and each of `paths` holding a file.
+fn repo_of(text: &str, paths: &[&str]) -> Repo {
+    let repo = Repo::new();
+    repo.write("deslag.toml", &format!("schema_version = 1\n{text}"));
+    for path in paths {
+        repo.write(path, "# A file\n");
+    }
+    repo
+}
+
+#[test]
+fn a_file_a_section_excludes_says_which_section_and_pattern_drop_it() {
+    let repo = repo_of(
+        "[md]\nexclude = [\"/docs/adr/**\"]\n\
+         [rust]\nglobs = [\"/src/**/*.rs\"]\nexclude = [\"/src/proto/**\", \"gen.rs\"]\n",
+        &[
+            "docs/adr/0001.md",
+            "docs/guide.md",
+            "src/proto/a.rs",
+            "src/lib.rs",
+            "src/gen.rs",
+        ],
+    );
+    for (path, line) in [
+        (
+            "docs/adr/0001.md",
+            "no section; [md] excludes it by \"/docs/adr/**\"",
+        ),
+        (
+            "src/proto/a.rs",
+            "no section; [rust] excludes it by \"/src/proto/**\"",
+        ),
+        ("src/gen.rs", "no section; [rust] excludes it by \"gen.rs\""),
+    ] {
+        let (code, stdout, stderr) = explain(&repo, &[path]);
+        assert_eq!((code, stderr.as_str()), (0, ""), "{path}");
+        assert_eq!(
+            stdout,
+            format!("# {path}\n# config: deslag.toml\n# selected by: {line}\n")
+        );
+    }
+    for (path, section) in [("docs/guide.md", "md"), ("src/lib.rs", "rust")] {
+        let (_, stdout, _) = explain(&repo, &[path]);
+        assert!(
+            stdout.contains(&format!("# selected by [{section}]: yes\n")),
+            "{stdout}"
+        );
+    }
+}
+
+#[test]
+fn an_override_shows_its_exclude_and_one_that_drops_the_file_says_so() {
+    let repo = repo_of(
+        "[md.lints.max_size_bytes]\nvalue = 1000\n\
+         [[md.overrides]]\nglobs = [\"/docs/**/*.md\"]\nexclude = [\"/docs/adr/**\", \"DRAFT.md\"]\n\
+         lints.max_size_bytes.value = 8000\n\
+         [[md.overrides]]\nglobs = [\"*.md\"]\nlints.density.max_paragraph_chars = 500\n",
+        &["docs/guide.md", "docs/adr/0001.md"],
+    );
+
+    let (code, stdout, stderr) = explain(&repo, &["docs/guide.md"]);
+    assert_eq!((code, stderr.as_str()), (0, ""));
+    assert!(
+        stdout.contains(
+            "# overrides, in the order they merge:\n\
+             #   override 2: globs = [\"*.md\"]\n\
+             #   override 1: globs = [\"/docs/**/*.md\"], exclude = [\"/docs/adr/**\", \"DRAFT.md\"]\n"
+        ),
+        "{stdout}"
+    );
+    assert!(
+        stdout.contains("[max_size_bytes]\nvalue = 8000\n"),
+        "{stdout}"
+    );
+
+    let (code, stdout, stderr) = explain(&repo, &["docs/adr/0001.md"]);
+    assert_eq!((code, stderr.as_str()), (0, ""));
+    assert!(
+        stdout.contains(
+            "# overrides, in the order they merge:\n\
+             #   override 2: globs = [\"*.md\"]\n\
+             #   override 1 does not apply: globs = [\"/docs/**/*.md\"] match, but exclude \
+             \"/docs/adr/**\" drops the file\n"
+        ),
+        "{stdout}"
+    );
+    // The excluded override lays nothing over the section's settings.
+    assert!(
+        stdout.contains("[max_size_bytes]\nvalue = 1000\n"),
+        "{stdout}"
+    );
+}
+
+#[test]
+fn an_override_that_drops_the_only_candidate_does_not_say_overrides_none() {
+    let repo = repo_of(
+        "[[md.overrides]]\nglobs = [\"*.md\"]\nexclude = [\"/docs/adr/**\"]\n\
+         lints.max_size_bytes.value = 8000\n",
+        &["docs/adr/0001.md"],
+    );
+    let (code, stdout, stderr) = explain(&repo, &["docs/adr/0001.md"]);
+    assert_eq!((code, stderr.as_str()), (0, ""));
+    assert!(
+        stdout.contains(
+            "# overrides: no override applies, but these match by globs:\n\
+             #   override 1 does not apply: globs = [\"*.md\"] match, but exclude \
+             \"/docs/adr/**\" drops the file\n"
+        ),
+        "{stdout}"
+    );
+    assert!(!stdout.contains("# overrides: none"), "{stdout}");
+    assert!(stdout.contains("# max_size_bytes: off\n"), "{stdout}");
+}
+
+#[test]
+fn an_exclude_does_not_bring_back_a_file_the_walk_skips() {
+    let repo = repo_of(
+        "[md]\nexclude = [\"/drafts/**\", \"/vendor/**\"]\n",
+        &["drafts/plan.md", "vendor/notes.md", "docs/a.md"],
+    );
+    repo.write(".gitignore", "drafts/\n");
+    repo.write(".ignore", "vendor/\n");
+    for path in ["drafts/plan.md", "vendor/notes.md"] {
+        let (code, stdout, stderr) = explain(&repo, &[path]);
+        assert_eq!((code, stderr.as_str()), (0, ""), "{path}");
+        assert_eq!(
+            stdout,
+            format!(
+                "# {path}\n# config: deslag.toml\n# ignored: yes, so deslag check never reads it\n"
+            ),
+        );
+    }
+}
+
 #[test]
 fn a_budget_in_the_frontmatter_is_the_last_layer() {
     let repo = Repo::new();

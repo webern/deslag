@@ -4,13 +4,18 @@
 //! [`walk`] and filters what it gets back with [`Pattern`]s, so a future linter for another kind
 //! of file reuses both.
 //!
+//! A [`Globs`] is a list of patterns less a list of patterns to leave out. A section and an
+//! override each hold one.
+//!
 //! A pattern has two forms. One holding a `/` is **anchored**: it matches the file's path relative
 //! to the repo root, and a leading `/` is allowed and ignored. One without a `/` matches the file's
 //! basename wherever the file is. In both, `*` stays inside one path component and `**` crosses
 //! them. Matching is case sensitive.
 
+mod select;
 mod walk;
 
+pub use select::{Globs, Selection};
 pub use walk::{RepoFile, find, relative_slash_path, walk};
 
 use globset::{GlobBuilder, GlobMatcher};
@@ -90,16 +95,6 @@ pub fn compile_all(texts: &[String]) -> Result<Vec<Pattern>, (String, globset::E
         .iter()
         .map(|text| Pattern::new(text).map_err(|error| (text.clone(), error)))
         .collect()
-}
-
-/// The specificity of the most specific pattern in `patterns` that matches `rel_path`, or `None`
-/// when none of them does.
-pub fn best_match(patterns: &[Pattern], rel_path: &str) -> Option<Specificity> {
-    patterns
-        .iter()
-        .filter(|pattern| pattern.matches(rel_path))
-        .map(Pattern::specificity)
-        .max()
 }
 
 #[cfg(test)]

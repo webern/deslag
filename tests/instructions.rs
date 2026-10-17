@@ -182,15 +182,25 @@ fn the_lints_topic_covers_every_lint() {
     assert_eq!(ids, lint_names());
 }
 
-/// The guide's example is a config deslag accepts, and the guide sends the reader to the lints for
-/// the rest.
+/// The guide's example is a config deslag accepts, every other table it shows fits the schema, and
+/// the guide sends the reader to the lints for the rest.
 #[test]
 fn the_guide_example_is_valid_and_points_to_the_lints() {
     let guide = guide();
     assert!(guide.contains("Run `deslag instructions lints`"));
-    let example = toml_blocks(&guide)[0];
+    let blocks = toml_blocks(&guide);
+    let (whole, parts): (Vec<&str>, Vec<&str>) = blocks
+        .into_iter()
+        .partition(|block| block.contains("schema_version"));
+    let [example] = whole.as_slice() else {
+        panic!("the guide holds one whole config, not {}", whole.len());
+    };
     assert_eq!(toml_misfit(example), None);
     assert_runs_clean(example);
+    for part in parts {
+        let config = format!("schema_version = {SCHEMA_VERSION}\n\n{part}");
+        assert_eq!(toml_misfit(&config), None, "{part}");
+    }
 }
 
 /// Each lint's section holds one table, which turns on that lint and no other.

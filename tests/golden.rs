@@ -87,6 +87,7 @@ fn record_of(violation: &Violation) -> Option<String> {
         }
         Violation::ListGrowth(over) => format!("items:{} base:{}", over.items, over.base_items),
         Violation::VerbsNoNouns(over) => format!("matches:{}", over.matches.len()),
+        Violation::CountedInventory(over) => format!("matches:{}", over.matches.len()),
     };
     Some(record)
 }

@@ -22,9 +22,9 @@ use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
 use deslag::change::{File, Hunk, Status};
 use deslag::changelog::Version;
-use deslag::config::{BannedPhrases, ListGrowth, PhraseGroups, VerbsNoNouns};
+use deslag::config::{BannedPhrases, CountedInventory, ListGrowth, PhraseGroups, VerbsNoNouns};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
-use deslag::lint::{Before, list_growth, verbs_no_nouns};
+use deslag::lint::{Before, counted_inventory, list_growth, verbs_no_nouns};
 use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.
@@ -746,8 +746,9 @@ fn list_growth_finds_what_its_golden_file_says() {
 /// A file whose label is its publisher's statement of the model (`corpus.md` section 3) counts as
 /// `llm`, as it does in every measure by default.
 ///
-/// The same pass, which reads each file once, checks the claim `verbs_no_nouns` makes: `llm`
-/// files hold it at least 3 times as often as `human` files, and at most 3.5% of `human` files do.
+/// The same pass, which reads each file once, checks the claim `verbs_no_nouns` and
+/// `counted_inventory` each make: `llm` files hold it at least 3 times as often as `human` files,
+/// and at most 3.5% of `human` files do.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -771,14 +772,16 @@ fn the_catalogue_counts_are_the_big_tiers() {
         })
         .collect();
     let negating = VerbsNoNouns::default();
+    let counting = CountedInventory::default();
     // Which entries each fixture holds, each fixture read once, over every core.
     let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
-    let held: Vec<(&Fixture, Vec<usize>, bool)> = std::thread::scope(|scope| {
+    let held: Vec<(&Fixture, Vec<usize>, [bool; 2])> = std::thread::scope(|scope| {
         let workers: Vec<_> = fixtures
             .chunks(fixtures.len().div_ceil(threads).max(1))
             .map(|chunk| {
                 let settings = &settings;
                 let negating = &negating;
+                let counting = &counting;
                 scope.spawn(move || {
                     chunk
                         .iter()
@@ -797,7 +800,9 @@ fn the_catalogue_counts_are_the_big_tiers() {
                                 .collect();
                             let negates =
                                 verbs_no_nouns::check(&document, Some(negating)).is_some();
-                            (*fixture, entries, negates)
+                            let counts =
+                                counted_inventory::check(&document, Some(counting)).is_some();
+                            (*fixture, entries, [negates, counts])
                         })
                         .collect::<Vec<_>>()
                 })
@@ -825,30 +830,38 @@ fn the_catalogue_counts_are_the_big_tiers() {
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
 
-    // Its words are English; `no` is a word of other languages too.
-    let flagged = |category: &str| {
-        let english = held.iter().filter(|(fixture, _, _)| {
-            fixture.category == category && fixture.sidecar.content.natural_language == "en"
-        });
-        let files = english.clone().count();
-        (english.filter(|(_, _, negates)| *negates).count(), files)
-    };
-    let ((human, humans), (llm, llms)) = (flagged("human"), flagged("llm"));
-    eprintln!("flagged by verbs_no_nouns: human {human} of {humans}, llm {llm} of {llms}");
-    assert!(
-        llm * humans >= 3 * human * llms,
-        "verbs_no_nouns: llm files hold it less than 3 times as often as human files (human \
-         {human} of {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. \
-         The tagger or the image moved the lint's findings: a human decides whether to excuse more \
-         idioms or to change the claim in the lint's doc comment."
-    );
-    assert!(
-        human * 1000 <= 35 * humans,
-        "verbs_no_nouns: more than 3.5% of human files hold it (human {human} of {humans}, llm \
-         {llm} of {llms}). The lint's claim no longer holds on this image. The tagger or the image \
-         moved the lint's findings: a human decides whether to excuse more idioms or to change the \
-         claim in the lint's doc comment."
-    );
+    // Their words are English; `no` is a word of other languages too. What can move each lint's
+    // findings: the tagger reads the words of one, and the other reads digits and a fixed list of
+    // nouns.
+    let lints = [
+        ("verbs_no_nouns", "The tagger or the image", "idioms"),
+        ("counted_inventory", "The image", "numbers"),
+    ];
+    for (at, (lint, moved, excuse)) in lints.into_iter().enumerate() {
+        let flagged = |category: &str| {
+            let english = held.iter().filter(|(fixture, ..)| {
+                fixture.category == category && fixture.sidecar.content.natural_language == "en"
+            });
+            let files = english.clone().count();
+            (english.filter(|(.., flags)| flags[at]).count(), files)
+        };
+        let ((human, humans), (llm, llms)) = (flagged("human"), flagged("llm"));
+        eprintln!("flagged by {lint}: human {human} of {humans}, llm {llm} of {llms}");
+        assert!(
+            llm * humans >= 3 * human * llms,
+            "{lint}: llm files hold it less than 3 times as often as human files (human {human} \
+             of {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. \
+             {moved} moved the lint's findings: a human decides whether to excuse more {excuse} \
+             or to change the claim in the lint's doc comment."
+        );
+        assert!(
+            human * 1000 <= 35 * humans,
+            "{lint}: more than 3.5% of human files hold it (human {human} of {humans}, llm {llm} \
+             of {llms}). The lint's claim no longer holds on this image. {moved} moved the \
+             lint's findings: a human decides whether to excuse more {excuse} or to change the \
+             claim in the lint's doc comment."
+        );
+    }
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

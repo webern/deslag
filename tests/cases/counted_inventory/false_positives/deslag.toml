@@ -1,0 +1,3 @@
+schema_version = 1
+
+[md.lints.counted_inventory]

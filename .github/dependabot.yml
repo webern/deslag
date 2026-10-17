@@ -1,9 +1,9 @@
 version: 2
 
 # One pull request a week with every update, across both ecosystems. The sweep keeps its own
-# lockfile and is watched too, except for unicode-ident, which its Cargo.toml pins, and
-# ra-ap-rustc_lexer, which that pin is for. scripts/crates/c is left out on purpose; see its
-# Cargo.toml.
+# lockfile and is watched too, except for unicode-ident, which its Cargo.toml pins exactly. A new
+# ra-ap-rustc_lexer reaches the group, and CI shows whether it builds against that pin.
+# scripts/crates/c is left out on purpose; see its Cargo.toml.
 multi-ecosystem-groups:
   dependencies:
     schedule:
@@ -19,7 +19,6 @@ updates:
     patterns: ["*"]
     multi-ecosystem-group: dependencies
     ignore:
-      - dependency-name: ra-ap-rustc_lexer
       - dependency-name: unicode-ident
   - package-ecosystem: github-actions
     directory: /

@@ -111,3 +111,40 @@ pub fn assert_no_words(text: &str, what: &str) {
         "{what} lists examples"
     );
 }
+
+/// The fields of an import line that can hold a value an error might quote, as the errors name them.
+pub const IMPORT_FIELDS: [&str; 5] = ["UPOS", "FEATS", "Conf", "Score", "Kept"];
+
+/// `skeleton` filled in with `NOUN` on every `Word` line, except the one whose FORM is `form`: on
+/// that line `field` (one of [`IMPORT_FIELDS`]) holds the FORM itself, which no field can read.
+pub fn import_with_form_in(skeleton: &str, form: &str, field: &str) -> String {
+    let mut hit = 0;
+    let text: String = skeleton
+        .lines()
+        .map(|line| {
+            let mut columns: Vec<String> = line.split('\t').map(str::to_string).collect();
+            if columns.len() == 10 && columns[9].starts_with("Kind=Word") {
+                columns[3] = "NOUN".to_string();
+                if columns[1] == form {
+                    hit += 1;
+                    match field {
+                        "UPOS" => columns[3] = form.to_string(),
+                        "FEATS" => columns[5] = form.to_string(),
+                        key => columns[9] = format!("{}|{key}={form}", columns[9]),
+                    }
+                }
+            }
+            columns.join("\t") + "\n"
+        })
+        .collect();
+    assert_eq!(hit, 1, "one Word line has the FORM `{form}`");
+    text
+}
+
+/// The line number, counted from 1, of the first line of `text` whose FORM is `form`.
+pub fn line_of_form(text: &str, form: &str) -> usize {
+    text.lines()
+        .position(|line| line.split('\t').nth(1) == Some(form))
+        .map(|index| index + 1)
+        .unwrap()
+}

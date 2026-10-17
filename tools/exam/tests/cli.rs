@@ -6,7 +6,9 @@ mod common;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-use common::{FORBIDDEN, assert_no_words, case_path};
+use common::{
+    FORBIDDEN, IMPORT_FIELDS, assert_no_words, case_path, import_with_form_in, line_of_form,
+};
 
 fn exam(args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_deslag-exam"))
@@ -531,4 +533,40 @@ fn score_holdout_refuses_a_gold_that_names_another_split() {
     ]);
     assert_eq!(error.lines().count(), 1, "{error}");
     assert!(error.contains("`exam.split = dev`"), "{error}");
+}
+
+#[test]
+fn score_holdout_import_errors_name_the_field_and_the_position_never_the_value() {
+    let dir = tempfile::tempdir().unwrap();
+    // The path of a tempdir is random and may hold a word, so it is cut out before looking.
+    let shown = |error: &str| error.replace(dir.path().to_str().unwrap(), "");
+    let holdout = case("done-when-holdout.conllu");
+    let dev = case("done-when.conllu");
+    let (_, holdout_skeleton) = skeleton(dir.path(), &holdout);
+    let (_, dev_skeleton) = skeleton(dir.path(), &dev);
+    let filled = dir.path().join("import.conllu");
+    for field in IMPORT_FIELDS {
+        // An ordinary read quotes the value: a plain import keeps its message.
+        std::fs::write(&filled, import_with_form_in(&dev_skeleton, "cats", field)).unwrap();
+        let plain = fails(&["score", "--gold", &dev, "--import", path(&filled)]);
+        assert!(plain.contains("cats"), "{field}: {plain}");
+
+        // Holdout text, by the flag or by the gold's own header, names the field and the position.
+        let import = import_with_form_in(&holdout_skeleton, "cats", field);
+        std::fs::write(&filled, &import).unwrap();
+        let at = format!(
+            "/import.conllu:{}: sentence 1: ",
+            line_of_form(&import, "cats")
+        );
+        for flag in [Some("--holdout"), None] {
+            let mut args = vec!["score", "--gold", &holdout, "--import", path(&filled)];
+            args.extend(flag);
+            let error = shown(&fails(&args));
+            assert_eq!(error.lines().count(), 1, "{field} {flag:?}: {error}");
+            assert!(error.contains(&at), "{field} {flag:?}: {error}");
+            assert!(error.contains(field), "{field} {flag:?}: {error}");
+            assert!(!error.contains("cats"), "{field} {flag:?}: {error}");
+            assert_no_words(&error, "the error");
+        }
+    }
 }

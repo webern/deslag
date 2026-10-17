@@ -8,7 +8,9 @@ mod common;
 use std::path::Path;
 use std::process::{Command, Output};
 
-use common::{FORBIDDEN, FORBIDDEN_MORE, Panics, assert_no_words, line};
+use common::{
+    FORBIDDEN, FORBIDDEN_MORE, IMPORT_FIELDS, Panics, assert_no_words, import_with_form_in, line,
+};
 use deslag_exam::gate::{self, Gates};
 use deslag_exam::tagger::{Deslag, Sentence, Tagger};
 use deslag_exam::tags::{Confidence, Features, Reading, Tag, TagSet};
@@ -375,6 +377,39 @@ fn the_holdout_set_refuses_an_import_and_a_list_before_it_reads_anything() {
         error.to_string(),
         "gates.toml: [holdout] a mustpass set names words, so it refuses a holdout gold"
     );
+}
+
+#[test]
+fn an_import_on_the_holdout_set_is_refused_and_its_values_are_never_read() {
+    let dir = tempfile::tempdir().unwrap();
+    let skeleton = dir.path().join("skeleton.conllu");
+    let made = Command::new(env!("CARGO_BIN_EXE_deslag-exam"))
+        .args(["tokens", "--gold", DONE_WHEN_HOLDOUT, "--out"])
+        .arg(&skeleton)
+        .output()
+        .unwrap();
+    assert!(made.status.success(), "{}", text(&made.stderr));
+    let skeleton = std::fs::read_to_string(&skeleton).unwrap();
+    std::fs::write(
+        dir.path().join("gates.toml"),
+        holding(DONE_WHEN_HOLDOUT, "holdout"),
+    )
+    .unwrap();
+    for field in IMPORT_FIELDS {
+        // Every field holds a FORM of the gold; had the file been read, an error would quote it.
+        let import = dir.path().join("import.conllu");
+        std::fs::write(&import, import_with_form_in(&skeleton, "cats", field)).unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_deslag-exam"))
+            .current_dir(dir.path())
+            .args(["gate", "--gates", "gates.toml", "--root"])
+            .arg(env!("CARGO_MANIFEST_DIR"))
+            .args(["--import", "import.conllu", "holdout"])
+            .output()
+            .unwrap();
+        let err = refused(&output, "the holdout set on an import");
+        assert!(err.contains("gate --import refuses a holdout set"), "{err}");
+        assert!(!err.contains("cats") && !err.contains(field), "{err}");
+    }
 }
 
 /// deslag's tagger, except that every `with` reads `ADV`, `Sure`, kept `{ADV}`.

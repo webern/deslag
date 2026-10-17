@@ -424,13 +424,25 @@ fn the_catalogue_is_measured_on_the_pinned_image() {
 #[test]
 fn the_corpus_report_config_holds_the_repos_own_lint_settings() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-    let lints = |path: &str| -> toml::Value {
+    let config = |path: &str| -> toml::Value {
         let text = std::fs::read_to_string(root.join(path)).expect(path);
-        let config: toml::Value = toml::from_str(&text).expect(path);
-        config["md"]["lints"].clone()
+        toml::from_str(&text).expect(path)
     };
-    assert_eq!(
-        lints("tools/corpus/report.toml"),
-        lints(".agents/deslag.toml")
+    let own = config(".agents/deslag.toml");
+    let mut own_lints = own["md"]["lints"].clone();
+    // `counted_inventory` is on for the repo's files through an override, since a lint in the
+    // section would reach the as-built docs and the skills, which stay as they are.
+    let overrides = own["md"]["overrides"].as_array().expect("overrides");
+    let table = toml::Value::Table(toml::Table::new());
+    assert!(
+        overrides
+            .iter()
+            .any(|over| over["lints"].get("counted_inventory") == Some(&table)),
+        "an override turns counted_inventory on"
     );
+    own_lints
+        .as_table_mut()
+        .expect("a table")
+        .insert("counted_inventory".to_string(), table);
+    assert_eq!(config("tools/corpus/report.toml")["md"]["lints"], own_lints);
 }

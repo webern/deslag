@@ -887,8 +887,10 @@ fn the_corpus_locations_hold_what_they_point_at() {
                 Violation::CountedInventory(over) => {
                     for found in &over.matches {
                         let held = held(&found.location);
+                        // The quote leaves out the markup between the words, which the place keeps.
+                        let number = found.quote.split_whitespace().next().expect("a quote");
                         assert!(
-                            held.split_whitespace().next() == found.quote.split_whitespace().next(),
+                            held.starts_with(number),
                             "{context}: {held:?} for {found:?}"
                         );
                     }

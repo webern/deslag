@@ -756,9 +756,15 @@ struct Found<'f> {
 
 /// Asserts the claim of the taste lint `lint`, for which `holds` says whether a fixture holds its
 /// construction: over the English fixtures, `llm` files hold it at least 3 times as often as
-/// `human` files, and at most 3.5% of `human` files do. `excuse` names what a human would excuse
-/// more of if the claim failed.
-fn assert_taste_claim(lint: &str, excuse: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> bool) {
+/// `human` files, and at most 3.5% of `human` files do. `moved` names what can move the lint's
+/// findings, and `excuse` what a human would excuse more of if the claim failed.
+fn assert_taste_claim(
+    lint: &str,
+    moved: &str,
+    excuse: &str,
+    held: &[Found<'_>],
+    holds: fn(&Found<'_>) -> bool,
+) {
     // Their words are English; `no` and `at` are words of other languages too.
     let flagged = |category: &str| {
         let english = held.iter().filter(|held| {
@@ -773,15 +779,15 @@ fn assert_taste_claim(lint: &str, excuse: &str, held: &[Found<'_>], holds: fn(&F
     assert!(
         llm * humans >= 3 * human * llms,
         "{lint}: llm files hold it less than 3 times as often as human files (human {human} of \
-         {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. The \
-         tagger or the image moved the lint's findings: a human decides whether to excuse more \
-         {excuse} or to change the claim in the lint's doc comment."
+         {humans}, llm {llm} of {llms}). The lint's claim no longer holds on this image. \
+         {moved} moved the lint's findings: a human decides whether to excuse more {excuse} or to \
+         change the claim in the lint's doc comment."
     );
     assert!(
         human * 1000 <= 35 * humans,
         "{lint}: more than 3.5% of human files hold it (human {human} of {humans}, llm {llm} of \
-         {llms}). The lint's claim no longer holds on this image. The tagger or the image moved \
-         the lint's findings: a human decides whether to excuse more {excuse} or to change the \
+         {llms}). The lint's claim no longer holds on this image. {moved} moved the \
+         lint's findings: a human decides whether to excuse more {excuse} or to change the \
          claim in the lint's doc comment."
     );
 }
@@ -882,9 +888,23 @@ fn the_catalogue_counts_are_the_big_tiers() {
         counts.insert(entry.phrase.as_str(), (llm_files, llm_repos.len() as u64));
     }
 
-    assert_taste_claim("verbs_no_nouns", "idioms", &held, |held| held.negates);
-    assert_taste_claim("not_at_all", "idioms", &held, |held| held.pads);
-    assert_taste_claim("counted_inventory", "nouns", &held, |held| held.counts);
+    assert_taste_claim(
+        "verbs_no_nouns",
+        "The tagger or the image",
+        "idioms",
+        &held,
+        |held| held.negates,
+    );
+    assert_taste_claim(
+        "not_at_all",
+        "The tagger or the image",
+        "idioms",
+        &held,
+        |held| held.pads,
+    );
+    assert_taste_claim("counted_inventory", "The image", "numbers", &held, |held| {
+        held.counts
+    });
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

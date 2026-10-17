@@ -24,3 +24,5 @@ max_paragraph_chars = 500
 [md.lints.verbs_no_nouns]
 
 [md.lints.not_at_all]
+
+[md.lints.counted_inventory]

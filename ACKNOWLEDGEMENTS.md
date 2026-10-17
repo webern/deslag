@@ -252,7 +252,8 @@ allows that for an adapted work.
 - URL: https://github.com/sloria/textblob-aptagger (Matthew Honnibal's averaged perceptron tagger,
   as packaged for TextBlob)
 - Licence: MIT
-- Used at: the design described in Honnibal's 2013 post on a part-of-speech tagger in Python
+- Used at: the design described in Honnibal's 2013 post, "A good part-of-speech tagger in about 200
+  lines of Python"
 
 A design was borrowed, no code was ported. The perceptron trainer in `scripts/train/` follows its
 shape: one weight per feature and tag, a guess that feeds the next token's tag features, updates

@@ -6,6 +6,9 @@
 #
 # PROFILE is the Cargo profile to build the tests with, such as fast or dev. Each SOURCE_PATH, such
 # as tests/corpus.rs, names a test binary to leave out. CARGO_FLAGS adds flags to the build.
+#
+# Prints a line as each binary finishes, with its seconds, and a failing binary's output at once, so
+# a binary that hangs is the one missing from the lines, and a failure shows while the rest run.
 set -euo pipefail
 
 profile=${1:?usage: test-at-once.sh PROFILE [SOURCE_PATH...]}
@@ -27,6 +30,8 @@ cargo test ${CARGO_FLAGS:-} --profile "$profile" --workspace --all-features --no
 
 start=$SECONDS
 jobs=""
+total=0
+: >"$logs/took"
 while IFS=$'\t' read -r src manifest exe; do
     name=${src#"$root"/}
     case "$skip" in *" $name "*) continue ;; esac
@@ -35,25 +40,53 @@ while IFS=$'\t' read -r src manifest exe; do
         began=$SECONDS
         status=0
         (cd "$(dirname "$manifest")" && "$exe") >"$log" 2>&1 || status=$?
-        echo "$((SECONDS - began))s $name" >"$log.took"
+        # The parent polls for this file, so it is renamed into place whole.
+        echo "$status $((SECONDS - began))" >"$log.tmp"
+        mv "$log.tmp" "$log.done"
         exit "$status"
     ) &
     jobs="$jobs $!:$name"
+    total=$((total + 1))
 done <"$logs/binaries"
 
+# Report each binary in the order it finishes, not the order it started. A binary whose subshell was
+# killed leaves no .done file; it counts as failed.
 failed=0
 count=0
-for job in $jobs; do
-    count=$((count + 1))
-    name=${job#*:}
-    if ! wait "${job%%:*}"; then
-        echo "FAILED: $name" >&2
-        cat "$logs/$(echo "$name" | tr / _).log" >&2
-        failed=1
-    fi
+pending=$jobs
+while [ -n "$pending" ]; do
+    waiting=""
+    for job in $pending; do
+        pid=${job%%:*}
+        name=${job#*:}
+        log="$logs/$(echo "$name" | tr / _).log"
+        alive=0
+        kill -0 "$pid" 2>/dev/null && alive=1
+        if [ -e "$log.done" ]; then
+            read -r status secs <"$log.done"
+        elif [ "$alive" -eq 0 ]; then
+            status=1
+            secs="?"
+        else
+            waiting="$waiting $job"
+            continue
+        fi
+        wait "$pid" 2>/dev/null || true
+        count=$((count + 1))
+        result=ok
+        [ "$status" -eq 0 ] || result=FAILED
+        printf '[%*d/%d] %-6s %4ss %s\n' "${#total}" "$count" "$total" "$result" "$secs" "$name"
+        echo "${secs}s $name" >>"$logs/took"
+        if [ "$status" -ne 0 ]; then
+            cat "$log" >&2
+            failed=1
+        fi
+    done
+    pending=$waiting
+    [ -z "$pending" ] || sleep 0.2
 done
 
 echo "test-at-once: $count test binaries in $((SECONDS - start))s; the slowest:"
-cat "$logs"/*.took | sort -rn | head -5
+sort -rn "$logs/took" | head -5
 [ "$#" -eq 0 ] || echo "left out: $*"
 exit "$failed"

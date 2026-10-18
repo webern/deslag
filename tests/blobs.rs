@@ -743,13 +743,25 @@ fn list_growth_finds_what_its_golden_file_says() {
 }
 
 /// The numbers of `tests/labels/counted_inventory.tsv` that were sampled from the big tier. A
-/// reader who held only the lint's definition marked each a count or not. The lint still finds each
-/// it found that the reader called a count, and finds no more of those called not counts than it
-/// did.
+/// reader who held only the lint's definition marked each a count or not. The rows in each class,
+/// and the number of each class that the lint finds, are exact: they are what its rules do to the
+/// rows today, and a human sets them again when a rule moves them.
 #[test]
 #[ignore = "needs make fetch-blobs"]
-fn counted_inventory_still_finds_the_numbers_a_reader_called_counts() {
-    labels::hold("big", &load_blobs(Path::new(FETCHED)));
+fn counted_inventory_finds_exactly_these_of_the_numbers_a_reader_labelled() {
+    labels::hold(
+        "big",
+        &load_blobs(Path::new(FETCHED)),
+        &labels::Expect {
+            found_counts: labels::Tally {
+                rows: 170,
+                found: 168,
+            },
+            found_nots: labels::Tally { rows: 30, found: 4 },
+            passed_counts: labels::Tally { rows: 0, found: 0 },
+            passed_nots: labels::Tally { rows: 0, found: 0 },
+        },
+    );
 }
 
 /// What one fixture of the big tier holds, from the one pass that reads it.
@@ -896,10 +908,11 @@ fn the_catalogue_counts_are_the_big_tiers() {
     assert_taste_claim("verbs_no_nouns", &held, |held| held.negates);
     assert_taste_claim("not_at_all", &held, |held| held.pads);
 
-    // What `counted_inventory` flagged in the English files when its rules were frozen, on the
-    // image `blobs.lock` pins. It counts true or not, and people write counts too: no ratio.
-    const COUNTING_HUMAN: usize = 676;
-    const COUNTING_LLM: usize = 2060;
+    // What `counted_inventory` flags in the English files, exactly, on the image `blobs.lock` pins.
+    // It counts true or not, and people write counts too: no ratio. A rule that moves either
+    // number shows here, and a human sets them again.
+    const COUNTING_HUMAN: usize = 668;
+    const COUNTING_LLM: usize = 2086;
     let counting = |category: &str| {
         held.iter()
             .filter(|held| {
@@ -911,11 +924,12 @@ fn the_catalogue_counts_are_the_big_tiers() {
     };
     let (human, llm) = (counting("human"), counting("llm"));
     eprintln!("flagged by counted_inventory: human {human}, llm {llm}");
-    assert!(
-        human >= COUNTING_HUMAN && llm >= COUNTING_LLM,
-        "counted_inventory: human {human} of {COUNTING_HUMAN}, llm {llm} of {COUNTING_LLM}. It \
-         flags fewer files than when its rules were frozen. The tagger or a rule moved its \
-         findings: a human decides whether the loss is wanted."
+    assert_eq!(
+        (human, llm),
+        (COUNTING_HUMAN, COUNTING_LLM),
+        "counted_inventory flags human {human} and llm {llm}, where it flagged {COUNTING_HUMAN} \
+         and {COUNTING_LLM}. The tagger or a rule moved its findings: a human decides whether the \
+         move is wanted."
     );
 
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/lint/banned_phrases.toml");

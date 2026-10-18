@@ -1247,18 +1247,31 @@ fn not_at_all_flags_llm_text_more_than_human_text() {
 }
 
 /// The numbers of `tests/labels/counted_inventory.tsv` that were sampled from the tree. A reader who
-/// held only the lint's definition marked each a count or not. The lint still finds each it found
-/// that the reader called a count, and finds no more of those called not counts than it did.
+/// held only the lint's definition marked each a count or not. The rows in each class, and the
+/// number of each class that the lint finds, are exact: they are what its rules do to the rows
+/// today, and a human sets them again when a rule moves them.
 #[test]
-fn counted_inventory_still_finds_the_numbers_a_reader_called_counts() {
-    labels::hold("tree", corpus());
+fn counted_inventory_finds_exactly_these_of_the_numbers_a_reader_labelled() {
+    labels::hold(
+        "tree",
+        corpus(),
+        &labels::Expect {
+            found_counts: labels::Tally {
+                rows: 180,
+                found: 170,
+            },
+            found_nots: labels::Tally { rows: 20, found: 6 },
+            passed_counts: labels::Tally { rows: 2, found: 1 },
+            passed_nots: labels::Tally { rows: 98, found: 0 },
+        },
+    );
 }
 
-/// What the lint found in the tree's English files when its rules were frozen: it flags at least
-/// that many `human` files and that many `llm` files. It claims no ratio between them: it counts
-/// true or not, and people write counts too.
+/// What the lint finds in the tree's English files today, exactly: the `human` files and the `llm`
+/// files that hold a count. It claims no ratio between them: it counts true or not, and people
+/// write counts too. A rule that moves either number shows here, and a human sets them again.
 #[test]
-fn counted_inventory_flags_at_least_the_files_it_did() {
+fn counted_inventory_flags_exactly_the_files_it_does() {
     const HUMAN: usize = 23;
     const LLM: usize = 112;
     let settings = CountedInventory::default();
@@ -1276,8 +1289,11 @@ fn counted_inventory_flags_at_least_the_files_it_did() {
     };
     let (human, llm) = (flagged("human"), flagged("llm"));
     eprintln!("flagged by counted_inventory: human {human}, llm {llm}");
-    assert!(human >= HUMAN, "human {human}, where it was {HUMAN}");
-    assert!(llm >= LLM, "llm {llm}, where it was {LLM}");
+    assert_eq!(
+        (human, llm),
+        (HUMAN, LLM),
+        "human {human}, llm {llm}, where they were {HUMAN} and {LLM}"
+    );
 }
 
 /// The number of `llm/` fixtures each phrase group must match, so that no group is dead weight.

@@ -4,7 +4,9 @@
 /// Number words below five, which are never a count alone but may begin one: `two hundred`.
 pub const SMALL_NUMBERS: &[&str] = &["zero", "one", "two", "three", "four"];
 
-/// Number words of five or more. A run of number words holding one is a cardinal.
+/// Number words of five or more. A run of number words holding one is a cardinal. They stand in
+/// order of value, `five` to `nineteen`, the tens, then the scales, which the value of a proportion
+/// reads.
 pub const BIG_NUMBERS: &[&str] = &[
     "five",
     "six",
@@ -56,14 +58,22 @@ pub const QUANTITIES: &[&str] = &[
 ];
 
 /// The words before a number that make it a limit, as in "at most 200 lines": each row is a
-/// phrase. `within`, `top`, `first`, `last` and `next` name a window, and `from` the start of a
-/// range.
+/// phrase. `within`, `top`, `first`, `last` and `next` name a window. `over` and `under` are limits
+/// only when they mean more or less than: after a word of [`PREPOSITION_VERBS`] they are
+/// prepositions and the number is a count. `from` is no bound: it opens a range only before a
+/// second number, which the scan reads.
 pub const BOUNDS: &[&[&str]] = &[
     &["at", "most"],
     &["at", "least"],
     &["up", "to"],
+    &["up", "to", "and", "including"],
+    &["as", "many", "as"],
+    &["as", "few", "as"],
     &["under"],
     &["over"],
+    &["beyond"],
+    &["in", "excess", "of"],
+    &["upwards", "of"],
     &["more", "than"],
     &["fewer", "than"],
     &["less", "than"],
@@ -76,15 +86,21 @@ pub const BOUNDS: &[&[&str]] = &[
     &["exceeds"],
     &["max", "of"],
     &["min", "of"],
+    &["max", "is"],
+    &["min", "is"],
     &["maximum"],
     &["maximum", "of"],
+    &["maximum", "is"],
     &["minimum"],
     &["minimum", "of"],
+    &["minimum", "is"],
     &["limit", "of"],
+    &["limit", "is"],
+    &["cap", "of"],
+    &["cap", "is"],
     &["capped", "at"],
     &["limited", "to"],
     &["between"],
-    &["from"],
     &["every"],
     &["per"],
     &["each"],
@@ -98,6 +114,62 @@ pub const BOUNDS: &[&[&str]] = &[
 /// The words that may stand between a bound and its number without ending the limit, as in "at
 /// most about 200 lines". A hedge alone is no limit: `about 400` is a count.
 pub const HEDGES: &[&str] = &["about", "around", "roughly", "nearly", "almost"];
+
+/// The verbs after which `over` and `under` are prepositions and no bound, as in `iterates over 63
+/// files` or `live under 63 directories`: they name where, not more or less than.
+pub const PREPOSITION_VERBS: &[&str] = &[
+    "iterate",
+    "iterates",
+    "iterated",
+    "iterating",
+    "loop",
+    "loops",
+    "looped",
+    "looping",
+    "spread",
+    "spreads",
+    "spreading",
+    "walk",
+    "walks",
+    "walked",
+    "walking",
+    "live",
+    "lives",
+    "lived",
+    "living",
+    "sit",
+    "sits",
+    "sat",
+    "sitting",
+    "nest",
+    "nests",
+    "nested",
+    "nesting",
+    "group",
+    "groups",
+    "grouped",
+    "grouping",
+    "store",
+    "stores",
+    "stored",
+    "storing",
+];
+
+/// The words that join the two numbers of a range: `5 to 15`, `5 through 15`.
+pub const RANGE_WORDS: &[&str] = &["to", "through"];
+
+/// The words before a unit of time that make a rate of what a phrase counts: `12 tests a day`,
+/// `5 files every second`. `per` makes one before any word.
+pub const RATE_WORDS: &[&str] = &["a", "an", "each", "every"];
+
+/// The nouns that name a place in a whole when a number follows, even at the start of a sentence,
+/// where the tagger also reads them as verbs: `Step 12 files` is a step, as `Process 12 files` is
+/// a command. Each is a noun that the tagger can read as a verb; the others stay names with no list.
+pub const LABEL_NOUNS: &[&str] = &[
+    "step", "phase", "wave", "slice", "chapter", "section", "part", "page", "level", "stage",
+    "item", "season", "figure", "table", "rule", "lesson", "article", "example", "exercise",
+    "case", "fortune", "issue", "row", "line",
+];
 
 /// The words right after a number, or after what it counts, that make it a limit: `5 or more`,
 /// `5 and up`, `8 words or fewer`.
@@ -197,12 +269,134 @@ pub const UNITS: &[&str] = &[
     "gbp",
     "yen",
     "pm",
+    "kilobyte",
+    "kilobytes",
+    "megabyte",
+    "megabytes",
+    "gigabyte",
+    "gigabytes",
+    "terabyte",
+    "terabytes",
+    "petabyte",
+    "petabytes",
+    "kibibyte",
+    "kibibytes",
+    "mebibyte",
+    "mebibytes",
+    "gibibyte",
+    "gibibytes",
+    "tebibyte",
+    "tebibytes",
+    "pb",
+    "b",
+    "bp",
+    "bps",
+    "kbps",
+    "mbps",
+    "gbps",
+    "tbps",
+    "flops",
+    "gflops",
+    "tflops",
+    "pflops",
+    "teraflops",
+    "petaflops",
+    "s",
+    "decade",
+    "decades",
+    "century",
+    "centuries",
+    "µs",
+    "μs",
+    "meter",
+    "meters",
+    "metre",
+    "metres",
+    "kilometer",
+    "kilometers",
+    "kilometre",
+    "kilometres",
+    "centimeter",
+    "centimeters",
+    "centimetre",
+    "centimetres",
+    "millimeter",
+    "millimeters",
+    "millimetre",
+    "millimetres",
+    "nm",
+    "yard",
+    "yards",
+    "yd",
+    "ft",
+    "kg",
+    "mg",
+    "gram",
+    "grams",
+    "kilogram",
+    "kilograms",
+    "milligram",
+    "milligrams",
+    "pound",
+    "pounds",
+    "ounce",
+    "ounces",
+    "oz",
+    "lb",
+    "lbs",
+    "ton",
+    "tons",
+    "tonne",
+    "tonnes",
+    "liter",
+    "liters",
+    "litre",
+    "litres",
+    "ml",
+    "gallon",
+    "gallons",
+    "quart",
+    "quarts",
+    "pint",
+    "pints",
+    "hectare",
+    "hectares",
+    "acre",
+    "acres",
+    "watt",
+    "watts",
+    "kw",
+    "mw",
+    "kwh",
+    "joule",
+    "joules",
+    "calorie",
+    "calories",
+    "kcal",
+    "volt",
+    "volts",
+    "amp",
+    "amps",
+    "mph",
+    "kph",
+    "rpm",
+    "fps",
+    "dpi",
+    "bpm",
+    "sats",
+    "satoshis",
+    "pence",
+    "penny",
+    "pennies",
 ];
 
 /// The units that make a measure only right after the number, or after the `of` of a quantity: `15
-/// points` is a gap. A word before them makes them things that a reader counts, as in `12 data
-/// points`, so they do not make a measure of the phrase they head.
-pub const BARE_UNITS: &[&str] = &["point", "points"];
+/// points` is a gap, `80 columns` a width and `180 degrees` an angle. A word before them makes
+/// them things that a reader counts, as in `12 data points` or `12 table columns`, so they do not
+/// make a measure of the phrase they head.
+pub const BARE_UNITS: &[&str] = &[
+    "point", "points", "degree", "degrees", "column", "columns", "units", "gig", "gigs",
+];
 
 /// The fractions that make a number a measure, as in `three quarters`.
 pub const FRACTIONS: &[&str] = &[
@@ -275,5 +469,53 @@ pub const HAVE_VERBS: &[&str] = &[
     "gathering",
 ];
 
-/// The words that begin a label such as `max-daily-credits`, which names a limit and no count.
-pub const CAPS: &[&str] = &["max", "min", "maximum", "minimum", "limit"];
+/// The words that make a label or a header name a limit and no count, as in `max-daily-credits`
+/// or `Max files`.
+pub const CAPS: &[&str] = &["max", "maximum", "minimum", "limit", "cap"];
+
+/// The plural nouns that name a value and no thing a person counts: a header or a label that ends
+/// in one, as in `Ports`, holds values, so its cells are no counts.
+pub const VALUE_HEADS: &[&str] = &[
+    "ports",
+    "limits",
+    "defaults",
+    "sizes",
+    "versions",
+    "ids",
+    "thresholds",
+    "budgets",
+    "quotas",
+    "timeouts",
+    "intervals",
+    "delays",
+    "durations",
+    "offsets",
+    "lengths",
+    "widths",
+    "heights",
+    "depths",
+    "weights",
+    "scores",
+    "ratings",
+    "ranks",
+    "levels",
+    "priorities",
+    "codes",
+    "prices",
+    "costs",
+    "rates",
+    "values",
+    "ages",
+    "indexes",
+    "indices",
+    "positions",
+];
+
+/// The words right before a year that make it one though the tagger reads them as a verb or a modal,
+/// which a count takes the place of: `May 2030 tests ran`. A year reads after any other word that
+/// no count follows (`in 2026`, `March 2020`), so the others do not need a row.
+pub const YEAR_BEFORE: &[&str] = &["may"];
+
+/// The words before `of` that make a number after it a count and no year: `a total of 2048
+/// entries`.
+pub const COUNTING_BEFORE_OF: &[&str] = &["total", "number", "count"];

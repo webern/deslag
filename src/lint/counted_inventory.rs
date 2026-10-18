@@ -1,21 +1,21 @@
 //! `counted_inventory`: a file must not count things, as in `It holds 63 tests`, true or not.
 //!
-//! A count is a cardinal of five or more, in digits (`1,075` is one) or number words (`five`,
-//! `sixty-three`, `a dozen`, `hundreds of`). It counts when a noun phrase follows whose head is a
-//! plural noun, after up to four modifiers (adjectives, nouns, participles, code spans, a hyphen
-//! or slash compound as one), or when no noun follows in a known place: `63 of them`, `5 more`,
-//! `N in total`, `Tests: 63`, `8/8 tests`, `It holds 63.`, a table cell of the number under a
-//! header of things.
-//! The tagger tells a plural noun, a modifier and a name.
+//! A count is a cardinal of five or more, in digits (`1,075`; `10k` and `5M` too) or number words
+//! (`five`, `sixty-three`, `a dozen`, `hundreds of`), or a digit below five before a scale word
+//! (`2 million`). It counts when a noun phrase follows whose head is a plural noun, after up to
+//! four modifiers (adjectives, nouns, participles, code spans, a hyphen or slash compound as one;
+//! an adverb in the chain and the `and`, `or` or comma that joins modifiers count for none), or
+//! when no noun follows in a known place: `63 of them`, `5 more`, `N in total`, `Tests: 63`,
+//! `8/8 tests`, `It holds 63.`, a table cell of the number under a header of things.
 //!
-//! It is no count when it is a measure (a unit, `%`, a fraction, as the head too), money, a date, a
-//! version, name, ID or rank (joined to what is before it, a decimal, the text of a link, after `#`
-//! or a noun that is no possessive, lower-case plural or participle), a limit (after a bound,
-//! before `or more` or `+`, a range, a rate), a compound, math, code, or inside double quotes. A
-//! hedge alone is a count. A bare number is a count after a verb of having (`holds`, `has`,
-//! `contains`, `includes`, `lists`, `ships`, `carries`, `keeps`, `gathers` and their forms) when it
-//! ends its clause. After any other verb it is a value (`returns 25`, `defaults to 25`, `takes 10`)
-//! and is left, as is coordination inside the phrase (`7 theme and period pairs`).
+//! It is no count when it is a measure (a unit, `%`, a fraction, as the head too; a unit in a code
+//! span), money, a date, a year where a year reads, a version, name, ID or rank (joined to what is
+//! before it, a decimal, the text of a link, after `#` or a noun that is no possessive, lower-case
+//! plural or participle, and not a capitalised noun that opens the sentence and can be a verb:
+//! `Process 12 files` is a command), a limit (after a bound, before `or more` or `+`, a range, a
+//! rate, a proportion), a compound, math, code, or inside double quotes. A hedge alone is a count.
+//! A bare number is a count after a verb of having (`holds`, `has`, `lists`, `ships`) when it ends
+//! its clause; after any other verb it is a value (`returns 25`, `takes 10`) and is left.
 //!
 //! The sets are Rust data in `rules.rs`, never config: a list a config grows is an allow-list an
 //! agent grows until the check passes. This is a taste lint, off until a config turns it on. Its
@@ -73,13 +73,16 @@ pub fn check(document: &Document<'_>, settings: Option<&CountedInventory>) -> Op
 }
 
 /// The words of `tokens` as they read, with no emphasis or link markers between them: a space
-/// stands where the file has whitespace, and a code span keeps its backticks.
+/// stands where the file has whitespace or an entity for one (`&nbsp;`), none where a hyphen ends
+/// a line (`sixty-` and `three`), and a code span keeps its backticks.
 fn words(document: &Document<'_>, tokens: &[Token<'_>]) -> String {
     let mut out = String::new();
     for (at, token) in tokens.iter().enumerate() {
         if let Some(before) = at.checked_sub(1).map(|before| &tokens[before]) {
             let gap = before.range.end.min(token.range.start)..token.range.start;
-            if document.text(gap).contains(char::is_whitespace) {
+            let text = document.text(gap);
+            let wrapped = before.text == "-" && text.contains('\n') && text.trim().is_empty();
+            if !wrapped && (text.contains(char::is_whitespace) || space_entity(&text)) {
                 out.push(' ');
             }
         }
@@ -93,6 +96,31 @@ fn words(document: &Document<'_>, tokens: &[Token<'_>]) -> String {
         }
     }
     out
+}
+
+/// Whether `text` holds an entity that is a space: `&nbsp;`, `&#160;`, `&#xA0;`, and the other
+/// names and numbers of a space.
+fn space_entity(text: &str) -> bool {
+    text.split('&').skip(1).any(|rest| {
+        let Some((entity, _)) = rest.split_once(';') else {
+            return false;
+        };
+        match entity.strip_prefix('#') {
+            Some(number) => {
+                let code = match number.strip_prefix(['x', 'X']) {
+                    Some(hex) => u32::from_str_radix(hex, 16),
+                    None => number.parse(),
+                };
+                code.ok()
+                    .and_then(char::from_u32)
+                    .is_some_and(char::is_whitespace)
+            }
+            None => [
+                "nbsp", "ensp", "emsp", "thinsp", "hairsp", "numsp", "puncsp",
+            ]
+            .contains(&entity),
+        }
+    })
 }
 
 /// The report for one file at `path` that holds counts, with no trailing newline.

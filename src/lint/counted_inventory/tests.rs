@@ -185,7 +185,6 @@ fn a_bound_before_the_number_makes_it_a_limit() {
     none("It holds capped at 63 tests.");
     none("It holds limited to 63 tests.");
     none("It holds between 63 tests.");
-    none("It holds from 63 tests.");
     none("It holds every 63 tests.");
     none("It holds per 63 tests.");
     none("It holds each 63 tests.");
@@ -525,8 +524,6 @@ fn a_number_after_a_hash_is_an_id() {
 
 #[test]
 fn a_number_after_a_noun_is_a_name_or_a_rank() {
-    none("Python 3 scripts are supported.");
-    none("Version 2 records are read.");
     none("Read issue 57 files.");
     none("Read step 12 files.");
     none("See Rung 6 tests.");
@@ -710,11 +707,6 @@ fn a_code_span_is_a_modifier_or_a_head() {
 #[test]
 fn a_noun_that_is_not_plural_ends_the_phrase_with_no_count() {
     none("It has 63 test.");
-}
-
-#[test]
-fn coordination_inside_the_phrase_is_left() {
-    none("We saw 7 theme and period pairs.");
 }
 
 #[test]
@@ -936,4 +928,909 @@ fn a_finding_on_a_line_the_change_did_not_touch_is_dropped() {
     assert_eq!(kept.matches.len(), 1);
     assert_eq!(kept.matches[0].quote, "12 files");
     assert!(retain(&over, &Line(2)).is_none());
+}
+
+/// A digit below five before a scale word is the number it makes: `2 million` is 2,000,000.
+#[test]
+fn a_digit_below_five_before_a_scale_word_is_a_count() {
+    counts("It has 2 hundred files.", &["2 hundred files"]);
+    counts("It has 3 thousand files.", &["3 thousand files"]);
+    counts("It has 2 million tests.", &["2 million tests"]);
+    counts("It has 1 billion rows.", &["1 billion rows"]);
+    counts("It has 4 trillion rows.", &["4 trillion rows"]);
+    counts("It has 2 dozen users.", &["2 dozen users"]);
+    counts("It holds 2 million.", &["holds 2 million"]);
+    counts("Tests: 2 million", &["Tests: 2 million"]);
+    none("It has 2 files.");
+    none("It has 4 tests.");
+    none("It has 2 millions.");
+}
+
+/// An adverb inside the chain of modifiers, as in `12 newly added files`, leaves the count whole.
+#[test]
+fn an_adverb_before_a_modifier_is_part_of_the_chain() {
+    counts(
+        "We changed 12 newly added files.",
+        &["12 newly added files"],
+    );
+    counts("We changed 12 very small files.", &["12 very small files"]);
+    counts(
+        "We changed 12 recently changed files.",
+        &["12 recently changed files"],
+    );
+    counts(
+        "We changed 12 currently failing tests.",
+        &["12 currently failing tests"],
+    );
+    counts(
+        "We changed 12 automatically generated files.",
+        &["12 automatically generated files"],
+    );
+    counts(
+        "We changed 12 really quite big tests.",
+        &["12 really quite big tests"],
+    );
+}
+
+/// An adverb is no modifier of the four: the cap stays at four adjectives, nouns and participles.
+#[test]
+fn an_adverb_is_no_modifier_of_the_four() {
+    counts(
+        "It has 12 very big very red very old very new tests.",
+        &["12 very big very red very old very new tests"],
+    );
+    none("It has 12 very big very red very old very new very fast tests.");
+    counts(
+        "It has 12 big red old new tests.",
+        &["12 big red old new tests"],
+    );
+    none("It has 12 big red old new fast tests.");
+}
+
+/// An adverb leads into a modifier and never into the head, and a compound that starts with one
+/// is one modifier.
+#[test]
+fn an_adverb_right_before_the_head_leads_into_no_modifier() {
+    none("It has 12 only tests.");
+    none("It has 12 really tests.");
+    counts(
+        "It has 12 well-known up-to-date tests.",
+        &["12 well-known up-to-date tests"],
+    );
+    counts(
+        "It has 12 very newly-added files.",
+        &["12 very newly-added files"],
+    );
+    counts(
+        "It has 12 very newly/old files.",
+        &["12 very newly/old files"],
+    );
+}
+
+/// `and`, `or` and a comma join the modifiers of a phrase, and are no modifier of the four.
+#[test]
+fn coordination_inside_the_phrase_is_a_count() {
+    counts(
+        "We saw 7 theme and period pairs.",
+        &["7 theme and period pairs"],
+    );
+    counts(
+        "It has 12 unit and integration tests.",
+        &["12 unit and integration tests"],
+    );
+    counts(
+        "It has 12 new or changed files.",
+        &["12 new or changed files"],
+    );
+    counts("It has 12 big, red tests.", &["12 big, red tests"]);
+    counts(
+        "It has 12 added, changed or removed files.",
+        &["12 added, changed or removed files"],
+    );
+    counts(
+        "It has 12 big, red, and old tests.",
+        &["12 big, red, and old tests"],
+    );
+    none("It has 12 big and then tests.");
+    counts("It has 12, big tests.", &["has 12"]);
+}
+
+/// The quote stops at the head noun: a word after it that the tagger reads as a verb is the verb.
+#[test]
+fn the_quote_stops_at_the_head_noun() {
+    counts("A list of 63 files follows.", &["63 files"]);
+    counts("One of five tests fails.", &["five tests"]);
+    counts("A set of 63 tests runs.", &["63 tests"]);
+    counts("The 12 tests run.", &["12 tests"]);
+    counts("We saw 12 sales calls.", &["12 sales calls"]);
+}
+
+/// One in ten is a proportion and no count.
+#[test]
+fn the_second_number_of_a_proportion_is_no_count() {
+    none("One in ten tests fail.");
+    none("It has one in ten tests.");
+    none("It fails 1 in 10 tests.");
+    none("It fails three in twelve tests.");
+    counts("It has 5 tests in 12 files.", &["5 tests", "12 files"]);
+}
+
+/// A proportion reads the number words as numbers, zero to ninety, whichever is the larger.
+#[test]
+fn a_proportion_reads_the_number_words_by_their_value() {
+    none("It fails zero in twelve tests.");
+    none("It fails two in twelve tests.");
+    none("It fails four in five tests.");
+    none("It fails five in six tests.");
+    none("It fails eleven in nineteen tests.");
+    none("It fails nineteen in twenty tests.");
+    none("It fails twenty in thirty tests.");
+    none("It fails thirty in forty tests.");
+    none("It fails forty in fifty tests.");
+    none("It fails fifty in sixty tests.");
+    none("It fails sixty in seventy tests.");
+    none("It fails seventy in eighty tests.");
+    none("It fails eighty in ninety tests.");
+    none("It fails ninety in a hundred tests.");
+    none("It fails twenty-one in thirty tests.");
+    counts("It fails nineteen in eleven tests.", &["eleven tests"]);
+    counts("It fails twenty in nineteen tests.", &["nineteen tests"]);
+    counts("It fails thirty in twenty tests.", &["twenty tests"]);
+    counts("It fails forty in thirty tests.", &["thirty tests"]);
+    counts("It fails fifty in forty tests.", &["forty tests"]);
+    counts("It fails sixty in fifty tests.", &["fifty tests"]);
+    counts("It fails seventy in sixty tests.", &["sixty tests"]);
+    counts("It fails eighty in seventy tests.", &["seventy tests"]);
+    counts("It fails ninety in eighty tests.", &["eighty tests"]);
+    counts("It fails six in five tests.", &["five tests"]);
+}
+
+/// A capitalised noun that opens a sentence and that the tagger can read as a verb is a command,
+/// and its number is a count.
+#[test]
+fn a_capitalised_noun_that_can_be_a_verb_opens_a_command() {
+    counts("Process 12 files.", &["12 files"]);
+    counts("Package 12 files.", &["12 files"]);
+    counts("Release 12 files.", &["12 files"]);
+    counts("Tracks 12 files.", &["12 files"]);
+    counts("Documents 12 files.", &["12 files"]);
+    counts("Plans 12 files.", &["12 files"]);
+    counts("Build 12 targets.", &["12 targets"]);
+    counts("Test 12 modules.", &["12 modules"]);
+    counts("- Process 12 files.\n", &["12 files"]);
+    counts("# Process 12 files\n", &["12 files"]);
+    counts("Process 12 failed tests.", &["12 failed tests"]);
+    counts("Fix 12 failing tests.", &["12 failing tests"]);
+}
+
+/// A word that opens a sentence and then a number and a verb is a name with its verb, though the
+/// tagger can read the first word as a verb: `Loop 40 added GitHub Actions.`
+#[test]
+fn a_name_that_a_verb_follows_is_a_name() {
+    none("Loop 40 added GitHub Actions.");
+    none("Plan 10 chose direct synchronous calls.");
+    none("Plan 10 initially chose direct synchronous calls.");
+    none("Tier 5 supports many languages.");
+    none("Tier 5 covers Asian languages.");
+    none("Position 22 remains unused.");
+    none("Loop 73 stages independent availability.");
+    none("Process 12 core files the report.");
+    counts("Process 12 core files.", &["12 core files"]);
+}
+
+/// A name stays a name: away from the start of a sentence, for a version, and when a verb with its
+/// object follows.
+#[test]
+fn a_name_is_still_a_name() {
+    none("See Process 12 files.");
+    none("We run Process 12 files.");
+    none("Windows 95 machines are read.");
+    none("Java 21 builds are supported.");
+    none("Version 12 records are read.");
+    none("Run 12 passed.");
+    none("Wave 9 closes Phase 3.");
+    none("Slice 5 lands the substrate.");
+    none("Slice 5 core lands the substrate.");
+    none("Wave 9 core closes Phase 3.");
+}
+
+/// A word that is no capital does not open a command, though it opens the sentence.
+#[test]
+fn a_word_with_no_capital_is_no_command() {
+    none("process 12 files.");
+    none("package 12 files.");
+    none("cache 12 files.");
+    counts("Process 12 files.", &["12 files"]);
+}
+
+/// A noun that names a place in a whole keeps its number a name at the start of a sentence, though
+/// the tagger can read it as a verb. Each is dropped from the list and fails here.
+#[test]
+fn a_word_that_names_a_place_in_a_whole_names_its_number() {
+    none("Step 12 files.");
+    none("Phase 12 files.");
+    none("Wave 12 modules.");
+    none("Slice 12 files.");
+    none("Chapter 12 files.");
+    none("Section 12 files.");
+    none("Part 12 files.");
+    none("Page 12 files.");
+    none("Level 12 files.");
+    none("Stage 12 files.");
+    none("Item 12 files.");
+    none("Season 12 files.");
+    none("Figure 12 modules.");
+    none("Table 12 files.");
+    none("Rule 12 files.");
+    none("Lesson 12 files.");
+    none("Article 12 files.");
+    none("Example 12 files.");
+    none("Exercise 12 files.");
+    none("Case 12 modules.");
+    none("Fortune 12 files.");
+    none("Issue 12 files.");
+    none("Row 12 files.");
+    none("Line 12 files.");
+    none("Fortune 500 companies are read.");
+    counts("Rung 12 files.", &["12 files"]);
+}
+
+/// `Run 12 of 100.` and `Step 12 of 100.` agree: a position in a whole after a word that opens a
+/// sentence is no count, whichever word it is. Away from that spot the share is a count.
+#[test]
+fn n_of_a_total_after_a_word_that_opens_the_sentence_is_a_position() {
+    none("Step 12 of 100.");
+    none("Run 12 of 100.");
+    none("Page 12 of 100.");
+    none("Process 12 of 100.");
+    counts("It has 63 of 100.", &["63 of 100"]);
+    counts("It ran 63 of 100.", &["63 of 100"]);
+}
+
+/// `from` is a bound only in a range, and so is `through`.
+#[test]
+fn from_is_a_bound_only_in_a_range() {
+    none("It holds from 5 to 15 tests.");
+    none("It holds from 5 through 15 tests.");
+    none("It holds from 5-15 tests.");
+    none("It holds 5 through 15 tests.");
+    none("It holds five through fifteen tests.");
+    counts("It holds from 63 tests.", &["63 tests"]);
+    counts(
+        "The corpus is drawn from 63 repositories.",
+        &["63 repositories"],
+    );
+    counts("It reads from 63 files.", &["63 files"]);
+}
+
+/// Each new bound makes a limit.
+#[test]
+fn more_bounds_make_a_limit() {
+    none("It holds up to and including 15 entries.");
+    none("It holds as many as 15 entries.");
+    none("It holds as few as 5 entries.");
+    none("It holds beyond 15 entries.");
+    none("It holds in excess of 15 entries.");
+    none("It holds upwards of 15 entries.");
+    none("It holds a cap of 15 entries.");
+    none("The cap is 15 entries.");
+    none("The max is 15 files.");
+    none("The min is 15 files.");
+    none("The maximum is 15 files.");
+    none("The minimum is 15 files.");
+    none("The limit is 15 files.");
+}
+
+/// `over` and `under` are bounds when they mean more or less than.
+#[test]
+fn over_and_under_are_bounds_when_they_mean_more_or_less_than() {
+    none("It has over 63 files.");
+    none("Over 63 files ship.");
+    none("It has under 63 files.");
+    none("Under 63 files ship.");
+    none("It stays well under 63 files.");
+    none("It sold over 63 files.");
+}
+
+/// After a verb that moves or places, `over` and `under` are prepositions and the number is a
+/// count. Each verb is dropped from the list and fails here.
+#[test]
+fn over_and_under_after_a_verb_of_place_are_prepositions() {
+    counts("They iterate over 63 files.", &["63 files"]);
+    counts("It iterates over 63 files.", &["63 files"]);
+    counts("It iterated over 63 files.", &["63 files"]);
+    counts("It is iterating over 63 files.", &["63 files"]);
+    counts("They loop over 63 files.", &["63 files"]);
+    counts("It loops over 63 files.", &["63 files"]);
+    counts("It looped over 63 files.", &["63 files"]);
+    counts("It is looping over 63 files.", &["63 files"]);
+    counts("They spread over 63 files.", &["63 files"]);
+    counts("It spreads over 63 files.", &["63 files"]);
+    counts("It is spreading over 63 files.", &["63 files"]);
+    counts("They walk over 63 files.", &["63 files"]);
+    counts("It walks over 63 files.", &["63 files"]);
+    counts("It walked over 63 files.", &["63 files"]);
+    counts("It is walking over 63 files.", &["63 files"]);
+    counts("They live under 63 directories.", &["63 directories"]);
+    counts("It lives under 63 directories.", &["63 directories"]);
+    counts("It lived under 63 directories.", &["63 directories"]);
+    counts("It is living under 63 directories.", &["63 directories"]);
+    counts("They sit under 63 directories.", &["63 directories"]);
+    counts("It sits under 63 directories.", &["63 directories"]);
+    counts("It sat under 63 directories.", &["63 directories"]);
+    counts("It is sitting under 63 directories.", &["63 directories"]);
+    counts("They nest under 63 directories.", &["63 directories"]);
+    counts("It nests under 63 directories.", &["63 directories"]);
+    counts("It is nested under 63 directories.", &["63 directories"]);
+    counts("It is nesting under 63 directories.", &["63 directories"]);
+    counts("They group under 63 directories.", &["63 directories"]);
+    counts("It groups under 63 directories.", &["63 directories"]);
+    counts("It is grouped under 63 directories.", &["63 directories"]);
+    counts("It is grouping under 63 directories.", &["63 directories"]);
+    counts("They store under 63 directories.", &["63 directories"]);
+    counts("It stores under 63 directories.", &["63 directories"]);
+    counts("It is stored under 63 directories.", &["63 directories"]);
+    counts("It is storing under 63 directories.", &["63 directories"]);
+    counts("It spreads evenly over 63 files.", &["63 files"]);
+}
+
+/// `close to` is an approximate count and no bound.
+#[test]
+fn close_to_is_an_approximate_count() {
+    counts("It holds close to 15 entries.", &["15 entries"]);
+    counts("Close to 63 tests ran.", &["63 tests"]);
+}
+
+/// A number from 1900 to 2099 reads as a year only where a year reads. After a verb, or right
+/// before a plural noun with no word that makes a year before it, it is a count.
+#[test]
+fn a_number_that_looks_like_a_year_where_no_year_reads_is_a_count() {
+    counts("It has 2000 files.", &["2000 files"]);
+    counts("It has 2048 entries.", &["2048 entries"]);
+    counts("It has 1950 unit tests.", &["1950 unit tests"]);
+    counts("Run 2020 tests.", &["2020 tests"]);
+    counts("There are 2026 tests.", &["2026 tests"]);
+    counts("It has a total of 2048 entries.", &["2048 entries"]);
+    counts("It has a number of 2048 entries.", &["2048 entries"]);
+    counts("It has a count of 2048 entries.", &["2048 entries"]);
+    counts("The crate ships 2000 files.", &["2000 files"]);
+    counts("Each folder lists 2000 entries.", &["2000 entries"]);
+    counts("The set gathers 2000 images.", &["2000 images"]);
+    none("The 2020 release notes are read.");
+    none("The 2016 themes are read.");
+    none("2021 goals");
+    none("2012 International Quartet Champions; Dallas-based");
+    none("Tech Stack: Rust 2024 edition, GitHub Actions CI");
+    none("It was released in 2020.");
+    none("It was written in 2026 by hand.");
+}
+
+/// A year reads after a month, a season or a preposition without a list: no count takes the place
+/// right after them.
+#[test]
+fn a_year_reads_after_a_month_a_season_or_a_preposition() {
+    none("In 2026 tests ran.");
+    none("Since 2019 tests ran.");
+    none("By 2030 tests ran.");
+    none("Until 2030 tests ran.");
+    none("Before 2030 tests ran.");
+    none("After 2030 tests ran.");
+    none("During 2030 tests ran.");
+    none("As of 2030 tests ran.");
+    none("From 2030 tests ran.");
+    none("Circa 2030 tests ran.");
+    none("Early 2030 tests ran.");
+    none("Spring 2030 tests ran.");
+    none("Fall 2030 tests ran.");
+    none("January 2030 tests ran.");
+    none("March 2030 tests ran.");
+    none("Sept 2030 tests ran.");
+    none("Dec 2030 tests ran.");
+}
+
+/// `May` is a modal to the tagger, and a count could take its place, so the list holds it.
+#[test]
+fn a_year_reads_after_may() {
+    none("May 2030 tests ran.");
+    none("Back in May 2030 tests ran.");
+    none("The May 2030 tests ran.");
+}
+
+/// A header that ends in a word for a value holds values: its cells are no counts. Each word is
+/// dropped from the list and fails here.
+#[test]
+fn a_table_header_that_names_a_value_makes_no_count() {
+    none("| name | ports |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | limits |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | defaults |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | sizes |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | versions |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | ids |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | thresholds |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | budgets |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | quotas |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | timeouts |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | intervals |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | delays |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | durations |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | offsets |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | lengths |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | widths |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | heights |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | depths |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | weights |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | scores |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | ratings |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | ranks |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | levels |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | priorities |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | codes |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | prices |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | costs |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | rates |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | values |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | ages |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | indexes |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | indices |\n| --- | --- |\n| a | 25 |\n");
+    none("| name | positions |\n| --- | --- |\n| a | 25 |\n");
+}
+
+/// A header with a bound, a unit or a rate names a value too, and a header of things still counts.
+#[test]
+fn a_table_header_with_a_bound_a_unit_or_a_rate_makes_no_count() {
+    none("| Name | Max files |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Min tests |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Maximum files |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Minimum files |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Cap files |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Files limit |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Tests per file |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Jobs per workers |\n| --- | --- |\n| a | 25 |\n");
+    none("Jobs per workers: 25");
+    none("| Name | Lines |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Bytes |\n| --- | --- |\n| a | 25 |\n");
+    none("| Name | Seconds |\n| --- | --- |\n| a | 25 |\n");
+    counts("| Name | Tests |\n| --- | --- |\n| a | 25 |\n", &["25"]);
+    counts(
+        "| Name | Files changed |\n| --- | --- |\n| a | 25 |\n",
+        &["25"],
+    );
+    counts(
+        "| Name | Open issues |\n| --- | --- |\n| a | 25 |\n",
+        &["25"],
+    );
+}
+
+/// A label gets the same check as a header: a unit, a bound, a rate or a value is no thing.
+#[test]
+fn a_label_that_names_a_measure_a_limit_or_a_value_makes_no_count() {
+    none("Lines: 63");
+    none("Points: 15");
+    none("Bytes: 1024");
+    none("Seconds: 30");
+    none("Days: 12");
+    none("Pixels: 800");
+    none("Max files: 63");
+    none("Min tests: 63");
+    none("Maximum files: 63");
+    none("Cap files: 63");
+    none("Tests per file: 63");
+    none("Ports: 8080");
+    none("IDs: 12345");
+    none("Versions: 12");
+    counts("Tests: 63", &["Tests: 63"]);
+    counts("Files changed: 63", &["Files changed: 63"]);
+}
+
+/// A line may hold several labels, a label may end in a participle, and the number may be a ratio.
+#[test]
+fn several_labels_on_a_line_are_each_a_count() {
+    counts("Tests: 63, Files: 12", &["Tests: 63", "Files: 12"]);
+    counts("Tests: 63; Files: 12", &["Tests: 63", "Files: 12"]);
+    counts("Tests: 63 | Files: 12", &["Tests: 63", "Files: 12"]);
+    counts(
+        "Tests: 63, Files: 12, Crates: 7",
+        &["Tests: 63", "Files: 12", "Crates: 7"],
+    );
+    counts("Tests run: 63", &["Tests run: 63"]);
+    counts("Tests passed: 63", &["Tests passed: 63"]);
+    counts("Tests: 63/100", &["Tests: 63/100"]);
+    counts("Tests: 63/100, Files: 12", &["Tests: 63/100", "Files: 12"]);
+    none("Tests: 63 failed, Files: 12 passed");
+    counts(
+        "It has 12 failed, changed tests.",
+        &["12 failed, changed tests"],
+    );
+}
+
+/// A spaced hyphen or a dash is no label mark: only the colon is, as in the owner's rule.
+#[test]
+fn a_spaced_hyphen_or_dash_is_no_label() {
+    none("Tests - 63");
+    none("Tests \u{2014} 63");
+}
+
+/// A unit in a code span right after the number is a unit.
+#[test]
+fn a_unit_in_a_code_span_after_the_number_is_a_measure() {
+    none("The timeout is 30 `s`.");
+    none("It waits 250 `ms` between retries.");
+    none("It reads 64 `MB`.");
+    none("It reads 25 `lines`.");
+    none("It sets the width to 80 `columns`.");
+    counts("It has 63 `tests`.", &["63 `tests`"]);
+    counts("It has 12 `cargo` commands.", &["12 `cargo` commands"]);
+}
+
+/// A rate with an article before a unit of time is no count, as `per` is none.
+#[test]
+fn a_rate_with_an_article_and_a_unit_is_no_count() {
+    none("It runs 12 tests a day.");
+    none("It runs 12 tests an hour.");
+    none("It runs 12 tests each week.");
+    none("It runs 12 tests every second.");
+    counts("It runs 12 tests a file.", &["12 tests"]);
+    counts("It runs 12 tests every file.", &["12 tests"]);
+}
+
+/// Later items of a list of versions are versions too.
+#[test]
+fn later_items_of_a_list_of_versions_are_names_too() {
+    none("We use Node 18, 20 and 22 builds.");
+    none("We use Node 18, 20, and 22 builds.");
+    none("We use Node 18 or 20 builds.");
+    none("Supports Ubuntu 22 and 24 images.");
+    none("Supports RFC 3339 and 8259 dates.");
+    counts("Run 18, 20 and 22 tests.", &["22 tests"]);
+}
+
+/// A number with a `k` or an `M` is a thousand or a million.
+#[test]
+fn a_number_with_a_k_or_an_m_is_a_count() {
+    counts("It has 10k files.", &["10k files"]);
+    counts("It has 63k tests.", &["63k tests"]);
+    counts("It has 10K files.", &["10K files"]);
+    counts("It has 1M tests.", &["1M tests"]);
+    counts("It has 5M files.", &["5M files"]);
+    counts("It holds 63k.", &["holds 63k"]);
+    none("It has 10km files.");
+}
+
+/// A number word that a line wrap splits after its hyphen is still one number.
+#[test]
+fn a_number_word_split_by_a_line_wrap_is_one_number() {
+    counts("It has sixty-\nthree tests.", &["sixty-three tests"]);
+    counts("It has twenty-\nfive tests.", &["twenty-five tests"]);
+    counts("It has sixty-three tests.", &["sixty-three tests"]);
+}
+
+/// A quote shows the text as the reader sees it, an entity for a space included.
+#[test]
+fn an_entity_for_a_space_is_quoted_as_a_space() {
+    counts("It has 63&nbsp;tests.", &["63 tests"]);
+    counts("It has 63&ensp;tests.", &["63 tests"]);
+    counts("It has 63&emsp;tests.", &["63 tests"]);
+    counts("It has 63&thinsp;tests.", &["63 tests"]);
+    counts("It has 63&hairsp;tests.", &["63 tests"]);
+    counts("It has 63&numsp;tests.", &["63 tests"]);
+    counts("It has 63&puncsp;tests.", &["63 tests"]);
+    counts("It has 63&#160;tests.", &["63 tests"]);
+    counts("It has 63&#xA0;tests.", &["63 tests"]);
+}
+
+/// A mark that opens a bracket or a quote, or sets a phrase apart, touches the number and does not
+/// join it to what is before it. Each of the ten is dropped from the list and fails here.
+#[test]
+fn a_number_after_an_opening_mark_is_not_joined_to_it() {
+    counts("It holds (63 tests).", &["63 tests"]);
+    counts("It holds [63 tests].", &["63 tests"]);
+    counts("It holds {63 tests}.", &["63 tests"]);
+    counts("It holds \"63 tests.", &["63 tests"]);
+    counts("It holds '63 tests.", &["63 tests"]);
+    counts("It holds \u{201c}63 tests.", &["63 tests"]);
+    counts("It holds \u{2018}63 tests.", &["63 tests"]);
+    counts("It holds \u{ab}63 tests.", &["63 tests"]);
+    counts("It holds \u{2039}63 tests.", &["63 tests"]);
+    counts("It holds files\u{2014}63 tests.", &["63 tests"]);
+}
+
+/// Any other mark that touches the number joins it to the word before it.
+#[test]
+fn a_number_after_any_other_mark_is_joined_to_it() {
+    none("It holds files_63 tests.");
+    none("It holds files@63 tests.");
+    none("It holds files/63 tests.");
+}
+
+/// A straight quote that touches an opening mark opens a pair, so the words in it are an example.
+/// The marks are the ones that do not join; a curly quote pairs by itself.
+#[test]
+fn a_straight_quote_after_an_opening_mark_opens_a_quote() {
+    none("Say (\"it holds 63 tests\") here.");
+    none("Say [\"it holds 63 tests\"] here.");
+    none("Say {\"it holds 63 tests\"} here.");
+    none("Say '\"it holds 63 tests\"' here.");
+    none("Say \u{2018}\"it holds 63 tests\"\u{2019} here.");
+    none("Say \u{ab}\"it holds 63 tests\"\u{bb} here.");
+    none("Say \u{2039}\"it holds 63 tests\"\u{203a} here.");
+    none("Say \u{2014}\"it holds 63 tests\"\u{2014} here.");
+    counts("Say @\"it holds 63 tests\"@ here.", &["63 tests"]);
+}
+
+/// Each unit of bytes, rates of data and flops, and spans of time makes a measure of the number before it.
+#[test]
+fn more_units_make_a_measure_of_data_and_time() {
+    none("It reads 63 kilobyte files.");
+    none("It reads 63 kilobytes files.");
+    none("It reads 63 megabyte files.");
+    none("It reads 63 megabytes files.");
+    none("It reads 63 gigabyte files.");
+    none("It reads 63 gigabytes files.");
+    none("It reads 63 terabyte files.");
+    none("It reads 63 terabytes files.");
+    none("It reads 63 petabyte files.");
+    none("It reads 63 petabytes files.");
+    none("It reads 63 kibibyte files.");
+    none("It reads 63 kibibytes files.");
+    none("It reads 63 mebibyte files.");
+    none("It reads 63 mebibytes files.");
+    none("It reads 63 gibibyte files.");
+    none("It reads 63 gibibytes files.");
+    none("It reads 63 tebibyte files.");
+    none("It reads 63 tebibytes files.");
+    none("It reads 63 pb files.");
+    none("It reads 63 b files.");
+    none("It reads 63 bp files.");
+    none("It reads 63 bps files.");
+    none("It reads 63 kbps files.");
+    none("It reads 63 mbps files.");
+    none("It reads 63 gbps files.");
+    none("It reads 63 tbps files.");
+    none("It reads 63 flops files.");
+    none("It reads 63 gflops files.");
+    none("It reads 63 tflops files.");
+    none("It reads 63 pflops files.");
+    none("It reads 63 teraflops files.");
+    none("It reads 63 petaflops files.");
+    none("It reads 63 s files.");
+    none("It reads 63 decade files.");
+    none("It reads 63 decades files.");
+    none("It reads 63 century files.");
+    none("It reads 63 centuries files.");
+    none("It reads 63 µs files.");
+    none("It reads 63 μs files.");
+}
+
+/// Each unit of length, mass, volume and area makes a measure of the number before it.
+#[test]
+fn more_units_make_a_measure_of_length_mass_volume_and_area() {
+    none("It reads 63 meter files.");
+    none("It reads 63 meters files.");
+    none("It reads 63 metre files.");
+    none("It reads 63 metres files.");
+    none("It reads 63 kilometer files.");
+    none("It reads 63 kilometers files.");
+    none("It reads 63 kilometre files.");
+    none("It reads 63 kilometres files.");
+    none("It reads 63 centimeter files.");
+    none("It reads 63 centimeters files.");
+    none("It reads 63 centimetre files.");
+    none("It reads 63 centimetres files.");
+    none("It reads 63 millimeter files.");
+    none("It reads 63 millimeters files.");
+    none("It reads 63 millimetre files.");
+    none("It reads 63 millimetres files.");
+    none("It reads 63 nm files.");
+    none("It reads 63 yard files.");
+    none("It reads 63 yards files.");
+    none("It reads 63 yd files.");
+    none("It reads 63 ft files.");
+    none("It reads 63 kg files.");
+    none("It reads 63 mg files.");
+    none("It reads 63 gram files.");
+    none("It reads 63 grams files.");
+    none("It reads 63 kilogram files.");
+    none("It reads 63 kilograms files.");
+    none("It reads 63 milligram files.");
+    none("It reads 63 milligrams files.");
+    none("It reads 63 pound files.");
+    none("It reads 63 pounds files.");
+    none("It reads 63 ounce files.");
+    none("It reads 63 ounces files.");
+    none("It reads 63 oz files.");
+    none("It reads 63 lb files.");
+    none("It reads 63 lbs files.");
+    none("It reads 63 ton files.");
+    none("It reads 63 tons files.");
+    none("It reads 63 tonne files.");
+    none("It reads 63 tonnes files.");
+    none("It reads 63 liter files.");
+    none("It reads 63 liters files.");
+    none("It reads 63 litre files.");
+    none("It reads 63 litres files.");
+    none("It reads 63 ml files.");
+    none("It reads 63 gallon files.");
+    none("It reads 63 gallons files.");
+    none("It reads 63 quart files.");
+    none("It reads 63 quarts files.");
+    none("It reads 63 pint files.");
+    none("It reads 63 pints files.");
+    none("It reads 63 hectare files.");
+    none("It reads 63 hectares files.");
+    none("It reads 63 acre files.");
+    none("It reads 63 acres files.");
+}
+
+/// Each unit of power, speed and money makes a measure of the number before it.
+#[test]
+fn more_units_make_a_measure_of_power_speed_and_money() {
+    none("It reads 63 watt files.");
+    none("It reads 63 watts files.");
+    none("It reads 63 kw files.");
+    none("It reads 63 mw files.");
+    none("It reads 63 kwh files.");
+    none("It reads 63 joule files.");
+    none("It reads 63 joules files.");
+    none("It reads 63 calorie files.");
+    none("It reads 63 calories files.");
+    none("It reads 63 kcal files.");
+    none("It reads 63 volt files.");
+    none("It reads 63 volts files.");
+    none("It reads 63 amp files.");
+    none("It reads 63 amps files.");
+    none("It reads 63 mph files.");
+    none("It reads 63 kph files.");
+    none("It reads 63 rpm files.");
+    none("It reads 63 fps files.");
+    none("It reads 63 dpi files.");
+    none("It reads 63 bpm files.");
+    none("It reads 63 sats files.");
+    none("It reads 63 satoshis files.");
+    none("It reads 63 pence files.");
+    none("It reads 63 penny files.");
+    none("It reads 63 pennies files.");
+}
+
+/// A unit of this kind makes a measure only right after the number: with a word before it, its
+/// plural names things that a reader counts.
+#[test]
+fn degrees_columns_units_and_gigs_are_a_measure_only_right_after_the_number() {
+    none("It reads 63 degree files.");
+    none("It reads 63 degrees files.");
+    none("It reads 63 column files.");
+    none("It reads 63 columns files.");
+    none("It reads 63 units files.");
+    none("It reads 63 gig files.");
+    none("It reads 63 gigs files.");
+    none("It is 180 degrees.");
+    none("It is 80 columns wide.");
+    none("It costs 100 units.");
+    none("It stores 500 gigs.");
+    counts("It reads 63 table columns.", &["63 table columns"]);
+    counts("It reads 63 compilation units.", &["63 compilation units"]);
+    counts("It reads 63 academic degrees.", &["63 academic degrees"]);
+    counts("It reads 63 unit tests.", &["63 unit tests"]);
+}
+
+/// A cell is read under the header of its own column, whatever the cells before it hold: numbers,
+/// nothing, code or an image.
+#[test]
+fn a_cell_is_read_under_the_header_of_its_own_column() {
+    counts(
+        "| a | b | Tests |\n| --- | --- | --- |\n| 1 | 2 | 63 |\n",
+        &["63"],
+    );
+    counts(
+        "| a | b | Tests |\n| --- | --- | --- |\n|  |  | 63 |\n",
+        &["63"],
+    );
+    counts("| a | Tests |\n| --- | --- |\n| `x` | 63 |\n", &["63"]);
+    counts("| a | Tests |\n| --- | --- |\n| ![x](y) | 63 |\n", &["63"]);
+    counts(
+        "| Tests | b | c |\n| --- | --- | --- |\n| 63 | 1 | 2 |\n| 64 | 1 | 2 |\n",
+        &["63", "64"],
+    );
+    none("| Tests | b | c |\n| --- | --- | --- |\n| 1 | 63 | 64 |\n");
+    none("| a | b | Tests |\n| --- | --- | --- |\n| 63 | 64 | 1 |\n");
+}
+
+/// A table of thousands of columns is read in one pass, and the cell under the last header is the
+/// one counted.
+#[test]
+fn a_table_of_thousands_of_columns_counts_the_cell_under_its_header() {
+    let width = 3000;
+    let mut table = String::from("|");
+    for _ in 1..width {
+        table.push_str(" a |");
+    }
+    table.push_str(" Tests |\n|");
+    for _ in 0..width {
+        table.push_str(" --- |");
+    }
+    table.push_str("\n|");
+    for _ in 1..width {
+        table.push_str(" 63 |");
+    }
+    table.push_str(" 64 |\n");
+    counts(&table, &["64"]);
+}
+
+/// A proportion is a smaller number in a larger one; the other way round, the first number is
+/// something else and the second counts.
+#[test]
+fn a_larger_number_in_a_smaller_one_is_no_proportion() {
+    counts("The same 85 in five notations.", &["five notations"]);
+    none("It fails 7 in 10 tests.");
+    none("It fails 1 in 10 tests.");
+    none("It fails sixty in a hundred tests.");
+}
+
+/// An adverb that starts a clause does not lead into a code span, so `404 when `error`` does not
+/// have a noun after its number.
+#[test]
+fn an_adverb_before_a_code_span_leads_into_no_modifier() {
+    none("It sends 404 when `error` is set.");
+    none("It sends 404 when users leave.");
+}
+
+/// A letter is no name for a list of numbers after it, as the `x` of `60 x 32, 8 colors` is none.
+#[test]
+fn a_list_of_numbers_after_a_letter_is_no_list_of_versions() {
+    counts("It shows 60 x 32, 8 colors, double buffer.", &["8 colors"]);
+    none("We use Node 18, 20 and 22 builds.");
+}
+
+/// A key in quotes before a colon is no label: only a word is.
+#[test]
+fn a_quoted_key_is_no_label() {
+    none("The default is { \"heartbeatIntervalInSeconds\": 20, \"reconnectTimeInSeconds\": 30 }.");
+    counts("Tests: 63", &["Tests: 63"]);
+}
+
+/// A code span is the head only right after the number or its modifiers: after a head it is the
+/// next thing, as the last of a list it names things, and after a verb in `-ing` it is the object.
+#[test]
+fn a_code_span_is_the_head_only_after_the_number_or_its_modifiers() {
+    none("Clip 06 uses `startFrom: 32×FPS` so the reel never includes it.");
+    none("The report lists 16 critical, `brace-expansion`, `js-yaml`.");
+    none("The proxy answered 500 still quoting `x` in the body.");
+    counts(
+        "It has 12 `unit` and `integration` tests.",
+        &["12 `unit` and `integration` tests"],
+    );
+    counts("It has 12 new `files`.", &["12 new `files`"]);
+    counts("We changed 12 files `a` and `b`.", &["12 files"]);
+    counts("We changed 12 files `a`.", &["12 files"]);
+}
+
+/// A label word that the tagger reads as a noun and that can be a verb is no participle, and a
+/// camel-case word is a name in code.
+#[test]
+fn a_label_that_ends_in_a_noun_or_in_code_names_no_things() {
+    none("NavTitle: Encodings Order: 60");
+    none("{startLine: 'x', numberOfLines: 9, lang: 'markdown'}");
+    counts(
+        "Dependencies analysed: 1374",
+        &["Dependencies analysed: 1374"],
+    );
+    counts("Test runs: 63", &["runs: 63"]);
+    counts("Build runs: 63", &["runs: 63"]);
+    none("Files `x`: 63");
+}
+
+/// A unit that a hyphen joins to a word is the start of another word, and a unit at the end of a
+/// hyphen compound is the end of another: they measure nothing.
+#[test]
+fn a_unit_inside_a_hyphen_compound_is_no_unit() {
+    counts(
+        "A selection of 8 ml-interpretability Python libraries.",
+        &["8 ml-interpretability Python libraries"],
+    );
+    counts(
+        "It carries the seven Amp-related files.",
+        &["seven Amp-related files"],
+    );
+    counts("It has 24 subject n-grams.", &["24 subject n-grams"]);
+    none("It reads 63 MB/s files.");
+    none("It reads 63 kb files.");
 }

@@ -4,14 +4,14 @@
 //! file that equals it, and its lint finds something in that sentence. Only spaces, tabs and line
 //! breaks are folded in the comparison, and the markers of a block quote and the byte order mark
 //! that opens a file are no part of a sentence. A line break is a line feed, a CR and a line feed,
-//! or a lone CR in Markdown, which ends a line there; a lone CR in a comment is a character of its
-//! line, as the comment's reader reads it. Any other character must match exactly, a no-break
-//! space included, so a character added to the sentence later stops it matching instead of riding
-//! along with the finding the entry was written for. The entry then drops each
-//! occurrence of its lint inside the sentence, and no other: the rest of the file stays judged, a
-//! verdict on the whole file is never dropped, and a sentence that is reworded stops matching, so
-//! its finding is back. An entry that does not hold fails the run, with the reason, so that an
-//! exemption cannot outlive the text it was written for.
+//! or a lone CR in Markdown, which ends a line there. A lone CR ends a C++ `//` or TOML `#`
+//! comment, and is a character of its line in any other comment, as its reader reads it. Any other
+//! character must match exactly, a no-break space included, so a character added to the sentence
+//! later stops it matching instead of riding along with the finding the entry was written for. The
+//! entry then drops each occurrence of its lint inside the sentence, and no other: the rest of the
+//! file stays judged, a verdict on the whole file is never dropped, and a sentence that is reworded
+//! stops matching, so its finding is back. An entry that does not hold fails the run, with the
+//! reason, so that an exemption cannot outlive the text it was written for.
 //!
 //! `apply` matches a file's entries inside `check_text`, where `check`, `fix` and `--diff` all read
 //! the file, so the three agree on what is exempt. `settle` adds the entries that name a file the
@@ -73,8 +73,8 @@ pub struct Held {
     pub start: String,
     /// Whether the sentence goes on past `start`.
     pub cut: bool,
-    /// Whether the sentence is read as a comment, where a lone CR is a character of its line and
-    /// not a line break. A quote is folded to match, to find the sentences closest to it.
+    /// Whether the sentence is read as a comment, where a lone CR is not a line break of the
+    /// sentence. A quote is folded to match, to find the sentences closest to it.
     pub comment: bool,
 }
 
@@ -290,9 +290,9 @@ fn distance(a: &str, b: &[char]) -> usize {
 }
 
 /// `text` with each run of spaces, tabs and line breaks made one space, and none at either end. A
-/// line break here is a line feed, or a CR and a line feed; a lone CR is kept, as a comment holds
-/// one, and [`sentence_text`] makes each CR of Markdown, where it ends a line, a line feed, as
-/// [`fold_quote`] does for a quote. Any other character is kept as it is, a no-break space and
+/// line break here is a line feed, or a CR and a line feed; a lone CR is kept, as a Rust comment
+/// holds one, and [`sentence_text`] makes each CR of Markdown, where it ends a line, a line feed,
+/// as [`fold_quote`] does for a quote. Any other character is kept as it is, a no-break space and
 /// every other Unicode space included: a quote and a sentence are equal only if they hold the same
 /// such characters.
 pub(crate) fn fold(text: &str) -> String {
@@ -305,7 +305,8 @@ pub(crate) fn fold(text: &str) -> String {
 
 /// `quote` folded to be compared with the folded text of a sentence that is read as a comment, or
 /// as Markdown when `comment` is false. It reads a lone CR as the sentence does: a character of the
-/// line in a comment, and in Markdown a line break, which folds with the spaces and tabs.
+/// line in a comment that holds one, and in Markdown a line break, which folds with the spaces and
+/// tabs.
 pub(crate) fn fold_quote(quote: &str, comment: bool) -> String {
     if comment {
         fold(quote)
@@ -356,8 +357,8 @@ impl Keep for Within {
 /// they come with its wrapping. Any other character stays, such as a no-break space beside a
 /// marker, a `>` inside a code span that wraps across the lines of a block quote, and every `>` of
 /// a comment read as plain text, where a `>` does not start a block quote. Each CR of Markdown,
-/// which ends a line there, becomes a line feed; a lone CR in a comment stays, since the comment's
-/// reader keeps it as a character of the line.
+/// which ends a line there, becomes a line feed; a lone CR that a comment's reader keeps as a
+/// character of the line stays.
 fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
     let range = &sentence.range;
     let tokens = &document.tokens[sentence.tokens.clone()];
@@ -399,7 +400,7 @@ fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
 }
 
 /// Whether `sentence` is read as a comment, which is so inside a region of `document`. A lone CR is
-/// a character of its line there, and a line break anywhere else.
+/// not a line break of a sentence there, and is one anywhere else.
 fn in_comment(document: &Document<'_>, sentence: &Sentence) -> bool {
     document.region_at(&sentence.range).is_some()
 }
@@ -975,6 +976,14 @@ mod tests {
         }
     }
 
+    /// A sentence on `line` read as a comment that holds a finding, as [`held`] makes it.
+    fn comment_at(line: usize, sentence: &str) -> Held {
+        Held {
+            comment: true,
+            ..held_at(line, sentence)
+        }
+    }
+
     /// The lines of the sentences `closest` quotes from `holding`, and how many more it counts.
     fn nearest(holding: &[Held], quote: &str) -> (Vec<usize>, usize) {
         let (near, more) = closest(holding, quote);
@@ -1004,22 +1013,58 @@ mod tests {
     fn a_report_folds_a_lone_cr_of_the_quote_as_each_sentence_is_read() {
         // A lone CR in the quote is a space to a Markdown sentence and itself to a comment.
         let quote = "abc\rdef";
-        let comment = |line, sentence| Held {
-            comment: true,
-            ..held_at(line, sentence)
-        };
         let holding = [
-            comment(1, "abc\rdxf"),
-            comment(2, "abc\rdxx"),
+            comment_at(1, "abc\rdxf"),
+            comment_at(2, "abc\rdxx"),
             held_at(3, "abc def"),
             held_at(4, "abc dxf"),
-            comment(5, "abc\rxxx"),
+            comment_at(5, "abc\rxxx"),
         ];
         // Lines 3, 1 and 4 are 0, 1 and 1 away. Were the quote left alone for the Markdown
         // sentences, line 3 would be 1 away and line 4 would be 2, behind line 2.
         assert_eq!(nearest(&holding, quote), (vec![1, 3, 4], 2));
-        // A line feed in the quote reads as a space in each, so only the Markdown sentences are near.
+        // A line feed in the quote reads as a space in each: line 3 is 0 away, line 4 is 1, and
+        // line 1, a comment, is 2, ahead of line 2 at 3.
         assert_eq!(nearest(&holding, "abc\ndef"), (vec![1, 3, 4], 2));
+    }
+
+    #[test]
+    fn a_report_keeps_a_lone_cr_of_the_quote_for_a_comment_that_holds_one() {
+        let holding = [
+            held_at(1, "abc def"),
+            held_at(2, "abc dxf"),
+            held_at(3, "abc xxx"),
+            comment_at(4, "abc\rdxx"),
+        ];
+        // Line 4 is 2 away from the quote as a comment reads it, so it is ahead of line 3 at 3.
+        assert_eq!(nearest(&holding, "abc\rdef"), (vec![1, 2, 4], 1));
+        // Were the quote read as Markdown for it too, line 4 would be 3 away, level with line 3,
+        // which comes first.
+        assert_eq!(nearest(&holding, "abc def"), (vec![1, 2, 3], 1));
+    }
+
+    #[test]
+    fn a_report_marks_a_sentence_by_whether_it_is_read_as_a_comment() {
+        // The same words as a paragraph and as a comment in a fence, each with a lone CR.
+        let source = "A \u{2014} b\rc d.\n\n```rust\n// A \u{2014} b\rc d.\n```\n";
+        let document = Stack::new(Reader::Markdown {
+            fences: Fences::all(),
+        })
+        .document(source);
+        let holding = held(&document, banned(&document).as_ref());
+        let paragraph = Held {
+            line: 1,
+            start: "A \u{2014} b c d.".to_string(),
+            cut: false,
+            comment: false,
+        };
+        let comment = Held {
+            line: 4,
+            start: "A \u{2014} b\rc d.".to_string(),
+            cut: false,
+            comment: true,
+        };
+        assert_eq!(holding, [paragraph, comment]);
     }
 
     #[test]

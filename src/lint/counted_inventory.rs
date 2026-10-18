@@ -2,20 +2,20 @@
 //!
 //! A count is a cardinal of five or more, in digits (`1,075`; `10k` and `5M` too) or number words
 //! (`five`, `sixty-three`, `a dozen`, `hundreds of`), or a digit below five before a scale word
-//! (`2 million`). It counts when a noun phrase follows whose head is a plural noun, after up to
-//! four modifiers (adjectives, nouns, participles, code spans, a hyphen or slash compound as one;
-//! an adverb in the chain and the `and`, `or` or comma that joins modifiers count for none), or
-//! when no noun follows in a known place: `63 of them`, `5 more`, `N in total`, `Tests: 63`,
-//! `8/8 tests`, `It holds 63.`, a table cell of the number under a header of things.
+//! (`2 million`), a hedge before it or not (`about 400 files`). It counts when a noun phrase
+//! follows whose head is a plural noun, after up to four modifiers (adjectives, nouns,
+//! participles, code spans, a hyphen or slash compound as one; adverbs and the `and`, `or` or
+//! comma that join modifiers count for none), or when no noun follows in a known place: `63 of
+//! them`, `12 of 100`, `5 more`, `N in total`, `Tests: 63`, `8/8 tests`, `It has 63 left.`, a
+//! table cell under a header of things.
 //!
-//! It is no count when it is a measure (a unit, `%`, a fraction, as the head too; a unit in a code
-//! span), money, a date, a year where a year reads, a version, name, ID or rank (joined to what is
-//! before it, a decimal, the text of a link, after `#` or a noun that is no possessive, lower-case
-//! plural or participle, and not a capitalised noun that opens the sentence and can be a verb:
-//! `Process 12 files` is a command), a limit (after a bound, before `or more` or `+`, a range, a
-//! rate, a proportion), a compound, math, code, or inside double quotes. A hedge alone is a count.
-//! A bare number is a count after a verb of having (`holds`, `has`, `lists`, `ships`) when it ends
-//! its clause; after any other verb it is a value (`returns 25`, `takes 10`) and is left.
+//! It is no count when it is a measure (a unit, `%`, a fraction; a unit in a code span), money, a
+//! date, a year where a year reads, a version, name, ID, status code or rank (joined to what is
+//! before it, a decimal, a link's text, a title, after `#`, `§` or a noun, or after a capitalised
+//! word that opens the sentence where a verb follows: `Test 12 fails`, but `Process 12 files` is
+//! a command), a limit (after a bound, before `or more` or `+`, either end of a range, a rate, a
+//! proportion), a position (`Step 12 of 100`), a compound, math, code, or inside double quotes. A
+//! bare number after a verb that is no verb of having is a value (`returns 25`).
 //!
 //! The sets are Rust data in `rules.rs`, never config: a list a config grows is an allow-list an
 //! agent grows until the check passes. This is a taste lint, off until a config turns it on. Its

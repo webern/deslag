@@ -1258,9 +1258,9 @@ fn counted_inventory_finds_exactly_these_of_the_numbers_a_reader_labelled() {
         &labels::Expect {
             found_counts: labels::Tally {
                 rows: 180,
-                found: 170,
+                found: 169,
             },
-            found_nots: labels::Tally { rows: 20, found: 6 },
+            found_nots: labels::Tally { rows: 20, found: 1 },
             passed_counts: labels::Tally { rows: 2, found: 1 },
             passed_nots: labels::Tally { rows: 98, found: 0 },
         },
@@ -1272,8 +1272,8 @@ fn counted_inventory_finds_exactly_these_of_the_numbers_a_reader_labelled() {
 /// write counts too. A rule that moves either number shows here, and a human sets them again.
 #[test]
 fn counted_inventory_flags_exactly_the_files_it_does() {
-    const HUMAN: usize = 23;
-    const LLM: usize = 112;
+    const HUMAN: usize = 22;
+    const LLM: usize = 105;
     let settings = CountedInventory::default();
     let flagged = |category: &str| {
         corpus()

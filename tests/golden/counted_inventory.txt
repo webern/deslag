@@ -2,14 +2,14 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 213 of 1230: core 4, human 24, llm 117, mixed 68
+# fails 202 of 1230: core 4, human 23, llm 110, mixed 65
 
 [md.lints.counted_inventory]
 
 core/den-design-decisions.md matches:5
 core/den-implementation-notes.md matches:3
 core/den-roadmap.md matches:1
-core/midi-spec.md matches:36
+core/midi-spec.md matches:20
 human/AlexFanw--HUSTER-CS/Toefl__README.md matches:1
 human/Behat--Behat/CHANGELOG.md matches:3
 human/ICLRandD--Blackstone/README.md matches:1
@@ -27,10 +27,9 @@ human/gitlab--dwt1--shell-color-scripts/README.md matches:1
 human/gitlab--gitlab-com--support--toolbox--strace-parser/README.md matches:3
 human/hf--KBLab--wav2vec2-large-voxrex-swedish/README.md matches:2
 human/hf--bionlp--bluebert_pubmed_uncased_L-12_H-768_A-12/README.md matches:1
-human/hf--dslim--bert-base-NER/README.md matches:9
+human/hf--dslim--bert-base-NER/README.md matches:6
 human/hf--google-bert--bert-base-uncased/README.md matches:4
-human/hf--openai-community--gpt2/README.md matches:1
-human/hf--speechbrain--slu-direct-fluent-speech-commands-librispeech-asr/README.md matches:3
+human/hf--speechbrain--slu-direct-fluent-speech-commands-librispeech-asr/README.md matches:4
 human/learning-at-home--hivemind/docs__user__dht.md matches:1
 human/primer--primer/docs__content__components__labels.md matches:1
 human/vercel--vercel/examples__hugo__themes__ananke__exampleSite__content__post__chapter-3.md matches:4
@@ -75,10 +74,10 @@ llm/bitwize-music-studio--claude-ai-music-skills/genres__j-pop__README.md matche
 llm/brsloan--warewoolf/docs__windows-autoupdate-plan.md matches:2
 llm/caliber-ai-org--ai-setup/LANDING_HERO.md matches:1
 llm/charly-vibes--paranoid/openspec__changes__add-netmap-app__specs__netmap-data__spec.md matches:1
-llm/cksystemsteaching--selfie/docs__presentations__what-is-selfie__README.md matches:18
+llm/cksystemsteaching--selfie/docs__presentations__what-is-selfie__README.md matches:19
 llm/coleam00--context-engineering-intro/use-cases__ai-coding-wisc-framework__claude__rules-example__testing.md matches:3
 llm/danikf--tik4net/Docs__findings-cli-history.md matches:7
-llm/danikf--tik4net/Docs__findings-routeros-6.md matches:16
+llm/danikf--tik4net/Docs__findings-routeros-6.md matches:15
 llm/david-priest--figtracer/examples__cytof__DATASETS.md matches:4
 llm/defi-io--smarts/planning__todos__done__2026-04-21-resolve-proxy-implementation-abi-in-fetcher.md matches:1
 llm/edmundmiller--dotfiles/agents__worklogs__herdr-hunk-worktree-path.md matches:2
@@ -90,11 +89,10 @@ llm/eunomia-bpf--bpf-benchmark/docs__tmp__p84_combined_review.md matches:17
 llm/evalstate--hf-mcp-server/GRADIO_DISCOVERY_OPTIMIZATION.md matches:8
 llm/everydaythingssoftware--citadel/ai-docs__MIGRATION_EXAMPLE.md matches:1
 llm/federicodeponte--opendraft/engine__prompts__tldr.md matches:3
-llm/flexinfer--flexinfer/docs__planning__context-curve-scheduler-spec.md matches:4
+llm/flexinfer--flexinfer/docs__planning__context-curve-scheduler-spec.md matches:2
 llm/flexinfer--flexinfer/loom__ralph-gfx906-vllm-diagnostic-digest-2026-05-19.md matches:1
 llm/gastownhall--gastown/docs__design__ledger-export-triggers.md matches:1
 llm/geekjourneyx--agora/agents__agora-schumpeter.md matches:3
-llm/github--awesome-copilot/skills__dotnet-best-practices__SKILL.md matches:1
 llm/github--gh-aw-mcpg/guards__github-guard__docs__WORKIQ_GUARD_PLAN.md matches:2
 llm/github--octocanvas/vscode__github__demo__prompt-3-readme-banner.md matches:2
 llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:9
@@ -110,27 +108,22 @@ llm/jasonacox--tinytuya/DESIGN.md matches:1
 llm/joeynyc--hermes-hudui/CLAUDE.md matches:1
 llm/kenjiokimoto--lennysan-rag-o-matic/episodes__aparna-chennapragada__transcript.md matches:3
 llm/kennethreitz--pytheory/plugin__plugins__composing-with-pytheory__skills__composing-with-pytheory__SKILL.md matches:1
-llm/kzahel--web-server-chrome/docs__research__cli-servers-comparison.md matches:3
+llm/kzahel--web-server-chrome/docs__research__cli-servers-comparison.md matches:15
 llm/lightdash--lightdash/skills__upgrade-preflight__resources__output-reference.md matches:1
 llm/lishix520--academic-paper-skills/strategist__references__search_strategy.md matches:7
 llm/microsoft--microsoft-ui-reactor/docs__specs__047__phase4-results__LAPTOP-4MEP83VI__2026-05-30-arm64-postgate__RESULTS.md matches:1
-llm/mitchdenny--hex1b/docs__tape.md matches:1
 llm/mohitagw15856--pm-claude-skills/exports__obsidian__pm-creator__content-repurposer__content-repurposer.md matches:1
-llm/mono--SkiaSharp/documentation__docfx__guides__curves__text-paths.md matches:1
-llm/mxschmitt--awesome-playwright/claude__skills__audit-entries__references__removal-criteria.md matches:1
-llm/nacyot--vllm-ds4f-gb10/notes__2026-09-12-issue-28-head-scripts__results.md matches:5
-llm/ndycode--codex-multi-auth/docs__releases__v2.8.6.md matches:1
+llm/nacyot--vllm-ds4f-gb10/notes__2026-09-12-issue-28-head-scripts__results.md matches:4
 llm/nozomi-koborinai--contextlint/packages__site__src__content__docs__docs__recipes__adr-style-repo-setup.md matches:1
 llm/ondata--ckan-mcp-server/openspec__changes__archive__2026-02-28-add-tool-annotations__tasks.md matches:3
 llm/oocx--tfplan2md/docs__adr-008-multi-platform-binary-distribution.md matches:2
 llm/openatx--uiautomator2/github__copilot-instructions.md matches:5
-llm/peterkrueck--Claude-Code-Development-Kit/skills__image-gen__SKILL.md matches:1
 llm/philipdallen--PleaNP/docs__CREATIVE_PROTOCOL.md matches:2
 llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:12
 llm/plasma-umass--coz/java__README.md matches:1
 llm/raia-live--amfs/docs__adapters__s3.md matches:1
 llm/rbtkhn--strategy-codex/docs__seed-promotion-thresholds.md matches:1
-llm/retentioneering--retentioneering-tools/docs__adr__0014-agent-facing-docs-surface.md matches:3
+llm/retentioneering--retentioneering-tools/docs__adr__0014-agent-facing-docs-surface.md matches:2
 llm/sangrokjung--claude-forge/docs__distribution__awesome-prs__hesreallyhim.md matches:4
 llm/sangrokjung--claude-forge/skills__loop-forge__references__codex-prompt-mechanism.md matches:2
 llm/shanraisshan--claude-code-best-practice/tips__claude-boris-15-tips-30-mar-26.md matches:1
@@ -143,7 +136,6 @@ llm/synthetic-sciences--openscience/backend__cli__skills__biology__bionemo-nims_
 llm/tajiaoyezi--vibestation/docs__superpowers__plans__2026-06-05-language-settings-implementation-plan.md matches:20
 llm/toku345--dotfiles/docs__outer-loop__week0-v2__policy.md matches:2
 llm/tradermonty--claude-trading-skills/skills__us-undervalued-growth-screener__references__original-prompt-mapping.md matches:2
-llm/twidi--twicc/src__twicc__agent__plugin__README.md matches:1
 llm/vokako--tmux-mobile/docs__todo.md matches:12
 llm/wangbinquan--agent-workflow/design__RFC-056-clarify-cross-agent__patch-2026-06-22-designer-rerun-no-rollback.md matches:1
 llm/workglow-dev--libs/packages__triggers__README.md matches:1
@@ -151,13 +143,12 @@ llm/xr843--fojin/docs__superpowers__specs__2026-06-03-cross-canon-parallel-readi
 llm/xyTom--coding-tools-mcp/docs__plan-v0.5.md matches:4
 llm/yanacuti1121--Yana-AI/core__skills__evm-token-decimals__SKILL.md matches:1
 llm/zhitongblog--solomd/app-store__macos__metadata__DESCRIPTION_en.md matches:1
-mixed/Azure--azure-sdk-for-net/sdk__identity__Azure.Identity__CHANGELOG.md matches:2
-mixed/Bee-Mar--mmpm/CHANGELOG.md matches:4
+mixed/Bee-Mar--mmpm/CHANGELOG.md matches:3
+mixed/BigDataBiology--macrel/README.md matches:1
 mixed/ColorlibHQ--gentelella/changelog.md matches:48
 mixed/ContextLab--storytelling-with-data/slides__data-viz.md matches:2
 mixed/Correia-jpv--fucking-magictools/README.md matches:2
 mixed/Esperanto--kurso-zagreba-metodo/enhavo__tradukenda__en__gramatiko__05.md matches:1
-mixed/GitTools--GitVersion/BREAKING_CHANGES.md matches:1
 mixed/HumanSignal--label-studio/docs__source__includes__deploy.md matches:1
 mixed/LambdaHack--LambdaHack/GameDefinition__PLAYING.md matches:2
 mixed/LennartHennigs--Button2/CHANGELOG.md matches:10
@@ -169,9 +160,10 @@ mixed/PetoiCamp--OpenCat-Quadruped-Robot/README.md matches:2
 mixed/SchemaStore--schemastore/CONTRIBUTING.md matches:2
 mixed/Shekyl-Foundation--shekyl-core/docs__COMPILING_DEBUGGING_TESTING.md matches:6
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md matches:7
+mixed/aa8y--docker-dataset/README.md matches:1
 mixed/activeadmin--activeadmin/CONTRIBUTING.md matches:1
 mixed/ad-si--awesome-sheet-music/README.md matches:1
-mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md matches:4
+mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md matches:5
 mixed/amir20--dozzle/README.md matches:1
 mixed/brsloan--warewoolf/README.md matches:1
 mixed/cksystemsteaching--selfie/assignments__introductory-assignments.md matches:20
@@ -181,11 +173,10 @@ mixed/dads2busy--dads2busy.github.io/README.md matches:2
 mixed/dh-tech--awesome-digital-humanities/README.md matches:2
 mixed/dotnet--ClangSharp/README.md matches:1
 mixed/dromara--liteflow/README.md matches:1
-mixed/expo--expo/packages__babel-preset-expo__CHANGELOG.md matches:2
 mixed/fsprojects--FSharp.Control.AsyncSeq/RELEASE_NOTES.md matches:2
 mixed/geoff-maddock--events-tracker/docs__deployment_notes.md matches:2
 mixed/getsentry--sentry-python/CONTRIBUTING.md matches:1
-mixed/gitlab--gitlab-com--runbooks/docs__rate-limiting__README.md matches:3
+mixed/gitlab--gitlab-com--runbooks/docs__rate-limiting__README.md matches:2
 mixed/gookit--validate/CHANGELOG.md matches:12
 mixed/harfbuzz--harfrust/CHANGELOG.md matches:1
 mixed/huggingface--transformers/examples__pytorch__speech-recognition__README.md matches:2
@@ -201,7 +192,6 @@ mixed/ncsa--NEAT/ChangeLog.md matches:11
 mixed/nicknisi--dotfiles/README.md matches:1
 mixed/nlfiedler--fastcdc-rs/CHANGELOG.md matches:1
 mixed/nteract--semiotic/README.md matches:4
-mixed/open-telemetry--opentelemetry-rust/opentelemetry-otlp__CHANGELOG.md matches:1
 mixed/opendatadiscovery--odd-platform/docker__README.md matches:3
 mixed/pamburus--hl/README.md matches:1
 mixed/pyo3--pyo3/Architecture.md matches:2
@@ -213,9 +203,8 @@ mixed/tmorin--plantuml-libs/CHANGELOG.md matches:2
 mixed/toshiki670--dotfiles/README.md matches:1
 mixed/ttop32--MouseTooltipTranslator/doc__description.md matches:6
 mixed/tui-cs--Terminal.Gui/CONTRIBUTING.md matches:1
-mixed/unseen1980--awesome-travel/README.md matches:1
+mixed/unseen1980--awesome-travel/README.md matches:2
 mixed/voxel51--fiftyone/README.md matches:1
-mixed/zcash--librustzcash/zcash_client_sqlite__CHANGELOG.md matches:1
 mixed/zcash--librustzcash/zcash_proofs__CHANGELOG.md matches:1
 mixed/zonca--italianschoolsd-website/site__content__about___index.md matches:1
 mixed/zonca--italianschoolsd-website/site__content__enroll.md matches:1

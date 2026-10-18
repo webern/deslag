@@ -755,7 +755,7 @@ fn counted_inventory_finds_exactly_these_of_the_numbers_a_reader_labelled() {
         &labels::Expect {
             found_counts: labels::Tally {
                 rows: 170,
-                found: 168,
+                found: 170,
             },
             found_nots: labels::Tally { rows: 30, found: 4 },
             passed_counts: labels::Tally { rows: 0, found: 0 },
@@ -911,8 +911,8 @@ fn the_catalogue_counts_are_the_big_tiers() {
     // What `counted_inventory` flags in the English files, exactly, on the image `blobs.lock` pins.
     // It counts true or not, and people write counts too: no ratio. A rule that moves either
     // number shows here, and a human sets them again.
-    const COUNTING_HUMAN: usize = 668;
-    const COUNTING_LLM: usize = 2086;
+    const COUNTING_HUMAN: usize = 665;
+    const COUNTING_LLM: usize = 2054;
     let counting = |category: &str| {
         held.iter()
             .filter(|held| {

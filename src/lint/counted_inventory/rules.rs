@@ -172,6 +172,78 @@ pub const PREPOSITION_VERBS: &[&str] = &[
 /// still means less than.
 pub const OVER_VERBS: &[&str] = &["run", "runs", "ran", "running"];
 
+/// The verbs of motion after which `past` is a preposition and no bound, as in `We walked past 12
+/// files`; after any other word it means more than, as in `only matters past ~100k candidates`.
+pub const PAST_VERBS: &[&str] = &[
+    "walk",
+    "walks",
+    "walked",
+    "walking",
+    "go",
+    "goes",
+    "went",
+    "gone",
+    "going",
+    "scroll",
+    "scrolls",
+    "scrolled",
+    "scrolling",
+    "read",
+    "reads",
+    "reading",
+    "move",
+    "moves",
+    "moved",
+    "moving",
+    "run",
+    "runs",
+    "ran",
+    "running",
+    "drive",
+    "drives",
+    "drove",
+    "driven",
+    "driving",
+    "get",
+    "gets",
+    "got",
+    "gotten",
+    "getting",
+    "slip",
+    "slips",
+    "slipped",
+    "slipping",
+    "step",
+    "steps",
+    "stepped",
+    "stepping",
+    "skip",
+    "skips",
+    "skipped",
+    "skipping",
+    "fly",
+    "flies",
+    "flew",
+    "flown",
+    "flying",
+    "pass",
+    "passes",
+    "passed",
+    "passing",
+    "push",
+    "pushes",
+    "pushed",
+    "pushing",
+    "scan",
+    "scans",
+    "scanned",
+    "scanning",
+];
+
+/// The particles that may stand between a verb of a path and `over`, `under` or `past`, as `out`
+/// does in `spread out over 12 files`.
+pub const PATH_PARTICLES: &[&str] = &["out", "up", "down", "along"];
+
 /// The words that join the two numbers of a range: `5 to 15`, `5 through 15`.
 pub const RANGE_WORDS: &[&str] = &["to", "through"];
 
@@ -192,9 +264,10 @@ pub const RATE_PERIODS: &[&str] = &[
 ];
 
 /// The words after a unit of time that make it no rate, as in `12 releases a year ago` or `12
-/// tests a second time`: the unit does not end a rate there.
+/// tests a second time`: the unit does not end a rate there. `from now` makes it no rate too, but a
+/// bare `from` does not: `63 requests a second from the cache` is a rate.
 pub const NOT_RATE_AFTER: &[&str] = &[
-    "ago", "earlier", "later", "after", "before", "old", "time", "since", "from",
+    "ago", "earlier", "later", "after", "before", "old", "time", "since",
 ];
 
 /// The nouns that name a place in a whole when a number follows, even at the start of a sentence,
@@ -549,6 +622,17 @@ pub const BARE_UNITS: &[&str] = &["point", "points", "degree", "degrees", "colum
 /// spacing after `at` or `to`, as in `Wrap at 72 columns`.
 pub const WIDTH_NOUNS: &[&str] = &["columns", "cols", "units", "gigs"];
 
+/// The words that make `columns` or `cols` a width where they stand before the number in its
+/// clause, as in `The line length is 80 columns` or `Lines wrap after 80 columns`.
+pub const WIDTH_WORDS: &[&str] = &[
+    "width", "widths", "length", "lengths", "margin", "margins", "wrap", "wraps", "wrapped",
+    "wrapping",
+];
+
+/// The forms of `be` that make `columns` or `cols` a width where the number and its noun end the
+/// clause after one: `The terminal is 80 columns.`
+pub const COPULAS: &[&str] = &["is", "are", "was", "were", "be", "been", "being"];
+
 /// The words after a noun phrase that make it a width, a height or a spacing and no count: `80
 /// columns wide`, `256 columns apart`, `80 rows tall`.
 pub const DIMENSIONS: &[&str] = &["wide", "apart", "long", "high", "deep", "tall", "thick"];
@@ -585,6 +669,10 @@ pub const COUNT_HEADERS: &[&str] = &["count", "total"];
 /// The first words of a label that refers to an issue or a change and does not name things, as in
 /// `Fixes: 1234`.
 pub const TRAILERS: &[&str] = &["fixes", "closes", "resolves", "refs", "relates", "see"];
+
+/// The words that may follow the number of a label and still leave the field ended, as in `Tests:
+/// 63 passed`.
+pub const FIELD_TAILS: &[&str] = &["passed", "failed", "skipped", "total"];
 
 /// The words after the bare number of a verb of having that leave its clause a count, as in `It
 /// has 400 now.` or `It has 400 so far.`: each row is a phrase. An adverb in `-ly` does too.
@@ -668,7 +756,6 @@ pub const STATUS_WORDS: &[&str] = &[
     "expectation",
     "length",
     "proxy",
-    "legal",
 ];
 
 /// The words that open the name of a ranked list after its number when they are capitalised and
@@ -677,10 +764,80 @@ pub const SUPERLATIVES: &[&str] = &[
     "most", "best", "greatest", "worst", "top", "biggest", "largest",
 ];
 
-/// The numbers with a `k` that name a thing and count none, folded: a display resolution (`4K
-/// displays`) and a retirement plan (`401k plans`). A hedge before one makes it a count: `~4k
-/// examples`.
-pub const SUFFIX_NAMES: &[&str] = &["4k", "8k", "401k"];
+/// The verbs that the tagger may read as plural nouns and that, after digits with a `k` or an `M`,
+/// are the only verb of their sentence: `Only after 16K boots.`
+pub const SUFFIX_VERBS: &[&str] = &["boots"];
+
+/// The nouns that a resolution names, as `4K` does in `4K displays` or `4K discs`. A rate of
+/// frames or a refresh rate after one makes it a resolution too: `4K 30fps`, `4K 120Hz screens`.
+pub const RESOLUTION_NOUNS: &[&str] = &[
+    "display",
+    "displays",
+    "monitor",
+    "monitors",
+    "screen",
+    "screens",
+    "tv",
+    "tvs",
+    "television",
+    "televisions",
+    "video",
+    "videos",
+    "texture",
+    "textures",
+    "background",
+    "backgrounds",
+    "wallpaper",
+    "wallpapers",
+    "blu",
+    "resolution",
+    "resolutions",
+    "footage",
+    "stream",
+    "streams",
+    "panel",
+    "panels",
+    "projector",
+    "projectors",
+    "disc",
+    "discs",
+    "movie",
+    "movies",
+    "film",
+    "films",
+    "copy",
+    "copies",
+    "episode",
+    "episodes",
+    "trailer",
+    "trailers",
+    "camera",
+    "cameras",
+    "content",
+];
+
+/// The numbers that name a thing before the nouns given with them, folded, and count none there: a
+/// resolution (`4K displays`), a retirement plan (`401k plans`), a company (`3M products`) and a
+/// method (`12 factor apps`). Before any other noun they count as numbers do: `8K entries`, `401k
+/// entries`, `3M rows`. A hedge before one makes it a count too: `~4k displays`.
+pub const NAMED_NUMBERS: &[(&str, &[&str])] = &[
+    ("4k", RESOLUTION_NOUNS),
+    ("8k", RESOLUTION_NOUNS),
+    (
+        "401k",
+        &[
+            "plan",
+            "plans",
+            "account",
+            "accounts",
+            "contribution",
+            "contributions",
+            "match",
+        ],
+    ),
+    ("3m", &["products"]),
+    ("12", &["factor"]),
+];
 
 /// The verbs of having, in each form a clause takes: a bare number right after one, ending its
 /// clause, is a count, as in `It holds 63.`. A number after any other verb is a value, as in

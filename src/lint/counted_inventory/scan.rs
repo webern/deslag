@@ -8,13 +8,14 @@
 use std::ops::Range;
 
 use super::rules::{
-    AND_NUMBERS, ARTICLE_NUMBERS, BARE_UNITS, BIG_NUMBERS, BOUNDS, CAPS, COUNT_HEADERS,
-    COUNTING_BEFORE_OF, CURRENCY_SIGNS, DAY_WORDS, DIMENSIONS, FRACTIONS, HAVE_TAILS, HAVE_VERBS,
-    HEDGES, JOINING_OPERATORS, LABEL_NOUNS, LEADING_ADVERBS, LIMITS_AFTER, MASS_NOUNS,
-    MIDDLE_HEDGES, NOT_RATE_AFTER, NUMBER_ABBREVIATIONS, OPERATORS, OVER_VERBS, PARTICLES,
-    POSITION_NOUNS, POSSESSIVES, PREPOSITION_VERBS, QUANTITIES, RANGE_WORDS, RATE_PERIODS,
-    RATE_WORDS, RESULT_VERBS, SMALL_NUMBERS, STATUS_CODES, STATUS_NOUNS, STATUS_WORDS,
-    SUFFIX_NAMES, SUPERLATIVES, TRAILERS, UNITS, VALUE_HEADS, WIDTH_NOUNS, YEAR_BEFORE,
+    AND_NUMBERS, ARTICLE_NUMBERS, BARE_UNITS, BIG_NUMBERS, BOUNDS, CAPS, COPULAS, COUNT_HEADERS,
+    COUNTING_BEFORE_OF, CURRENCY_SIGNS, DAY_WORDS, DIMENSIONS, FIELD_TAILS, FRACTIONS, HAVE_TAILS,
+    HAVE_VERBS, HEDGES, JOINING_OPERATORS, LABEL_NOUNS, LEADING_ADVERBS, LIMITS_AFTER, MASS_NOUNS,
+    MIDDLE_HEDGES, NAMED_NUMBERS, NOT_RATE_AFTER, NUMBER_ABBREVIATIONS, OPERATORS, OVER_VERBS,
+    PARTICLES, PAST_VERBS, PATH_PARTICLES, POSITION_NOUNS, POSSESSIVES, PREPOSITION_VERBS,
+    QUANTITIES, RANGE_WORDS, RATE_PERIODS, RATE_WORDS, RESOLUTION_NOUNS, RESULT_VERBS,
+    SMALL_NUMBERS, STATUS_CODES, STATUS_NOUNS, STATUS_WORDS, SUFFIX_VERBS, SUPERLATIVES, TRAILERS,
+    UNITS, VALUE_HEADS, WIDTH_NOUNS, WIDTH_WORDS, YEAR_BEFORE,
 };
 use crate::document::{Block, BlockKind, Body, Document, Token, TokenKind};
 use crate::tag::{Features, Tag};
@@ -56,6 +57,7 @@ pub(super) fn find(document: &Document<'_>) -> Vec<Range<usize>> {
     // one after the other, so a count of them is a column, and no cell is looked up in its row.
     let mut row_walked: Option<&Block<'_>> = None;
     let mut column = 0;
+    let frontmatter = frontmatter_end(document.source);
     for (block, ancestors) in document.walk() {
         if block.kind == BlockKind::TableHead {
             headers = cells_of(block)
@@ -89,7 +91,7 @@ pub(super) fn find(document: &Document<'_>) -> Vec<Range<usize>> {
         let link_rest = link_rest(document, block_tokens);
         for sentence in &document.sentences[sentences.clone()] {
             let slice = &document.tokens[sentence.tokens.clone()];
-            if !slice.iter().any(has_a_cardinal) {
+            if sentence.range.start < frontmatter || !slice.iter().any(has_a_cardinal) {
                 continue;
             }
             let start = sentence.tokens.start;
@@ -98,6 +100,7 @@ pub(super) fn find(document: &Document<'_>) -> Vec<Range<usize>> {
                 && document.tokens[start - 2].range.end == document.tokens[start - 1].range.start
                 && NUMBER_ABBREVIATIONS.contains(&document.tokens[start - 2].folded().as_str());
             let row = Row {
+                source: document.source,
                 tokens: slice,
                 folded: slice.iter().map(Token::folded).collect(),
                 quoted: &quoted[sentence.tokens.start - tokens.start..][..slice.len()],
@@ -105,11 +108,30 @@ pub(super) fn find(document: &Document<'_>) -> Vec<Range<usize>> {
                 link_rest: &link_rest[sentence.tokens.start - tokens.start..][..slice.len()],
                 counting_cell,
                 after_abbreviation,
+                comment: document.region_at(&sentence.range).is_some(),
+                heading: matches!(block.kind, BlockKind::Heading { level: 1 }),
             };
             row.counts(&mut found, sentence.tokens.start);
         }
     }
     found
+}
+
+/// Where frontmatter in TOML ends, if the file opens with it: a line of `+++` and the next such
+/// line. The Markdown reader reads it as prose, though it holds settings, as in `count = 5`.
+fn frontmatter_end(source: &str) -> usize {
+    let mut end = 0;
+    for (index, line) in source.split_inclusive('\n').enumerate() {
+        end += line.len();
+        let fence = line.trim_end() == "+++";
+        if index == 0 && !fence {
+            return 0;
+        }
+        if index > 0 && fence {
+            return end;
+        }
+    }
+    0
 }
 
 /// The cells of a row or a header, as blocks.
@@ -122,24 +144,26 @@ fn cells_of<'d, 'a>(row: &'d Block<'a>) -> Vec<&'d Block<'a>> {
 
 /// Whether the words of a header or a label name things that a number counts: see [`thing_head`].
 fn names_things(tokens: &[Token<'_>]) -> bool {
-    thing_head(tokens).is_some()
+    thing_head(tokens, false).is_some()
 }
 
 /// Where the head of a header or a label is, in `tokens`, if it names things, and whether a form
 /// that counts opens or ends it, so that the count starts at its first word: `Number of`, `Count
 /// of`, `# of` or `Total` before the head, or `count` or `total` as the head after other words.
+/// `heading` says that a heading's `#` stands before the tokens, as in `# of ports`.
 ///
-/// The head is a plural noun but one of [`MASS_NOUNS`] (`Data`), a regular plural in `-s` that the
-/// tagger reads as a verb or a singular (`Commits`, `Plugins`), or `count` or `total`, last among
-/// the words outside brackets, or just before a participle, which ends the words read, as in `Files
-/// changed` or `units stating values`; or the last word in brackets, where only a preposition or an
-/// adverb stands outside them, as in `After (queries)`. No word may name a bound (`Max files`,
-/// `Tests (max)`) or a rate (`Tests per file`). Unless a form that counts opens the words or
+/// The head is a word that names things (see [`names_a_thing`]), last among the words outside
+/// brackets, or just before a participle after a word that names things, which ends the words
+/// read, as in `Files changed` or `units stating values`; or the last word in brackets, where only
+/// a preposition or an adverb stands outside them, as in `After (queries)`. Any other word the
+/// tagger reads as a verb is passed over, as `run` is in `Prior run visits`. No word, in brackets
+/// or not, may name a bound (`Max files`, `Tests (max)`) or a rate (`Files sent (per run)`), and
+/// no unit may follow a slash (`Sent / Minute`). Unless a form that counts opens the words or
 /// `count` or `total` ends them, no word may name a value either: a unit (`Bytes`, `Size (bytes)`),
 /// a fraction, or a plural noun of [`VALUE_HEADS`] (`Ports`) that no adjective or participle
 /// modifies (`Open ports` names things). A label that refers to an issue, as `Fixes` does, names
 /// none.
-fn thing_head(tokens: &[Token<'_>]) -> Option<(usize, bool)> {
+fn thing_head(tokens: &[Token<'_>], heading: bool) -> Option<(usize, bool)> {
     let mut depth = 0usize;
     let mut words = Vec::new();
     for (at, token) in tokens.iter().enumerate() {
@@ -160,25 +184,41 @@ fn thing_head(tokens: &[Token<'_>]) -> Option<(usize, bool)> {
     if TRAILERS.contains(&folded(first).as_str()) {
         return None;
     }
-    let hash = tokens[..first].iter().any(|token| token.text == "#");
+    let hash = heading || tokens[..first].iter().any(|token| token.text == "#");
     let leading = (outside.len() >= 2
         && matches!(folded(first).as_str(), "number" | "count")
         && folded(outside[1]) == "of")
         || (hash && folded(first) == "of")
-        || (folded(first) == "total" && outside.len() >= 2);
+        || folded(first) == "total";
     let forced = leading
         || outside
             .last()
             .is_some_and(|last| COUNT_HEADERS.contains(&folded(*last).as_str()));
+    let slash_rate = tokens.windows(2).any(|pair| {
+        pair[0].text == "/"
+            && pair[1].kind == TokenKind::Word
+            && UNITS.contains(&pair[1].folded().as_str())
+    });
+    if slash_rate
+        || words.iter().any(|&(at, _)| {
+            let word = folded(at);
+            CAPS.contains(&word.as_str()) || word == "per"
+        })
+    {
+        return None;
+    }
     let (mut head, mut before) = (None, None);
     for &(at, inside) in &words {
         let token = &tokens[at];
         let word = folded(at);
-        if CAPS.contains(&word.as_str()) || word == "per" {
-            return None;
-        }
-        if head.is_some() && !inside && participle_after_head(token) {
-            break;
+        // A word the tagger reads as a verb after the head ends the words read where it is a
+        // participle after a head that names things, as in `Files changed`; anywhere else it is
+        // passed over as a modifier, as `run` is in `prior run visits`.
+        if let Some(last) = head.filter(|_| !inside && verb_after_head(token)) {
+            if participle(token) && names_a_thing(&tokens[last]) {
+                break;
+            }
+            continue;
         }
         let unit = UNITS.contains(&word.as_str())
             || BARE_UNITS.contains(&word.as_str())
@@ -226,23 +266,31 @@ fn thing_head(tokens: &[Token<'_>]) -> Option<(usize, bool)> {
         .chars()
         .zip(token.text.chars().skip(1))
         .any(|(before, after)| before.is_lowercase() && after.is_uppercase());
+    let count = COUNT_HEADERS.contains(&token.folded().as_str());
+    // A count that `count` or `total` ends starts at its first word: `Port count`.
+    let leading = leading || (count && head > first);
+    (!identifier && names_a_thing(token)).then_some((head, leading))
+}
+
+/// Whether `token`, as the head of a header or a label, names things: a plural noun but one of
+/// [`MASS_NOUNS`], a regular plural in `-s` that the tagger reads as a verb or a singular, or
+/// `count` or `total`.
+fn names_a_thing(token: &Token<'_>) -> bool {
+    let folded = token.folded();
     let misread = regular_plural(&token.text)
         && token.reading.is_some_and(|reading| {
             reading.tag == Tag::Verb
                 || (matches!(reading.tag, Tag::Noun | Tag::ProperNoun)
                     && reading.features.contains(Features::SINGULAR))
         });
-    let count = COUNT_HEADERS.contains(&token.folded().as_str());
-    let mass = MASS_NOUNS.contains(&token.folded().as_str());
-    let things = (plural_noun(token) && !mass) || misread || count;
-    // A count that `count` or `total` ends starts at its first word: `Port count`.
-    let leading = leading || (count && head > first);
-    (!identifier && things).then_some((head, leading))
+    (plural_noun(token) && !MASS_NOUNS.contains(&folded.as_str()))
+        || misread
+        || COUNT_HEADERS.contains(&folded.as_str())
 }
 
-/// Whether `token`, after the head of a label, is a participle that leaves that head the head:
-/// `Files changed`, `Tests run`.
-fn participle_after_head(token: &Token<'_>) -> bool {
+/// Whether `token`, after a word of a header or a label, is a word the tagger reads as a verb and
+/// no plural noun, as `run` and `changed` are in `Tests run` and `Files changed`.
+fn verb_after_head(token: &Token<'_>) -> bool {
     !plural_noun(token)
         && token
             .reading
@@ -278,11 +326,13 @@ fn suffixed(text: &str) -> bool {
 }
 
 /// Whether `text` is a regular plural in `-s`, as `commits` or `Plugins` is, by its shape alone.
+/// A word in capitals is an acronym, as `OPFS` is.
 fn regular_plural(text: &str) -> bool {
     let lower = text.to_ascii_lowercase();
     text.chars().count() > 3
         && lower.ends_with('s')
         && text.chars().all(char::is_alphabetic)
+        && !text.chars().all(|letter| letter.is_ascii_uppercase())
         && !["ss", "us", "is", "as"]
             .iter()
             .any(|ending| lower.ends_with(ending))
@@ -317,6 +367,13 @@ fn decimal(text: &str) -> bool {
             && whole.bytes().all(|byte| byte.is_ascii_digit())
             && part.bytes().all(|byte| byte.is_ascii_digit())
     })
+}
+
+/// Whether `text` is a row of bits: only `0` and `1`, with a `1` after the first digit, as
+/// `11110000` is and `10000000` is not.
+fn binary(text: &str) -> bool {
+    text.bytes().all(|byte| matches!(byte, b'0' | b'1'))
+        && text.get(1..).is_some_and(|rest| rest.contains('1'))
 }
 
 /// Whether `text` has the form of an HTTP status code: three digits, the first from 1 to 5 and the
@@ -577,6 +634,8 @@ struct Cardinal {
 
 /// A sentence, with each token's folded text, read by position.
 struct Row<'t, 'a> {
+    /// The file the sentence is in, whose bytes the ranges of its tokens are.
+    source: &'a str,
     tokens: &'t [Token<'a>],
     folded: Vec<String>,
     /// Whether each token stands inside double quotes.
@@ -590,6 +649,11 @@ struct Row<'t, 'a> {
     /// Whether an abbreviation of [`NUMBER_ABBREVIATIONS`] and its `.` end the sentence before,
     /// which the sentence then follows on from: `No. 12 files`.
     after_abbreviation: bool,
+    /// Whether the sentence is in a comment of code, as in a fence of Rust.
+    comment: bool,
+    /// Whether the sentence is in a heading of one `#`, whose `#` a label at its start follows, as
+    /// in `# of ports: 25`.
+    heading: bool,
 }
 
 impl Row<'_, '_> {
@@ -943,13 +1007,19 @@ impl Row<'_, '_> {
     }
 
     /// Whether an operator stands beside the cardinal. A `+` or `=` after a word is no math: it
-    /// joins two phrases, as in `13 protocols + 8 modules`.
+    /// joins two phrases, as in `13 protocols + 8 modules`, but where it touches both the word and
+    /// the number, as code writes a setting (`WORKERS=8`) or a code point (`U+0027`). The size of a
+    /// sample is the one setting that counts: `n=40 sessions`.
     fn math(&self, cardinal: &Cardinal) -> bool {
         let before = cardinal.start.checked_sub(1);
         OPERATORS.iter().any(|operator| {
             let word_before = |at: usize| {
-                at.checked_sub(1)
-                    .is_some_and(|word| self.tokens[word].kind == TokenKind::Word)
+                at.checked_sub(1).is_some_and(|word| {
+                    let code = self.touches(word, at)
+                        && self.touches(at, cardinal.start)
+                        && !(*operator == "=" && self.is_word(word, "n"));
+                    self.tokens[word].kind == TokenKind::Word && !code
+                })
             };
             let joins = JOINING_OPERATORS.contains(operator);
             before.is_some_and(|before| {
@@ -982,13 +1052,29 @@ impl Row<'_, '_> {
 
     /// Whether the noun of [`WIDTH_NOUNS`] at token `at`, right after the cardinal, is a width or a
     /// spacing: `at` or `to` stands before the number, as in `at 80 columns` or `to 100 columns`.
+    /// `columns` and `cols` are a width too after a word of [`WIDTH_WORDS`] in the clause (`The
+    /// line length is 80 columns`), and after a form of `be` where they end the clause (`The
+    /// terminal is 80 columns.`).
     fn width(&self, cardinal: &Cardinal, at: usize) -> bool {
         let noun = self.tokens.get(at).is_some_and(|token| {
             matches!(token.kind, TokenKind::Word | TokenKind::Code)
                 && WIDTH_NOUNS.contains(&self.folded[at].as_str())
         });
         let lead = self.hedged_start(cardinal.start);
-        noun && lead >= 1 && self.in_set(lead - 1, &["at", "to"])
+        if !noun || lead == 0 {
+            return false;
+        }
+        if self.in_set(lead - 1, &["at", "to"]) {
+            return true;
+        }
+        if !self.in_set(at, &["columns", "cols"]) {
+            return false;
+        }
+        let clause = (0..lead)
+            .rev()
+            .take_while(|before| !self.clause_ends(*before))
+            .any(|before| self.in_set(before, WIDTH_WORDS));
+        clause || (self.in_set(lead - 1, COPULAS) && self.clause_ends(at + 1))
     }
 
     /// Whether a hyphen touches token `at` and a word follows it, as in `ml` of
@@ -1431,12 +1517,15 @@ impl Row<'_, '_> {
     }
 
     /// Whether the cardinal is an ID, a code or a title by its form: 8 to 16 digits with no comma,
-    /// as a phone number or a stamp has; a number of [`SUFFIX_NAMES`] that no hedge leads; an HTTP
-    /// status code before a noun of [`STATUS_NOUNS`] (`429 errors`), before its reason (`429 Too
-    /// Many Requests`) or beside another of a redirect or an error (`302/404 paths`); or a number
-    /// in a title, after a capitalised possessive (`Time's 100 Most Influential People`) or before
-    /// a capitalised superlative whose capitals run to the end of the title (`the 30 Most
-    /// Essential Data Structures`, but `10 TOP Health teams`).
+    /// as a phone number or a stamp has, but for a round number (`100000000 rows`) that is no row
+    /// of bits (`11110000`); a number of [`NAMED_NUMBERS`] that no hedge leads, before a noun it
+    /// names (`4K displays`, `12 factor apps`) as the word after it or the head of its phrase, or
+    /// before a frame rate (`4K 30fps`); an HTTP status code before a noun of [`STATUS_NOUNS`]
+    /// (`429 errors`), before its reason (`429 Too Many Requests`) or beside another of a redirect
+    /// or an error (`302/404 paths`); or a number in a title, after a capitalised possessive
+    /// (`Time's 100 Most Influential People`) or before a capitalised superlative whose capitals
+    /// run to the end of the title (`the 30 Most Essential Data Structures`, but `10 TOP Health
+    /// teams`).
     fn titled(&self, cardinal: &Cardinal) -> bool {
         let first = cardinal.first;
         let token = &self.tokens[first];
@@ -1444,14 +1533,28 @@ impl Row<'_, '_> {
         if token.kind == TokenKind::Number
             && (8..=16).contains(&text.len())
             && text.bytes().all(|byte| byte.is_ascii_digit())
+            && (binary(text) || !text.ends_with("000"))
         {
             return true;
         }
-        if token.kind == TokenKind::Word
-            && SUFFIX_NAMES.contains(&self.folded[first].as_str())
-            && self.hedge_before(cardinal.start).is_none()
+        if let Some((_, nouns)) = NAMED_NUMBERS
+            .iter()
+            .find(|(number, _)| *number == self.folded[first])
         {
-            return true;
+            let names = |at: usize| self.in_set(at, nouns);
+            let rate = *nouns == RESOLUTION_NOUNS
+                && self.tokens.get(cardinal.end).is_some_and(|next| {
+                    let next = next.text.to_ascii_lowercase();
+                    next.starts_with(|c: char| c.is_ascii_digit())
+                        && (next.ends_with("fps") || next.ends_with("hz"))
+                });
+            if self.hedge_before(cardinal.start).is_none()
+                && (names(cardinal.end)
+                    || rate
+                    || self.phrase(cardinal.end).is_some_and(|end| names(end - 1)))
+            {
+                return true;
+            }
         }
         if cardinal.end != first + 1 {
             return false;
@@ -1591,13 +1694,11 @@ impl Row<'_, '_> {
     }
 
     /// Whether the cardinal is an end of a range that a dash with spaces parts, as in `12 - 63
-    /// tests`, or a tilde that touches both numbers, as in `5~10 files`. Both ends are in digits or
-    /// both in words: `Rule of 5 - five stages` is no range.
+    /// tests`, or a tilde that touches the number before it, as in `5~10 files`. Both ends are in
+    /// digits or both in words: `Rule of 5 - five stages` is no range.
     fn dash_range(&self, cardinal: &Cardinal) -> bool {
         let dash = |at: usize| self.is_mark(at, "-") || self.is_mark(at, "\u{2013}");
-        let tilde = |at: usize| {
-            self.is_mark(at, "~") && self.touches(at - 1, at) && self.touches(at, at + 1)
-        };
+        let tilde = |at: usize| self.is_mark(at, "~") && self.touches(at - 1, at);
         let end = cardinal.end;
         let start = cardinal.start;
         let kind = self.tokens[cardinal.first].kind;
@@ -1714,21 +1815,27 @@ impl Row<'_, '_> {
                         TokenKind::Word | TokenKind::Punctuation | TokenKind::Symbol
                     ) && self.folded[index] == *word
                 })
-                && !(matches!(*row, ["over"] | ["under"]) && self.after_preposition_verb(at - 1))
+                && !(matches!(*row, ["over"] | ["under"] | ["past"])
+                    && self.after_preposition_verb(at - 1))
         })
     }
 
-    /// Whether token `word`, an `over` or an `under`, follows a verb that makes it a preposition,
-    /// an adverb apart or not: `iterates over`, `scans under`, `spread evenly over`, `runs over`.
+    /// Whether token `word`, an `over`, an `under` or a `past`, follows a verb that makes it a
+    /// preposition, an adverb or a particle of [`PATH_PARTICLES`] apart or not: `iterates over`,
+    /// `scans under`, `spread evenly over`, `spread out over`, `runs over`, `walked past`. `past`
+    /// is one after a verb of [`PAST_VERBS`] only.
     fn after_preposition_verb(&self, word: usize) -> bool {
         let Some(mut before) = word.checked_sub(1) else {
             return false;
         };
-        if self.after_adverbs(before) != before {
+        if self.after_adverbs(before) != before || self.in_set(before, PATH_PARTICLES) {
             before = match before.checked_sub(1) {
                 Some(before) => before,
                 None => return false,
             };
+        }
+        if self.is_word(word, "past") {
+            return self.in_set(before, PAST_VERBS);
         }
         self.in_set(before, PREPOSITION_VERBS)
             || (self.is_word(word, "over") && self.in_set(before, OVER_VERBS))
@@ -1807,14 +1914,15 @@ impl Row<'_, '_> {
 
     /// Whether a rate starts at token `at`, after a noun phrase: `a`, `an`, `each` or `every`, and
     /// a unit of time that ends the rate (`12 releases a year`), or a number and a unit (`12 tests
-    /// every 5 minutes`). A unit that a word of [`NOT_RATE_AFTER`] follows does not end a rate:
-    /// `12 releases a year ago`.
+    /// every 5 minutes`). A unit that a word of [`NOT_RATE_AFTER`] or `from now` follows does not
+    /// end a rate: `12 releases a year ago`.
     fn rate_at(&self, at: usize) -> bool {
         if !self.in_set(at, RATE_WORDS) {
             return false;
         }
         if self.in_set(at + 1, UNITS) || self.in_set(at + 1, RATE_PERIODS) {
-            return !self.in_set(at + 2, NOT_RATE_AFTER);
+            return !(self.in_set(at + 2, NOT_RATE_AFTER)
+                || self.words_at(at + 2, &["from", "now"]));
         }
         self.number_end(at + 1)
             .is_some_and(|end| self.in_set(end, UNITS))
@@ -1851,8 +1959,8 @@ impl Row<'_, '_> {
     }
 
     /// The end of a count with nothing nominal after the cardinal, whose tokens `from` follow: a
-    /// share (`63 of them`, `12 of 100`), `more`, `others`, `in total`, or `in all` that ends
-    /// the clause (`5 in all cases` is no total).
+    /// share (`63 of them`, `12 of 100`), `more`, `in total`, or `in all` that ends the clause (`5
+    /// in all cases` is no total).
     fn without_noun(&self, cardinal: &Cardinal, from: usize) -> Option<usize> {
         let of = cardinal.end;
         if self.is_word(of, "of") {
@@ -1864,9 +1972,6 @@ impl Row<'_, '_> {
             }
         }
         if self.is_word(from, "more") && !self.is_word(from + 1, "than") {
-            return Some(from + 1);
-        }
-        if self.is_word(from, "others") {
             return Some(from + 1);
         }
         if self.is_word(from, "in")
@@ -1921,12 +2026,46 @@ impl Row<'_, '_> {
         if equals && !opens_field {
             return None;
         }
-        let (head, leading) = thing_head(&self.tokens[first..mark])?;
-        // A snake-case word before `=` is a setting in code: `completion_tokens=64`.
-        if equals && self.tokens[first + head].text.contains('_') {
+        let hash = first == 0 && self.heading;
+        let (head, leading) = thing_head(&self.tokens[first..mark], hash)?;
+        // Before `=`, a word that the tagger reads as a verb or a pronoun makes the words a clause
+        // and no label: `We set tests = 63`.
+        let clause = (first..first + head).any(|at| {
+            self.tokens[at].reading.is_some_and(|reading| {
+                matches!(reading.tag, Tag::Verb | Tag::Auxiliary | Tag::Pronoun)
+            })
+        });
+        if equals && (clause || self.setting(first, first + head, mark, cardinal)) {
             return None;
         }
         Some(if leading { first } else { first + head })
+    }
+
+    /// Whether the label from token `first` to its head at `head`, and the `=` at `mark` before the
+    /// cardinal, are a setting in code and no field of prose. So they are in a comment of code, or
+    /// where the `=` touches a word or the number (`retries=5`, `Tests= 63`), the head is in snake
+    /// case (`completion_tokens = 64`) or a dotted path (`Config.Retries = 5`), or a lowercase word
+    /// and the number fill their line (`pages = 5`).
+    fn setting(&self, first: usize, head: usize, mark: usize, cardinal: &Cardinal) -> bool {
+        let path = self.tokens[head].text.contains('.');
+        let lowercase = first == head
+            && head + 1 == mark
+            && !self.tokens[head].text.chars().any(char::is_uppercase);
+        let line = || {
+            let start = self.tokens[first].range.start;
+            let end = self.tokens[cardinal.end - 1].range.end;
+            let before = &self.source[..start];
+            let after = &self.source[end..];
+            let before = &before[before.rfind('\n').map_or(0, |at| at + 1)..];
+            let after = after[..after.find('\n').unwrap_or(after.len())].trim();
+            before.trim().is_empty() && after.is_empty()
+        };
+        self.comment
+            || self.touches(mark - 1, mark)
+            || self.touches(mark, mark + 1)
+            || self.tokens[head].text.contains('_')
+            || path
+            || (lowercase && line())
     }
 
     /// Where the label that ends at token `last` starts: its words back to a mark that is no hyphen
@@ -1952,18 +2091,26 @@ impl Row<'_, '_> {
         first
     }
 
-    /// Whether a field of a line ends before token `tail`, a short note in brackets after it or
-    /// not: only marks follow, or a separator of [`FIELD_SEPARATORS`] and the words of another
-    /// label and its colon.
+    /// Whether a field of a line ends before token `tail`, past a word of [`FIELD_TAILS`] and the
+    /// tallies after it (`63 passed, 2 failed`) or a short note in brackets: only marks follow, or
+    /// the words of another label and its colon, after a separator of [`FIELD_SEPARATORS`] or
+    /// right after the field (`Tests: 63, Files: 12`, `Tests: 63 Open bugs: 5`).
     fn field_ends(&self, tail: usize) -> bool {
         let mut tail = tail;
-        // A note is a word or two, or `of` and a total: `(approx)`, `(of 100)`. A note that holds
-        // another number is a second value, as in `(not 1250)`.
+        if self.in_set(tail, FIELD_TAILS) {
+            tail += 1;
+            while self.is_mark(tail, ",") && self.in_set(tail + 2, FIELD_TAILS) {
+                tail += 3;
+            }
+        }
+        // A note is a word or two, `of` and a total, or a share: `(approx)`, `(of 100)`, `(63%)`. A
+        // note that holds another number is a second value, as in `(not 1250)`.
         if self.is_mark(tail, "(") {
             if let Some(close) = (tail + 1..self.tokens.len().min(tail + 3 + MODIFIERS))
                 .find(|at| self.is_mark(*at, ")"))
             {
-                let number = (tail + 1..close).any(|at| self.is_number_at(at));
+                let number =
+                    (tail + 1..close).any(|at| self.is_number_at(at) && !self.is_mark(at + 1, "%"));
                 if !number || self.is_word(tail + 1, "of") {
                     tail = close + 1;
                 }
@@ -1975,19 +2122,20 @@ impl Row<'_, '_> {
             return true;
         }
         let separator = FIELD_SEPARATORS.iter().any(|mark| self.is_mark(tail, mark));
-        let mut at = tail + 1;
+        let label = tail + usize::from(separator);
+        let mut at = label;
         while at < self.tokens.len()
-            && at - tail <= MODIFIERS + 1
+            && at - label <= MODIFIERS
             && matches!(self.tokens[at].kind, TokenKind::Word | TokenKind::Code)
         {
             at += 1;
         }
-        separator && at > tail + 1 && self.is_mark(at, ":")
+        at > label && self.is_mark(at, ":")
     }
 
     /// Where a bare number that a verb of having governs starts, as in `It holds 63.`: the verb is
     /// right before the cardinal or its hedge (`It has about 63.`), and the clause ends after the
-    /// number, or after adverbs in `-ly` and words of [`HAVE_TAILS`], as in `It has 400 left.` A
+    /// number, or after adverbs and words of [`HAVE_TAILS`], as in `It has 400 left.` A
     /// number after any other verb is a value. `It has 400 of those.` is a share (see
     /// [`Row::without_noun`]).
     fn after_have_verb(&self, cardinal: &Cardinal) -> Option<usize> {
@@ -2000,7 +2148,6 @@ impl Row<'_, '_> {
             let tail = HAVE_TAILS.iter().find(|row| self.words_at(end, row));
             let adverb = self.tokens.get(end).is_some_and(|token| {
                 token.kind == TokenKind::Word
-                    && self.folded[end].ends_with("ly")
                     && token
                         .reading
                         .is_some_and(|reading| reading.tag == Tag::Adverb)
@@ -2132,15 +2279,35 @@ impl Row<'_, '_> {
                         .is_some_and(|reading| reading.features.contains(Features::PLURAL));
                     // `each` before no noun is no object: `11 runs each`, `five runs each with`.
                     let each = self.is_word(end, "each") && !self.nominal_word(end + 1);
-                    let governs = self.governs(end) && !self.relative_clause(end) && !each;
+                    let governs = self.governs(end)
+                        && !self.relative_clause(end)
+                        && !each
+                        && !self.period_at(end);
                     let follows = self.object_starts(end) && !self.relative_clause(end);
                     let after_singular = singular
                         && ((verb && (suffix || follows)) || (suffix && verb_possible && !plural));
                     let particle = self.in_set(end, PARTICLES) && self.clause_ends(end + 1);
+                    // After digits with a `k` or an `M`, a word that the tagger can read as a
+                    // verb, or a verb of [`SUFFIX_VERBS`], is the verb of the sentence where it
+                    // ends the clause and no other word is one: `APC at 32k holds.`, `Only after
+                    // 16K boots.`
+                    let lone = || {
+                        self.clause_ends(end)
+                            && !self.tokens.iter().enumerate().any(|(other, word)| {
+                                other != end - 1
+                                    && word.reading.is_some_and(|reading| {
+                                        matches!(reading.tag, Tag::Verb | Tag::Auxiliary)
+                                    })
+                            })
+                    };
                     let first_verb = unit == 0
                         && plural_noun(token)
                         && ((verb && (suffix || governs || particle))
-                            || (suffix && verb_possible && !plural && (governs || particle)));
+                            || (suffix
+                                && ((verb_possible
+                                    && !plural
+                                    && (governs || particle || lone()))
+                                    || (self.in_set(end - 1, SUFFIX_VERBS) && lone()))));
                     if (coordinated && verb) || after_singular || first_verb {
                         break;
                     }
@@ -2197,9 +2364,10 @@ impl Row<'_, '_> {
     }
 
     /// Whether the unit `start..end` is a regular plural in `-s` that the tagger reads only as a
-    /// verb and that nothing a verb governs follows but a relative clause, as `retries` in `Use 12
-    /// retries.` or `uploads` in `Process 12 uploads the user chose.` `that` starts what a verb
-    /// governs unless a clause follows it: `Loop 74 promotes that staged seed`.
+    /// verb and that nothing a verb governs follows but a relative clause or a span of time, as
+    /// `retries` in `Use 12 retries.`, `uploads` in `Process 12 uploads the user chose.` or
+    /// `releases` in `12 releases a year ago`. `that` starts what a verb governs unless a clause
+    /// follows it: `Loop 74 promotes that staged seed`.
     fn verb_plural(&self, start: usize, end: usize) -> bool {
         let token = &self.tokens[start];
         end == start + 1
@@ -2208,7 +2376,16 @@ impl Row<'_, '_> {
                 reading.tag == Tag::Verb && !reading.possible().contains(Tag::Noun)
             })
             && (!(self.object_starts(end) || self.is_word(end, "that"))
-                || self.relative_clause(end))
+                || self.relative_clause(end)
+                || self.period_at(end))
+    }
+
+    /// Whether a span of time that a rate may take starts at token `at`: `a`, `an`, `each` or
+    /// `every`, and a unit or a span of [`RATE_PERIODS`], as in `a year` or `a sprint`. A word that
+    /// the tagger reads as a verb before one is a plural head: `12 releases a year ago`.
+    fn period_at(&self, at: usize) -> bool {
+        self.in_set(at, RATE_WORDS)
+            && (self.in_set(at + 1, UNITS) || self.in_set(at + 1, RATE_PERIODS))
     }
 
     /// Where the adverbs that start at token `at` end: `at` itself if the token is none, or if no

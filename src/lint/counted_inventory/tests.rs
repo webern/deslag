@@ -1,4 +1,5 @@
 use super::*;
+use crate::document::{Fences, Reader, Stack};
 
 /// The quote of each count in `markdown`.
 fn found(markdown: &str) -> Vec<String> {
@@ -215,6 +216,7 @@ fn a_hedge_may_stand_between_a_bound_and_its_number() {
     none("It holds at most roughly 63 tests.");
     none("It holds at most nearly 63 tests.");
     none("It holds at most almost 63 tests.");
+    none("It holds at most approximately 63 tests.");
 }
 
 #[test]
@@ -361,6 +363,8 @@ fn a_unit_after_the_number_makes_it_a_measure() {
     none("It reads 63 gbp files.");
     none("It reads 63 yen files.");
     none("It reads 63 pm files.");
+    none("The 12 o'clock trains run.");
+    none("Cold Starts Take 300 Ms");
 }
 
 /// A gap in points is a measure right after the number; with a word before them, points are things.
@@ -536,6 +540,7 @@ fn a_number_after_a_noun_is_a_name_or_a_rank() {
     none("Fortune 500 companies are read.");
     none("It holds max 63 tests.");
     none("It holds min 63 tests.");
+    none("See para 31 of the judgment.");
 }
 
 #[test]
@@ -737,7 +742,7 @@ fn a_label_with_a_plural_noun_total_or_count_ends_in_the_number() {
     counts("Tests: 63", &["Tests: 63"]);
     counts("Total: 63", &["Total: 63"]);
     counts("Count: 63", &["Count: 63"]);
-    none("Tests: 63 failed.");
+    counts("Tests: 63 failed.", &["Tests: 63"]);
     none("Test: 63");
     none("Step: 63");
 }
@@ -1190,6 +1195,11 @@ fn n_of_m_is_a_position_only_after_a_noun_of_place() {
     counts("Process 12 of 100.", &["12 of 100"]);
     counts("It has 63 of 100.", &["63 of 100"]);
     counts("It ran 63 of 100.", &["63 of 100"]);
+    none("Lap 12 of 50 is done.");
+    none("Epoch 12 of 50 is done.");
+    none("Build 12 of 50 is done.");
+    none("Sprint 12 of 50 is done.");
+    none("Quiz 12 of 50 is done.");
 }
 
 /// `from` is a bound only in a range, and so is `through`.
@@ -1344,6 +1354,7 @@ fn a_number_that_looks_like_a_year_where_no_year_reads_is_a_count() {
     none("Tech Stack: Rust 2024 edition, GitHub Actions CI");
     none("It was released in 2020.");
     none("It was written in 2026 by hand.");
+    counts("| Tests |\n| --- |\n| 2048 |", &["2048"]);
 }
 
 /// A year reads after a month, a season or a preposition without a list: no count takes the place
@@ -1367,6 +1378,7 @@ fn a_year_reads_after_a_month_a_season_or_a_preposition() {
     none("March 2030 tests ran.");
     none("Sept 2030 tests ran.");
     none("Dec 2030 tests ran.");
+    none("As of 2000 users had signed up.");
 }
 
 /// `May` is a modal to the tagger, and a count could take its place, so the list holds it.
@@ -1477,12 +1489,20 @@ fn several_labels_on_a_line_are_each_a_count() {
     counts("Tests passed: 63", &["Tests passed: 63"]);
     counts("Tests: 63/100", &["Tests: 63/100"]);
     counts("Tests: 63/100, Files: 12", &["Tests: 63/100", "Files: 12"]);
-    none("Tests: 63 failed, Files: 12 passed");
+    counts(
+        "Tests: 63 failed, Files: 12 passed",
+        &["Tests: 63", "Files: 12"],
+    );
     counts("We found 12 `TODO` and files: 3", &["12 `TODO`"]);
     counts(
         "It has 12 failed, changed tests.",
         &["12 failed, changed tests"],
     );
+    counts(
+        "Tests: 63, Number of open bug reports: 5",
+        &["Tests: 63", "Number of open bug reports: 5"],
+    );
+    counts("Tests: 63 Open bugs: 5", &["Tests: 63", "bugs: 5"]);
 }
 
 /// A spaced hyphen or a dash is no label mark: only the colon is, as in the owner's rule.
@@ -1769,6 +1789,15 @@ fn columns_units_and_gigs_count_except_as_a_width() {
         "The first version holds 100 synthetic examples across:",
         &["100 synthetic examples"],
     );
+    none("Wrap at 80 cols.");
+    none("Wrap at about 80 columns.");
+    none("It caps at 64 gigs.");
+    none("The wall is 12 layers thick.");
+    none("It caps at about 64 gigs.");
+    none("It grew to about 100 columns.");
+    none("The board is 12 squares wide by 8 squares deep.");
+    none("The table is 12 rows at its narrowest.");
+    none("It is 80 cols by 24 rows.");
 }
 
 /// A cell is read under the header of its own column, whatever the cells before it hold: numbers,
@@ -1822,6 +1851,7 @@ fn a_larger_number_in_a_smaller_one_is_no_proportion() {
     none("It fails 7 in 10 tests.");
     none("It fails 1 in 10 tests.");
     none("It fails sixty in a hundred tests.");
+    counts("The same 12 in 12 notations.", &["12 notations"]);
 }
 
 /// An adverb that starts a clause does not lead into a code span, so `404 when `error`` does not
@@ -1927,6 +1957,8 @@ fn a_hedge_between_a_bound_and_its_number_keeps_the_bound() {
     none("It holds up to some 50 files.");
     none("It holds more than roughly 50 files.");
     none("It holds over circa 50 files.");
+    none("It has at most \u{2248} 63 tests.");
+    none("It has at most close to 63 tests.");
 }
 
 /// A year after a hedge counts, except after `circa`.
@@ -2029,6 +2061,10 @@ fn a_label_takes_an_equals_sign_a_note_and_a_misread_head() {
     none("The job failed (retries = 5).");
     none("test_runs=64");
     none("Use commas: 1,250 (not 1250).");
+    counts(
+        "Tests (all of the suites): 63",
+        &["Tests (all of the suites): 63"],
+    );
 }
 
 /// A field ends at a bullet before the next label.
@@ -2051,6 +2087,15 @@ fn a_date_after_a_label_is_no_count() {
 fn a_count_that_names_its_things_first_reads_from_them() {
     counts("The number of tests is 400.", &["number of tests is 400"]);
     counts("It has a total of 400.", &["total of 400"]);
+    counts(
+        "The number of big old red tests is 400.",
+        &["number of big old red tests is 400"],
+    );
+    counts(
+        "The number of failures were 400.",
+        &["number of failures were 400"],
+    );
+    counts("Total `lint` warnings: 12", &["Total `lint` warnings: 12"]);
 }
 
 /// A bare number after a verb of having counts before an adverb, a word of time or `of those`.
@@ -2063,6 +2108,11 @@ fn a_bare_number_after_a_verb_of_having_takes_a_tail() {
     counts("It has 400 currently.", &["has 400"]);
     counts("It has 400 of those.", &["400 of those"]);
     none("It has 400 (approx).");
+    counts("It has 400 give or take.", &["has 400"]);
+    counts("It has 400 at the moment.", &["has 400"]);
+    counts("It had 400 then.", &["had 400"]);
+    counts("It has 400 left over.", &["has 400"]);
+    none("The sign has 400 written on it.");
 }
 
 /// A unit of time after `a`, `an`, `each`, `every` or `per` makes a rate only where it ends the
@@ -2074,11 +2124,15 @@ fn a_unit_of_time_makes_a_rate_only_where_it_ends_it() {
     none("It holds 12 meetings a sprint.");
     none("It holds 12 meetings a quarter.");
     none("It ran 12 tests every 5 minutes.");
-    none("It ships 12 releases a year from now.");
+    counts("It ships 12 releases a year from now.", &["12 releases"]);
     counts("It shipped 12 releases a year ago.", &["12 releases"]);
     counts("It shipped 12 releases a year earlier.", &["12 releases"]);
     counts("It shipped 12 releases a year later.", &["12 releases"]);
     counts("It ran 12 tests a second time.", &["12 tests"]);
+    none("It holds 12 meetings a semester.");
+    none("It handles 12 tickets a shift.");
+    none("It holds 12 meetings a fortnight.");
+    counts("It holds 12 files a year old.", &["12 files"]);
 }
 
 /// Tokens are a measure, and so is a compound that ends in a unit.
@@ -2108,6 +2162,19 @@ fn both_ends_of_a_range_are_excused() {
     counts("Keep it - 12 files.", &["12 files"]);
     counts("Move 5 files to 12 folders.", &["5 files", "12 folders"]);
     counts("It follows the Rule of 5 - five stages.", &["five stages"]);
+    none("It lists 5~ 10 files.");
+    counts("It lists 5 ~10 files.", &["10 files"]);
+    none("It went from 5 files up.");
+    none("It went from 5 files to 15 folders.");
+    none("It sorts 5 big old red files to 15 files.");
+    counts(
+        "Copied from 3 hosts: 12 files to 5 disks.",
+        &["12 files", "5 disks"],
+    );
+    counts(
+        "It came from 3 hosts; 12 files went to 5 disks.",
+        &["12 files", "5 disks"],
+    );
 }
 
 /// The new bounds make a limit.
@@ -2140,6 +2207,7 @@ fn a_name_before_its_verb_is_a_name() {
     none("Rev 12 files changed.");
     none("Process 12 core files the report.");
     none("It is the [12 factor](https://12factor.net) app method.");
+    none("It follows the [12 Rules](https://example.com) guides.");
 }
 
 /// A verb that opens a sentence before a number and its noun phrase is a command, a relative clause
@@ -2299,6 +2367,7 @@ fn a_number_with_a_k_or_an_m_counts_but_names_a_few_things() {
     none("It funds 401k plans.");
     none("The 100k OFAT data is clear.");
     none("It spent 2.4 s in 1M grouped `dissolve`.");
+    none("It plays on 8K displays.");
 }
 
 /// A status code, a ranked title and a long run of digits are names.
@@ -2326,6 +2395,19 @@ fn a_status_code_a_title_and_an_id_are_names() {
         "It reads 99999999999999999999999 files.",
         &["99999999999999999999999 files"],
     );
+    none("It logged 422 errors.");
+    none("It sent 404 replies.");
+    none("It returns 101 Switching Protocols.");
+    none("It returns 451 Unavailable For Legal Reasons.");
+    counts("It has 200 pages.", &["200 pages"]);
+    counts("It has 200 bad files.", &["200 bad files"]);
+    none("The 10 Worst Bugs Ever");
+    counts(
+        "It lists the 30 Most popular crates.",
+        &["30 Most popular crates"],
+    );
+    counts("It cites 200 Legal cases.", &["200 Legal cases"]);
+    none("It logged 417 Expectation Failed errors.");
 }
 
 /// A year before a plural noun counts after a hedge, a determiner or `of`, or at the start; a year
@@ -2337,6 +2419,7 @@ fn a_round_year_before_a_noun_counts_where_a_count_reads() {
     counts("2000 files were lost.", &["2000 files"]);
     none("In 2026 tests ran.");
     none("It holds 2026.");
+    counts("In 02026 tests ran.", &["02026 tests"]);
 }
 
 /// A code span joined to a word by a hyphen is one modifier.
@@ -2346,4 +2429,256 @@ fn a_code_span_joined_by_a_hyphen_is_one_modifier() {
         "It holds 12 new `x`-free crates.",
         &["12 new `x`-free crates"],
     );
+}
+
+/// The quote of each count in `markdown`, read with the comments of its fenced code.
+fn found_in_fences(markdown: &str) -> Vec<String> {
+    let document = Stack::new(Reader::Markdown {
+        fences: Fences::all(),
+    })
+    .document(markdown);
+    check(&document, Some(&CountedInventory::default()))
+        .map(|over| over.matches.into_iter().map(|found| found.quote).collect())
+        .unwrap_or_default()
+}
+
+/// A word that the tagger reads as a verb in a header or a label modifies its head, as `run` does
+/// in `Prior run visits`. A participle after a head that names things ends the head, as in `Files
+/// changed`.
+#[test]
+fn a_verb_in_a_header_or_a_label_modifies_its_head() {
+    counts("Prior run visits: 63", &["visits: 63"]);
+    counts("Prior merge files: 63", &["files: 63"]);
+    counts("Prior deploy hits: 63", &["hits: 63"]);
+    counts("- Prior run visits: 63", &["visits: 63"]);
+    counts(
+        "| cap | toolshed-reload visits |\n|---|---|\n| none | 68,551 |",
+        &["68,551"],
+    );
+    counts(
+        "| name | prior run visits |\n|---|---|\n| a | 68,551 |",
+        &["68,551"],
+    );
+    counts(
+        "| name | cached run visits |\n|---|---|\n| a | 68,551 |",
+        &["68,551"],
+    );
+    counts(
+        "Total queued in v1.52-v1.53: 14",
+        &["Total queued in v1.52-v1.53: 14"],
+    );
+    counts("Files changed: 12", &["Files changed: 12"]);
+    counts("Tests run: 63", &["Tests run: 63"]);
+    counts("| Files changed |\n|---|\n| 12 |", &["12"]);
+    counts("Prior merged files: 63", &["files: 63"]);
+    none("Files (changed, bytes): 12");
+}
+
+/// A rate or a bound anywhere in a header makes it name a value: in brackets, after a participle,
+/// or as a unit after a slash.
+#[test]
+fn a_rate_or_a_bound_anywhere_in_a_header_names_a_value() {
+    none("| Files sent (per run) |\n|---|\n| 12 |");
+    none("| split-reduce candidates timed (per arm) |\n|---|\n| 12 |");
+    none("| Timeseries Sent / Minute |\n|---|\n| 12 |");
+    none("Tests (max): 63");
+    counts("Tests/files: 63", &["files: 63"]);
+    counts(
+        "| Name | Files / Tests |\n| --- | --- |\n| a | 25 |",
+        &["25"],
+    );
+}
+
+/// A plural that the tagger reads only as a verb is the head before a span of time, and the rule
+/// of rates decides: it counts where a word such as `ago` ends the span.
+#[test]
+fn a_plural_read_as_a_verb_heads_before_a_span_of_time() {
+    counts("12 releases a year ago", &["12 releases"]);
+    counts("We made 12 releases a year ago.", &["12 releases"]);
+    counts("12 builds a year ago", &["12 builds"]);
+    counts("Then 12 releases a year ago came out.", &["12 releases"]);
+    none("12 releases a year");
+    counts("We made 12 retries a day ago.", &["12 retries"]);
+    counts("We made 12 releases a sprint ago.", &["12 releases"]);
+}
+
+/// `4K` and `8K` name a resolution, `401k` a plan, `3M` a company and `12` a factor only before
+/// the nouns they name. Before any other noun they count, as other digits with a `k` or an `M` do.
+#[test]
+fn a_named_number_names_only_the_nouns_it_names() {
+    none("It plays on 4K HDR displays.");
+    none("It records 4K 30fps video.");
+    none("It funds 401k accounts.");
+    none("It sets a 401k match.");
+    none("3M products are common.");
+    none("The 12 factor apps.");
+    none("It runs 12 factor apps.");
+    counts("It holds 8K entries.", &["8K entries"]);
+    counts("It holds 8k rows.", &["8k rows"]);
+    counts("It holds 401k entries.", &["401k entries"]);
+    counts("After 8K users joined, it stopped.", &["8K users"]);
+    counts("It has 4K examples.", &["4K examples"]);
+    counts("It has 8K requests.", &["8K requests"]);
+    counts("It holds 3M rows.", &["3M rows"]);
+    none("It streams 4K 30fps.");
+    none("It runs 4K 120Hz games.");
+    none("It plays on 4K curved displays.");
+    counts("It ships about 4K displays.", &["4K displays"]);
+}
+
+/// `from` after a rate leaves it a rate.
+#[test]
+fn from_after_a_rate_leaves_it_a_rate() {
+    none("It handles 63 requests a second from the cache.");
+    none("It does 63 requests a second from each client.");
+}
+
+/// A run of 8 to 16 digits is an ID unless it is round: it ends in `000` and is no row of bits.
+#[test]
+fn a_long_run_of_digits_is_an_id_unless_it_is_round() {
+    counts("It has 100000000 rows.", &["100000000 rows"]);
+    counts("It reads 10000000 rows.", &["10000000 rows"]);
+    counts("It reads 12340000 rows.", &["12340000 rows"]);
+    none("It reads 250829098 rows.");
+    none("It reads 11110000 rows.");
+    none("It reads 1234567890123456 rows.");
+    counts(
+        "It reads 12345678901234567 rows.",
+        &["12345678901234567 rows"],
+    );
+}
+
+/// `past` after a verb of motion is a preposition. After any other word it is a bound.
+#[test]
+fn past_after_a_verb_of_motion_is_a_preposition() {
+    counts("We walked past 12 files.", &["12 files"]);
+    counts("We went past 12 files.", &["12 files"]);
+    counts("We scrolled past 12 files.", &["12 files"]);
+    counts("It reads past 12 files.", &["12 files"]);
+    counts("We drove past 12 files.", &["12 files"]);
+    none("It only matters past ~100k candidates.");
+}
+
+/// `columns` and `cols` are a width after a word of width or wrapping in the clause, or after a
+/// form of `be` where they end the clause. Anywhere else they count.
+#[test]
+fn columns_after_a_word_of_width_or_as_a_complement_are_a_width() {
+    none("The default width is 80 columns.");
+    none("The line length is 80 columns.");
+    none("Lines wrap after 80 columns.");
+    none("The text wraps at 80 columns.");
+    none("Set width = 80 columns.");
+    none("The margin stays near 80 columns.");
+    none("The terminal is 80 columns.");
+    none("The terminal was 80 cols.");
+    none("It is five columns.");
+    counts("Use 80 columns.", &["80 columns"]);
+    counts("The report is 80 columns of numbers.", &["80 columns"]);
+    counts(
+        "The width is fine, and the table has 80 columns.",
+        &["80 columns"],
+    );
+    counts("The cost is 100 units.", &["100 units"]);
+}
+
+/// An `=` makes a label only where it reads as prose. A setting in code is none: an `=` with no
+/// space beside it, a path, or a lowercase word alone on its line with the number.
+#[test]
+fn an_equals_sign_in_a_setting_makes_no_label() {
+    none("retries=5");
+    none("Tests=63");
+    none("WORKERS=8 sets threads.");
+    none("U+0027 marks it.");
+    none("x.retries = 5");
+    none("self.pages = 5");
+    none("pages = 5");
+    none("pages = 5 # the default");
+    none("Intro.\n\ncount = 5");
+    counts("Pages = 5", &["Pages = 5"]);
+    counts("It ran n=40 sessions.", &["40 sessions"]);
+    none("Tests= 63");
+    none("Tests =63");
+    none("Config.Retries = 5");
+    none("App.Workers = 8");
+    none("completion_tokens = 64, max_files = 5");
+    counts("tests = 63 (of 100)", &["tests = 63"]);
+}
+
+/// Frontmatter in TOML holds settings, and the text after it is read.
+#[test]
+fn toml_frontmatter_holds_no_count() {
+    none("+++\ncount = 5\ntests = 63\n+++\n\nBody.");
+    counts("+++\ncount = 5\n+++\n\nIt has 12 files.", &["12 files"]);
+}
+
+/// In a comment of fenced code an `=` sets a value, while a sentence there still counts.
+#[test]
+fn an_equals_sign_in_a_comment_of_code_makes_no_label() {
+    let empty: &[&str] = &[];
+    assert_eq!(
+        found_in_fences("Text.\n\n```cpp\n// record count = 5\n    h[4] = 0x05;\n```\n"),
+        empty
+    );
+    assert_eq!(
+        found_in_fences("```rust\n// record count = 5\n```\n"),
+        empty
+    );
+    assert_eq!(
+        found_in_fences("```cpp\n// It has 12 files.\n```\n"),
+        ["12 files"]
+    );
+    assert_eq!(found_in_fences("```rust\n// Pages = 5\n```\n"), empty);
+    assert_eq!(found_in_fences("```cpp\n// Pages = 5\n```\n"), empty);
+}
+
+/// A heading of one `#` before `of` opens a count of things.
+#[test]
+fn a_heading_of_one_hash_opens_a_count() {
+    counts("# of ports: 25", &["of ports: 25"]);
+    none("## of ports: 25");
+}
+
+/// A particle between a verb of path and `over` leaves `over` a preposition.
+#[test]
+fn a_particle_before_over_leaves_it_a_preposition() {
+    counts("It is spread out over 12 files.", &["12 files"]);
+}
+
+/// A field takes a word that says how its things ended, other tallies after that word, or a share
+/// in brackets.
+#[test]
+fn a_field_takes_a_tally_or_a_share_after_its_number() {
+    counts("Tests: 63 passed.", &["Tests: 63"]);
+    counts("Tests: 63 total.", &["Tests: 63"]);
+    counts("Tests: 63 skipped.", &["Tests: 63"]);
+    counts("**Tests:** 63 passed", &["Tests: 63"]);
+    counts("Tests: 63 (63%)", &["Tests: 63"]);
+    counts("Tests: 63 passed, 2 failed.", &["Tests: 63"]);
+    counts("Tests: 63 passed, 2 failed, 1 skipped", &["Tests: 63"]);
+    none("OPFS: 56 passed");
+    none("See tests: 63");
+    counts("Tests: 63 passed, none failed.", &["Tests: 63"]);
+}
+
+/// After digits with a `k` or an `M`, a word that may be a verb is the verb where it ends the
+/// clause and no other word is a verb.
+#[test]
+fn a_lone_verb_after_a_number_with_a_k_or_an_m_is_the_verb() {
+    none("APC at 32k holds.");
+    none("Only after 16K boots.");
+    counts("Table: 8k rows.", &["8k rows"]);
+    counts("It has 32k holds.", &["32k holds"]);
+    counts("It will be 32k holds.", &["32k holds"]);
+    counts("A table of 32k holds by region.", &["32k holds"]);
+}
+
+/// A label that refers to an issue or to other text does not name things.
+#[test]
+fn a_label_that_refers_to_an_issue_does_not_name_things() {
+    none("Fixes: 1234");
+    none("Closes: 1234");
+    none("Resolves: 1234");
+    none("Refs: 1234");
+    none("Relates: 1234");
+    counts("Commits: 1234", &["Commits: 1234"]);
 }

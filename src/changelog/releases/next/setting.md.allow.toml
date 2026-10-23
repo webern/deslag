@@ -1,0 +1,31 @@
+kind = "setting"
+id = "md.allow"
+keys = ["path", "lint", "quote", "reason"]
+summary = "Exempts one sentence of a Markdown file from a lint, with a reason"
+onboarding = '''
+`[[md.allow]]` exempts one sentence of a Markdown file from one lint. An entry holds `path`, `lint`,
+`quote` and `reason`. `lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns` or `not_at_all`;
+the other lints are refused when the config loads, each with the setting that bounds it.
+
+`quote` is the sentence as the file holds it, and the file must hold it once. Spaces, tabs and line
+breaks fold to one space; the rest must match. The lint must find something in the sentence. An
+entry that stops holding fails the run, so an exemption does not outlive its text.
+
+A `quote` may hold any character but a control character other than a tab, CR or LF, since it must
+equal the sentence, which the file holds anyway. A `path` or `reason` may not hold a character that
+shows as nothing or acts on the reader: a control or format character, another default-ignorable
+one, or a blank other than the ASCII space; a `reason` may hold a tab, CR or LF. Reports, notices
+and `deslag explain` write each character that shows as nothing or acts on the reader as `<U+XXXX>`.
+
+Only a human writes or changes an entry. An agent leaves the sentence as it is and gives the human
+its text and a reason. It may delete an entry that stopped holding, which only tightens the check.
+`deslag check --base` shows a reviewer each entry that a change adds or changes.
+
+```toml
+[[md.allow]]
+path = "docs/log.md"
+lint = "banned_chars"
+quote = "The sentence, as the file holds it."
+reason = "Why it stays."
+```
+'''

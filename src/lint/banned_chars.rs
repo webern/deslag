@@ -416,8 +416,9 @@ fn verdict(settings: &BannedChars, ch: char) -> Option<(Option<String>, bool)> {
         .map(|rule| (rule.instead.map(str::to_string), rule.first != rule.last))
 }
 
-/// What the report calls `ch`, from the first rule of any group that holds it, on or off.
-fn name(ch: char) -> Option<&'static str> {
+/// What the report calls `ch`, from the first rule of any group that holds it, on or off. `None`
+/// when no group holds it, so the lint cannot ban it with a group.
+pub(crate) fn name(ch: char) -> Option<&'static str> {
     GROUPS
         .iter()
         .find_map(|group| rule(group.rules, ch))

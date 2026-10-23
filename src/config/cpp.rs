@@ -4,6 +4,7 @@
 use schemars::JsonSchema;
 use serde::Deserialize;
 
+use crate::config::allow::AllowFile;
 use crate::config::lints::Lints;
 use crate::config::section::{CommentSurface, OverrideFile, Parts};
 use crate::document::{Reader, Stack};
@@ -44,14 +45,19 @@ pub(super) struct CppFile {
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
     overrides: Vec<OverrideFile>,
-    // Last, so that a section written as a JSON array keeps the keys before it where they were:
-    // the config reads a struct by position.
+    // After `overrides`, so that a section written as a JSON array keeps the keys before it where
+    // they were: the config reads a struct by position.
     /// Files `globs` match that this section leaves out, such as generated code. A pattern is
     /// written as in `globs`, from the repo root with a `/`, else by file name, and not needing a C
     /// or C++ extension. A file the walk skips stays skipped, and nothing re-includes one. Only a
     /// human adds an exclude; never add one to make a check pass.
     #[serde(default)]
     exclude: Vec<String>,
+    // After `exclude` for the same reason.
+    /// The sentences of these files that stay as written, each exempted from one lint. Only a
+    /// human writes an entry.
+    #[serde(default)]
+    allow: Vec<AllowFile>,
 }
 
 impl CppFile {
@@ -71,6 +77,7 @@ impl CppFile {
             stack: Stack::new(Reader::Cpp { surfaces }),
             lints: self.lints,
             overrides: self.overrides,
+            allow: self.allow,
         }
     }
 }

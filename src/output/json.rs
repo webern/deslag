@@ -5,6 +5,7 @@ use schemars::generate::SchemaSettings;
 use serde::Serialize;
 
 use crate::Report;
+use crate::lint::allow::Status;
 use crate::lint::{self, Base, Lint, Mark, Narrowed};
 
 /// The version of the document's shape. It goes up when a change could break a reader, not when
@@ -20,7 +21,10 @@ pub struct Run {
     pub deslag_version: String,
     /// How many files the run examined, including the ones for which no lint had settings.
     pub files_scanned: usize,
-    /// The failures, sorted by path; one file's failures are in the order the lints ran.
+    /// The files a lint failed, sorted by path; one file's failures are in the order the lints
+    /// ran. An `allow` entry that does not hold is not here but in `exemptions`, with a status
+    /// other than `applied`, and it fails the run all the same, so a run that exits 1 can have no
+    /// findings.
     pub findings: Vec<Finding>,
     /// With `--base` or `--diff`, the base the run judged a change from; a run with no base has
     /// none.
@@ -29,6 +33,35 @@ pub struct Run {
     /// With `--diff`, the change the findings were narrowed to; a run of the whole tree has none.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub change: Option<Narrowed>,
+    /// The `allow` entries of the config, in its order; a config with none leaves this out.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub exemptions: Vec<Exemption>,
+}
+
+/// One `allow` entry of the config, and how it came out. An entry that did not hold fails the run.
+#[derive(Debug, Clone, PartialEq, Serialize, JsonSchema)]
+pub struct Exemption {
+    /// The section it is in, such as `md`.
+    pub section: String,
+    /// The file it names, relative to the repo root, `/`-separated.
+    pub path: String,
+    /// The lint it exempts the sentence from.
+    pub lint: Lint,
+    /// The sentence, as the config quotes it.
+    pub quote: String,
+    /// Why the sentence stays, as the config states it.
+    pub reason: String,
+    /// How it came out: `applied` when it dropped at least one occurrence, else why it did not
+    /// hold.
+    pub status: Status,
+    /// The places it dropped, in the order of the file; none unless it applied.
+    pub marks: Vec<Mark>,
+    /// Whether the change added the entry or changed its reason. A run with no base says false.
+    pub added: bool,
+    /// The text report for an entry that did not hold, as `deslag check` prints it on standard
+    /// error.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub report: Option<String>,
 }
 
 /// One file that a lint failed.
@@ -54,6 +87,32 @@ impl From<&Report> for Run {
             findings: report.findings.iter().map(Finding::from).collect(),
             base: report.base.clone(),
             change: report.change.clone(),
+            exemptions: report
+                .exemptions
+                .iter()
+                .map(|exemption| Exemption::new(exemption, &report.config))
+                .collect(),
+        }
+    }
+}
+
+impl Exemption {
+    fn new(exemption: &lint::Exemption, config: &str) -> Exemption {
+        let allow = &exemption.allow;
+        Exemption {
+            section: allow.section.to_string(),
+            path: allow.path.clone(),
+            lint: allow.lint,
+            quote: allow.quote.clone(),
+            reason: allow.reason.clone(),
+            status: exemption.status,
+            marks: exemption
+                .dropped
+                .iter()
+                .flat_map(lint::Violation::marks)
+                .collect(),
+            added: exemption.added,
+            report: exemption.render(config),
         }
     }
 }

@@ -35,7 +35,8 @@ pub fn guide() -> String {
 }
 
 /// The lints topic `deslag instructions lints` prints: its intro, then a section per lint, in the
-/// order they run, headed by the lint's id and saying which release it arrived in.
+/// order they run, headed by the lint's id and saying which release it arrived in, then the section
+/// on the `allow` entries that exempt a sentence from a lint.
 pub fn lints() -> String {
     let mut text = LINTS.replace("{version}", env!("CARGO_PKG_VERSION"));
     for lint in Lint::ALL {
@@ -45,8 +46,15 @@ pub fn lints() -> String {
         }
         text.push_str(section(lint));
     }
+    text.push_str(&format!(
+        "\n## `{ALLOW}`\n\n{}",
+        include_str!("lints/allow.md")
+    ));
     text
 }
+
+/// The heading of the section on `allow` entries, which is no lint's id.
+pub const ALLOW: &str = "allow";
 
 /// The line that says which release of `changelog` `lint` arrived in. A lint with no entry does not
 /// get a line: the library does not panic over a changelog it was built with, and the changelog

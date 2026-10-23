@@ -1,0 +1,3 @@
+# Log
+
+A plain sentence.

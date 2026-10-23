@@ -2,8 +2,10 @@
 //!
 //! Each lint is a module of its own. This module walks the repo once, hands each file to the
 //! section of the config that selects it, and runs that section's lints with the settings the
-//! config resolves for the file.
+//! config resolves for the file. [`allow`] then drops the occurrences that an `allow` entry of the
+//! config exempts.
 
+pub mod allow;
 pub mod banned_chars;
 pub mod banned_phrases;
 pub mod density;
@@ -16,6 +18,7 @@ pub mod repo_layout;
 pub mod verbs_no_nouns;
 
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use std::fmt;
 use std::path::Path;
 
@@ -25,9 +28,11 @@ use serde::Serialize;
 use crate::Error;
 use crate::change::{self, Change};
 use crate::changelog::Version;
-use crate::config::{Config, Section};
+use crate::config::{Allow, Config, Section};
 use crate::document::{Document, Edit, Location, Need};
 use crate::glob::{self, RepoFile};
+
+pub use allow::Exemption;
 
 /// Every lint deslag has. Everything that lists the lints, such as the order they run in and the
 /// tally of a run, takes them from here.
@@ -373,12 +378,18 @@ impl Finding {
 pub struct Report {
     /// The path of each file examined, including the ones for which no lint had settings.
     pub scanned: Vec<String>,
-    /// The failures, sorted by path; one file's failures are in the order the lints ran.
+    /// The files a lint failed, sorted by path; one file's failures are in the order the lints
+    /// ran. An `allow` entry that does not hold is not here but in `exemptions`, and fails the run
+    /// all the same.
     pub findings: Vec<Finding>,
     /// The base the run judged a change from, when it had one.
     pub base: Option<Base>,
     /// The change the findings were narrowed to, by [`Report::within`].
     pub change: Option<Narrowed>,
+    /// Every `allow` entry of the config, in its order, with how it came out.
+    pub exemptions: Vec<Exemption>,
+    /// The config's path as a report names it: relative to the repo root when it is under it.
+    pub config: String,
 }
 
 /// The base a run judged a change from, given with `--base` or `--diff`.
@@ -402,13 +413,53 @@ pub struct Narrowed {
 }
 
 impl Report {
-    /// Whether nothing failed.
+    /// Whether nothing failed: no file fails a lint, and every `allow` entry holds.
     pub fn is_clean(&self) -> bool {
-        self.findings.is_empty()
+        self.findings.is_empty() && !self.exemptions.iter().any(Exemption::failed)
     }
 
-    /// The tally that closes a failing run: one line for each lint that failed a file, and a line
-    /// on the change when the run was narrowed to one.
+    /// The entries that did not hold.
+    pub fn failed(&self) -> impl Iterator<Item = &Exemption> {
+        self.exemptions
+            .iter()
+            .filter(|exemption| exemption.failed())
+    }
+
+    /// The text report of each entry that did not hold.
+    pub fn failures(&self) -> Vec<String> {
+        self.failed()
+            .filter_map(|exemption| exemption.render(&self.config))
+            .collect()
+    }
+
+    /// The notice line for each entry that the change adds or changes, for a reviewer. A run with
+    /// no base has none.
+    pub fn notices(&self) -> Vec<String> {
+        self.exemptions
+            .iter()
+            .filter(|exemption| exemption.added)
+            .map(|exemption| format!("deslag: notice: {}", exemption.notice(&self.config)))
+            .collect()
+    }
+
+    /// The line that says how many entries held, for a run whose config has any entry.
+    pub fn exemption_tally(&self) -> Option<String> {
+        if self.exemptions.is_empty() {
+            return None;
+        }
+        let applied = self.exemptions.len() - self.failed().count();
+        let (count, what) = match applied {
+            1 => ("1".to_string(), "exemption"),
+            count => (count.to_string(), "exemptions"),
+        };
+        Some(format!(
+            "deslag: {count} {what} applied; deslag explain <PATH> lists a file's."
+        ))
+    }
+
+    /// The tally that closes a failing run: one line for each lint that failed a file, the lines on
+    /// the exemptions when the config has any, and a line on the change when the run was narrowed
+    /// to one.
     pub fn summary(&self) -> String {
         let scanned = self.scanned.len();
         let tally = Lint::ALL.iter().filter_map(|lint| {
@@ -426,7 +477,26 @@ impl Report {
                 change.files_changed, change.base
             )
         });
-        tally.chain(change).collect::<Vec<_>>().join("\n")
+        let failed = self.failed().count();
+        let exemptions = (failed > 0)
+            .then(|| {
+                let total = self.exemptions.len();
+                let what = if total == 1 {
+                    "exemption"
+                } else {
+                    "exemptions"
+                };
+                format!("deslag: {failed} of {total} {what} did not hold.")
+            })
+            .into_iter();
+        let humans = (!self.exemptions.is_empty()).then(|| allow::HUMANS_ONLY.to_string());
+        tally
+            .chain(exemptions)
+            .chain(humans)
+            .chain(self.exemption_tally())
+            .chain(change)
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 
     /// This report narrowed to `change`: of each file the change touched, the part of each finding
@@ -448,6 +518,10 @@ impl Report {
             .iter()
             .filter(|path| change.files.contains_key(*path))
             .count();
+        // Every entry stays. One that holds is in the tally, and one that does not is never
+        // hidden: a rename, or an edit of the config that unselects its file, would otherwise let
+        // a failed entry pass as clean here and fail on the whole tree.
+        let exemptions = self.exemptions.clone();
         Report {
             scanned: self.scanned.clone(),
             findings,
@@ -457,18 +531,25 @@ impl Report {
                 merge_base: change.merge_base.clone(),
                 files_changed,
             }),
+            exemptions,
+            config: self.config.clone(),
         }
     }
 }
 
 /// Runs every lint over the repo rooted at `root`, judging `change`, when there is one, for the
 /// lints that compare a file with what it was.
+///
+/// An `allow` entry of the config drops the occurrences of its lint inside the one sentence it
+/// quotes; [`Report::exemptions`] says how each entry came out, and an entry that did not hold
+/// fails the run.
 pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Result<Report, Error> {
     let mut report = Report {
         base: change.map(|change| Base {
             rev: change.base.clone(),
             merge_base: change.merge_base.clone(),
         }),
+        config: allow::label(root, config),
         ..Report::default()
     };
 
@@ -477,13 +558,19 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         change,
         phrases_at: &stamp,
     };
-    for (file, section) in selected(root, config)? {
+    let walked = glob::walk(root)?;
+    let known: BTreeSet<String> = match config.has_allow() {
+        true => walked.iter().map(|file| file.relative.clone()).collect(),
+        false => BTreeSet::new(),
+    };
+    let mut exemptions = Vec::new();
+    for (file, section) in select(walked, config)? {
         report.scanned.push(file.relative.clone());
 
         let contents = read(&file)?;
         let dir = file.absolute.parent().unwrap_or(root);
         let text = decode(&contents);
-        let (_, findings) = check_text(
+        let checked = check_text(
             config,
             section,
             &file.relative,
@@ -492,7 +579,12 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
             dir,
             judging,
         )?;
-        report.findings.extend(findings);
+        report.findings.extend(checked.findings);
+        exemptions.extend(checked.exemptions);
+    }
+    report.exemptions = allow::settle(config, &known, exemptions);
+    if let Some(change) = change {
+        allow::mark_added(root, config, change, &mut report.exemptions)?;
     }
 
     Ok(report)
@@ -504,7 +596,12 @@ pub(crate) fn selected<'c>(
     root: &Path,
     config: &'c Config,
 ) -> Result<Vec<(RepoFile, &'c Section)>, Error> {
-    glob::walk(root)?
+    select(glob::walk(root)?, config)
+}
+
+/// The `files` that the config selects, each with the section that selects it.
+fn select(files: Vec<RepoFile>, config: &Config) -> Result<Vec<(RepoFile, &Section)>, Error> {
+    files
         .into_iter()
         .filter_map(|file| match config.sole_section_for(&file.relative) {
             Ok(Some(section)) => Some(Ok((file, section))),
@@ -544,6 +641,10 @@ pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
 /// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
 /// run here, so a file one selects is an error. A path no section selects is read by the section
 /// for its extension, such as `[rust]` for `.rs`, and else as `[md]` reads a file.
+///
+/// The `allow` entries of that section that name `relative` are applied, so the findings they
+/// exempt are not returned, whether or not the section selects the file. An entry that does not
+/// hold is dropped, not reported: [`check_repo`] reports it, and fails the run.
 pub fn check_file(
     config: &Config,
     relative: &str,
@@ -555,7 +656,8 @@ pub fn check_file(
 
 /// [`check_file`], with the phrases of the catalogue held to `stamp` and not to the config's:
 /// [`Version::Next`] puts the whole catalogue in force. For a test or a tool that means the
-/// catalogue as shipped, whatever stamp the config it lints with has.
+/// catalogue as shipped, whatever stamp the config it lints with has. The `allow` entries are as
+/// [`check_file`] has them: applied, and not reported when they fail.
 pub fn check_file_at(
     config: &Config,
     relative: &str,
@@ -569,7 +671,17 @@ pub fn check_file_at(
         change: None,
         phrases_at: stamp,
     };
-    Ok(check_text(config, section, relative, contents, &text, dir, judging)?.1)
+    Ok(check_text(config, section, relative, contents, &text, dir, judging)?.findings)
+}
+
+/// What running the lints over one file came to.
+pub(crate) struct Checked<'a> {
+    /// The document the lints read, for a caller that edits it.
+    pub document: Document<'a>,
+    /// What they found, in the order the lints ran, less what an `allow` entry exempts.
+    pub findings: Vec<Finding>,
+    /// How each `allow` entry that names the file came out, in the order of the config.
+    pub exemptions: Vec<Exemption>,
 }
 
 /// A file as it was at the base of a run, which a lint that judges a change compares it with.
@@ -600,7 +712,9 @@ pub(crate) struct Judging<'a> {
 /// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it,
 /// `text`, its `contents` decoded, and what the run `judging` is held to. Returns the document the
 /// lints read with what they found, for a caller that edits it: the section's stack reads the
-/// file, so a fix reads a file as the check does.
+/// file, so a fix reads a file as the check does. The section's `allow` entries for the file are
+/// applied here, so that `check`, `fix` and `--diff` agree on what is exempt: a fix never edits an
+/// exempted occurrence.
 pub(crate) fn check_text<'a>(
     config: &Config,
     section: &Section,
@@ -609,7 +723,7 @@ pub(crate) fn check_text<'a>(
     text: &'a str,
     dir: &Path,
     judging: Judging<'_>,
-) -> Result<(Document<'a>, Vec<Finding>), Error> {
+) -> Result<Checked<'a>, Error> {
     let Judging {
         change,
         phrases_at: stamp,
@@ -687,7 +801,13 @@ pub(crate) fn check_text<'a>(
             violation,
         }));
     }
-    Ok((document, findings))
+    let entries: Vec<&Allow> = section.allow_for(relative).collect();
+    let (findings, exemptions) = allow::apply(&document, &entries, findings);
+    Ok(Checked {
+        document,
+        findings,
+        exemptions,
+    })
 }
 
 #[cfg(test)]

@@ -172,7 +172,8 @@ fn changed(root: &Path, base: Option<&str>) -> anyhow::Result<Option<deslag::Cha
 
 /// Checks the repo rooted at `root`, judging `change` for the lints that compare a file with what
 /// it was, printing the report as `format` says, and returns the exit code: 0 when every file
-/// passes and 1 when one fails. When `narrowed`, only what the change touched counts.
+/// passes and every `allow` entry holds, and 1 when one fails. When `narrowed`, only what the
+/// change touched counts.
 fn check(
     root: &Path,
     config: &deslag::Config,
@@ -187,8 +188,16 @@ fn check(
     for finding in &report.findings {
         eprintln!("{}\n", finding.render());
     }
+    for failure in report.failures() {
+        eprintln!("{failure}\n");
+    }
+    for notice in report.notices() {
+        eprintln!("{notice}");
+    }
     if !report.is_clean() {
         eprintln!("{}", report.summary());
+    } else if let Some(tally) = report.exemption_tally() {
+        eprintln!("{tally}");
     }
     write_stdout(&match format {
         Format::Text => String::new(),

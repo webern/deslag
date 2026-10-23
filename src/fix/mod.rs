@@ -234,7 +234,9 @@ fn passes(
     let mut bound = None;
     let stamp = config.deslag_version();
     for pass in 0.. {
-        let (document, findings) = lint::check_text(
+        let lint::Checked {
+            document, findings, ..
+        } = lint::check_text(
             config,
             section,
             relative,

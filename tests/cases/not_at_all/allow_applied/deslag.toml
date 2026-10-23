@@ -1,0 +1,9 @@
+schema_version = 1
+
+[md.lints.not_at_all]
+
+[[md.allow]]
+path = "README.md"
+lint = "not_at_all"
+quote = 'The bug report says the tool "does not start at all".'
+reason = "A quotation from the bug report."

@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: md.allow[0].reason holds U+200B (zero width space), a character that shows as nothing or acts on the reader; write it in visible characters

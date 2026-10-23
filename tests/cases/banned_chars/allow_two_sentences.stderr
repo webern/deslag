@@ -1,0 +1,30 @@
+ERROR: deslag detected banned characters!
+
+README.md has 2 banned characters.
+
+This repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+
+Code is not checked, so a diagram may use these characters in a code block.
+
+Do not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The characters, and what to write instead:
+  lines 3, 7: U+2014 em dash "—"; write `-`
+
+ERROR: deslag detected an exemption that does not hold!
+
+deslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: README.md holds the quote as 2 sentences, on lines 3, 7. An entry names one sentence, since exempting every copy would let a sentence be pasted elsewhere.
+
+The quote: "`2026-10-03-03`: licence corrections — 856 exclusions, and 376 fixtures added again."
+The reason: "A dated record of one image; its counts never go stale."
+
+The sentences of README.md that hold a finding of `banned_chars`:
+  line 3: "`2026-10-03-03`: licence corrections — 856 exclusions, and 3..."
+  line 7: "`2026-10-03-03`: licence corrections — 856 exclusions, and 3..."
+
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
+
+deslag: 1 of 1 files with banned characters.
+deslag: 1 of 1 exemption did not hold.
+deslag: only a human writes or changes an exemption; leave the sentence as it is, and give the human its text and a reason.
+deslag: 0 exemptions applied; deslag explain <PATH> lists a file's.

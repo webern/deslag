@@ -8,6 +8,7 @@ use schemars::JsonSchema;
 use serde::Deserialize;
 
 use crate::Error;
+use crate::config::allow::{self, Allow, AllowFile};
 use crate::config::lints::{Lints, Merge};
 use crate::document::{Stack, Surface};
 use crate::glob::{self, Globs, Pattern, Selection};
@@ -73,6 +74,8 @@ pub(super) struct Parts {
     pub(super) lints: Lints,
     /// Settings for the selected files that match a pattern.
     pub(super) overrides: Vec<OverrideFile>,
+    /// The sentences exempted from a lint.
+    pub(super) allow: Vec<AllowFile>,
 }
 
 impl Parts {
@@ -167,6 +170,7 @@ pub struct Section {
     globs: Globs,
     lints: Lints,
     overrides: Vec<Override>,
+    allow: Vec<Allow>,
     /// What reads the files the section selects.
     pub(crate) stack: Stack,
 }
@@ -220,11 +224,14 @@ impl Section {
             })
             .collect::<Result<Vec<_>, Error>>()?;
 
+        let allow = allow::compile(name, parts.allow, config_path)?;
+
         Ok(Section {
             name,
             globs,
             lints: parts.lints,
             overrides,
+            allow,
             stack: parts.stack,
         })
     }
@@ -247,6 +254,18 @@ impl Section {
             Selection::Excluded(pattern) => Some(pattern),
             Selection::Miss | Selection::Hit(_) => None,
         }
+    }
+
+    /// The sentences the section exempts from a lint, in the order of the config.
+    pub fn allow(&self) -> &[Allow] {
+        &self.allow
+    }
+
+    /// The entries that name `rel_path`, in the order of the config.
+    pub fn allow_for<'s>(&'s self, rel_path: &'s str) -> impl Iterator<Item = &'s Allow> {
+        self.allow
+            .iter()
+            .filter(move |entry| entry.path == rel_path)
     }
 
     /// The number of overrides, for a caller that wants to say so.
@@ -353,6 +372,7 @@ mod tests {
                     exclude: Vec::new(),
                 })
                 .collect(),
+            allow: Vec::new(),
         }
     }
 
@@ -553,9 +573,9 @@ mod tests {
         assert_eq!(rust.overrides_excluding("src/gen/a.rs").len(), 1);
     }
 
-    /// A section written as a JSON array is read by position: `exclude` is the last place of each
-    /// struct, so an array written before it reads as it did, and one that puts the key anywhere
-    /// else is not read as an exclude.
+    /// A section written as a JSON array is read by position: `exclude` follows every key an older
+    /// config has, last in an override and before `allow` in a section, so an array written before
+    /// it reads as it did, and one that puts the key anywhere else is not read as an exclude.
     #[test]
     fn a_json_array_keeps_exclude_last_in_a_section_and_in_an_override() {
         // `[md]`: globs, lints, overrides, fences, exclude.

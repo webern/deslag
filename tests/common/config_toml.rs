@@ -59,12 +59,43 @@ pub fn stamped_as_running(config: &str) -> String {
         .collect()
 }
 
+/// Whether the config `text` holds an `allow` entry in any section.
+fn holds_allow(text: &str) -> bool {
+    let config: toml::Table = toml::from_str(text).expect("valid TOML");
+    config
+        .values()
+        .filter_map(toml::Value::as_table)
+        .any(|section| {
+            section
+                .get("allow")
+                .and_then(toml::Value::as_array)
+                .is_some_and(|entries| !entries.is_empty())
+        })
+}
+
 /// Checks that `deslag check` passes with the config `config`, in a repo holding nothing else. A
 /// stamp in `config` is run as the running version ([`stamped_as_running`]).
+///
+/// An `allow` entry names a file of its own repo, which this one lacks, so a config that holds one
+/// cannot pass. It must load, and the entries must be the only failure: each is reported as naming
+/// no file deslag reads.
 pub fn assert_runs_clean(config: &str) {
     let repo = Repo::new();
     repo.write("deslag.toml", &stamped_as_running(config));
     let output = repo.check();
+    if holds_allow(config) {
+        let said = stderr(&output);
+        assert_eq!(code(&output), 1, "{config}\n{said}");
+        let entries = config.matches(".allow]]").count();
+        assert_eq!(said.matches(" It fails: ").count(), entries, "{said}");
+        assert_eq!(
+            said.matches(" is not a file deslag reads").count(),
+            entries,
+            "{said}"
+        );
+        assert!(!said.contains("ERROR: deslag detected banned"), "{said}");
+        return;
+    }
     assert_eq!(
         (code(&output), stderr(&output)),
         (0, String::new()),

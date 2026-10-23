@@ -246,6 +246,27 @@ impl Change {
     }
 }
 
+impl Change {
+    /// The text of the file at `path` as it was at the merge base, whatever the change did to it,
+    /// with the line endings of [`Change::base_text`]. `None` when the base does not have a file there.
+    pub fn text_at_base(&self, path: &str) -> Result<Option<String>, Error> {
+        let fail = |problem: String| Error::Change {
+            base: self.base.clone(),
+            problem,
+        };
+        let object = format!("{}:./{path}", self.merge_base);
+        let exists = git(&self.root, &["cat-file", "-e", &object]).map_err(fail)?;
+        if !exists.status.success() {
+            return Ok(None);
+        }
+        let output = git(&self.root, &["cat-file", "--filters", &object]).map_err(fail)?;
+        if !output.status.success() {
+            return Err(fail(failed("cat-file", &output)));
+        }
+        Ok(Some(String::from_utf8_lossy(&output.stdout).into_owned()))
+    }
+}
+
 /// Runs git with `args` in `root`. The error says why it could not start.
 fn git(root: &Path, args: &[&str]) -> Result<Output, String> {
     Command::new("git")

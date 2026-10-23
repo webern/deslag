@@ -60,7 +60,8 @@ pub struct CheckArgs {
     pub report: ReportArgs,
     /// Report only what the change from where BASE and HEAD meet to the working tree touched, such
     /// as with `origin/main`: a step toward a clean tree, which the whole check still gates. It
-    /// judges the change as `--base` does
+    /// judges the change as `--base` does. An allow entry that does not hold fails it wherever its
+    /// file is
     #[arg(long, value_name = "BASE", conflicts_with = "base")]
     pub diff: Option<String>,
 }

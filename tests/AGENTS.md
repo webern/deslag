@@ -1,6 +1,7 @@
 # tests
 
-Every other `*.rs` here pins one lint or concern. `docs/design/tests.asbuilt.md` has the harnesses.
+Every other `*.rs` here pins one lint or concern. `make test-fast` runs every binary here but
+`slow/`; `make test-product` runs them all.
 
 ## Repository layout
 
@@ -11,8 +12,7 @@ tests/
   golden/    <- what each lint finds in the corpus, and the tag stream of corpus/core
   gold/      <- the tagger's gold sets, its gates and its frozen word lists
   common/    <- the temp repo and corpus helpers the test files share
-  cases.rs   <- runs the cases
-  corpus.rs  <- the corpus, end to end
+  slow/      <- the cases, the corpus end to end, diff and update; one binary, --test slow
   golden.rs  <- runs the golden set
 ```
 

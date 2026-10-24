@@ -12,10 +12,6 @@ globs = [
   "/tools/AGENTS.md",
   "/ACKNOWLEDGEMENTS.md",
   "/.agents/skills/**/*.md",
-  "/docs/design/analysis.md",
-  "/docs/design/catalog.md",
-  "/docs/design/corpus.md",
-  "/docs/design/*.asbuilt.md",
   "/scripts/blobstore/blobs.md",
   "/src/instructions/**/*.md",
   "/src/changelog/releases/next/README.md",
@@ -94,28 +90,9 @@ lints.max_size_bytes.value = 800
 globs = ["/src/instructions/update.md"]
 lints.max_size_bytes.value = 1472
 
-# corpus.asbuilt.md declares its own budget in its frontmatter.
-[[md.overrides]]
-globs = ["/docs/design/corpus.md"]
-lints.max_size_bytes.value = 17408
-
-[[md.overrides]]
-globs = ["/docs/design/catalog.md"]
-lints.max_size_bytes.value = 3522
-
-[[md.overrides]]
-globs = ["/docs/design/analysis.md"]
-lints.max_size_bytes.value = 8192
-
 [[md.overrides]]
 globs = ["/scripts/blobstore/blobs.md"]
 lints.max_size_bytes.value = 8192
-
-# Every *.asbuilt.md declares its budget in its frontmatter, which wins over this. One that does
-# not fails at 4 KB instead of going unchecked.
-[[md.overrides]]
-globs = ["/docs/design/*.asbuilt.md"]
-lints.max_size_bytes.value = 4096
 
 # The comments of deslag's own source. A comment may not hold the characters and phrases the
 # prose of this repo may not.

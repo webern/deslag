@@ -16,7 +16,7 @@ license = "MIT"
 publish = false
 
 [dependencies]
-ra-ap-rustc_lexer = "0.177.0"
+ra-ap-rustc_lexer = "0.178.0"
 sha2 = "0.11.0"
 tree-sitter = "0.27.0"
 tree-sitter-c = "0.24.2"

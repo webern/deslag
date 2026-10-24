@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Runs every unit and integration test binary of the workspace at once, each from its package's
-# directory as cargo runs it, and fails if any fails. Doctests are not run: cargo does that.
+# Builds the test binaries the cargo target flags select, then runs them all at once, each from its
+# package's directory as cargo runs it, and fails if any fails. Doctests are not run: cargo does that.
 #
-#   test-at-once.sh PROFILE [SOURCE_PATH...]
+#   test-at-once.sh PROFILE [CARGO_TARGET_FLAGS...]
 #
-# PROFILE is the Cargo profile to build the tests with, such as fast or dev. Each SOURCE_PATH, such
-# as tests/corpus.rs, names a test binary to leave out. CARGO_FLAGS adds flags to the build.
+# PROFILE is the Cargo profile to build the tests with, such as fast or dev. CARGO_TARGET_FLAGS go to
+# the `cargo test --no-run` that builds them, such as `-p deslag --lib --bins --test '*'` or
+# `-p deslag-corpus -p deslag-exam`. CARGO_FLAGS adds flags to the build.
 #
 # Prints a line as each binary finishes, with its seconds, and a failing binary's output at once, so
 # a binary that hangs is the one missing from the lines, and a failure shows while the rest run.
 set -euo pipefail
 
-profile=${1:?usage: test-at-once.sh PROFILE [SOURCE_PATH...]}
+profile=${1:?usage: test-at-once.sh PROFILE [CARGO_TARGET_FLAGS...]}
 shift
-skip=" $* "
 
 root=$(pwd)
 logs=$(mktemp -d)
@@ -22,7 +22,7 @@ trap 'rm -rf "$logs"' EXIT
 # Build every test binary, then list each as its source path, package directory and executable.
 # Only a test build's profile says "test":true; a binary built for the tests to run does not.
 # shellcheck disable=SC2086 # CARGO_FLAGS is a list of flags
-cargo test ${CARGO_FLAGS:-} --profile "$profile" --workspace --all-features --no-run \
+cargo test ${CARGO_FLAGS:-} --profile "$profile" "$@" --no-run \
     --message-format=json-render-diagnostics |
     grep '"reason":"compiler-artifact"' | grep -E '"profile":\{[^}]*"test":true' |
     sed -E 's/.*"manifest_path":"([^"]*)".*"src_path":"([^"]*)".*"executable":"([^"]*)".*/\2	\1	\3/' \
@@ -39,7 +39,6 @@ total=0
 : >"$logs/took"
 while IFS=$'\t' read -r src manifest exe; do
     name=${src#"$root"/}
-    case "$skip" in *" $name "*) continue ;; esac
     log="$logs/${name//\//_}.log"
     (
         began=$SECONDS
@@ -95,5 +94,4 @@ done
 
 echo "test-at-once: $count test binaries in $((SECONDS - start))s; the slowest:"
 sort -rn "$logs/took" | head -5
-[ "$#" -eq 0 ] || echo "left out: $*"
 exit "$failed"

@@ -10,19 +10,18 @@ llm_edit: true
 ---
 # /deslag-release
 
-Releases `<version>` (X.Y.Z, 0.0.1 below) in the owner's name, using `gh`. Every
-`gh` command below needs `--repo webern/deslag` (or `GH_REPO=webern/deslag`), left out below.
-Tags carry a `v`.
+Releases `<version>` (X.Y.Z) in the owner's name, using `gh`. Every `gh` command below needs
+`--repo webern/deslag` (or `GH_REPO=webern/deslag`), left out below. Tags carry a `v`, e.g.
+`v1.3.1`, while arguments/variables do not (e.g. the same version in Cargo.toml would be `1.3.1`).
+
+In this skill, `1.3.1` is used as an example of the current version and `1.4.0` is used as an
+example of the version being released. Actual versions come from the repo and input.
 
 When the owner asks for a release you may run `bump-version`, open the release pull request and
 squash merge it once CI is green, and run `release`. Stop and ask when a workflow refuses the
 version, CI is red, `verify` or `build` fails, or crates.io authentication fails.
 
-Never push, create or move a tag, and never touch `v0.0.0`. Never change repo settings,
-environments or secrets, and never run `cargo publish` yourself.
-
-The first release: 0.0.0 is a placeholder already on crates.io, and the 0.0.1 bump folds `next/`
-into the existing `releases/0.0.1/`.
+Do not push, create or move a tag, or run `cargo publish` yourself.
 
 ## A run's id
 
@@ -40,13 +39,13 @@ No output means the run is not listed yet: wait a few seconds and repeat until a
 ## 1. Make the release change
 
 ```bash
-gh workflow run bump-version.yml --ref main -f version=0.0.1
+gh workflow run bump-version.yml --ref main -f version=1.4.0
 ```
 
-Find the run titled `bump-version 0.0.1` and watch it. It pushes the branch `release/v0.0.1`: one
-commit in the owner's name. If it fails, read `gh run view <id> --log-failed` and tell the owner. A failed run pushes nothing, so after the cause is gone, dispatch again. If
-`release/v0.0.1` exists from an earlier attempt, the run refuses: when its pull request merged, go
-to step 3's SHA; otherwise ask the owner to delete the branch.
+Find the run titled `bump-version 1.4.0` and watch it. It pushes the branch `release/v1.4.0`. If it
+fails tell the owner why. After the cause is gone, dispatch again. If `release/v1.4.0` exists from
+an earlier attempt, the run refuses: when its pull request merged, go to step 3's SHA; otherwise ask
+the owner to delete the branch.
 
 ## 2. Open the pull request
 
@@ -54,19 +53,19 @@ You open it, not the workflow, so that CI runs on it. No human wrote this change
 `## Human Summary`; delete the section if it is there.
 
 ```bash
-gh pr create --base main --head release/v0.0.1 --title "chore: release 0.0.1" --body "## Summary
+gh pr create --base main --head release/v1.4.0 --title "chore: release 1.4.0" --body "## Summary
 
-The change that releases 0.0.1, made by the bump-version workflow.
+The change that releases 1.4.0, made by the bump-version workflow.
 
 ## Testing
 
 - [x] bump-version: make ci-fast check-release"
-gh pr view release/v0.0.1 --json number --jq .number
+gh pr view release/v1.4.0 --json number --jq .number
 ```
 
-Read `gh pr diff <n>` before the merge. For 0.0.1 expect renames from `next/`
-to `releases/0.0.1/`, a rewritten `tests/configs/0.0.1/` and `hashes`; ask about more. A new pull
-request lists its checks after a few seconds, so repeat until it does:
+Read `gh pr diff <n>` before the merge. For 1.4.0 expect renames from `next/` to `releases/1.4.0/`,
+a rewritten `tests/configs/1.4.0/` and `hashes`; ask about more. A new pull request lists its checks
+after a few seconds, so repeat until it does:
 
 ```bash
 gh pr checks <n> --watch
@@ -77,7 +76,7 @@ gh pr checks <n> --watch
 Squash with an empty body. The repo deletes the merged branch itself.
 
 ```bash
-gh pr merge <n> --squash --subject "chore: release 0.0.1 (#<n>)" --body ""
+gh pr merge <n> --squash --subject "chore: release 1.4.0 (#<n>)" --body ""
 gh pr view <n> --json mergeCommit --jq .mergeCommit.oid
 ```
 
@@ -87,11 +86,11 @@ That prints the 40-character SHA to release. Its message must hold no `Co-author
 ## 4. Run the release
 
 ```bash
-gh workflow run release.yml --ref main -f version=0.0.1 -f sha=<sha>
+gh workflow run release.yml --ref main -f version=1.4.0 -f sha=<sha>
 ```
 
-Find the run titled `release 0.0.1` and watch it. It runs `verify`, `build` and `publish`;
-the last makes the tag and release, then publishes through trusted publishing.
+Find the run titled `release 1.4.0` and watch it. It runs `verify`, `build` and `publish`; the last
+makes the tag and release, then publishes through trusted publishing.
 
 ## 5. When a job fails
 
@@ -100,8 +99,8 @@ Read `gh run view <id> --log-failed` and tell the owner.
 - `verify` or `build`: nothing was published. After a pull request fixes the cause and merges, run
   step 4 again with the new SHA and the same version.
 - `publish`: the tag or release may exist. If "Authenticate with crates.io" failed, an owner action
-  is missing (below); do not make a token. For a cause outside the repo, such as a crates.io
-  outage, rerun once it is gone: `gh run rerun <id> --failed`
+  is missing (below); do not make a token. For a cause outside the repo, such as a crates.io outage,
+  rerun once it is gone: `gh run rerun <id> --failed`
 
 A repo defect found after the tag exists ships under the next version: a rerun replays the original
 workflow file, and a dispatch of the same version is refused.
@@ -110,9 +109,9 @@ workflow file, and a dispatch of the same version is refused.
 
 ```bash
 gh run view <id> --json conclusion --jq .conclusion
-gh api repos/webern/deslag/commits/v0.0.1 --jq .sha
-gh release view v0.0.1 --json assets --jq '[.assets[].name]'
-curl -s -o /dev/null -w '%{http_code}' -A 'deslag-release-skill' https://crates.io/api/v1/crates/deslag/0.0.1
+gh api repos/webern/deslag/commits/v1.4.0 --jq .sha
+gh release view v1.4.0 --json assets --jq '[.assets[].name]'
+curl -s -o /dev/null -w '%{http_code}' -A 'deslag-release-skill' https://crates.io/api/v1/crates/deslag/1.4.0
 ```
 
 Expect `success`; the tag's SHA equal to the released one (annotated tags too); three archives plus

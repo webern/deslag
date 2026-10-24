@@ -7,8 +7,8 @@ This project is highly LLM-automated. The owner may pre-authorize you to open an
 main. Just make sure you follow the guidelines given here and in the skills!
 
 Markdown files in this repo that have `llm_edit: false` in their front-matter should not be
-automatically updated. When `llm_edit` in `false` or absent, you are responsible for maintaining the
-file.
+automatically updated. When `llm_edit` is `true` or absent (default=`true`), you are responsible for
+maintaining the file.
 
 ## Repository layout
 
@@ -44,7 +44,7 @@ changing any of them. A change that adds a lint, setting, feature or migration a
 ## Skills
 
 - `/deslag-build-doctrine`: the build system, Makefile, scripts, CI, dependencies.
-- `/deslag-design-docs`: the docs in `docs/design/` and who owns which.
+- `/deslag-test-doctrine`: guidance for writing and maintaining tests.
 - `/deslag-open-pr`, `/deslag-commit`, `/deslag-release`: opening a pull request, rules for git
   commits, releasing.
 

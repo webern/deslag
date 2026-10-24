@@ -33,8 +33,7 @@ deslag/
 ## Build
 
 `make help` lists the targets. Run `make ci-fast` before a push; GitHub runs the parts of `make ci`
-as parallel jobs in `.github/workflows/ci.yml`, and `tests/ci_jobs.rs` fails unless together they
-run everything `make ci` does, so a part added to `ci` goes in a job too.
+as parallel jobs in `.github/workflows/ci.yml`.
 
 `make test-blobs` fetches the corpus's big tier first; see `scripts/blobstore/blobs.md`. The
 `/deslag-build-doctrine` skill governs the Makefile, `scripts/`, CI and dependencies; read it before

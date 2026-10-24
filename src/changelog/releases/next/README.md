@@ -115,3 +115,6 @@ that change edits the entry in place, its id, its `keys`, its blocks and its fil
 onboards to the key that is live. The other is a later change that makes `deslag update` do what the
 entry asks the person to do by hand: it sets the entry's `update_does_all` to `true`, and edits
 nothing else.
+
+A released directory is otherwise a record: the repository's own config excludes it, and the test
+that lints the entries reads `next/` only, so a lint that arrives later never edits one.

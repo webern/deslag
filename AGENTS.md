@@ -32,7 +32,7 @@ deslag/
 ## Build
 
 `make help` lists the targets. GitHub runs the parts of `make ci` as parallel jobs in
-`.github/workflows/ci.yml`. Which target to run:
+`.github/workflows/ci.yml`, and the timing check in `time.yml`. Which target to run:
 
 | When                       | Run                |
 | -------------------------- | ------------------ |

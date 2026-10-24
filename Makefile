@@ -318,7 +318,7 @@ build-release: preflight
 test: preflight test-exam test-product test-tools
 
 # The big tier's checks and tests, which a plain cargo test ignores so that it runs offline and with no
-# login, then the timing check. The ci workflow runs the timing check alone, in a job of its own.
+# login, then the timing check. The time workflow runs the timing check alone, on its own runner.
 test-blobs: preflight fetch-blobs test-silver test-tier test-time
 
 # The Brill tagger's unit tests, then the exam's full report on the dev and owner sets for it and for its
@@ -493,8 +493,8 @@ test-tier: preflight fetch-blobs
 
 # Prints how long reading and tagging the big tier take, and fails if tagging's share of reading is over
 # the budget of the profile built. The budget is 75.0% in either profile: what tagging took with its
-# learned stage (about 64% in debug), plus room. It needs the machine to itself, so the ci workflow runs
-# it alone on a runner.
+# learned stage (about 64% in debug), plus room. It needs the machine to itself, so the time workflow
+# runs it alone on a runner.
 test-time: preflight fetch-blobs
 	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
 

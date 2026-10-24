@@ -378,7 +378,7 @@ fn the_report_checks_every_file_at_its_own_config() {
 
 #[test]
 fn time_covers_every_fixture_of_the_tree_core_included() {
-    let timing = time(repo_root(), Tier::Tree).unwrap_or_else(|problem| panic!("{problem}"));
+    let timing = time(repo_root(), Tier::Tree, None).unwrap_or_else(|problem| panic!("{problem}"));
     let fixtures = load::tree(&repo_root().join("tests/corpus")).unwrap();
     assert_eq!(timing.files, fixtures.len());
     assert_eq!(

@@ -1,10 +1,12 @@
 name: time
 
-# make test-time, the part of make ci that ci.yml leaves out, times reading and tagging the big tier.
-# It needs a runner to itself, and what it times changes rarely, so a pull request runs it only when
-# the tagger (src/tag), the reader (src/document), the timer (tools/corpus/src/time.rs), the big
-# tier's scripts, or how it is built change. Every push to main runs it. Since a pull request may
-# skip it, it is never a required check.
+# make test-time, the part of make ci that ci.yml leaves out, builds deslag in release and gates it
+# on the three bounds of the Performance Characteristics of docs/design/deslag.desired.md: reading
+# the big tier at 5 MB a second on one thread, a check of one small file in at most 1 s, and a binary
+# under 200 MB. It needs a runner to itself, and what it times changes rarely, so a pull request runs
+# it only when the tagger (src/tag), the reader (src/document), the timer (tools/corpus/src/time.rs),
+# the bounds' source, the big tier's scripts, or how it is built change. Every push to main runs it.
+# Since a pull request may skip it, it is never a required check.
 on:
   push:
     branches: [main]
@@ -13,6 +15,7 @@ on:
       - "src/tag/**"
       - "src/document/**"
       - "tools/corpus/src/time.rs"
+      - "docs/design/deslag.desired.md"
       - "scripts/blobstore/**"
       - "Cargo.toml"
       - "Cargo.lock"
@@ -42,8 +45,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
 
-      # Installs what rust-toolchain.toml names and caches the registry and target dir. Only main saves
-      # the cache.
+      # Installs what rust-toolchain.toml names and caches the registry and target dir, the release
+      # build in it included. Only main saves the cache.
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
         with:
@@ -65,7 +68,7 @@ jobs:
           key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
 
       # blobs.sh reads the package with gh's token, which here is the workflow token.
-      - name: Time reading and tagging the big tier
+      - name: Time the big tier and a small check, and size the binary, in release
         env:
           GH_TOKEN: ${{ github.token }}
         run: make CARGO_FLAGS=--locked test-time

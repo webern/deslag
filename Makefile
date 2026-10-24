@@ -172,9 +172,10 @@ help:
 	@echo "                 first, so minutes, and not in test or ci"
 	@echo "test-tier        fetch the corpus's big tier, run the tests that read it, and check the gold sets' seen"
 	@echo "                 sidecars against their fixtures; needs the network, so not in test; test-blobs runs it"
-	@echo "test-time        fetch the corpus's big tier, print how long reading and tagging it take, and fail if"
-	@echo "                 tagging takes over its budget of the time to read it; minutes, on a quiet machine, and"
-	@echo "                 needs the network, so not in test; test-blobs runs it"
+	@echo "test-time        fetch the corpus's big tier, build deslag and the timer in release, and fail unless"
+	@echo "                 reading the tier runs at 5 MB a second or more, checking one small file takes at most"
+	@echo "                 1 s and the binary is under 200 MB, the bounds of docs/design/deslag.desired.md;"
+	@echo "                 minutes, on a quiet machine, and needs the network, so not in test; test-blobs runs it"
 	@echo "test-tools       the tests of the crates under tools/, at once in the fast profile, their doctests"
 	@echo "                 and deslag-sweep's tests; not a product tier, so not in ci-fast; run it when tools/"
 	@echo "                 changes; CI's tools job"
@@ -491,12 +492,16 @@ test-tier: preflight fetch-blobs
 	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
 	cargo test $(CARGO_FLAGS) -p deslag-exam --test seen -- --ignored
 
-# Prints how long reading and tagging the big tier take, and fails if tagging's share of reading is over
-# the budget of the profile built. The budget is 75.0% in either profile: what tagging took with its
-# learned stage (about 64% in debug), plus room. It needs the machine to itself, so the time workflow
-# runs it alone on a runner.
+# Builds the deslag binary and the timer in release, prints how long reading and tagging the big tier
+# take, how long the binary takes to check one small file, and its size, and fails when one is over its
+# bound: the tier read at 5 MB a second, rounded up to a whole second; 1 s; 200 MB. The bounds are the
+# Performance Characteristics of docs/design/deslag.desired.md, which are about a release build, and
+# the timer judges nothing in debug. It needs the machine to itself, so the time workflow runs it alone
+# on a runner.
 test-time: preflight fetch-blobs
-	cargo run $(CARGO_FLAGS) -p deslag-corpus -- --tier blobs time --check
+	cargo build $(CARGO_FLAGS) --release -p deslag --bin deslag
+	cargo run $(CARGO_FLAGS) --release -p deslag-corpus -- --tier blobs time --check \
+	        --deslag $(or $(CARGO_TARGET_DIR),target)/release/deslag
 
 # The tooling suite, beside the product tiers and not one of them: the tests of the crates under
 # tools/, at once in the fast profile, their doctests, then the sweep's tests.

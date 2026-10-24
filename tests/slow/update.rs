@@ -5,7 +5,7 @@
 //!
 //! `src/config/edit/` tests the edits text by text; these tests run the command.
 
-mod common;
+use crate::common;
 
 use std::path::{Path, PathBuf};
 use std::process::Output;

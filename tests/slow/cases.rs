@@ -28,7 +28,7 @@
 //! `deslag fix`, writes to its copy alone. A case cannot hold a `.git` directory, or a `.gitignore`
 //! that ignores its own files, because git would apply it to this repo too.
 
-mod common;
+use crate::common;
 
 use std::fs;
 use std::path::{Path, PathBuf};

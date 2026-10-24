@@ -7,6 +7,7 @@ description: >
 argument-hint: "<prompt>"
 disable-model-invocation: false
 user-invocable: true
+llm_edit: false
 ---
 # /deslag-design-docs
 

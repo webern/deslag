@@ -16,11 +16,11 @@
 //! matches; a negated condition does. The sets are Rust data, never config: a list a config grows
 //! is an allow-list an agent grows until the check passes.
 //!
-//! This is a taste lint, off until a config turns it on. Its claim, which `tests/corpus.rs` and
-//! `make test-blobs` check on English fixtures: `llm` files hold it more often than `human` files
-//! on the tree; on the big tier, at least 3 times as often, and at most 3.5% of its `human` files
-//! hold it. People write the phrase too, mostly in replies, so the advice owns the rule as the
-//! repo's style and never says who wrote the sentence. A retrained tagger can move the lint's
+//! This is a taste lint, off until a config turns it on. Its claim, which `tests/slow/corpus.rs`
+//! and `make test-blobs` check on English fixtures: `llm` files hold it more often than `human`
+//! files on the tree; on the big tier, at least 3 times as often, and at most 3.5% of its `human`
+//! files hold it. People write the phrase too, mostly in replies, so the advice owns the rule as
+//! the repo's style and never says who wrote the sentence. A retrained tagger can move the lint's
 //! findings; `src/tag/weights.md` says what to do then.
 
 use std::ops::Range;

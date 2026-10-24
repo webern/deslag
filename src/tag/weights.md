@@ -103,7 +103,7 @@ fails a change to it until `RULES_VERSION` is raised and `make fix-golden` run. 
 4. Read the diff of `tests/golden/verbs_no_nouns.txt` and `tests/golden/not_at_all.txt` after
    `make fix-golden`. Both lints read the tagger, `not_at_all` its nouns at `Likely`, so a retrain
    can move their findings, their unit tests in `src/lint/`,
-   `tests/cases/verbs_no_nouns/forms.stderr`, the tree tests in `tests/corpus.rs` and the big
+   `tests/cases/verbs_no_nouns/forms.stderr`, the tree tests in `tests/slow/corpus.rs` and the big
    tier's ceilings and ratios in `tests/blobs.rs`. If findings moved, add a changelog entry under
    `src/changelog/releases/next/`. If a ceiling or ratio test fails, stop and ask a human: no
    limit moves on a retrain's say-so.

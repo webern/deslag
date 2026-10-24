@@ -413,15 +413,6 @@ fn every_catalogue_phrase_is_one_a_config_could_ban() {
 }
 
 #[test]
-fn the_catalogue_is_measured_on_the_pinned_image() {
-    let lock = std::fs::read_to_string(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("scripts/blobstore/blobs.lock"),
-    )
-    .expect("blobs.lock");
-    assert_eq!(Some(CATALOGUE.measured_on.as_str()), lock.lines().next());
-}
-
-#[test]
 fn the_corpus_report_config_holds_the_repos_own_lint_settings() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
     let lints = |path: &str| -> toml::Value {

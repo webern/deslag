@@ -1,0 +1,71 @@
+name: time
+
+# make test-time, the part of make ci that ci.yml leaves out, times reading and tagging the big tier.
+# It needs a runner to itself, and what it times changes rarely, so a pull request runs it only when
+# the tagger (src/tag), the reader (src/document), the timer (tools/corpus/src/time.rs), the big
+# tier's scripts, or how it is built change. Every push to main runs it. Since a pull request may
+# skip it, it is never a required check.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "src/tag/**"
+      - "src/document/**"
+      - "tools/corpus/src/time.rs"
+      - "scripts/blobstore/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - "Makefile"
+      - ".github/workflows/time.yml"
+
+# A new push to the same branch supersedes the run in progress.
+concurrency:
+  group: time-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # The timing check, alone on its runner: it measures seconds on one thread, so nothing else may
+  # share the machine. The big tier is a package this repository is granted access to; see
+  # scripts/blobstore/blobs.md.
+  time:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      # Installs what rust-toolchain.toml names and caches the registry and target dir. Only main saves
+      # the cache.
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # make preflight runs first here as in every gate, and it checks for typos, which this job does
+      # not otherwise use.
+      - name: Install typos
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
+        with:
+          tool: typos
+
+      # .blobs is the pinned image unpacked, with the stamp that says so, so a hit means fetch-blobs
+      # touches nothing. Keyed on the lock, with no restore keys: another image is of no use.
+      - name: Cache the corpus's big tier
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
+        with:
+          path: .blobs
+          key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
+
+      # blobs.sh reads the package with gh's token, which here is the workflow token.
+      - name: Time reading and tagging the big tier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: make CARGO_FLAGS=--locked test-time

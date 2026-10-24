@@ -2,7 +2,7 @@
 //! config, and none of the variables that point it at another repository, and so does the git
 //! deslag runs, which inherits them. The patch reading is tested without git.
 
-mod common;
+use crate::common;
 
 use std::collections::BTreeSet;
 use std::fs;

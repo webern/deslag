@@ -8,7 +8,7 @@ What changed and why.
 
 ## Testing
 
-- [x] `make ci`: exit 0
+- [x] `make ci-fast`: exit 0
 - [x] whatever else was run
 
 ## References

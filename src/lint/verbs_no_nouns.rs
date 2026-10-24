@@ -15,12 +15,12 @@
 //! A participle is told by the tagger's feature, which comes from the lexicon entry. A few rare
 //! `-ing` entries lack it (`recompiling`, `digitising`), and such a word before `no` is flagged.
 //!
-//! This is a taste lint, off until a config turns it on. Its claim, which `tests/corpus.rs` and
-//! `make test-blobs` check on English fixtures: `llm` files hold it at least 3 times as often as
-//! `human` files, on the tree and on the big tier, and at most 3.5% of the big tier's `human`
-//! files hold it. Human writers use the construction too, so the advice owns the rule as the
-//! repo's style and never says who wrote the sentence. A retrained tagger can move the lint's
-//! findings; `src/tag/weights.md` says what to do then.
+//! This is a taste lint, off until a config turns it on. Its claim, which `tests/slow/corpus.rs`
+//! and `make test-blobs` check on English fixtures: `llm` files hold it at least 3 times as often
+//! as `human` files, on the tree and on the big tier, and at most 3.5% of the big tier's `human`
+//! files hold it. Human writers use the construction too, so the advice owns the rule as the repo's
+//! style and never says who wrote the sentence. A retrained tagger can move the lint's findings;
+//! `src/tag/weights.md` says what to do then.
 
 use std::ops::Range;
 

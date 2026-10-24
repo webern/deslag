@@ -493,8 +493,11 @@ test-time: preflight fetch-blobs
 
 check: check-fmt check-clippy check-deslag check-doc check-typos
 
+# --all-targets leaves out a test declared `test = false`, so the slow binary is named on a line of
+# its own.
 check-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --workspace --all-features --all-targets -- -D warnings
+	cargo clippy $(CARGO_FLAGS) --workspace --all-features --test slow -- -D warnings
 	cargo clippy $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET) --all-targets -- -D warnings
 
 # The debug build of deslag, run against .agents/deslag.toml. list_growth judges
@@ -594,6 +597,7 @@ fix: fix-fmt fix-clippy fix-golden fix-test-output
 
 fix-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --workspace --all-features --all-targets --fix --allow-dirty --allow-staged
+	cargo clippy $(CARGO_FLAGS) --workspace --all-features --test slow --fix --allow-dirty --allow-staged
 	cargo clippy $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET) --all-targets --fix --allow-dirty --allow-staged
 
 fix-fmt: preflight
@@ -620,7 +624,7 @@ fix-catalog: preflight fetch-blobs
 
 # Accepts whatever deslag prints now, so read the diff before committing it.
 fix-test-output: preflight
-	DESLAG_FIX_TEST_OUTPUT=1 cargo test $(CARGO_FLAGS) --all-features --test cases
+	DESLAG_FIX_TEST_OUTPUT=1 cargo test $(CARGO_FLAGS) --all-features --test slow -- cases::
 
 preflight:
 	@$(SCRIPTS)/preflight.sh

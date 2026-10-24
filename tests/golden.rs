@@ -10,8 +10,8 @@
 //!
 //! The set is a snapshot, not a verdict. It says what deslag does today, so that a change to what a
 //! lint finds shows in review, and a change not meant to move it must leave it as it is. Whether a
-//! lint is right about the corpus is for `tests/corpus.rs` to say. The one verdict here is that the
-//! corpus holds fixtures on both sides of every lint.
+//! lint is right about the corpus is for `tests/slow/corpus.rs` to say. The one verdict here is
+//! that the corpus holds fixtures on both sides of every lint.
 //!
 //! Each fixture is linted alone in an empty directory, so a lint that looks at the disk finds
 //! nothing there. `repo_layout` fails every fixture that has the section, since none of the paths

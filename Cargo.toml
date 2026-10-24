@@ -48,6 +48,13 @@ tempfile = "3.27.0"
 [lints]
 workspace = true
 
+# The product tests that spawn deslag per case or build a repository per test, as one binary.
+# `make test-product` runs them; `cargo test -p deslag` does not.
+[[test]]
+name = "slow"
+path = "tests/slow/main.rs"
+test = false
+
 # tools/corpus measures the test corpus, tools/exam grades taggers and tools/release makes the
 # release change. None is published, and deslag depends on none, so `cargo publish` sees deslag
 # alone. (tools/corpus and tools/release are path-only dev-dependencies, which the package drops.)

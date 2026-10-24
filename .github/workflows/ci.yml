@@ -13,17 +13,17 @@ concurrency:
 permissions:
   contents: read
 
-# make ci, which the release runs, takes the sum of its parts. Here the parts are jobs side by side, so a
-# run takes as long as its longest job, the timing check or the tests, whichever the runners made
-# slower. tests/ci_jobs.rs fails unless each `run:` is `make` with CARGO_FLAGS=--locked and targets,
-# those lines run every recipe line of make ci and no other, the timing check runs alone in its job, no
-# job or step has `if:` or `continue-on-error:`, and each job runs on a matrix that lists both OSes and
-# has no `exclude:`. Each job installs and caches only what its line reads, except typos, which make
-# preflight wants in all of them, and each has a target cache of its own, keyed by setup-rust-toolchain
-# on the job and on Cargo.lock, the manifests and the toolchain. Only a push to main saves those caches;
-# a pull request restores main's, so a branch that changes Cargo.lock adds none to the repository's
-# 10 GB, where it would add eight. make ci is not everything: python.yml runs make test-python when the
-# scripts it tests change.
+# make ci, which the release runs, takes the sum of its parts. Here each part is a job, and the jobs run
+# side by side, so a run takes as long as its longest job. The parts and their jobs: check, build and
+# test-scanners run in `check`; test-exam and test-product in `test`; test-tools in `tools`;
+# test-silver and test-tier in `blobs`; test-time in time.yml, alone on its runner and on a pull
+# request only when what it times changes. Nothing but this comment checks that mapping: a part added
+# to make ci gets a job, and a place in this list. Each job installs and caches only what its line
+# reads, except typos, which make preflight wants in all of them, and each has a target cache of its
+# own, keyed by setup-rust-toolchain on the job and on Cargo.lock, the manifests and the toolchain.
+# Only a push to main saves those caches; a pull request restores main's, so a branch that changes
+# Cargo.lock adds none to the repository's 10 GB, where it would add six, and time.yml's a seventh.
+# make ci is not everything: python.yml runs make test-python when the scripts it tests change.
 jobs:
   # Fmt, clippy, deslag on its own Markdown, rustdoc, typos, the builds, and the scanners' sweeps.
   check:
@@ -68,7 +68,8 @@ jobs:
       - name: Check, build and sweep
         run: make CARGO_FLAGS=--locked check build test-scanners
 
-  # Every Rust test of the workspace but the big tier's. It reads no .blobs, as a fresh clone does.
+  # The product tiers: the exam's gates and every product test, in the fast profile. It reads no
+  # .blobs, as a fresh clone does.
   test:
     strategy:
       fail-fast: false
@@ -91,16 +92,34 @@ jobs:
           tool: typos
 
       - name: Test
-        run: make CARGO_FLAGS=--locked test
+        run: make CARGO_FLAGS=--locked test-exam test-product
+
+  # The tooling suite: the tests of the crates under tools/ and the sweep's. Linux only. It shows on
+  # every run but is not a required check: a tooling failure does not block a product change.
+  tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install typos
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
+        with:
+          tool: typos
+
+      - name: Test the tools
+        run: make CARGO_FLAGS=--locked test-tools
 
   # The big tier's tests and the silver batches' checks. The tier is a package this repository is
-  # granted access to; see scripts/blobstore/blobs.md.
+  # granted access to; see scripts/blobstore/blobs.md. Linux only.
   blobs:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
@@ -134,40 +153,3 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: make CARGO_FLAGS=--locked test-silver test-tier
 
-  # The timing check, alone on its runner: it measures seconds on one thread, so nothing else may
-  # share the machine. A run lasts as long as its longest job, which is this one or `test`: on some
-  # runs `test` took as long, or longer.
-  time:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
-
-      - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
-        with:
-          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
-
-      - name: Install typos
-        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
-        with:
-          tool: typos
-
-      - name: Cache the corpus's big tier
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0, 2026-06-26
-        with:
-          path: .blobs
-          key: blobs-${{ runner.os }}-${{ hashFiles('scripts/blobstore/blobs.lock') }}
-
-      - name: Time reading and tagging the big tier
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: make CARGO_FLAGS=--locked test-time

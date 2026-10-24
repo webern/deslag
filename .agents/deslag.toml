@@ -68,12 +68,13 @@ lints.max_size_bytes.value = 5000
 
 # An override can turn a lint on but not off, so list_growth names the skills it judges, and the
 # build doctrine is not among them: the owner authorized its verb list to grow by one on
-# 2026-10-03, and its budget is 5000 plus the 92 bytes that item added.
+# 2026-10-03, and its budget is 5000 plus the 92 bytes that item added. The open-pr skill left the
+# list on 2026-10-24, when the owner added an anti-pattern to it: the lint cannot exempt one item,
+# and the owner is to revisit the lint.
 [[md.overrides]]
 globs = [
   "/.agents/skills/deslag-commit/SKILL.md",
   "/.agents/skills/deslag-design-docs/SKILL.md",
-  "/.agents/skills/deslag-open-pr/SKILL.md",
 ]
 lints.list_growth = {}
 

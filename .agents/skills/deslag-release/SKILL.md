@@ -6,6 +6,7 @@ description: >
 argument-hint: "<version>"
 disable-model-invocation: false
 user-invocable: true
+llm_edit: true
 ---
 # /deslag-release
 

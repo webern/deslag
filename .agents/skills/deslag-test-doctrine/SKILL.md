@@ -12,8 +12,8 @@ llm_edit: false
 ## Build Doctrine
 
 North Star: tests should provide fast feedback on actual behavior of the system. They should not be
-brittle or coupled to the repo layout, dependency versions, or project state. Tests should focus on
-ensuring the product behaves correctly.
+brittle or coupled to the repo layout, dependency versions, or project state (e.g. lockfiles, file
+counts, version). Tests should focus on ensuring the product behaves correctly.
 
 ## Fast
 
@@ -39,8 +39,26 @@ answer. Therefore, what I am asking is that, at the end of the work, before open
 step back and ask, are all of these tests necessary? Are they ensuring the product works correctly?
 Are they costly? Are they worth their weight in total test time?
 
-Based on the answers to those questions, delete the tests that are some combination of expensive,
-brittle, and not ensuring the quality of deslag as a product.
+Based on the answers to those questions, remove tests that would otherwise be added to the repo that
+are some combination of expensive, brittle, and not ensuring the quality of deslag as a product.
+
+### Value Check
+
+A test should fail with the change it is checking reverted. If mutating the code under tests does
+not cause the test to fail, then it is a poortly written test.
+
+## Avoid Brittle Tests
+
+- Tests should not reach-around the repos `.agents/deslag.toml` config to test lints outside of the
+  test corpuses.
+- Tests should not include locked-in file count checks. If a count of files is necessary to ensure a
+  test is not inert, make it a floor or a ceiling instead of an exact count. Counts should not have
+  to change when files are added or changed in the corpuses. No tally assertions.
+- Decide how a test ensures product behavior. A threshold chosen arbitrarily (e.g. by running the
+  test itself for discovery) does not ensure product behavior.
+
+Examples of bad tests seen in this repo: tests that fail when Cargo.lock changes, tests that assert
+github yaml files match the makefile, tests that ensure design docs match Rust module structure.
 
 ## Segmenting
 
@@ -52,3 +70,16 @@ massively slow down project development.
 An agent should understand whether it needs to run the slow tests or not. It should also understand
 a progressive level of depth that it has available with tests. Fast tests while iterating, then
 something deeper if necessary before opening a PR.
+
+* * *
+
+# deslag-test-doctrine edit checklist
+
+- [ ] Decide tests/ci_jobs.rs: AGENTS.md Build requires it, this doctrine condemns it.
+- [ ] Fast: say if "a few seconds" binds the next PR or is a direction; today is 72 s.
+- [ ] Segmenting: name the make target of each tier and when an agent runs it.
+- [ ] "Lint unit tests should fall under this category": name it, the fast set.
+- [ ] description: replace "etc." with the triggers: make test targets, CI test jobs.
+- [ ] CI-minutes paragraph: move to /deslag-build-doctrine or cross-reference it.
+- [ ] Rename the heading "Build Doctrine" to "Test Doctrine".
+- [ ] Fix "By it's nature" to "By its nature".

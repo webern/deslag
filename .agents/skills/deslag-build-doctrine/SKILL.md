@@ -3,7 +3,6 @@ name: deslag-build-doctrine
 description: >
   Read this skill before changing the deslag build system: the Makefile, scripts/, CI, GitHub
   workflows, the toolchain, or dependencies.
-argument-hint: "<prompt>"
 disable-model-invocation: false
 user-invocable: true
 llm_edit: false

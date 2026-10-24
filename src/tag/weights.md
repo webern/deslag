@@ -37,9 +37,8 @@ Measured on macOS x86-64 (an i9-9980HK) with the machine idle, release builds un
   the pages it reads.
 - Per run: `deslag check` of one three-line Markdown file takes 24 ms in a debug build and 11 ms in
   a release build (medians of 21 runs).
-- Tagging's share of reading the corpus's big tier, which `cargo run -p deslag-corpus -- time
-  --check` holds under 75%, is 55.3% in debug. That check keeps each file's fastest pass, so it
-  leaves out any setup.
+- Tagging's share of reading the corpus's big tier, which `cargo run -p deslag-corpus -- time`
+  prints, is 55.3% in debug. That timer keeps each file's fastest pass, so it leaves out any setup.
 
 ## Training data
 

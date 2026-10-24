@@ -56,7 +56,8 @@ pub const STARTUP_RUNS: usize = 5;
 /// 2026-10-24 a debug build read the tier in 35.3 s on an ubuntu runner (run 40108576558) and in
 /// 126.1 s on a 2019 laptop, an i9-9980HK on macOS, so the runner is the faster of the two. A
 /// release build read it on that laptop in 23.78, 23.79 and 23.81 s in three runs, 1.26 times
-/// under the bound.
+/// under the bound, and on the runner in 14.43, 13.71 and 14.08 s (run 40122828031, attempts 1
+/// to 3), about 2.1 times under.
 pub const PROSE_BYTES_PER_SECOND: u64 = 5_000_000;
 
 /// The longest a release `deslag check` of one small file may take, in seconds, as a fresh
@@ -65,13 +66,13 @@ pub const PROSE_BYTES_PER_SECOND: u64 = 5_000_000;
 /// The desired doc asks that linting a small file take less than 1 second, a cold load of any
 /// onboard model included. The bound is that second, on whatever machine runs the check, as for
 /// [`PROSE_BYTES_PER_SECOND`]. On 2026-10-24, on the i9-9980HK laptop, the fastest of five runs
-/// took 0.010 to 0.011 s in each of four runs of `time --check`: the tagger's tables are in the
-/// binary, and nothing is loaded at start.
+/// took 0.010 to 0.011 s in each of four runs of `time --check`, and 0.002 s in each of three on
+/// the ubuntu runner: the tagger's tables are in the binary, and nothing is loaded at start.
 pub const STARTUP_SECONDS: f64 = 1.0;
 
 /// The release `deslag` binary must be smaller than this, in bytes: 200 MB, taken as
 /// 200,000,000 bytes, as the desired doc asks. On 2026-10-24 it was 15,763,848 bytes on macOS
-/// x86-64.
+/// x86-64 and 16,951,064 on ubuntu x86-64.
 pub const BINARY_BYTES: u64 = 200_000_000;
 
 /// The config of the scratch repository that startup is timed in: two lints that read the

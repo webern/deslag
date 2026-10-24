@@ -24,6 +24,6 @@ TOML. A Markdown doc comment in Rust, `///` or `//!`, is never taken for licence
 paragraph of Markdown can hold a code fence or a list.
 
 A line that is not linted reads as a blank line, so it ends a paragraph. A comment of nothing but
-such lines is not read. Labels such as `SAFETY:` and `TODO(name):` are words like any
+such lines is not read at all. Labels such as `SAFETY:` and `TODO(name):` are words like any
 other, and the text after one is linted.
 '''

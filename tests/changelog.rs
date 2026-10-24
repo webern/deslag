@@ -36,6 +36,13 @@ fn entries() -> impl Iterator<Item = (&'static Version, &'static Entry)> {
     entries_in(changelog())
 }
 
+/// The entries of the release in the making. A released entry is a record, so the rules of the
+/// repo never read one: a lint that arrives later would otherwise edit it. `next/README.md` says
+/// the two cases in which a released entry changes.
+fn unreleased_entries() -> impl Iterator<Item = &'static Entry> {
+    entries().filter_map(|(version, entry)| matches!(version, Version::Next).then_some(entry))
+}
+
 /// Where the key `key` of the setting `id`, a table, is in the schema: under the table's items
 /// when the table is a list, as `md.overrides[].globs` is, and folded as the schema paths are.
 fn key_path(paths: &SchemaPaths, id: &str, key: &str) -> String {
@@ -653,16 +660,16 @@ fn every_catalogue_phrase_arrives_in_next_or_a_release_no_later_than_the_crate()
     }
 }
 
-/// The text of each entry meets the rules deslag holds the instruction files to, which cannot
-/// read it from a TOML file.
+/// The text of each unreleased entry meets the rules deslag holds the instruction files to, which
+/// cannot read it from a TOML file. A released entry is a record and is not read.
 #[test]
-fn every_entry_meets_the_rules_of_the_repo() {
+fn every_unreleased_entry_meets_the_rules_of_the_repo() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let path: PathBuf = root.join(".agents/deslag.toml");
     let text = std::fs::read_to_string(&path).expect(".agents/deslag.toml");
     let config = Config::parse(&text, path, ConfigSource::Explicit).expect("the repo's config");
     let empty = tempfile::tempdir().expect("a temp directory");
-    for (_, entry) in entries() {
+    for entry in unreleased_entries() {
         for (what, text) in [
             ("summary", entry.summary()),
             ("onboarding", entry.onboarding()),
@@ -774,8 +781,8 @@ struct Linted {
     files: Vec<String>,
 }
 
-/// Every finding of the repo's text under `config`: the entries of the changelog, and every file
-/// the config selects, Rust comments included.
+/// Every finding of the repo's text under `config`: the unreleased entries of the changelog, and
+/// every file the config selects, Rust comments included.
 fn findings_in_the_repo(config: &Config) -> Linted {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut linted = Linted {
@@ -783,7 +790,7 @@ fn findings_in_the_repo(config: &Config) -> Linted {
         entry_texts: 0,
         files: Vec::new(),
     };
-    for (_, entry) in entries() {
+    for entry in unreleased_entries() {
         for text in [entry.summary(), entry.onboarding()] {
             let findings =
                 check_file(config, TEXT_PATH, text.as_bytes(), root).expect("the lints run");

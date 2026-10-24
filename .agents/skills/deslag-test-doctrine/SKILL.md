@@ -1,15 +1,16 @@
 ---
 name: deslag-test-doctrine
 description: >
-  Read this skill before adding, deleting or changing tests, how tests run in CI, how tests are
-  selected, etc.
+  This is the repos testing guidance. Read this skill before adding, deleting or changing tests, how
+  tests run in CI, how tests are selected, segmented, how long they take, and what their priorities
+  are.
 disable-model-invocation: false
 user-invocable: true
 llm_edit: false
 ---
 # /deslag-test-doctrine
 
-## Build Doctrine
+## Test Doctrine
 
 North Star: tests should provide fast feedback on actual behavior of the system. They should not be
 brittle or coupled to the repo layout, dependency versions, or project state (e.g. lockfiles, file
@@ -20,7 +21,7 @@ counts, version). Tests should focus on ensuring the product behaves correctly.
 Running the standard set of product tests should take no more than a few seconds. This should be the
 standard set of tests that an LLM can use when editing product code such as configuration behavior,
 adding a comment, refactoring, restructuring the product code, etc. Lint unit tests should fall
-under this category. They may use the small, checked-in corpus, or target specific checked-in files,
+under the fast set. They may use the small, checked-in corpus, or target specific checked-in files,
 but not the big corpus.
 
 CI for most PRs that do not involve tooling or training changes should complete in a few minutes.
@@ -29,7 +30,7 @@ longer than a few minutes.
 
 ## Avoid Over-testing
 
-LLMs tend to add tests for everything that they are currently working on. By it's nature, an LLM
+LLMs tend to add tests for everything that they are currently working on. By its nature, an LLM
 cannot keep track of the big-picture. Repos like this one end up having thousands of low value
 tests. Examples of low value tests are ones that lock in very specific behaviors that do not affect
 the product, over-testing of tooling code, testing of repo scripts, etc.
@@ -70,16 +71,3 @@ massively slow down project development.
 An agent should understand whether it needs to run the slow tests or not. It should also understand
 a progressive level of depth that it has available with tests. Fast tests while iterating, then
 something deeper if necessary before opening a PR.
-
-* * *
-
-# deslag-test-doctrine edit checklist
-
-- [ ] Decide tests/ci_jobs.rs: AGENTS.md Build requires it, this doctrine condemns it.
-- [ ] Fast: say if "a few seconds" binds the next PR or is a direction; today is 72 s.
-- [ ] Segmenting: name the make target of each tier and when an agent runs it.
-- [ ] "Lint unit tests should fall under this category": name it, the fast set.
-- [ ] description: replace "etc." with the triggers: make test targets, CI test jobs.
-- [ ] CI-minutes paragraph: move to /deslag-build-doctrine or cross-reference it.
-- [ ] Rename the heading "Build Doctrine" to "Test Doctrine".
-- [ ] Fix "By it's nature" to "By its nature".

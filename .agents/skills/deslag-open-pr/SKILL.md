@@ -23,9 +23,9 @@ closes and related issues. It might also be related to other PRs.
 Have you followed relevant repo skills in your implementation? If not, you may need to make changes
 before you are ready to open the PR.
 
-Run `make ci-fast` before every push, and `make test-python` too if you changed
-`scripts/blobstore/` or `scripts/llm-detection/`. GitHub runs the parts of `make ci` as parallel
-jobs, and `make test-python` when those scripts change.
+Run `make ci-fast` before every push, and `make test-python` too if you changed `scripts/blobstore/`
+or `scripts/llm-detection/`. GitHub runs the parts of `make ci` as parallel jobs, and
+`make test-python` when those scripts change.
 
 ## Writing it
 
@@ -81,3 +81,9 @@ Check after you have opened the PR. Read it back from GitHub. If your harness ad
 > Authored by Claude
 
 At the end of the PR description. Delete it and update the PR description so it's not there anymore.
+
+## Anti-patterns I have Seen
+
+- The PR description is not a place to discuss design decisions with the owner. The PR description
+  should not include "open design questions" or "things for the owners eyes". The PR description
+  describes what is in the code, what was decided and why. Not "what still needs to be decided".

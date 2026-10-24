@@ -2,7 +2,7 @@ ERROR: deslag detected banned characters!
 
 include/parse.h has 2 banned characters.
 
-This repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+This repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
 Code is not checked, so a diagram may use these characters in a code block.
 
@@ -16,7 +16,7 @@ ERROR: deslag detected banned characters!
 
 src/parse.c has 3 banned characters.
 
-This repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+This repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
 Code is not checked, so a diagram may use these characters in a code block.
 
@@ -30,7 +30,7 @@ ERROR: deslag detected banned characters!
 
 src/util.cc has 1 banned character.
 
-This repo writes in plain characters, and each of these has a plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+This repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
 
 Code is not checked, so a diagram may use these characters in a code block.
 

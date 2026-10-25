@@ -1,9 +1,13 @@
-//! The version a changelog release, or a phrase of the catalogue, arrived in.
+//! The version a changelog release, or a phrase of the catalogue, arrived in, and the releases a
+//! config is compared with: the running one and the baseline.
 
 use std::fmt;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize, Serializer};
+
+/// The release a config with no `deslag_version` is taken to be from: the first in the changelog.
+pub const BASELINE: semver::Version = semver::Version::new(0, 0, 1);
 
 /// A released version, or the one not released yet.
 ///
@@ -94,5 +98,31 @@ impl TryFrom<String> for Version {
 
     fn try_from(text: String) -> Result<Version, ParseError> {
         text.parse()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn version(text: &str) -> Version {
+        text.parse().expect("a version")
+    }
+
+    #[test]
+    fn next_sorts_above_every_release() {
+        assert!(version("next") > version("999.0.0"));
+        assert!(version("next") > version("1.0.0-rc.1"));
+        assert!(version("0.2.0") > version("0.1.9"));
+        assert!(version("1.0.0-rc.1") < version("1.0.0"));
+        assert_eq!(version("next"), Version::Next);
+        assert_eq!(version("next").to_string(), "next");
+    }
+
+    #[test]
+    fn a_version_that_is_neither_semver_nor_next_is_refused() {
+        for text in ["", "0.1", "v0.1.0", "Next", "latest"] {
+            assert!(text.parse::<Version>().is_err(), "{text:?}");
+        }
     }
 }

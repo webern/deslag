@@ -1,4 +1,5 @@
-//! The paths of the config schema, which the frozen configs and the changelog tests walk.
+//! The paths of the config schema, which the release tool's frozen configs and the changelog
+//! tests walk.
 
 use std::collections::{BTreeMap, BTreeSet};
 

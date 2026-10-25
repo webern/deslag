@@ -30,11 +30,11 @@ use std::path::Path;
 
 use common::corpus::{CATEGORIES, corpus};
 use common::fixture::Fixture;
-use deslag::changelog::Version;
 use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::density;
 use deslag::lint::repo_layout::Problem;
 use deslag::tag::{Confidence, Features, Origin, RULES_VERSION, Reading, Tag, VERSION};
+use deslag::version::Version;
 use deslag::{Config, ConfigSource, Lint, Violation, check_file_at};
 
 /// Set to 1 to rewrite the golden files instead of comparing with them.

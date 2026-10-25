@@ -11,7 +11,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use deslag::changelog::Version;
+use deslag::version::Version;
 use deslag::{Config, Lint, check_file_at};
 use serde::Serialize;
 

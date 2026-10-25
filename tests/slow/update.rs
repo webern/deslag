@@ -13,10 +13,11 @@ use std::process::Output;
 use common::frozen::{self, EXTENSIONS};
 use common::schema::SchemaPaths;
 use common::{Repo, code, stderr, stdout};
-use deslag::changelog::{Version, changelog};
+use deslag::changelog::changelog;
 use deslag::config::schema;
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::news::News;
+use deslag::version::Version;
 
 /// The release running, which `--to` accepts. A test that needs the stamp to move passes it, because
 /// a bare `update` holds the stamp back once a release has entries after the config's, and a test

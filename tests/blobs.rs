@@ -17,10 +17,10 @@ use common::blobs::{Entry, Exclusion, Tried, load_blobs};
 use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
-use deslag::changelog::Version;
 use deslag::config::{BannedPhrases, NotAtAll, PhraseGroups, VerbsNoNouns};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
 use deslag::lint::{not_at_all, verbs_no_nouns};
+use deslag::version::Version;
 use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.

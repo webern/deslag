@@ -26,10 +26,10 @@ use std::sync::LazyLock;
 
 use serde::Deserialize;
 
-use crate::changelog::Version;
 use crate::config::{BannedPhrases, PhraseGroups};
 use crate::document::{Document, Location, Token, TokenKind};
 use crate::lint::{Keep, Mark, MarkKind};
+use crate::version::Version;
 
 /// The line every report opens with.
 pub const HEADING: &str = "ERROR: deslag detected banned phrases!";

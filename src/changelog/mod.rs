@@ -10,7 +10,6 @@
 
 #[cfg(test)]
 mod listing;
-mod version;
 
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
@@ -18,11 +17,7 @@ use std::sync::LazyLock;
 use serde::{Deserialize, Serialize};
 
 use crate::Lint;
-pub(crate) use version::parse_release;
-pub use version::{ParseError, Version, current_release};
-
-/// The release a config with no `deslag_version` is taken to be from: the first in the changelog.
-pub const BASELINE: semver::Version = semver::Version::new(0, 0, 1);
+use crate::version::{Version, parse_release};
 
 /// Where the changelog's files are, from the root of the crate. A path in a message starts here.
 const ROOT: &str = "src/changelog/releases";
@@ -534,23 +529,6 @@ onboarding = "Turn it on."
             Some(&version("0.2.0"))
         );
         assert_eq!(changelog.arrived_in(Lint::RepoLayout), None);
-    }
-
-    #[test]
-    fn next_sorts_above_every_release() {
-        assert!(version("next") > version("999.0.0"));
-        assert!(version("next") > version("1.0.0-rc.1"));
-        assert!(version("0.2.0") > version("0.1.9"));
-        assert!(version("1.0.0-rc.1") < version("1.0.0"));
-        assert_eq!(version("next"), Version::Next);
-        assert_eq!(version("next").to_string(), "next");
-    }
-
-    #[test]
-    fn a_version_that_is_neither_semver_nor_next_is_refused() {
-        for text in ["", "0.1", "v0.1.0", "Next", "latest"] {
-            assert!(text.parse::<Version>().is_err(), "{text:?}");
-        }
     }
 
     #[test]

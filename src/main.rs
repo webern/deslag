@@ -7,12 +7,13 @@ use std::process::ExitCode;
 use anyhow::Context;
 use clap::Parser;
 
-use deslag::changelog::{BASELINE, Version, changelog};
+use deslag::changelog::changelog;
 use deslag::cli::{Cli, Command, Format, Topic, UpdateArgs, UpdateFormat};
 use deslag::instructions::{self, Reading, Start};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::news::News;
 use deslag::output::{github, json, sarif};
+use deslag::version::{BASELINE, Version};
 
 /// Exits 0 when a run finishes and nothing fails, 1 when it finishes and a file fails a lint, and 2
 /// when deslag cannot do what it was asked: any error out of `run`, whatever the subcommand. clap
@@ -95,7 +96,7 @@ fn run() -> anyhow::Result<ExitCode> {
                 args.config_path.as_deref(),
                 args.dry_run,
                 args.to.as_ref(),
-                &deslag::changelog::current_release(),
+                &deslag::version::current_release(),
                 changelog(),
                 &CATALOGUE,
             )?;

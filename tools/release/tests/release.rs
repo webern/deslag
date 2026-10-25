@@ -4,11 +4,11 @@
 use std::path::Path;
 use std::process::Command;
 
+use deslag::config::paths::SchemaPaths;
 use deslag_release::entries::{Entry, Kind};
 use deslag_release::freeze::{self, Retired, Rules};
 use deslag_release::frozen::{self, EXTENSIONS};
 use deslag_release::prep::prep;
-use deslag_release::schema::SchemaPaths;
 use deslag_release::version;
 use serde_json::{Value, json};
 

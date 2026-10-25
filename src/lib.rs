@@ -16,12 +16,13 @@
 //! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
 //! sentences of its prose. [`tag`] is where each word gets a part of speech. [`instructions`] holds
 //! what an agent setting deslag up needs to read, [`changelog`] what each release added,
-//! [`news`] what a config has not seen of that, [`config::schema`] the JSON schema of the config,
-//! and [`explain`](mod@explain) the settings a file gets. [`output`] prints a run in the formats a
-//! machine reads, and [`fix`](mod@fix) makes the edits to a file that the lints name and the
-//! document proves safe. [`change`] asks git what a change did, which [`Report::within`] narrows a
-//! run to and which says what `allow` entries a change adds. [`mod@write`] replaces a file whole,
-//! as `fix` and `deslag update` do.
+//! [`news`] what a config has not seen of that, and [`version`] how releases compare.
+//! [`config::schema`] is the JSON schema of the config, [`config::paths`] the path of each setting
+//! in it, and [`explain`](mod@explain) the settings a file gets. [`output`] prints a run in the
+//! formats a machine reads, and [`fix`](mod@fix) makes the edits to a file that the lints name and
+//! the document proves safe. [`change`] asks git what a change did, which [`Report::within`]
+//! narrows a run to and which says what `allow` entries a change adds. [`mod@write`] replaces a
+//! file whole, as `fix` and `deslag update` do.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -40,6 +41,7 @@ pub mod news;
 pub mod output;
 pub mod parse;
 pub mod tag;
+pub mod version;
 pub mod write;
 
 pub use change::Change;

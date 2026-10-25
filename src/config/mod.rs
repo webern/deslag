@@ -33,13 +33,15 @@
 //! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`], [`cpp`] and
 //! [`toml`] hold the sections of those names, and [`lints`] the settings of each lint. [`allow`]
 //! holds the entries that exempt one sentence from a lint. [`update`] is the one thing that writes
-//! a config, and [`edit`] makes the edits to its text.
+//! a config, and [`edit`] makes the edits to its text. [`paths`] walks the schema for the path of
+//! every setting.
 
 pub mod allow;
 pub mod cpp;
 pub mod edit;
 pub mod lints;
 pub mod md;
+pub mod paths;
 pub mod redirect;
 pub mod rust;
 pub mod search;
@@ -56,8 +58,8 @@ use serde::de::{DeserializeOwned, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 use crate::Error;
-use crate::changelog::{BASELINE, Version, current_release, parse_release};
 use crate::glob::Pattern;
+use crate::version::{BASELINE, Version, current_release, parse_release};
 
 pub use allow::Allow;
 pub use lints::{

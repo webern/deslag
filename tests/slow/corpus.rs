@@ -17,7 +17,6 @@ use std::path::Path;
 use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
-use deslag::changelog::Version;
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
 use deslag::config::{NotAtAll, VerbsNoNouns};
 use deslag::document::{Fences, Location, Reader, Stack};
@@ -27,6 +26,7 @@ use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{
     Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, verbs_no_nouns,
 };
+use deslag::version::Version;
 use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
 
 /// How many fixtures each collected category must hold at least.

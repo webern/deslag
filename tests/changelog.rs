@@ -8,9 +8,10 @@ use std::path::{Path, PathBuf};
 
 use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_misfit};
 use common::schema::SchemaPaths;
-use deslag::changelog::{BASELINE, Changelog, Entry, FileError, Version, changelog};
+use deslag::changelog::{Changelog, Entry, FileError, changelog};
 use deslag::config::{SCHEMA_VERSION, schema};
 use deslag::lint::banned_phrases::{CATALOGUE, Catalogue, Entry as Phrase};
+use deslag::version::{BASELINE, Version};
 use deslag::{Config, ConfigSource, Lint, check_file, check_repo};
 use serde_json::json;
 

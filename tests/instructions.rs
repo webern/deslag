@@ -11,7 +11,7 @@ use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_
 use common::schema::resolve;
 use common::{Repo, code, raw_stderr, stderr, stdout};
 use deslag::Lint;
-use deslag::changelog::{BASELINE, Entry, Version, changelog};
+use deslag::changelog::{Entry, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
@@ -19,6 +19,7 @@ use deslag::instructions::{ALLOW, Reading, Start, guide, lints, update_json, upd
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::{banned_chars, banned_phrases, check_file};
 use deslag::news::News;
+use deslag::version::{BASELINE, Version};
 use deslag::{Config, ConfigSource};
 use serde_json::Value;
 

@@ -6,8 +6,8 @@ name: publish-blobs
 # seed with what GitHub says of each repository and the commit to harvest, builds the batch twice
 # and fails unless both come out the same, and fails unless a completed manifest builds to exactly
 # what it records. On a push it then publishes the batches, rewrites what is measured on the new image
-# (the phrase catalogue and the golden file of list_growth), and commits the completed manifests, the
-# new blobs.lock and those two files to the branch pushed, as one commit, so the branch stays green.
+# (the phrase catalogue), and commits the completed manifests, the new blobs.lock and the catalogue
+# to the branch pushed, as one commit, so the branch stays green.
 # scripts/blobstore/batches.md has the whole story.
 #
 # Only main publishes. A workflow file runs from the branch it is pushed to, so a long-lived
@@ -16,9 +16,8 @@ name: publish-blobs
 #
 # A pull request builds the batches and publishes nothing, so a seed is shown to build, and to
 # build the same way twice, before it merges. It also measures the new batches the way a publish
-# would: the catalogue and the golden file are rewritten on the tier with the batch in it and the
-# checks run, and the step summary shows the diff, so a batch that breaks a floor fails its pull
-# request.
+# would: the catalogue is rewritten on the tier with the batch in it and the checks run, and the
+# step summary shows the diff, so a batch that breaks a floor fails its pull request.
 
 on:
   push:
@@ -177,14 +176,13 @@ jobs:
         run: make publish-blobs
 
       # What the build holds to the pinned image would fail on the lock this run is about to commit:
-      # the catalogue's counts and measured_on, and list_growth's golden file, which names the batch
-      # of every fixture. The tree publish left is the artifact's contents, so remeasure.sh drops it
-      # and fetches the image just published back from the registry, by its digest, as anyone else
-      # would. It then rewrites both files and runs make test-blobs and the phrases test on the
-      # result. The code that reads the image is the branch's own, with its locked dependencies; it
-      # reads the fixtures as data and has no token, in its environment or on disk. A failure here
-      # must not leave the image unpinned, so the next step commits whatever there is, and the last
-      # step fails the job.
+      # the catalogue's counts and measured_on. The tree publish left is the artifact's contents, so
+      # remeasure.sh drops it and fetches the image just published back from the registry, by its
+      # digest, as anyone else would. It then rewrites the catalogue and runs make test-blobs and
+      # the phrases test on the result. The code that reads the image is the branch's own, with its
+      # locked dependencies; it reads the fixtures as data and has no token, in its environment or
+      # on disk. A failure here must not leave the image unpinned, so the next step commits whatever
+      # there is, and the last step fails the job.
       - name: Measure the new image
         id: remeasure
         continue-on-error: true
@@ -197,7 +195,7 @@ jobs:
 
       # The push is made with the workflow token, so it starts no workflow of its own. The token is
       # for git's fetch and push alone. If the branch moved meanwhile, the pin goes on its new tip
-      # and the image is measured again there. The paths are the two files make fix-blobs writes.
+      # and the image is measured again there. The paths are the files make fix-catalog writes.
       - name: Commit the lock, the completed manifests and what was rewritten
         env:
           GH_TOKEN: ${{ github.token }}

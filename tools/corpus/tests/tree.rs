@@ -338,21 +338,9 @@ fn lints_check_the_files_the_config_selects() {
 }
 
 #[test]
-fn lints_leave_out_the_lints_that_judge_a_change() {
-    // The repository's config runs list_growth on AGENTS.md, and the tree holds files at that path.
-    let raw = deslag::Config::load(repo_root(), None).expect("the repository's config");
-    assert!(
-        tree()
-            .docs
-            .iter()
-            .any(|doc| raw.md().lints_for(&doc.source_path).list_growth.is_some())
-    );
+fn lints_read_the_config_deslag_finds_when_given_none() {
     let config = load_config(repo_root(), None).unwrap_or_else(|problem| panic!("{problem}"));
     assert_eq!(config.path, Path::new(".agents/deslag.toml"));
-    let found = lints(tree(), &Filters::default(), &config, true)
-        .unwrap_or_else(|problem| panic!("{problem}"));
-    assert_eq!(found.left_out, ["repo_layout", "list_growth"]);
-    assert!(found.lints.iter().all(|row| row.lint != "list_growth"));
 }
 
 #[test]

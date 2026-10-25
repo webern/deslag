@@ -92,8 +92,7 @@ enum Command {
     Lints {
         #[command(flatten)]
         filters: Filters,
-        /// The config; by default, the one deslag finds in the repository at --root. A lint that
-        /// judges a change, such as list_growth, is not run: a corpus file has no base.
+        /// The config; by default, the one deslag finds in the repository at --root.
         #[arg(long)]
         config: Option<PathBuf>,
         /// Check every file, not only those the config's globs select.

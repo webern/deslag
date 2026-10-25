@@ -10,8 +10,7 @@ it reading as it did.
 
 A config with no `[cpp]` section does not read a C or C++ file. Its lints are the same tables as
 `[md]`'s, under `[cpp.lints]`, and the same lints turn on. A lint that needs the whole file, such as
-`max_size_bytes`, or Markdown blocks, such as `list_growth`, is an error there, since no comment of
-a C file has Markdown blocks. A file that `[md]` and `[cpp]` both select is an error.
+`max_size_bytes`, is an error there. A file that `[md]` and `[cpp]` both select is an error.
 
 The section reads files ending in `.c`, `.h`, `.cc`, `.cpp`, `.cxx`, `.hpp`, `.hh` or `.hxx`. A
 header with no extension, and files ending in `.tcc`, `.inl` or `.ipp`, cannot be selected. The

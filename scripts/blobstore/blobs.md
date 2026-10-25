@@ -117,9 +117,9 @@ drop, and which files moved since the fetch, and pushes nothing.
 3. `make test-blobs`, which tests the tree as it is, and say what changed in this file.
 4. `scripts/blobstore/blobs.sh plan` to see what will be pushed, then `make publish-blobs`. It
    pushes the next `vN`, reusing every layer that did not change, and rewrites `blobs.lock`.
-5. `scripts/blobstore/remeasure.sh run`: `make fix-blobs`, which rewrites what the new image makes
-   stale (the catalogue's counts and `measured_on`, and `list_growth`'s golden), then `make
-   test-blobs` and the phrases test. Read the diff.
+5. `scripts/blobstore/remeasure.sh run`: `make fix-catalog`, which rewrites what the new image makes
+   stale (the catalogue's counts and `measured_on`), then `make test-blobs` and the phrases test.
+   Read the diff.
 6. Commit `blobs.lock` and those files with this file. The workflow does the same for a batch it
    builds; `batches.md` says how.
 

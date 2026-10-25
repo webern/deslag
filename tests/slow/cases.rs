@@ -16,10 +16,10 @@
 //! A case runs `deslag check` unless an `.args` file beside it holds other arguments, one to a
 //! line, the subcommand first.
 //!
-//! A `.base` directory beside a case is the repo as it was before a change, for the lints that
-//! judge one. The case then runs in a git repo whose one commit holds the base, with the case's
-//! files in its working tree in place of the base's, and with `--base HEAD` after its arguments.
-//! The commit is written as `[BASE]`.
+//! A `.base` directory beside a case is the repo as it was before a change, for a case of the
+//! notice on an `allow` entry the change adds. The case then runs in a git repo whose one commit
+//! holds the base, with the case's files in its working tree in place of the base's, and with
+//! `--base HEAD` after its arguments. The commit is written as `[BASE]`.
 //!
 //! `make fix-test-output` rewrites the `.stderr` and `.json` files from what deslag prints now, and
 //! never a `.exit` or `.args` file; read the diff before committing it.

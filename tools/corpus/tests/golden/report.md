@@ -85,7 +85,7 @@ The catalog gate, n-grams through the sieve that no reference file holds, in any
 
 ## Lints
 
-config: config.toml; the files its globs select, at their path in their repository; left out: repo_layout, list_growth, since a corpus file has no repository around it and no base
+config: config.toml; the files its globs select, at their path in their repository; left out: repo_layout, since a corpus file has no repository around it
 
 **failing files by label: failing/checked, file share (repository-weighted share)**
 

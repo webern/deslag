@@ -6,13 +6,12 @@
 mod common;
 
 use common::frozen::{self, EXTENSIONS};
-use common::git::{commit, git};
 use common::{Repo, code, stderr};
 use deslag::config::REDIRECTS;
 use deslag::{Config, ConfigSource};
 
-/// A git repo holding the config at `path`, as `deslag.<extension>`, and one Markdown file the
-/// config selects and every lint in it passes. It is committed, because `list_growth` needs a base.
+/// A repo holding the config at `path`, as `deslag.<extension>`, and one Markdown file the config
+/// selects and every lint in it passes.
 fn repo_with(path: &std::path::Path, extension: &str) -> Repo {
     let repo = Repo::new();
     let text = std::fs::read_to_string(path).expect("a readable config");
@@ -21,8 +20,6 @@ fn repo_with(path: &std::path::Path, extension: &str) -> Repo {
         "docs/note.md",
         "# Note\n\n## Layout\n\n```\nnote.md  <- this note\n```\n\nA short note.\n",
     );
-    git(repo.root(), &["init", "-q"]);
-    commit(repo.root(), "a repo");
     repo
 }
 
@@ -60,7 +57,7 @@ fn every_frozen_config_loads_and_warns_only_for_redirects() {
         for extension in EXTENSIONS {
             let path = frozen::config(&directory, extension);
             let value = frozen::value(&path);
-            let output = repo_with(&path, extension).run(&["check", "--base", "HEAD"]);
+            let output = repo_with(&path, extension).run(&["check"]);
             let said = stderr(&output);
             assert_eq!(code(&output), 0, "{release} {extension}: {said}");
 

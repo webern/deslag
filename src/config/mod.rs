@@ -61,8 +61,8 @@ use crate::glob::Pattern;
 
 pub use allow::Allow;
 pub use lints::{
-    BannedChars, BannedPhrases, CharGroups, Density, Lints, ListGrowth, MaxEmphasis, MaxSizeBytes,
-    Merge, NotAtAll, PhraseGroups, RepoLayout, VerbsNoNouns,
+    BannedChars, BannedPhrases, CharGroups, Density, Lints, MaxEmphasis, MaxSizeBytes, Merge,
+    NotAtAll, PhraseGroups, RepoLayout, VerbsNoNouns,
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{

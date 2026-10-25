@@ -612,8 +612,8 @@ fn without_git_it_cannot_run() {
     );
 }
 
-/// A base alone judges the change for the lints that read one, and narrows nothing: every finding
-/// of the whole tree is reported, with no line on the change.
+/// A base alone narrows nothing: every finding of the whole tree is reported, with no line on the
+/// change.
 #[test]
 fn a_base_does_not_narrow_the_report() {
     let repo = repo(&[

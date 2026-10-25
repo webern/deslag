@@ -45,8 +45,8 @@ pub struct ReportArgs {
     /// What to print on standard output; the text report goes to standard error in every format
     #[arg(long, value_enum, default_value_t = Format::Text)]
     pub format: Format,
-    /// Judge the change from where REV and HEAD meet to the working tree, such as with
-    /// `origin/main`, for the lints that compare a file with what it was; the whole tree is
+    /// Read the change from where REV and HEAD meet to the working tree, such as with
+    /// `origin/main`, and give a notice for each allow entry it adds or changes; the whole tree is
     /// checked
     #[arg(long, value_name = "REV")]
     pub base: Option<String>,
@@ -60,7 +60,7 @@ pub struct CheckArgs {
     pub report: ReportArgs,
     /// Report only what the change from where BASE and HEAD meet to the working tree touched, such
     /// as with `origin/main`: a step toward a clean tree, which the whole check still gates. It
-    /// judges the change as `--base` does. An allow entry that does not hold fails it wherever its
+    /// gives the notices `--base` does. An allow entry that does not hold fails it wherever its
     /// file is
     #[arg(long, value_name = "BASE", conflicts_with = "base")]
     pub diff: Option<String>,

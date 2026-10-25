@@ -34,12 +34,12 @@ pub(super) struct CppFile {
     /// The comments this section reads, the rest of a C or C++ file being left alone.
     /// `doc_comment` is the `///` and `//!` lines and the `/** */` and `/*! */` blocks, and the
     /// trailing `///<` and `/**<` forms. `comment` is the other `//` lines and `/* */` blocks.
-    /// Both are read as plain text, so a lint that needs Markdown blocks is an error here.
+    /// Both are read as plain text.
     #[serde(default)]
     #[schemars(extend("default" = ["doc_comment", "comment"]))]
     surfaces: Option<Vec<CommentSurface>>,
     /// The settings for every selected file that no override changes. A lint that needs the whole
-    /// file, such as `max_size_bytes`, or Markdown blocks, such as `list_growth`, is an error here.
+    /// file, such as `max_size_bytes`, is an error here.
     #[serde(default)]
     lints: Lints,
     /// Settings for the selected files that match a pattern.

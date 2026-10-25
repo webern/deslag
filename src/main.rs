@@ -70,9 +70,8 @@ fn run() -> anyhow::Result<ExitCode> {
             let config = load_config(&root, args.report.config_path.as_deref())?;
             let base = args.report.base.as_deref();
             // A base git cannot read stops the run before fix writes anything.
-            let before = changed(&root, base)?;
-            let fixes =
-                deslag::fix::fix(&root, &config, &args.paths, args.dry_run, before.as_ref())?;
+            changed(&root, base)?;
+            let fixes = deslag::fix::fix(&root, &config, &args.paths, args.dry_run)?;
             if fixes.is_empty() {
                 eprintln!("{}\n", deslag::fix::nothing_fixed(args.dry_run));
             }
@@ -170,10 +169,9 @@ fn changed(root: &Path, base: Option<&str>) -> anyhow::Result<Option<deslag::Cha
         .transpose()?)
 }
 
-/// Checks the repo rooted at `root`, judging `change` for the lints that compare a file with what
-/// it was, printing the report as `format` says, and returns the exit code: 0 when every file
-/// passes and every `allow` entry holds, and 1 when one fails. When `narrowed`, only what the
-/// change touched counts.
+/// Checks the repo rooted at `root` against `change`, when there is one, printing the report as
+/// `format` says, and returns the exit code: 0 when every file passes and every `allow` entry
+/// holds, and 1 when one fails. When `narrowed`, only what the change touched counts.
 fn check(
     root: &Path,
     config: &deslag::Config,

@@ -52,7 +52,6 @@ impl Markup {
     pub(crate) fn provides(self, need: Need) -> bool {
         match need {
             Need::File => false,
-            Need::Structure => self == Markup::Markdown,
             Need::Sentences | Need::Text => true,
         }
     }

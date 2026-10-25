@@ -107,8 +107,6 @@ impl Reader {
 pub(crate) enum Need {
     /// The file as a whole.
     File,
-    /// Markdown blocks and spans.
-    Structure,
     /// Sentences, with their tokens and tags.
     Sentences,
     /// Any prose.
@@ -147,14 +145,13 @@ impl Stack {
     }
 
     /// Whether a document read with this stack has what `need` asks for. Markdown has all of it.
-    /// Plain text is prose, so it has sentences and text, but no blocks of Markdown, and it is no
-    /// file of its own. A code file has what the markup of any of its surfaces gives, and is never
-    /// the file.
+    /// Plain text is prose, so it has sentences and text, but it is no file of its own. A code file
+    /// has what the markup of any of its surfaces gives, and is never the file.
     pub(crate) fn provides(&self, need: Need) -> bool {
         match (&self.outer, need) {
             (Reader::Markdown { .. }, _) => true,
             (Reader::Plain, Need::Sentences | Need::Text) => true,
-            (Reader::Plain, Need::File | Need::Structure) => false,
+            (Reader::Plain, Need::File) => false,
             (
                 Reader::Rust { surfaces } | Reader::Cpp { surfaces } | Reader::Toml { surfaces },
                 _,
@@ -164,24 +161,10 @@ impl Stack {
         }
     }
 
-    /// What `need` asks for and what gives it, for a message about the section named `section`. The
-    /// surfaces that give Markdown blocks are those whose markup is Markdown, which a C or C++
-    /// file has none of.
-    pub(crate) fn asks(&self, need: Need, section: &str) -> String {
+    /// What `need` asks for and what gives it, for a message about a section.
+    pub(crate) fn asks(&self, need: Need) -> String {
         match need {
             Need::File => "the whole file, which only [md] reads".to_string(),
-            Need::Structure => {
-                let giving = [Surface::DocComment, Surface::Comment]
-                    .into_iter()
-                    .find(|surface| self.markup(*surface).provides(need));
-                match giving {
-                    None => format!("the blocks of Markdown, which no surface of [{section}] has"),
-                    Some(surface) => format!(
-                        "the blocks of Markdown, which only the {} surface gives",
-                        surface.name()
-                    ),
-                }
-            }
             Need::Sentences | Need::Text => match self.outer {
                 Reader::Toml { .. } => "prose, which the comment surface gives".to_string(),
                 _ => "prose, which the doc_comment and comment surfaces give".to_string(),
@@ -342,11 +325,10 @@ mod tests {
         let comments = rust(&[Surface::Comment]);
         let both = rust(&[Surface::DocComment, Surface::Comment]);
 
-        for need in [Need::Structure, Need::Sentences, Need::Text] {
+        for need in [Need::Sentences, Need::Text] {
             assert!(docs.provides(need) && both.provides(need), "{need:?}");
         }
         assert!(comments.provides(Need::Sentences) && comments.provides(Need::Text));
-        assert!(!comments.provides(Need::Structure));
         assert!(!both.provides(Need::File));
         assert!(!rust(&[]).provides(Need::Text));
     }
@@ -365,7 +347,7 @@ mod tests {
         ] {
             let stack = cpp(surfaces);
             assert!(stack.provides(Need::Sentences) && stack.provides(Need::Text));
-            assert!(!stack.provides(Need::Structure) && !stack.provides(Need::File));
+            assert!(!stack.provides(Need::File));
         }
         assert!(!cpp(&[]).provides(Need::Text));
         for (reader, surface, markup) in [
@@ -410,39 +392,27 @@ mod tests {
         });
         assert_eq!(toml.markup(Surface::Comment), Markup::Plain);
         assert!(comments.provides(Need::Sentences) && comments.provides(Need::Text));
-        assert!(!comments.provides(Need::Structure) && !comments.provides(Need::File));
+        assert!(!comments.provides(Need::File));
         assert!(!toml.provides(Need::Text));
         assert_eq!(
-            toml.asks(Need::Text, "toml"),
+            toml.asks(Need::Text),
             "prose, which the comment surface gives"
-        );
-        assert_eq!(
-            toml.asks(Need::Structure, "toml"),
-            "the blocks of Markdown, which no surface of [toml] has"
         );
         assert_eq!(toml.reads(), "no surface");
         assert_eq!(comments.reads(), "the comment surface");
     }
 
     #[test]
-    fn a_message_says_which_surfaces_give_markdown_blocks_and_that_a_cpp_file_has_none() {
+    fn a_message_says_what_gives_the_whole_file_and_prose() {
         let rust = Stack::new(Reader::Rust { surfaces: vec![] });
         let cpp = Stack::new(Reader::Cpp { surfaces: vec![] });
-        assert_eq!(
-            rust.asks(Need::Structure, "rust"),
-            "the blocks of Markdown, which only the doc_comment surface gives"
-        );
-        assert_eq!(
-            cpp.asks(Need::Structure, "cpp"),
-            "the blocks of Markdown, which no surface of [cpp] has"
-        );
         for stack in [&rust, &cpp] {
             assert_eq!(
-                stack.asks(Need::File, "x"),
+                stack.asks(Need::File),
                 "the whole file, which only [md] reads"
             );
             assert_eq!(
-                stack.asks(Need::Text, "x"),
+                stack.asks(Need::Text),
                 "prose, which the doc_comment and comment surfaces give"
             );
         }

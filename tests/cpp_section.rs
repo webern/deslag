@@ -176,11 +176,11 @@ fn every_glob_of_the_cpp_section_ends_in_an_extension_it_reads_and_an_override_g
         .expect("an override glob narrows the section's");
 }
 
-/// Whether a lint can run on the surfaces: the whole file is never given, Markdown blocks are not
-/// either, since no C comment has them, and prose by either surface.
+/// Whether a lint can run on the surfaces: the whole file is never given, and prose by either
+/// surface.
 fn can_run(lint: Lint, surfaces: &[&str]) -> bool {
     match lint {
-        Lint::MaxSizeBytes | Lint::RepoLayout | Lint::ListGrowth => false,
+        Lint::MaxSizeBytes | Lint::RepoLayout => false,
         Lint::MaxEmphasis
         | Lint::BannedChars
         | Lint::BannedPhrases
@@ -238,17 +238,6 @@ fn the_message_names_the_lint_the_surfaces_and_what_would_feed_it() {
         refused("[cpp.lints.max_size_bytes]\n"),
         "invalid setting in deslag.toml: cpp.lints.max_size_bytes is on, but it needs the whole \
          file, which only [md] reads; [cpp] reads the surfaces doc_comment and comment"
-    );
-    assert_eq!(
-        refused("[cpp]\nsurfaces = [\"doc_comment\"]\n[cpp.lints.list_growth]\n"),
-        "invalid setting in deslag.toml: cpp.lints.list_growth is on, but it needs the blocks of \
-         Markdown, which no surface of [cpp] has; [cpp] reads the doc_comment surface"
-    );
-    assert_eq!(
-        refused("[[cpp.overrides]]\nglobs = [\"a.c\"]\nlints.list_growth = {}\n"),
-        "invalid setting in deslag.toml: cpp.overrides[0].lints.list_growth is on, but it needs \
-         the blocks of Markdown, which no surface of [cpp] has; [cpp] reads the surfaces \
-         doc_comment and comment"
     );
     assert_eq!(
         refused("[cpp]\nsurfaces = []\n[cpp.lints.density]\n"),

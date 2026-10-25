@@ -826,8 +826,7 @@ fn the_corpus_locations_hold_what_they_point_at() {
                 located.push(lint);
             }
             match &finding.violation {
-                // A fixture alone is no change, so a lint that judges one never runs here.
-                Violation::MaxSizeBytes(_) | Violation::ListGrowth(_) => {}
+                Violation::MaxSizeBytes(_) => {}
                 Violation::BannedChars(over) => {
                     for banned in &over.banned {
                         for location in &banned.locations {
@@ -936,9 +935,7 @@ fn the_corpus_locations_hold_what_they_point_at() {
 
     let unlocated: Vec<Lint> = Lint::ALL
         .into_iter()
-        .filter(|lint| {
-            *lint != Lint::MaxSizeBytes && !lint.reads_change() && !located.contains(lint)
-        })
+        .filter(|lint| *lint != Lint::MaxSizeBytes && !located.contains(lint))
         .collect();
     assert_eq!(
         unlocated,
@@ -1051,7 +1048,7 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
     let settings = BannedChars::default();
     let paths = place_real(&repo, fixtures);
     let config = Config::load(repo.root(), None).expect("a config");
-    let fixes = fix::fix(repo.root(), &config, &[], false, None).expect("fix runs");
+    let fixes = fix::fix(repo.root(), &config, &[], false).expect("fix runs");
     let fixes: HashMap<&str, &Outcome> = fixes
         .iter()
         .map(|file| (file.path.as_str(), &file.outcome))
@@ -1141,7 +1138,7 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
         whole += usize::from(!places.is_empty() && left.is_empty());
     }
 
-    let again = fix::fix(repo.root(), &config, &[], false, None).expect("fix runs again");
+    let again = fix::fix(repo.root(), &config, &[], false).expect("fix runs again");
     assert!(
         again.iter().all(|file| match &file.outcome {
             Outcome::Read { fixed, .. } => fixed.is_empty(),

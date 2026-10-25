@@ -9,7 +9,6 @@ pub mod allow;
 pub mod banned_chars;
 pub mod banned_phrases;
 pub mod density;
-pub mod list_growth;
 pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod not_at_all;
@@ -51,8 +50,6 @@ pub enum Lint {
     BannedPhrases,
     /// `density`: the length of paragraphs and list items.
     Density,
-    /// `list_growth`: what a change does to the count of list items.
-    ListGrowth,
     /// `verbs_no_nouns`: a verb negated through its object, as in `bakes no cakes`.
     VerbsNoNouns,
     /// `not_at_all`: a negation padded with "at all", as in `does not parse at all`.
@@ -61,14 +58,13 @@ pub enum Lint {
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 9] = [
+    pub const ALL: [Lint; 8] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
         Lint::BannedChars,
         Lint::BannedPhrases,
         Lint::Density,
-        Lint::ListGrowth,
         Lint::VerbsNoNouns,
         Lint::NotAtAll,
     ];
@@ -82,25 +78,8 @@ impl Lint {
             Lint::BannedChars => "banned_chars",
             Lint::BannedPhrases => "banned_phrases",
             Lint::Density => "density",
-            Lint::ListGrowth => "list_growth",
             Lint::VerbsNoNouns => "verbs_no_nouns",
             Lint::NotAtAll => "not_at_all",
-        }
-    }
-
-    /// Whether it judges a change rather than a file: it compares a file with what it was at the
-    /// run's base, and cannot run without one.
-    pub fn reads_change(self) -> bool {
-        match self {
-            Lint::ListGrowth => true,
-            Lint::MaxSizeBytes
-            | Lint::MaxEmphasis
-            | Lint::RepoLayout
-            | Lint::BannedChars
-            | Lint::BannedPhrases
-            | Lint::Density
-            | Lint::VerbsNoNouns
-            | Lint::NotAtAll => false,
         }
     }
 
@@ -108,7 +87,6 @@ impl Lint {
     pub(crate) fn needs(self) -> Need {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
-            Lint::ListGrowth => Need::Structure,
             Lint::VerbsNoNouns | Lint::NotAtAll => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
@@ -128,9 +106,6 @@ impl Lint {
             }
             Lint::BannedPhrases => "A file must not hold the phrases the config bans.",
             Lint::Density => "A paragraph or list item must not be longer than its limit.",
-            Lint::ListGrowth => {
-                "A change must not leave a file with more list items than it had before."
-            }
             Lint::VerbsNoNouns => {
                 "A sentence must negate its verb, not its object, as in \"does not bake cakes\"."
             }
@@ -150,7 +125,6 @@ impl Lint {
             Lint::BannedChars => "with banned characters",
             Lint::BannedPhrases => "with banned phrases",
             Lint::Density => "with dense text",
-            Lint::ListGrowth => "with more list items than at the base",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
             Lint::NotAtAll => "with negations padded with \"at all\"",
         }
@@ -211,8 +185,6 @@ pub enum Violation {
     BannedPhrases(banned_phrases::Over),
     /// The file has a paragraph or list item longer than it is allowed.
     Density(density::Over),
-    /// The change left the file with more list items than it had.
-    ListGrowth(list_growth::Over),
     /// The file negates a verb through its object.
     VerbsNoNouns(verbs_no_nouns::Over),
     /// The file pads a negation with "at all".
@@ -229,7 +201,6 @@ impl Violation {
             Violation::BannedChars(_) => Lint::BannedChars,
             Violation::BannedPhrases(_) => Lint::BannedPhrases,
             Violation::Density(_) => Lint::Density,
-            Violation::ListGrowth(_) => Lint::ListGrowth,
             Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
             Violation::NotAtAll(_) => Lint::NotAtAll,
         }
@@ -245,7 +216,6 @@ impl Violation {
             Violation::BannedChars(over) => banned_chars::marks(over),
             Violation::BannedPhrases(over) => banned_phrases::marks(over),
             Violation::Density(over) => density::marks(over),
-            Violation::ListGrowth(over) => list_growth::marks(over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
             Violation::NotAtAll(over) => not_at_all::marks(over),
         }
@@ -263,7 +233,6 @@ impl Violation {
             // Its values are advice, not replacements, and a match's words can cross markup.
             Violation::BannedPhrases(_) => Vec::new(),
             Violation::Density(_) => Vec::new(),
-            Violation::ListGrowth(_) => Vec::new(),
             Violation::VerbsNoNouns(_) => Vec::new(),
             Violation::NotAtAll(_) => Vec::new(),
         }
@@ -275,7 +244,7 @@ impl Violation {
     pub fn retain(&self, keep: &dyn Keep) -> Option<Violation> {
         match self {
             // A verdict on the whole file, and its evidence.
-            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) | Violation::ListGrowth(_) => {
+            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) => {
                 keep.verdict().then(|| self.clone())
             }
             Violation::RepoLayout(over) => {
@@ -357,7 +326,6 @@ impl Finding {
             Violation::BannedChars(over) => banned_chars::render(&self.path, over),
             Violation::BannedPhrases(over) => banned_phrases::render(&self.path, over),
             Violation::Density(over) => density::render(&self.path, over),
-            Violation::ListGrowth(over) => list_growth::render(&self.path, over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
             Violation::NotAtAll(over) => not_at_all::render(&self.path, over),
         }
@@ -382,7 +350,7 @@ pub struct Report {
     /// ran. An `allow` entry that does not hold is not here but in `exemptions`, and fails the run
     /// all the same.
     pub findings: Vec<Finding>,
-    /// The base the run judged a change from, when it had one.
+    /// The base the run read a change from, when it had one.
     pub base: Option<Base>,
     /// The change the findings were narrowed to, by [`Report::within`].
     pub change: Option<Narrowed>,
@@ -392,7 +360,7 @@ pub struct Report {
     pub config: String,
 }
 
-/// The base a run judged a change from, given with `--base` or `--diff`.
+/// The base a run read a change from, given with `--base` or `--diff`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct Base {
     /// The base as given, such as `origin/main`.
@@ -537,8 +505,8 @@ impl Report {
     }
 }
 
-/// Runs every lint over the repo rooted at `root`, judging `change`, when there is one, for the
-/// lints that compare a file with what it was.
+/// Runs every lint over the repo rooted at `root`. With a `change`, the report names its base and
+/// marks each `allow` entry the change adds or changes.
 ///
 /// An `allow` entry of the config drops the occurrences of its lint inside the one sentence it
 /// quotes; [`Report::exemptions`] says how each entry came out, and an entry that did not hold
@@ -554,10 +522,6 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
     };
 
     let stamp = config.deslag_version();
-    let judging = Judging {
-        change,
-        phrases_at: &stamp,
-    };
     let walked = glob::walk(root)?;
     let known: BTreeSet<String> = match config.has_allow() {
         true => walked.iter().map(|file| file.relative.clone()).collect(),
@@ -577,7 +541,7 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
             &contents,
             &text,
             dir,
-            judging,
+            &stamp,
         )?;
         report.findings.extend(checked.findings);
         exemptions.extend(checked.exemptions);
@@ -636,11 +600,10 @@ pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
     Cow::Owned(text)
 }
 
-/// Runs every lint over one file, in a run with no base: `relative` is its path from the repo
-/// root, `contents` its bytes and `dir` the directory it is in, which a lint that looks at the
-/// disk reads. The findings are in the order the lints run. A lint that judges a change cannot
-/// run here, so a file one selects is an error. A path no section selects is read by the section
-/// for its extension, such as `[rust]` for `.rs`, and else as `[md]` reads a file.
+/// Runs every lint over one file: `relative` is its path from the repo root, `contents` its bytes
+/// and `dir` the directory it is in, which a lint that looks at the disk reads. The findings are in
+/// the order the lints run. A path no section selects is read by the section for its extension,
+/// such as `[rust]` for `.rs`, and else as `[md]` reads a file.
 ///
 /// The `allow` entries of that section that name `relative` are applied, so the findings they
 /// exempt are not returned, whether or not the section selects the file. An entry that does not
@@ -667,11 +630,7 @@ pub fn check_file_at(
 ) -> Result<Vec<Finding>, Error> {
     let text = decode(contents);
     let section = config.section_to_read(relative)?;
-    let judging = Judging {
-        change: None,
-        phrases_at: stamp,
-    };
-    Ok(check_text(config, section, relative, contents, &text, dir, judging)?.findings)
+    Ok(check_text(config, section, relative, contents, &text, dir, stamp)?.findings)
 }
 
 /// What running the lints over one file came to.
@@ -684,37 +643,13 @@ pub(crate) struct Checked<'a> {
     pub exemptions: Vec<Exemption>,
 }
 
-/// A file as it was at the base of a run, which a lint that judges a change compares it with.
-#[derive(Debug, Clone)]
-pub struct Before<'a> {
-    /// The base as given, such as `origin/main`.
-    pub rev: &'a str,
-    /// The commit the base names.
-    pub commit: &'a str,
-    /// The commit the change is measured from, where the base and HEAD meet.
-    pub merge_base: &'a str,
-    /// The file there.
-    pub document: Document<'a>,
-    /// What the change did to it.
-    pub file: &'a change::File,
-}
-
-/// What a run judges its files by besides the config.
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct Judging<'a> {
-    /// The change the lints that judge one need, if the run has a base.
-    pub change: Option<&'a Change>,
-    /// The stamp the phrases of the catalogue are held to, which is the config's unless the caller
-    /// means the catalogue whole.
-    pub phrases_at: &'a Version,
-}
-
 /// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it,
-/// `text`, its `contents` decoded, and what the run `judging` is held to. Returns the document the
-/// lints read with what they found, for a caller that edits it: the section's stack reads the
-/// file, so a fix reads a file as the check does. The section's `allow` entries for the file are
-/// applied here, so that `check`, `fix` and `--diff` agree on what is exempt: a fix never edits an
-/// exempted occurrence.
+/// `text`, its `contents` decoded, and the `stamp` the phrases of the catalogue are held to, which
+/// is the config's unless the caller means the catalogue whole. Returns the document the lints read
+/// with what they found, for a caller that edits it: the section's stack reads the file, so a fix
+/// reads a file as the check does. The section's `allow` entries for the file are applied here, so
+/// that `check`, `fix` and `--diff` agree on what is exempt: a fix never edits an exempted
+/// occurrence.
 pub(crate) fn check_text<'a>(
     config: &Config,
     section: &Section,
@@ -722,12 +657,8 @@ pub(crate) fn check_text<'a>(
     contents: &[u8],
     text: &'a str,
     dir: &Path,
-    judging: Judging<'_>,
+    stamp: &Version,
 ) -> Result<Checked<'a>, Error> {
-    let Judging {
-        change,
-        phrases_at: stamp,
-    } = judging;
     let lints = section.lints_for(relative);
     let contradiction = lints.contradiction().or_else(|| {
         lints
@@ -741,29 +672,6 @@ pub(crate) fn check_text<'a>(
             message: format!("for {relative}, {message}"),
         });
     }
-    // Only a file a lint that judges a change selects is read at the base.
-    let judged = lints.list_growth.is_some().then_some(Lint::ListGrowth);
-    let base_text = match (judged, change) {
-        (None, _) => None,
-        (Some(lint), None) => {
-            return Err(Error::NoBase {
-                lint: lint.id(),
-                path: relative.to_string(),
-            });
-        }
-        (Some(_), Some(change)) => change
-            .base_text(relative)?
-            .map(|base_text| (change, base_text)),
-    };
-    let before = base_text.as_ref().and_then(|(change, base_text)| {
-        Some(Before {
-            rev: &change.base,
-            commit: &change.commit,
-            merge_base: &change.merge_base,
-            document: section.stack.document(base_text),
-            file: change.files.get(relative)?,
-        })
-    });
     let document = section.stack.document(text);
 
     let mut findings = Vec::new();
@@ -785,10 +693,6 @@ pub(crate) fn check_text<'a>(
             }
             Lint::Density => {
                 density::check(&document, lints.density.as_ref()).map(Violation::Density)
-            }
-            Lint::ListGrowth => {
-                list_growth::check(&document, before.as_ref(), lints.list_growth.as_ref())
-                    .map(Violation::ListGrowth)
             }
             Lint::VerbsNoNouns => verbs_no_nouns::check(&document, lints.verbs_no_nouns.as_ref())
                 .map(Violation::VerbsNoNouns),
@@ -854,10 +758,7 @@ mod tests {
         for lint in Lint::ALL {
             assert!(markdown.provides(lint.needs()), "{lint}");
         }
-        assert_eq!(
-            refused,
-            [Lint::MaxSizeBytes, Lint::RepoLayout, Lint::ListGrowth]
-        );
+        assert_eq!(refused, [Lint::MaxSizeBytes, Lint::RepoLayout]);
     }
 
     /// A lint reads and quotes the file through `Document::text`, which knows where a range is in

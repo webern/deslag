@@ -401,12 +401,12 @@ onboarding = "Pass the flag."
 "#,
         ),
         (
-            "0.2.0/lint.list_growth.toml",
+            "0.2.0/lint.not_at_all.toml",
             r#"
 kind = "lint"
-id = "list_growth"
+id = "not_at_all"
 keys = []
-summary = "Fails growing lists"
+summary = "Fails padded negations"
 onboarding = "Turn it on."
 "#,
         ),
@@ -481,12 +481,12 @@ onboarding = "Turn it on."
             [
                 pair("0.1.0", "density"),
                 pair("0.2.0", "rename"),
-                pair("0.2.0", "list_growth"),
+                pair("0.2.0", "not_at_all"),
             ]
         );
         assert_eq!(
             ids_between(&changelog, "0.1.0", "0.2.0"),
-            [pair("0.2.0", "rename"), pair("0.2.0", "list_growth")]
+            [pair("0.2.0", "rename"), pair("0.2.0", "not_at_all")]
         );
         assert!(ids_between(&changelog, "0.2.0", "0.2.0").is_empty());
         assert!(ids_between(&changelog, "0.2.0", "0.1.0").is_empty());
@@ -530,7 +530,7 @@ onboarding = "Turn it on."
         let changelog = small();
         assert_eq!(changelog.arrived_in(Lint::Density), Some(&version("0.1.0")));
         assert_eq!(
-            changelog.arrived_in(Lint::ListGrowth),
+            changelog.arrived_in(Lint::NotAtAll),
             Some(&version("0.2.0"))
         );
         assert_eq!(changelog.arrived_in(Lint::RepoLayout), None);
@@ -577,7 +577,7 @@ onboarding = "Pass the flag."
             .iter()
             .map(Entry::id)
             .collect();
-        assert_eq!(ids, ["rename", "list_growth"]);
+        assert_eq!(ids, ["rename", "not_at_all"]);
     }
 
     /// The order of the files' paths puts `feature` before `lint` and `setting`, and the order of

@@ -21,11 +21,10 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 use crate::Error;
-use crate::change::Change;
 use crate::config::{Config, Section};
 use crate::document::{Edit, Refusal};
 use crate::glob::{self, RepoFile};
-use crate::lint::{self, Judging, Mark, on_lines};
+use crate::lint::{self, Mark, on_lines};
 
 /// What fix did, or would do, to one file.
 #[derive(Debug, Clone, PartialEq)]
@@ -73,7 +72,7 @@ impl fmt::Display for Unfixed {
 
 /// Fixes the files of the repo rooted at `root` that the config selects: those `paths` names, each
 /// relative to the root, or every one when it names none. With `dry_run`, writes nothing. The
-/// files are read as `check` reads them in a run with `change`.
+/// files are read as `check` reads them.
 ///
 /// Returns what became of each file there is anything to say about, in the order of their paths.
 pub fn fix(
@@ -81,14 +80,13 @@ pub fn fix(
     config: &Config,
     paths: &[PathBuf],
     dry_run: bool,
-    change: Option<&Change>,
 ) -> Result<Vec<FileFix>, Error> {
     let mut fixes = Vec::new();
     for (file, section) in chosen(root, config, paths)? {
         let outcome = match String::from_utf8(lint::read(&file)?) {
             Ok(text) => {
                 let dir = file.absolute.parent().unwrap_or(root);
-                passes(config, section, &file.relative, text, dir, change)?
+                passes(config, section, &file.relative, text, dir)?
             }
             Err(_) => Outcome::NotUtf8,
         };
@@ -224,7 +222,6 @@ fn passes(
     relative: &str,
     mut text: String,
     dir: &Path,
-    change: Option<&Change>,
 ) -> Result<Outcome, Error> {
     let unsettled = |problem: String| Error::Fix {
         path: relative.to_string(),
@@ -243,10 +240,7 @@ fn passes(
             text.as_bytes(),
             &text,
             dir,
-            Judging {
-                change,
-                phrases_at: &stamp,
-            },
+            &stamp,
         )?;
         let places: Vec<(Mark, Result<Edit, &'static str>)> = findings
             .iter()

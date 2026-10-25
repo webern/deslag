@@ -5,7 +5,7 @@
 # workflow runs it after a publish, and on a pull request that adds a batch,
 # where it measures the batch before it is published. batches.md has the story.
 #
-#   run [--refetch]   make fix-blobs, then make test-blobs and the phrases
+#   run [--refetch]   make fix-catalog, then make test-blobs and the phrases
 #                     test, then write .blobs/remeasure/report.txt, which says
 #                     what moved, and the same as Markdown to the job's step
 #                     summary. --refetch first drops the unpacked tree and
@@ -13,7 +13,7 @@
 #                     what the registry holds and not what publish left on
 #                     disk. Exits 1, after writing .blobs/remeasure/failed, if
 #                     any part failed.
-#   paths             the files make fix-blobs writes, one per line
+#   paths             the files make fix-catalog writes, one per line
 #   verdict           exit 1 if the last run failed, or if REMEASURE_OUTCOME
 #                     says the step that ran it did; the last step of a job
 #
@@ -28,9 +28,8 @@ BLOBS="$ROOT/.blobs"
 OUT="$BLOBS/remeasure"
 FAILED="$OUT/failed"
 REPORT="$OUT/report.txt"
-# What make fix-blobs writes. publish-blobs.yml gives pin-lock these paths.
+# What make fix-catalog writes. publish-blobs.yml gives pin-lock these paths.
 CATALOGUE="src/lint/banned_phrases.toml"
-GOLDEN="tests/golden/list_growth.txt"
 # The catalogue's floor: `llm` files of at least this many repositories, which
 # tests/phrases.rs holds every entry to.
 FLOOR=40
@@ -62,19 +61,6 @@ catalogue_changes() {
             }'
 }
 
-# One line on the golden file of list_growth: how many pairs fail of how many, then and now.
-golden_change() {
-    local old new
-    old="$(committed "$GOLDEN" | grep -m1 '^# fails' || true)"
-    new="$(grep -m1 '^# fails' "$ROOT/$GOLDEN" || true)"
-    if [[ "$old" == "$new" ]] && git -C "$ROOT" diff --quiet HEAD -- "$GOLDEN"; then
-        echo "list_growth golden: unchanged (${new#\# })"
-    else
-        echo "list_growth golden: ${old#\# } -> ${new#\# }; $(git -C "$ROOT" diff --numstat HEAD -- "$GOLDEN" |
-            awk '{ printf "%s lines added, %s removed", $1, $2 }')"
-    fi
-}
-
 image() {
     head -n 1 "$ROOT/scripts/blobstore/blobs.lock"
 }
@@ -104,7 +90,7 @@ run() {
         # What publish left is the tree built from the bundle. Measure the image the registry holds.
         rm -rf "$BLOBS/unpacked" "$BLOBS/stamp" "$BLOBS/inventory"
     fi
-    make -C "$ROOT" fix-blobs 2>&1 | tee "$OUT/fix-blobs.log"
+    make -C "$ROOT" fix-catalog 2>&1 | tee "$OUT/fix-catalog.log"
     fix="${PIPESTATUS[0]}"
     make -C "$ROOT" test-blobs 2>&1 | tee "$OUT/test-blobs.log"
     blobs="${PIPESTATUS[0]}"
@@ -115,11 +101,11 @@ run() {
     local -a broken=()
     local changes listed
     changes="$(catalogue_changes)"
-    [[ "$fix" -eq 0 ]] || broken+=("make fix-blobs")
+    [[ "$fix" -eq 0 ]] || broken+=("make fix-catalog")
     [[ "$blobs" -eq 0 ]] || broken+=("make test-blobs")
     [[ "$phrases" -eq 0 ]] || broken+=("the phrases test")
     if [[ "${#broken[@]}" -gt 0 ]]; then
-        listed="$(failures "$OUT/fix-blobs.log" "$OUT/test-blobs.log" "$OUT/phrases.log" | sort -u)"
+        listed="$(failures "$OUT/fix-catalog.log" "$OUT/test-blobs.log" "$OUT/phrases.log" | sort -u)"
         if [[ -n "$listed" ]]; then
             sed 's/^\([^ ]\)/  \1/' <<<"$listed" > "$FAILED"
         else
@@ -129,7 +115,7 @@ run() {
     {
         echo "Measured on $(image)."
         if [[ "${#broken[@]}" -eq 0 ]]; then
-            echo "make fix-blobs, make test-blobs and the phrases test pass."
+            echo "make fix-catalog, make test-blobs and the phrases test pass."
         else
             echo "FAILED, so the branch is red until a person fixes it: ${broken[*]}"
             echo "Failing:"
@@ -142,7 +128,6 @@ run() {
         else
             echo "catalogue counts: none moved"
         fi
-        golden_change
     } > "$REPORT"
     summary
     [[ ! -e "$FAILED" ]]
@@ -162,7 +147,7 @@ summary() {
         echo "<details><summary>Diff of the rewritten files</summary>"
         echo
         echo '```diff'
-        git -C "$ROOT" diff HEAD -- "$CATALOGUE" "$GOLDEN" | head -n 300
+        git -C "$ROOT" diff HEAD -- "$CATALOGUE" | head -n 300
         echo '```'
         echo
         echo "</details>"
@@ -200,7 +185,7 @@ MSG
 
 case "${1:-}" in
     run) shift; run "$@" ;;
-    paths) printf '%s\n' "$CATALOGUE" "$GOLDEN" ;;
+    paths) printf '%s\n' "$CATALOGUE" ;;
     verdict) verdict ;;
     *) echo "usage: $0 run [--refetch] | paths | verdict" >&2; exit 2 ;;
 esac

@@ -11,7 +11,7 @@ agent how to fix it. Every lint is off until the config turns it on.
 
 ## Install
 
-If you have rust install from crates.io: `cargo install deslag`.
+From crates.io: `cargo install deslag`.
 
 ## Set up
 

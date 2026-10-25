@@ -73,7 +73,7 @@ tell them to do so), and they should bring the new features to your attention.
 
 Run `deslag update --to <version>`, with the version running, to record the new version stamp and
 update the config. After this the new warning for out-of-date config will not longer print and the
-new features will no longer be offered by `deslag instructions update`. stamp and end the
+new features will no longer be offered by `deslag instructions update`.
 
 ## Cool Lints
 

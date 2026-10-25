@@ -545,9 +545,10 @@ check-publish: preflight
 # build part: a release is X.Y.Z. It also fails while a tests/configs/ directory is above the crate
 # version, or the newest leaves out a setting. `deslag-release prep` fixes all of these, so `check`
 # cannot run this. It runs every ignored test in tests/since.rs and tests/frozen.rs: those are the
-# release-time checks, so a new one there rides along.
+# release-time checks, so a new one there rides along. It runs both files whatever fails, so one
+# run names every check left.
 check-release: preflight
-	cargo test $(CARGO_FLAGS) --all-features --test since --test frozen -- --ignored
+	cargo test $(CARGO_FLAGS) --all-features --no-fail-fast --test since --test frozen -- --ignored
 
 check-typos: preflight
 	typos

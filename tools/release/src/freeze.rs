@@ -1,18 +1,20 @@
 //! Makes the frozen config of a release: the newest one, brought to name every setting.
 //!
-//! Four rules, all mechanical. A setting the newest config leaves out gets the TOML its changelog
-//! entry fences, else the schema's default, else the run fails naming the setting and the entry.
-//! A setting a redirect retired is taken out, or moved to its new path. A lint setting goes in
-//! `[md]`, since every section takes the same lints and one section naming it is enough. And
+//! Four rules, all mechanical. A setting the newest config leaves out gets the schema's default,
+//! else its value in `tests/configs/fill.toml`, else the run fails naming the setting and the
+//! file. A setting a redirect retired is taken out, or moved to its new path. A lint setting goes
+//! in `[md]`, since every section takes the same lints and one section naming it is enough. And
 //! `deslag_version` is the release. The result is one `serde_json::Value` that `render` writes in
 //! each language.
 
 use anyhow::{Context, Result};
 use serde_json::Value;
 
-use crate::entries::{Entry, Kind};
 use crate::frozen::{self, EXTENSIONS};
-use deslag::config::paths::SchemaPaths;
+use deslag::config::paths::{SINCE, SchemaPaths};
+
+/// Where the values for settings with no schema default are, from the root of the repository.
+pub const FILL: &str = "tests/configs/fill.toml";
 
 /// A setting a redirect retired.
 #[derive(Debug, Clone)]
@@ -25,6 +27,8 @@ pub struct Retired {
 
 /// What the generator needs to know of the config schema and its redirects.
 pub struct Rules {
+    /// The config schema, as `deslag instructions config-schema` prints it.
+    pub schema: Value,
     /// The schema's paths.
     pub paths: SchemaPaths,
     /// The settings that were renamed or removed.
@@ -32,18 +36,27 @@ pub struct Rules {
 }
 
 impl Rules {
+    /// The rules of `schema` and `redirects`.
+    pub fn of(schema: Value, redirects: Vec<Retired>) -> Rules {
+        Rules {
+            paths: SchemaPaths::of(&schema),
+            schema,
+            redirects,
+        }
+    }
+
     /// The rules of the deslag this tool is built with.
     pub fn current() -> Rules {
-        Rules {
-            paths: SchemaPaths::of(&deslag::config::schema()),
-            redirects: deslag::config::REDIRECTS
+        Rules::of(
+            deslag::config::schema(),
+            deslag::config::REDIRECTS
                 .iter()
                 .map(|redirect| Retired {
                     old: redirect.old.to_string(),
                     new: redirect.new.map(str::to_string),
                 })
                 .collect(),
-        }
+        )
     }
 }
 
@@ -58,12 +71,14 @@ pub fn missing(value: &Value, paths: &SchemaPaths) -> Vec<String> {
 }
 
 /// `newest`, the config of the newest frozen release, brought to name every setting of the schema
-/// and stamped `version`. On failure, one message for each setting that cannot be filled.
+/// and stamped `version`. A setting it leaves out takes the schema's default, else its value in
+/// `fill`, the fragment `tests/configs/fill.toml` holds. On failure, one message for each setting
+/// that has neither.
 pub fn freeze(
     newest: &Value,
     version: &semver::Version,
     rules: &Rules,
-    entries: &[Entry],
+    fill: &Value,
 ) -> Result<Value, Vec<String>> {
     let mut value = newest.clone();
     frozen::set(
@@ -80,24 +95,55 @@ pub fn freeze(
     } else {
         sections.first().copied().unwrap_or("md")
     };
-    let mut problems = Vec::new();
+    let target = |leaf: &str| match lint_setting(leaf, &sections) {
+        Some(rest) => format!("{home}.lints.{rest}"),
+        None => leaf.to_string(),
+    };
     for leaf in &rules.paths.leaves {
         if frozen::names(&value, leaf) {
             continue;
         }
-        let target = match lint_setting(leaf, &sections) {
-            Some(rest) => format!("{home}.lints.{rest}"),
-            None => leaf.clone(),
-        };
-        match fill(leaf, &target, &sections, rules, entries) {
-            Ok(found) => frozen::set(&mut value, &target, found),
-            Err(problem) => problems.push(problem),
+        if let Some(default) = rules.paths.defaults.get(leaf) {
+            frozen::set(&mut value, &target(leaf), default.clone());
         }
     }
+    overlay(&mut value, fill);
+    let problems: Vec<String> = missing(&value, &rules.paths)
+        .iter()
+        .map(|leaf| {
+            format!(
+                "`{}`: the schema has no default, so add a value to {FILL}",
+                target(leaf)
+            )
+        })
+        .collect();
     if !problems.is_empty() {
         return Err(problems);
     }
     Ok(value)
+}
+
+/// Lays `fill` over `value` where `value` is silent: a key `value` lacks takes `fill`'s, a table
+/// both have is laid key by key, and so is the first item of a list both have.
+fn overlay(value: &mut Value, fill: &Value) {
+    match (value, fill) {
+        (Value::Object(value), Value::Object(fill)) => {
+            for (key, from) in fill {
+                match value.get_mut(key) {
+                    Some(Value::Null) | None => {
+                        value.insert(key.clone(), from.clone());
+                    }
+                    Some(to) => overlay(to, from),
+                }
+            }
+        }
+        (Value::Array(value), Value::Array(fill)) => {
+            if let (Some(to), Some(from)) = (value.first_mut(), fill.first()) {
+                overlay(to, from);
+            }
+        }
+        _ => {}
+    }
 }
 
 /// The part of `leaf` after `<section>.lints.`, when it is a lint setting.
@@ -109,88 +155,27 @@ fn lint_setting<'a>(leaf: &'a str, sections: &[&str]) -> Option<&'a str> {
         .flatten()
 }
 
-/// The value for the setting `leaf`, to go at `target`.
-fn fill(
-    leaf: &str,
-    target: &str,
-    sections: &[&str],
-    rules: &Rules,
-    entries: &[Entry],
-) -> Result<Value, String> {
-    let covering: Vec<&Entry> = entries
-        .iter()
-        .filter(|entry| covers(entry, leaf, sections, &rules.paths))
-        .collect();
-    // A lint setting is fenced under whichever section the entry's author wrote.
-    let candidates: Vec<String> = match lint_setting(leaf, sections) {
-        Some(rest) => sections
-            .iter()
-            .map(|s| format!("{s}.lints.{rest}"))
-            .collect(),
-        None => vec![leaf.to_string()],
-    };
-    for entry in &covering {
-        for block in fences(&entry.onboarding) {
-            let parsed = toml::from_str::<toml::Value>(block)
-                .ok()
-                .and_then(|block| serde_json::to_value(block).ok())
-                .ok_or_else(|| format!("{} holds a TOML fence that does not parse", entry.file))?;
-            if let Some(found) = candidates
-                .iter()
-                .find_map(|path| frozen::get(&parsed, path))
-            {
-                return Ok(found.clone());
-            }
-        }
-    }
-    if let Some(default) = rules.paths.defaults.get(leaf) {
-        return Ok(default.clone());
-    }
-    let files: Vec<&str> = covering.iter().map(|entry| entry.file.as_str()).collect();
-    Err(match files.as_slice() {
-        [] => format!(
-            "{target}: no changelog entry covers it and the schema has no default; add the \
-             entry, with a fenced TOML example that sets it"
-        ),
-        files => format!(
-            "{target}: the fence of {} does not set it and the schema has no default; add a \
-             fenced TOML example that sets it",
-            files.join(", ")
-        ),
-    })
-}
-
-/// Whether `entry` is the entry for the schema leaf `leaf`: a `setting` for its own path and for
-/// each key it lists, a `lint` for each key it lists in every section.
-fn covers(entry: &Entry, leaf: &str, sections: &[&str], paths: &SchemaPaths) -> bool {
-    match entry.kind {
-        Kind::Setting => {
-            entry.id == leaf
-                || entry.keys.iter().any(|key| {
-                    let path = if paths.all.contains(&format!("{}[]", entry.id)) {
-                        format!("{}[].{key}", entry.id)
+/// The schema dump of a release: `schema` with each `since` of `next` set to `version`, as
+/// `deslag instructions config-schema` prints it at that release.
+pub fn dump(schema: &Value, version: &semver::Version) -> String {
+    fn release(value: &mut Value, version: &str) {
+        match value {
+            Value::Object(object) => {
+                for (key, child) in object.iter_mut() {
+                    if key == SINCE && child.as_str() == Some("next") {
+                        *child = Value::String(version.to_string());
                     } else {
-                        format!("{}.{key}", entry.id)
-                    };
-                    SchemaPaths::fold(&path) == leaf
-                })
+                        release(child, version);
+                    }
+                }
+            }
+            Value::Array(items) => items.iter_mut().for_each(|item| release(item, version)),
+            _ => {}
         }
-        Kind::Lint => lint_setting(leaf, sections).is_some_and(|rest| {
-            entry
-                .keys
-                .iter()
-                .any(|key| rest == format!("{}.{key}", entry.id))
-        }),
-        _ => false,
     }
-}
-
-/// The contents of the fenced TOML blocks of `text`, in order.
-fn fences(text: &str) -> Vec<&str> {
-    text.split("```toml\n")
-        .skip(1)
-        .filter_map(|rest| rest.split_once("```").map(|(block, _)| block))
-        .collect()
+    let mut schema = schema.clone();
+    release(&mut schema, &version.to_string());
+    format!("{schema:#}\n")
 }
 
 /// Takes the setting a redirect retired out of `value`, in the section and in each of its

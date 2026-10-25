@@ -1,5 +1,6 @@
-# FNV-1a 64 of each frozen config: a path from this directory, then the hash.
-# Frozen configs are never edited (see tests/frozen.rs). A release adds its directory and its lines.
+# FNV-1a 64 of each frozen file: a path from this directory, then the hash.
+# Frozen files are never edited (see tests/frozen.rs). A release adds its directory and its lines.
 0.0.1/config.toml 15d5ca8be7ba436b
 0.0.1/config.yaml 51a769dcb6c8dcb7
 0.0.1/config.json e87551fc73ada74e
+0.0.1/schema.json b634a7fe21b7e8c6

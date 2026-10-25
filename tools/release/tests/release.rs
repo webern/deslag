@@ -1,11 +1,11 @@
 //! The generator of frozen configs and `prep`, on small schemas and small trees of their own, so
-//! that no test depends on what the real `next/` holds or on the crate version.
+//! that no test depends on what the real source holds or on the crate version.
 
 use std::path::Path;
 use std::process::Command;
 
 use deslag::config::paths::SchemaPaths;
-use deslag_release::entries::{Entry, Kind};
+use deslag_release::arrival::{self, Form};
 use deslag_release::freeze::{self, Retired, Rules};
 use deslag_release::frozen::{self, EXTENSIONS};
 use deslag_release::prep::prep;
@@ -13,10 +13,11 @@ use deslag_release::version;
 use serde_json::{Value, json};
 
 /// A schema with two sections, `md` and `rust`, that take the same lints. `extra` adds a setting
-/// with a default and one without.
+/// with a default and one without, both from `next`.
 fn schema(extra: bool) -> Value {
     let mut section = json!({
         "type": "object",
+        "since": "0.0.1",
         "properties": {
             "globs": { "type": "array", "items": { "type": "string" } },
             "surfaces": { "type": "array", "items": { "type": "string" } },
@@ -34,14 +35,15 @@ fn schema(extra: bool) -> Value {
         },
     });
     if extra {
-        section["properties"]["width"] = json!({ "type": "integer", "default": 80 });
-        section["properties"]["title"] = json!({ "type": "string" });
+        section["properties"]["width"] =
+            json!({ "type": "integer", "default": 80, "since": "next" });
+        section["properties"]["title"] = json!({ "type": "string", "since": "next" });
     }
     json!({
         "type": "object",
         "properties": {
-            "schema_version": { "type": "integer" },
-            "deslag_version": { "type": ["string", "null"], "default": null },
+            "schema_version": { "type": "integer", "since": "0.0.1" },
+            "deslag_version": { "type": ["string", "null"], "default": null, "since": "0.0.1" },
             "md": { "allOf": [{ "$ref": "#/definitions/Section" }] },
             "rust": { "allOf": [{ "$ref": "#/definitions/Section" }] },
         },
@@ -52,6 +54,7 @@ fn schema(extra: bool) -> Value {
                 "properties": {
                     "density": {
                         "type": "object",
+                        "since": "0.0.1",
                         "properties": {
                             "max": { "type": "integer" },
                             "banned": { "type": "boolean", "default": true },
@@ -64,21 +67,7 @@ fn schema(extra: bool) -> Value {
 }
 
 fn rules(extra: bool, redirects: Vec<Retired>) -> Rules {
-    Rules {
-        paths: SchemaPaths::of(&schema(extra)),
-        redirects,
-    }
-}
-
-fn entry(kind: Kind, id: &str, keys: &[&str], onboarding: &str) -> Entry {
-    Entry {
-        kind,
-        id: id.to_string(),
-        keys: keys.iter().map(|key| key.to_string()).collect(),
-        summary: format!("about {id}"),
-        onboarding: onboarding.to_string(),
-        file: format!("{}.{id}.toml", format!("{kind:?}").to_lowercase()),
-    }
+    Rules::of(schema(extra), redirects)
 }
 
 fn version(text: &str) -> semver::Version {
@@ -115,76 +104,34 @@ fn without(mut value: Value, path: &str) -> Value {
     value
 }
 
-fn fence(text: &str) -> String {
-    format!("Prose.\n\n```toml\n{text}```\n")
+/// A config that has `md` and little else.
+fn base() -> Value {
+    json!({
+        "schema_version": 1,
+        "md": { "globs": ["*.md"], "overrides": [{ "globs": ["a.md"] }] },
+    })
 }
 
 #[test]
-fn a_missing_setting_gets_the_fence_of_its_entry() {
-    let entries = [entry(
-        Kind::Setting,
-        "rust.surfaces",
-        &[],
-        &fence("[rust]\nsurfaces = [\"new\"]\n"),
-    )];
-    let leaves = rules(false, Vec::new());
-    let value = without(full(false), "rust.surfaces");
-    let frozen = freeze::freeze(&value, &version("0.0.2"), &leaves, &entries).expect("fills");
-    let mut want = full(false);
-    want["rust"]["surfaces"] = json!(["new"]);
-    want["deslag_version"] = json!("0.0.2");
-    assert_eq!(frozen, want);
-}
-
-#[test]
-fn every_setting_is_filled_from_a_fence_or_a_default_and_the_release_is_stamped() {
-    let entries = [
-        entry(
-            Kind::Setting,
-            "rust.globs",
-            &[],
-            &fence("[rust]\nglobs = [\"/src/**\"]\n"),
-        ),
-        entry(
-            Kind::Setting,
-            "rust.surfaces",
-            &[],
-            &fence("[rust]\nsurfaces = [\"comment\"]\n"),
-        ),
-        entry(
-            Kind::Setting,
-            "rust.overrides",
-            &["globs", "lints"],
-            &fence("[[rust.overrides]]\nglobs = [\"/v/**\"]\nlints.density = {}\n"),
-        ),
-        entry(
-            Kind::Setting,
-            "md.surfaces",
-            &[],
-            &fence("[md]\nsurfaces = [\"doc\"]\n"),
-        ),
-        entry(
-            Kind::Setting,
-            "md.title",
-            &[],
-            &fence("[md]\ntitle = \"T\"\n"),
-        ),
-        entry(
-            Kind::Setting,
-            "rust.title",
-            &[],
-            &fence("[rust]\ntitle = \"R\"\n"),
-        ),
-        // A lint is fenced under any section; its setting lands in md.
-        entry(
-            Kind::Lint,
-            "density",
-            &["max"],
-            &fence("[rust.lints.density]\nmax = 3\n"),
-        ),
-    ];
+fn a_missing_setting_takes_its_default_else_its_fill_and_the_release_is_stamped() {
+    // A lint setting lands in `md`, from its default or from the fill. The fill is laid into the
+    // first item of a list the config has.
+    let fill = json!({
+        "md": {
+            "surfaces": ["doc"],
+            "title": "T",
+            "overrides": [{ "lints": {} }],
+            "lints": { "density": { "max": 3 } },
+        },
+        "rust": {
+            "globs": ["/src/**"],
+            "surfaces": ["comment"],
+            "overrides": [{ "globs": ["/v/**"] }],
+            "title": "R",
+        },
+    });
     let leaves = rules(true, Vec::new());
-    let value = freeze::freeze(&base(), &version("0.0.2"), &leaves, &entries).expect("fills");
+    let value = freeze::freeze(&base(), &version("0.0.2"), &leaves, &fill).expect("fills");
     assert_eq!(
         value,
         json!({
@@ -192,7 +139,7 @@ fn every_setting_is_filled_from_a_fence_or_a_default_and_the_release_is_stamped(
             "deslag_version": "0.0.2",
             "md": {
                 "globs": ["*.md"],
-                "overrides": [{ "globs": ["a.md"] }],
+                "overrides": [{ "globs": ["a.md"], "lints": {} }],
                 "surfaces": ["doc"],
                 "width": 80,
                 "title": "T",
@@ -210,43 +157,73 @@ fn every_setting_is_filled_from_a_fence_or_a_default_and_the_release_is_stamped(
     assert!(freeze::missing(&value, &leaves.paths).is_empty());
 }
 
-/// A config that has `md` and little else.
-fn base() -> Value {
-    json!({
-        "schema_version": 1,
-        "md": { "globs": ["*.md"], "overrides": [{ "globs": ["a.md"] }] },
-    })
+/// The fill holds settings with no default, and where it holds one with a default, the default is
+/// what the freeze takes: the fill is laid only where the config is still silent.
+#[test]
+fn a_default_wins_over_the_fill() {
+    let fill = json!({ "md": { "width": 1 }, "rust": { "width": 2 } });
+    let value = freeze::freeze(
+        &without(without(full(true), "md.width"), "rust.width"),
+        &version("0.0.2"),
+        &rules(true, Vec::new()),
+        &fill,
+    )
+    .expect("fills");
+    assert_eq!(value["md"]["width"], json!(80));
+    assert_eq!(value["rust"]["width"], json!(80));
+}
+
+/// The newest config's own values stay, whatever the fill says.
+#[test]
+fn the_fill_is_laid_only_where_the_newest_is_silent() {
+    let fill = json!({
+        "md": { "title": "fill", "overrides": [{ "globs": ["fill"] }, { "globs": ["second"] }] },
+    });
+    let value = freeze::freeze(
+        &full(true),
+        &version("0.0.2"),
+        &rules(true, Vec::new()),
+        &fill,
+    )
+    .expect("fills");
+    let mut want = full(true);
+    want["deslag_version"] = json!("0.0.2");
+    assert_eq!(value, want);
 }
 
 #[test]
-fn a_setting_with_no_fence_and_no_default_is_listed_with_its_entry() {
-    let entries = [entry(
-        Kind::Setting,
-        "md.title",
-        &[],
-        &fence("[md]\nwidth = 1\n"),
-    )];
+fn a_setting_with_no_default_and_no_fill_is_named_with_the_file_to_add_it_to() {
     let value = without(without(full(true), "md.title"), "rust.globs");
     let Err(problems) = freeze::freeze(
         &value,
         &version("0.0.2"),
         &rules(true, Vec::new()),
-        &entries,
+        &json!({}),
     ) else {
         panic!("md.title and rust.globs have no value");
     };
-    assert_eq!(problems.len(), 2, "{problems:?}");
-    let title = problems
-        .iter()
-        .find(|p| p.starts_with("md.title:"))
-        .expect("md.title");
-    assert!(title.contains("setting.md.title.toml"), "{title}");
-    assert!(title.contains("no default"), "{title}");
-    let globs = problems
-        .iter()
-        .find(|p| p.starts_with("rust.globs:"))
-        .expect("rust.globs");
-    assert!(globs.contains("no changelog entry covers it"), "{globs}");
+    assert_eq!(
+        problems,
+        [
+            "`md.title`: the schema has no default, so add a value to tests/configs/fill.toml",
+            "`rust.globs`: the schema has no default, so add a value to tests/configs/fill.toml",
+        ]
+    );
+}
+
+/// The dump is the schema with each `since` of `next` set to the release, printed as
+/// `deslag instructions config-schema` prints it.
+#[test]
+fn the_schema_dump_holds_the_release_where_the_schema_said_next() {
+    let text = freeze::dump(&schema(true), &version("0.0.2"));
+    assert!(text.ends_with("}\n"), "{text}");
+    assert!(!text.contains("\"next\""), "{text}");
+    let dumped: Value = serde_json::from_str(&text).expect("JSON");
+    let section = &dumped["definitions"]["Section"];
+    assert_eq!(section["properties"]["title"]["since"], json!("0.0.2"));
+    assert_eq!(section["properties"]["width"]["since"], json!("0.0.2"));
+    assert_eq!(section["since"], json!("0.0.1"));
+    assert_eq!(format!("{dumped:#}\n"), text);
 }
 
 #[test]
@@ -267,8 +244,13 @@ fn a_retired_setting_is_dropped_or_moved_in_the_section_and_in_its_overrides() {
             new: Some("md.lints.density.banned".into()),
         },
     ];
-    let value = freeze::freeze(&value, &version("0.0.2"), &rules(false, redirects), &[])
-        .expect("nothing to fill");
+    let value = freeze::freeze(
+        &value,
+        &version("0.0.2"),
+        &rules(false, redirects),
+        &json!({}),
+    )
+    .expect("nothing to fill");
     assert_eq!(
         value["md"]["lints"],
         json!({ "density": { "max": 4, "banned": 2 } })
@@ -327,8 +309,24 @@ fn the_schema_paths_keep_the_defaults_that_are_not_null() {
     assert!(!paths.defaults.contains_key("md.title"));
 }
 
-/// A repository of its own: the version, the entries, a catalogue and one frozen release.
-fn tree(root: &Path, crate_version: &str, extra_leaf_in_schema: bool) {
+/// The catalogue of `tree`, before and after `prep` 0.0.2: a comment keeps its `next`.
+const CATALOGUE: &str = "# since = \"next\" in a comment stays\n[[entry]]\nsince = \"0.0.1\"\n\n\
+                         [[entry]]\n  since = \"next\"  # new\n";
+const CATALOGUE_SET: &str = "# since = \"next\" in a comment stays\n[[entry]]\nsince = \"0.0.1\"\n\n\
+                             [[entry]]\n  since = \"0.0.2\"  # new\n";
+
+/// A Rust file of `tree` with two attributes, one of `next`, and a JSON literal that is none of
+/// the forms.
+const SETTINGS: &str = "    #[schemars(extend(\"since\" = \"0.0.1\"))]\n    a: u8,\n    \
+                        #[schemars(extend(\"since\" = \"next\"))]\n    b: u8,\n\
+                        // json!({ \"since\": \"next\" })\n";
+
+/// The redirects of `tree`, one of `next`.
+const REDIRECTS: &str = "    since: \"0.0.1\",\n    since: \"next\",\n";
+
+/// A repository of its own: the version, a source with each form of `next`, and one frozen
+/// release. With `extra`, a fill for the two settings `schema(true)` adds with no default.
+fn tree(root: &Path, crate_version: &str, extra: bool) {
     let write = |path: &str, text: &str| {
         let path = root.join(path);
         std::fs::create_dir_all(path.parent().expect("a directory")).expect("makes it");
@@ -345,96 +343,41 @@ fn tree(root: &Path, crate_version: &str, extra_leaf_in_schema: bool) {
              [[package]]\nname = \"other\"\nversion = \"{crate_version}\"\n"
         ),
     );
-    write(
-        "src/lint/banned_phrases.toml",
-        "# since = \"next\" in a comment stays\n[[entry]]\nsince = \"0.0.1\"\n\n[[entry]]\n  since = \"next\"  # new\n",
-    );
-    write(
-        "src/changelog/releases/0.0.1/feature.old.toml",
-        "kind = \"feature\"\nid = \"old\"\nsummary = \"s\"\nonboarding = \"o\"\n",
-    );
-    write(
-        "src/changelog/releases/next/README.md",
-        "Stays where it is.\n",
-    );
-    write(
-        "src/changelog/releases/next/feature.new.toml",
-        "kind = \"feature\"\nid = \"new\"\nsummary = \"Adds new\"\nonboarding = \"o\"\n",
-    );
-    write(
-        "src/changelog/releases/next/breaking.zed.toml",
-        "kind = \"breaking\"\nid = \"zed\"\nupdate_does_all = true\nsummary = \"Drops zed\"\nonboarding = \"o\"\n",
-    );
-    if extra_leaf_in_schema {
-        for section in ["md", "rust"] {
-            write(
-                &format!("src/changelog/releases/next/setting.{section}.title.toml"),
-                &format!(
-                    "kind = \"setting\"\nid = \"{section}.title\"\nsummary = \"Titles\"\n\
-                     onboarding = '''\n```toml\n[{section}]\ntitle = \"T\"\n```\n'''\n"
-                ),
-            );
-        }
+    write(arrival::CATALOGUE, CATALOGUE);
+    write("src/config/settings.rs", SETTINGS);
+    write(arrival::REDIRECTS, REDIRECTS);
+    if extra {
+        write(
+            "tests/configs/fill.toml",
+            "[md]\ntitle = \"T\"\n\n[rust]\ntitle = \"R\"\n",
+        );
     }
 }
 
 /// The newest frozen config of `tree`, the first release's, with a header of hash lines.
 fn freeze_first(root: &Path) {
-    let leaves = rules(false, Vec::new());
+    let fill = json!({
+        "md": { "surfaces": ["e"], "overrides": [{ "globs": ["d"] }], "lints": { "density": { "max": 1 } } },
+        "rust": { "globs": ["a"], "surfaces": ["b"], "overrides": [{ "globs": ["c"] }] },
+    });
     let first = freeze::freeze(
         &json!({ "schema_version": 1, "md": { "globs": ["*.md"] } }),
         &version("0.0.1"),
-        &leaves,
-        &[
-            entry(
-                Kind::Setting,
-                "rust.globs",
-                &[],
-                "```toml\n[rust]\nglobs = [\"a\"]\n```\n",
-            ),
-            entry(
-                Kind::Setting,
-                "rust.surfaces",
-                &[],
-                "```toml\n[rust]\nsurfaces = [\"b\"]\n```\n",
-            ),
-            entry(
-                Kind::Setting,
-                "rust.overrides",
-                &["globs"],
-                "```toml\n[[rust.overrides]]\nglobs = [\"c\"]\n```\n",
-            ),
-            entry(
-                Kind::Setting,
-                "md.overrides",
-                &["globs"],
-                "```toml\n[[md.overrides]]\nglobs = [\"d\"]\n```\n",
-            ),
-            entry(
-                Kind::Setting,
-                "md.surfaces",
-                &[],
-                "```toml\n[md]\nsurfaces = [\"e\"]\n```\n",
-            ),
-            entry(
-                Kind::Lint,
-                "density",
-                &["max"],
-                "```toml\n[md.lints.density]\nmax = 1\n```\n",
-            ),
-        ],
+        &rules(false, Vec::new()),
+        &fill,
     )
     .expect("the first release freezes");
     let mut hashes = String::from("# comment\n");
     let directory = root.join("tests/configs/0.0.1");
     std::fs::create_dir_all(&directory).expect("makes it");
-    for extension in EXTENSIONS {
-        let text = freeze::render(&first, extension).expect("renders");
-        std::fs::write(frozen::config(&directory, extension), &text).expect("writes");
-        hashes += &format!(
-            "0.0.1/config.{extension} {}\n",
-            frozen::hash(text.as_bytes())
-        );
+    let mut texts: Vec<String> = EXTENSIONS
+        .iter()
+        .map(|extension| freeze::render(&first, extension).expect("renders"))
+        .collect();
+    texts.push("{}\n".to_string());
+    for (name, text) in frozen::files().into_iter().zip(texts) {
+        std::fs::write(directory.join(&name), &text).expect("writes");
+        hashes += &format!("0.0.1/{name} {}\n", frozen::hash(text.as_bytes()));
     }
     std::fs::write(root.join("tests/configs/hashes"), hashes).expect("writes");
 }
@@ -477,65 +420,21 @@ fn hash_lines_match(root: &Path) {
     }
 }
 
-#[test]
-fn the_first_release_folds_into_the_crate_version() {
-    let directory = tempfile::tempdir().expect("a directory");
-    let root = directory.path();
-    tree(root, "0.0.1", false);
-    freeze_first(root);
-    commit(root);
-    let first = read(root, "tests/configs/0.0.1/config.toml");
-    let leaves = rules(false, Vec::new());
-    // Nothing is missing, so the frozen release is left as it is, and the rest is done.
-    prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("prep");
-    assert_eq!(read(root, "tests/configs/0.0.1/config.toml"), first);
-    assert!(read(root, "Cargo.toml").contains("version = \"0.0.1\" # kept"));
-    assert!(
-        root.join("src/changelog/releases/0.0.1/feature.new.toml")
-            .is_file()
-    );
-    assert!(
-        root.join("src/changelog/releases/0.0.1/feature.old.toml")
-            .is_file()
-    );
-    assert!(root.join("src/changelog/releases/next/README.md").is_file());
-    assert!(
-        !root
-            .join("src/changelog/releases/next/feature.new.toml")
-            .exists()
-    );
-    assert_eq!(
-        read(root, "src/lint/banned_phrases.toml"),
-        "# since = \"next\" in a comment stays\n[[entry]]\nsince = \"0.0.1\"\n\n[[entry]]\n  since = \"0.0.1\"  # new\n"
-    );
+/// The files of the frozen directory of `release` in `root`, each as data.
+fn frozen_values(root: &Path, release: &str) -> Vec<Value> {
+    EXTENSIONS
+        .iter()
+        .map(|extension| {
+            frozen::value(&frozen::config(
+                &root.join("tests/configs").join(release),
+                extension,
+            ))
+        })
+        .collect()
 }
 
 #[test]
-fn a_fold_rewrites_the_first_release_to_name_every_setting() {
-    let directory = tempfile::tempdir().expect("a directory");
-    let root = directory.path();
-    tree(root, "0.0.1", true);
-    freeze_first(root);
-    commit(root);
-    let first = read(root, "tests/configs/0.0.1/config.json");
-    let leaves = rules(true, Vec::new());
-    prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("prep");
-    assert_ne!(read(root, "tests/configs/0.0.1/config.json"), first);
-    for extension in EXTENSIONS {
-        let path = frozen::config(&root.join("tests/configs/0.0.1"), extension);
-        let value = frozen::value(&path);
-        assert!(
-            freeze::missing(&value, &leaves.paths).is_empty(),
-            "{extension}"
-        );
-        assert_eq!(value["deslag_version"], json!("0.0.1"));
-    }
-    hash_lines_match(root);
-    assert_eq!(read(root, "tests/configs/hashes").lines().count(), 4);
-}
-
-#[test]
-fn a_later_release_bumps_the_version_and_adds_a_directory() {
+fn a_release_sets_each_form_of_next_and_writes_its_four_files_and_their_hashes() {
     let directory = tempfile::tempdir().expect("a directory");
     let root = directory.path();
     tree(root, "0.0.1", true);
@@ -544,7 +443,17 @@ fn a_later_release_bumps_the_version_and_adds_a_directory() {
     let tags = ["v0.0.1".to_string()];
     let leaves = rules(true, Vec::new());
     let said = prep(root, &version("0.0.2"), &tags, &leaves).expect("prep");
-    assert_eq!(said.len(), 4, "{said:?}");
+    assert_eq!(
+        said,
+        [
+            "Cargo.toml and Cargo.lock: version 0.0.2",
+            "src/lint/banned_phrases.toml: 1 of `since = \"next\"` set to 0.0.2",
+            "src/**/*.rs: 1 of `extend(\"since\" = \"next\")` set to 0.0.2",
+            "src/config/redirect.rs: 1 of `since: \"next\"` set to 0.0.2",
+            "tests/configs/0.0.2: config.toml, config.yaml, config.json and schema.json written, \
+             with their hash lines",
+        ]
+    );
     assert!(read(root, "Cargo.toml").contains("version = \"0.0.2\" # kept"));
     let lock = read(root, "Cargo.lock");
     assert!(
@@ -555,44 +464,106 @@ fn a_later_release_bumps_the_version_and_adds_a_directory() {
         lock.contains("name = \"other\"\nversion = \"0.0.1\""),
         "{lock}"
     );
-    assert!(
-        root.join("src/changelog/releases/0.0.2/setting.md.title.toml")
-            .is_file()
+
+    // Each form is set, and no other `next`.
+    assert_eq!(read(root, arrival::CATALOGUE), CATALOGUE_SET);
+    assert_eq!(
+        read(root, "src/config/settings.rs"),
+        SETTINGS.replace("= \"next\"))", "= \"0.0.2\"))")
     );
-    assert!(
-        root.join("src/changelog/releases/0.0.1/feature.old.toml")
-            .is_file()
+    assert_eq!(
+        read(root, arrival::REDIRECTS),
+        "    since: \"0.0.1\",\n    since: \"0.0.2\",\n"
     );
+    assert!(read(root, "src/config/settings.rs").contains("json!({ \"since\": \"next\" })"));
+    assert_eq!(arrival::left(root).expect("left"), Vec::<String>::new());
+
     // The first release's directory is as it was; the new one names every setting.
     assert!(!read(root, "tests/configs/0.0.1/config.toml").contains("title"));
-    for extension in EXTENSIONS {
-        let path = frozen::config(&root.join("tests/configs/0.0.2"), extension);
-        let value = frozen::value(&path);
-        assert!(
-            freeze::missing(&value, &leaves.paths).is_empty(),
-            "{extension}"
-        );
+    for value in frozen_values(root, "0.0.2") {
+        assert!(freeze::missing(&value, &leaves.paths).is_empty());
         assert_eq!(value["deslag_version"], json!("0.0.2"));
+        assert_eq!(value["md"]["title"], json!("T"));
+        assert_eq!(value["md"]["width"], json!(80));
     }
+    let dump = read(root, "tests/configs/0.0.2/schema.json");
+    assert_eq!(dump, freeze::dump(&leaves.schema, &version("0.0.2")));
+    assert!(
+        !dump.contains("\"next\"") && dump.contains("\"0.0.2\""),
+        "{dump}"
+    );
     hash_lines_match(root);
-    assert_eq!(read(root, "tests/configs/hashes").lines().count(), 7);
+    assert_eq!(read(root, "tests/configs/hashes").lines().count(), 9);
+}
+
+/// A form of `next` written where `prep` does not rewrite it, or written another way, ships as
+/// `next`; `left` names each.
+#[test]
+fn left_names_each_next_the_rewrite_misses() {
+    let directory = tempfile::tempdir().expect("a directory");
+    let root = directory.path();
+    tree(root, "0.0.1", false);
+    let write = |path: &str, text: &str| {
+        let path = root.join(path);
+        std::fs::create_dir_all(path.parent().expect("a directory")).expect("makes it");
+        std::fs::write(path, text).expect("writes");
+    };
+    // The forms where `prep` rewrites them are not left.
+    assert_eq!(arrival::left(root).expect("left"), Vec::<String>::new());
+    write(
+        "src/notes.md",
+        "Write #[schemars(extend(\"since\" = \"next\"))].\n",
+    );
+    write("src/other.rs", "    since: \"next\",\n");
+    write("src/lint/more.toml", "since = \"next\"\n");
+    assert_eq!(
+        arrival::left(root).expect("left"),
+        [
+            "src/lint/more.toml:1: since = \"next\"",
+            "src/notes.md:1: Write #[schemars(extend(\"since\" = \"next\"))].",
+            "src/other.rs:1: since: \"next\",",
+        ]
+    );
 }
 
 #[test]
-fn a_release_with_no_entry_and_nothing_to_freeze_changes_only_the_version() {
+fn the_rewrite_sets_only_the_form_of_its_own_files() {
+    let (text, counts) = arrival::rewrite(
+        arrival::CATALOGUE,
+        "since = \"next\"\nsince = \"next\" # new\nsince = \"next\" and more\n\
+         extend(\"since\" = \"next\")\n",
+        "1.0.0",
+    );
+    assert_eq!(
+        text,
+        "since = \"1.0.0\"\nsince = \"1.0.0\" # new\nsince = \"next\" and more\n\
+         extend(\"since\" = \"next\")\n"
+    );
+    assert_eq!(counts, [2, 0, 0]);
+    let (_, counts) = arrival::rewrite("src/a.rs", "since: \"next\"\n", "1.0.0");
+    assert_eq!(counts, [0, 0, 0]);
+    assert_eq!(Form::Redirect.with("next"), "since: \"next\"");
+}
+
+/// A release with nothing new still writes its directory, which differs from the one before only
+/// in the stamp, and a schema dump.
+#[test]
+fn a_release_with_nothing_new_writes_a_directory_that_differs_only_in_the_stamp() {
     let directory = tempfile::tempdir().expect("a directory");
     let root = directory.path();
     tree(root, "0.0.1", false);
     freeze_first(root);
     commit(root);
     let tags = ["v0.0.1".to_string()];
-    let leaves = rules(false, Vec::new());
-    prep(root, &version("0.0.1"), &["v0.0.0".to_string()], &leaves).expect("the first release");
-    commit(root);
-    prep(root, &version("0.0.2"), &tags, &leaves).expect("the second");
-    assert!(!root.join("src/changelog/releases/0.0.2").exists());
-    assert!(!root.join("tests/configs/0.0.2").exists());
-    assert!(read(root, "Cargo.toml").contains("version = \"0.0.2\""));
+    prep(root, &version("0.0.2"), &tags, &rules(false, Vec::new())).expect("prep");
+    let before = frozen_values(root, "0.0.1");
+    for (mut after, before) in frozen_values(root, "0.0.2").into_iter().zip(before) {
+        assert_eq!(after["deslag_version"], json!("0.0.2"));
+        after["deslag_version"] = before["deslag_version"].clone();
+        assert_eq!(after, before);
+    }
+    assert!(root.join("tests/configs/0.0.2/schema.json").is_file());
+    hash_lines_match(root);
 }
 
 #[test]
@@ -610,41 +581,59 @@ fn a_version_that_may_not_be_released_changes_nothing() {
         assert!(!error.to_string().is_empty());
     }
     assert_eq!(read(root, "Cargo.toml"), cargo);
+    assert_eq!(git(root, &["status", "--porcelain"]), "");
+}
+
+/// A release adds its directory once: the newest frozen release must be below it.
+#[test]
+fn a_release_that_has_a_frozen_directory_already_is_refused() {
+    let directory = tempfile::tempdir().expect("a directory");
+    let root = directory.path();
+    tree(root, "0.0.1", false);
+    freeze_first(root);
+    commit(root);
+    let error = prep(
+        root,
+        &version("0.0.1"),
+        &["v0.0.0".to_string()],
+        &rules(false, Vec::new()),
+    )
+    .expect_err("refused");
     assert!(
-        root.join("src/changelog/releases/next/feature.new.toml")
-            .is_file()
+        error
+            .to_string()
+            .contains("tests/configs/0.0.1 is not below 0.0.1"),
+        "{error:#}"
     );
+    assert_eq!(git(root, &["status", "--porcelain"]), "");
 }
 
 #[test]
-fn a_setting_that_cannot_be_filled_stops_prep_before_any_edit() {
+fn a_setting_that_cannot_be_filled_stops_prep_before_any_write() {
     let directory = tempfile::tempdir().expect("a directory");
     let root = directory.path();
-    tree(root, "0.0.1", true);
+    // No fill, and `title` has no default.
+    tree(root, "0.0.1", false);
     freeze_first(root);
-    std::fs::write(
-        root.join("src/changelog/releases/next/setting.md.title.toml"),
-        "kind = \"setting\"\nid = \"md.title\"\nsummary = \"Titles\"\nonboarding = \"No fence\"\n",
-    )
-    .expect("writes");
     commit(root);
-    let cargo = read(root, "Cargo.toml");
     let tags = ["v0.0.1".to_string()];
     let error = prep(root, &version("0.0.2"), &tags, &rules(true, Vec::new())).expect_err("stops");
-    assert!(error.to_string().contains("md.title"), "{error:#}");
-    assert_eq!(read(root, "Cargo.toml"), cargo);
+    let said = format!("{error:#}");
     assert!(
-        root.join("src/changelog/releases/next/feature.new.toml")
-            .is_file()
+        said.contains(
+            "`md.title`: the schema has no default, so add a value to tests/configs/fill.toml"
+        ),
+        "{said}"
     );
+    assert_eq!(git(root, &["status", "--porcelain"]), "");
+    assert!(!root.join("tests/configs/0.0.2").exists());
 }
 
 #[test]
 fn a_hand_bumped_crate_version_is_a_normal_release() {
     let directory = tempfile::tempdir().expect("a directory");
     let root = directory.path();
-    // The crate is at 0.0.2 by hand, `releases/0.0.2/` does not exist, and the newest frozen
-    // config is 0.0.1 and leaves out a setting.
+    // The crate is at 0.0.2 by hand, and the newest frozen config is 0.0.1.
     tree(root, "0.0.2", true);
     freeze_first(root);
     commit(root);
@@ -652,19 +641,13 @@ fn a_hand_bumped_crate_version_is_a_normal_release() {
     let leaves = rules(true, Vec::new());
     prep(root, &version("0.0.2"), &tags, &leaves).expect("a normal release");
     assert!(read(root, "Cargo.toml").contains("version = \"0.0.2\" # kept"));
-    assert!(
-        root.join("src/changelog/releases/0.0.2/setting.md.title.toml")
-            .is_file()
-    );
     assert!(!read(root, "tests/configs/0.0.1/config.toml").contains("title"));
-    for extension in EXTENSIONS {
-        let path = frozen::config(&root.join("tests/configs/0.0.2"), extension);
-        let value = frozen::value(&path);
+    for value in frozen_values(root, "0.0.2") {
         assert!(freeze::missing(&value, &leaves.paths).is_empty());
         assert_eq!(value["deslag_version"], json!("0.0.2"));
     }
     hash_lines_match(root);
-    assert_eq!(read(root, "tests/configs/hashes").lines().count(), 7);
+    assert_eq!(read(root, "tests/configs/hashes").lines().count(), 9);
 }
 
 #[test]
@@ -702,10 +685,7 @@ fn a_file_that_cannot_be_read_stops_prep_before_any_write() {
         assert!(error.to_string().contains(missing), "{error:#}");
         assert_eq!(git(root, &["status", "--porcelain"]), "", "{missing}");
         assert!(!root.join("tests/configs/0.0.2").exists());
-        assert!(
-            root.join("src/changelog/releases/next/feature.new.toml")
-                .is_file()
-        );
+        assert_eq!(read(root, arrival::CATALOGUE), CATALOGUE);
     }
 }
 

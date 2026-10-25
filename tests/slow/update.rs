@@ -866,13 +866,13 @@ fn every_frozen_config_updates_clean_in_every_language_and_reads_the_same_after(
         for extension in EXTENSIONS {
             let path = frozen::config(&directory, extension);
             let text = std::fs::read_to_string(&path).expect("a config");
-            let repo = repo_with(extension, &text);
+            let repo = frozen::repo(&path, extension);
             let name = format!("{release} {extension}");
             let probe = |repo: &Repo| {
                 [
                     vec!["check"],
                     vec!["check", "--format", "json"],
-                    vec!["explain", "README.md"],
+                    vec!["explain", "docs/note.md"],
                 ]
                 .map(|args| {
                     let output = repo.run(&args);

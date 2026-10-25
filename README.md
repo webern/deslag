@@ -28,7 +28,7 @@ Run it from the root of the repository:
 deslag check
 ```
 
-A file that fails a lint gets a report on standard error with exit code is 1. When deslag cannot
+A file that fails a lint gets a report on standard error with exit code 1. When deslag cannot
 run, as with a bad config, the exit code is 2. A clean run exits 0, so a CI job can gate on it.
 
 `--format` also prints the findings on standard output for a machine to read. The report, the exit

@@ -30,6 +30,7 @@ pub(super) struct CppFile {
     /// `.hpp`, `.hh` or `.hxx`.
     #[serde(default)]
     #[schemars(extend("default" = DEFAULT_GLOBS))]
+    #[schemars(extend("since" = "0.0.1"))]
     globs: Option<Vec<String>>,
     /// The comments this section reads, the rest of a C or C++ file being left alone.
     /// `doc_comment` is the `///` and `//!` lines and the `/** */` and `/*! */` blocks, and the
@@ -37,13 +38,16 @@ pub(super) struct CppFile {
     /// Both are read as plain text.
     #[serde(default)]
     #[schemars(extend("default" = ["doc_comment", "comment"]))]
+    #[schemars(extend("since" = "0.0.1"))]
     surfaces: Option<Vec<CommentSurface>>,
     /// The settings for every selected file that no override changes. A lint that needs the whole
     /// file, such as `max_size_bytes`, is an error here.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     lints: Lints,
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     overrides: Vec<OverrideFile>,
     // After `overrides`, so that a section written as a JSON array keeps the keys before it where
     // they were: the config reads a struct by position.
@@ -52,11 +56,13 @@ pub(super) struct CppFile {
     /// or C++ extension. A file the walk skips stays skipped, and nothing re-includes one. Only a
     /// human adds an exclude; never add one to make a check pass.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     exclude: Vec<String>,
     // After `exclude` for the same reason.
     /// The sentences of these files that stay as written, each exempted from one lint. Only a
     /// human writes an entry.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     allow: Vec<AllowFile>,
 }
 

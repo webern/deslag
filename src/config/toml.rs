@@ -35,19 +35,23 @@ pub(super) struct TomlFile {
     /// The files this section lints. Each pattern must end in `.toml`.
     #[serde(default)]
     #[schemars(extend("default" = DEFAULT_GLOBS))]
+    #[schemars(extend("since" = "0.0.1"))]
     globs: Option<Vec<String>>,
     /// The comments this section reads, the rest of a TOML file being left alone. `comment` is
     /// the `#` lines, whole-line or after a value, read as plain text. TOML does not have another
     /// kind of comment, so `comment` is the only value.
     #[serde(default)]
     #[schemars(extend("default" = ["comment"]))]
+    #[schemars(extend("since" = "0.0.1"))]
     surfaces: Option<Vec<TomlSurface>>,
     /// The settings for every selected file that no override changes. A lint that needs the whole
     /// file, such as `max_size_bytes`, is an error here.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     lints: Lints,
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     overrides: Vec<OverrideFile>,
     // After `overrides`, so that a section written as a JSON array keeps the keys before it where
     // they were: the config reads a struct by position.
@@ -56,11 +60,13 @@ pub(super) struct TomlFile {
     /// end in `.toml`. A file the walk skips stays skipped, and nothing re-includes one. Only a
     /// human adds an exclude; never add one to make a check pass.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     exclude: Vec<String>,
     // After `exclude` for the same reason.
     /// The sentences of these files that stay as written, each exempted from one lint. Only a
     /// human writes an entry.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     allow: Vec<AllowFile>,
 }
 

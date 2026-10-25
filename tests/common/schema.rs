@@ -24,6 +24,7 @@ const KEYWORDS: &[&str] = &[
     "oneOf",
     "properties",
     "required",
+    "since",
     "title",
     "type",
 ];

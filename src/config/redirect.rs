@@ -11,8 +11,8 @@
 //! sections, `Redirect` gains a list of places.
 //!
 //! [`REDIRECTS`] is the contract. It is data as well as code, so that `deslag update` can write
-//! the same edit into a file: `in_force` is the list it walks. Each entry has a `breaking`
-//! changelog entry whose id is its old path.
+//! the same edit into a file: `in_force` is the list it walks. Each records the release it arrived
+//! in, which is how `deslag instructions update` tells a config older than that about it.
 
 use crate::Error;
 use crate::config::lints::Lints;
@@ -21,7 +21,7 @@ use crate::config::section::Parts;
 /// A setting that was renamed or removed.
 #[derive(Debug)]
 pub struct Redirect {
-    /// The old setting's path in the config schema, as a changelog `id` writes it.
+    /// The old setting's path in the config schema, such as `md.lints.density.max_paragraph_len`.
     pub old: &'static str,
     /// The path that replaced it, or `None` when the setting was removed.
     pub new: Option<&'static str>,
@@ -30,6 +30,9 @@ pub struct Redirect {
     pub reason: Option<&'static str>,
     /// A value for `old`, written as JSON, that a test sets to see the redirect work.
     pub example: &'static str,
+    /// The release the rename or removal arrived in, or `next` for the one in the making, which
+    /// `deslag-release prep` sets to the version.
+    pub since: &'static str,
     /// Moves the setting out of one `lints` table, and says whether the table set it.
     moves: fn(&mut Lints) -> Result<bool, BothSet>,
 }
@@ -66,6 +69,7 @@ pub const REDIRECTS: &[Redirect] = &[Redirect {
          replaces it",
     ),
     example: "true",
+    since: "0.0.1",
     moves: |lints| {
         Ok(lints
             .banned_phrases
@@ -81,6 +85,7 @@ pub(super) static TEST_RENAME: Redirect = Redirect {
     new: Some("md.lints.density.max_paragraph_chars"),
     reason: None,
     example: "300",
+    since: "0.0.1",
     moves: |lints| {
         let Some(density) = lints.density.as_mut() else {
             return Ok(false);
@@ -100,6 +105,7 @@ pub(super) static TEST_RUST_REMOVAL: Redirect = Redirect {
     new: None,
     reason: None,
     example: "true",
+    since: "0.0.1",
     moves: |lints| {
         Ok(lints
             .banned_phrases

@@ -117,9 +117,11 @@ struct ConfigFile {
     /// The schema the file is written against, which may not be later than the one this build
     /// reads.
     #[schemars(range(max = SCHEMA_VERSION.get()))]
+    #[schemars(extend("since" = "0.0.1"))]
     schema_version: NonZeroU32,
     /// The Markdown section.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     md: md::MdFile,
     /// The deslag that last onboarded or updated this config, as a release such as "0.0.1". When
     /// it is missing the config is taken to be from 0.0.1. It may not be later than the deslag
@@ -129,15 +131,19 @@ struct ConfigFile {
         dead_code,
         reason = "read from `Head` before this parse; here for the schema"
     )]
+    #[schemars(extend("since" = "0.0.1"))]
     deslag_version: Option<String>,
     /// The Rust section. A config without one does not read any Rust file.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     rust: Option<rust::RustFile>,
     /// The C and C++ section. A config without one does not read any C or C++ file.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     cpp: Option<cpp::CppFile>,
     /// The TOML section. A config without one does not read any TOML file.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     toml: Option<toml::TomlFile>,
 }
 

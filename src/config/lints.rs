@@ -40,27 +40,35 @@ impl<T: Merge + Clone> Merge for Option<T> {
 pub struct Lints {
     /// The byte budget.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "0.0.1"))]
     pub max_size_bytes: Option<MaxSizeBytes>,
     /// The limit on bold, italics and ALL CAPS.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "0.0.1"))]
     pub max_emphasis: Option<MaxEmphasis>,
     /// The index of the repo that the file must hold.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "0.0.1"))]
     pub repo_layout: Option<RepoLayout>,
     /// The characters the file must not hold, such as the em dash.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "0.0.1"))]
     pub banned_chars: Option<BannedChars>,
     /// The phrases the file must not hold, which the config lists.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "0.0.1"))]
     pub banned_phrases: Option<BannedPhrases>,
     /// The longest a paragraph or list item may be.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "0.0.1"))]
     pub density: Option<Density>,
     /// That a sentence negates its verb, not its object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "0.0.1"))]
     pub verbs_no_nouns: Option<VerbsNoNouns>,
     /// That a negation drops `at all`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "next"))]
     pub not_at_all: Option<NotAtAll>,
 }
 
@@ -175,10 +183,12 @@ impl Merge for Lints {
 pub struct MaxSizeBytes {
     /// The budget in bytes. A file with no budget from any source is not checked.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub value: Option<u64>,
     /// Replaces the advice that follows the first two lines of the report. `{path}` and
     /// `{max_size_bytes}` in it are replaced with the file's path and budget.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
 }
 
@@ -203,14 +213,17 @@ impl Merge for MaxSizeBytes {
 pub struct MaxEmphasis {
     /// How many spans a file may have whatever share of its prose they cover.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub free_spans: Option<u64>,
     /// The share of the prose, in percent, that the spans may cover.
     #[serde(default)]
     #[schemars(range(min = 0, max = 100))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub max_percent: Option<f64>,
     /// Replaces the advice in the report. `{path}`, `{free_spans}` and `{max_percent}` in it are
     /// replaced with the file's path and its limits.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
 }
 
@@ -256,22 +269,27 @@ pub struct RepoLayout {
     /// The section's heading, matched at any level and in any case.
     #[serde(default)]
     #[schemars(extend("default" = RepoLayout::DEFAULT_HEADING))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub heading: Option<String>,
     /// The fewest entries the layout may list.
     #[serde(default)]
     #[schemars(extend("default" = RepoLayout::DEFAULT_MIN_ENTRIES))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub min_entries: Option<u64>,
     /// The most entries the layout may list.
     #[serde(default)]
     #[schemars(extend("default" = RepoLayout::DEFAULT_MAX_ENTRIES))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub max_entries: Option<u64>,
     /// The widest a line of the layout may be, in characters.
     #[serde(default)]
     #[schemars(extend("default" = RepoLayout::DEFAULT_MAX_WIDTH))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub max_width: Option<u64>,
     /// Replaces the advice in the report. `{path}`, `{heading}`, `{min_entries}`,
     /// `{max_entries}` and `{max_width}` in it are replaced with the file's path and its settings.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
 }
 
@@ -351,16 +369,20 @@ impl Merge for RepoLayout {
 pub struct BannedChars {
     /// Turns groups of characters on or off.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub groups: CharGroups,
     /// Characters that are never banned, each written as a one-character string.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub allow: Option<Vec<String>>,
     /// Characters banned beyond the groups, each mapped to what to write instead. An empty
     /// string means delete it.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub ban: Option<BTreeMap<String, String>>,
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
 }
 
@@ -422,50 +444,62 @@ pub struct CharGroups {
     /// The em dash, en dash, minus sign and other dashes, for `-`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub dashes: Option<bool>,
     /// Arrows, for `->`, `<-` and the like.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub arrows: Option<bool>,
     /// The ellipsis, for `...`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub ellipsis: Option<bool>,
     /// Bullets, the middle dot and geometric shapes, for a Markdown list's `-`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub bullets: Option<bool>,
     /// The multiplication sign and comparison signs, for `x`, `>=`, `<=`, `!=` and `~`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub math: Option<bool>,
     /// Check marks and crosses, for yes and no.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub checks: Option<bool>,
     /// The section sign, for the word section.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub section: Option<bool>,
     /// Box-drawing characters and block elements, for `-`, `|` and `+`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub box_drawing: Option<bool>,
     /// The no-break space and other unusual spaces, for a plain space.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub spaces: Option<bool>,
     /// Characters that do not take space, such as the zero-width space, to be deleted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub invisible: Option<bool>,
     /// Curly quotes and apostrophes, for `"` and `'`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub quotes: Option<bool>,
     /// Emoji, to be deleted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = false))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub emoji: Option<bool>,
 }
 
@@ -519,16 +553,20 @@ impl Merge for CharGroups {
 pub struct BannedPhrases {
     /// Turns groups of phrases on or off.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub groups: PhraseGroups,
     /// Phrases that are never reported, such as a longer phrase that holds a banned one.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub allow: Option<Vec<String>>,
     /// Banned phrases, each mapped to the advice the report shows with it. An empty string means
     /// delete it.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub ban: Option<BTreeMap<String, String>>,
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
 }
 
@@ -616,14 +654,17 @@ pub struct PhraseGroups {
     /// Phrases that insist on what a thing does not do, such as `not silently`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub insistence: Option<bool>,
     /// Metaphors that stand in for a plain verb or claim, such as `load-bearing`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub metaphors: Option<bool>,
     /// Words that claim a precision nobody measured, such as `byte-identical`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = true))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub precision: Option<bool>,
 }
 
@@ -660,14 +701,17 @@ pub struct Density {
     /// The most characters a paragraph may hold.
     #[serde(default)]
     #[schemars(range(min = 1), extend("default" = Density::DEFAULT_MAX_PARAGRAPH_CHARS))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub max_paragraph_chars: Option<u64>,
     /// The most characters a list item may hold.
     #[serde(default)]
     #[schemars(range(min = 1), extend("default" = Density::DEFAULT_MAX_ITEM_CHARS))]
+    #[schemars(extend("since" = "0.0.1"))]
     pub max_item_chars: Option<u64>,
     /// Replaces the advice in the report. `{path}`, `{max_paragraph_chars}` and
     /// `{max_item_chars}` in it are replaced with the file's path and its limits.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
     /// Read by the unit tests' rename of this setting, to `max_paragraph_chars`.
     #[cfg(test)]
@@ -728,6 +772,7 @@ impl Merge for Density {
 pub struct VerbsNoNouns {
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
 }
 
@@ -749,6 +794,7 @@ impl Merge for VerbsNoNouns {
 pub struct NotAtAll {
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     pub message: Option<String>,
 }
 

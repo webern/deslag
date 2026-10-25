@@ -458,8 +458,7 @@ fn the_schema_gives_each_group_its_default() {
     }
 }
 
-/// Each lint's section says which release the lint arrived in, as the changelog has it. The
-/// changelog tests are the ones that say a lint has no entry.
+/// Each lint's section says which release the lint arrived in, as [`Lint::since`] has it.
 #[test]
 fn each_lint_section_says_when_its_lint_arrived() {
     let text = lints();
@@ -469,15 +468,9 @@ fn each_lint_section_says_when_its_lint_arrived() {
             .into_iter()
             .find_map(|(found, section)| (found == heading).then_some(section))
             .unwrap_or_else(|| panic!("no section for {heading}"));
-        let line = match changelog().arrived_in(lint) {
-            Some(Version::Release(version)) => format!("Since {version}."),
-            Some(Version::Next) => "Since the next release.".to_string(),
-            None => panic!(
-                "lint `{}` has no changelog entry, so its section has no `Since` line: see \
-                 `every_lint_has_exactly_one_entry_and_every_lint_entry_is_a_lint` in \
-                 tests/changelog.rs, which names the fix",
-                lint.id()
-            ),
+        let line = match lint.since() {
+            Version::Release(version) => format!("Since {version}."),
+            Version::Next => "Since the next release.".to_string(),
         };
         assert!(section.starts_with(&format!("\n{line}\n\n")), "{heading}");
     }

@@ -8,8 +8,8 @@ use std::path::PathBuf;
 
 use common::schema::SchemaPaths;
 use common::{Repo, code, stderr};
-use deslag::changelog::{Entry, changelog};
 use deslag::config::{REDIRECTS, Redirect, schema};
+use deslag::version::Version;
 use deslag::{Config, ConfigSource};
 use serde_json::{Value, json};
 
@@ -245,22 +245,16 @@ fn no_old_path_is_a_setting_and_every_new_path_is() {
     }
 }
 
+/// A redirect records the release it arrived in, which `deslag instructions update` selects it by.
 #[test]
-fn every_redirect_has_one_breaking_entry_whose_id_is_its_old_path() {
+fn every_redirect_has_a_since_that_parses() {
     for redirect in REDIRECTS {
-        let entries: Vec<_> = changelog()
-            .releases
-            .iter()
-            .flat_map(|release| &release.entries)
-            .filter(|entry| matches!(entry, Entry::Breaking { id, .. } if id == redirect.old))
-            .collect();
-        assert_eq!(
-            entries.len(),
-            1,
-            "`{}` needs one `breaking` entry with that id: add \
-             src/changelog/releases/<the release>/breaking.{}.toml",
+        assert!(
+            redirect.since.parse::<Version>().is_ok(),
+            "the redirect of `{}` has the since {:?}, which is neither a release such as 0.0.1 \
+             nor \"next\": write \"next\" for one not released yet",
             redirect.old,
-            redirect.old
+            redirect.since
         );
     }
 }

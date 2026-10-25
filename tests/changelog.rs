@@ -457,11 +457,6 @@ fn lints_turned_on_reads_every_section() {
 }
 
 #[test]
-fn the_schema_has_the_md_section() {
-    assert!(SchemaPaths::of(&schema()).sections().contains(&"md"));
-}
-
-#[test]
 fn no_entry_names_a_path_or_block_the_schema_refuses() {
     let paths = SchemaPaths::of(&schema());
     for (version, entry) in entries() {

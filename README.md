@@ -16,7 +16,7 @@ From crates.io: `cargo install deslag`.
 ## Set up
 
 Tell your agent to run `deslag --help && deslag instructions`. It will explain everything the agent
-needs to know to use and onboard your repo with a deslag config file.
+needs to know in order to onboard your repo.
 
 `deslag instructions output-schema` prints its schema.
 

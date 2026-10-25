@@ -94,4 +94,4 @@ We use a `Makefile`, `make help` lists the targets.
 ### Design
 
 Most of this repo is LLM slop, but here is a human-authored aspirational
-[doc](./docs/deslag.desired.md)
+[doc](./docs/design/deslag.desired.md)

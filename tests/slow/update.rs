@@ -13,28 +13,27 @@ use std::process::Output;
 use common::frozen::{self, EXTENSIONS};
 use common::schema::SchemaPaths;
 use common::{Repo, code, stderr, stdout};
-use deslag::changelog::changelog;
 use deslag::config::schema;
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::news::News;
 use deslag::version::Version;
 
 /// The release running, which `--to` accepts. A test that needs the stamp to move passes it, because
-/// a bare `update` holds the stamp back once a release has entries after the config's, and a test
-/// must not turn on what the changelog holds.
+/// a bare `update` holds the stamp back once something arrived after the config's, and a test
+/// must not turn on what arrived.
 const CURRENT: &str = env!("CARGO_PKG_VERSION");
 
-/// A release before every release, so a stamp of it is behind a deslag with a changelog. No deslag
-/// is older than it, so it loads under whatever version the crate is at.
+/// A release before every release, so a stamp of it is behind every lint released so far. No
+/// deslag is older than it, so it loads under whatever version the crate is at.
 const BEFORE_ALL: &str = "0.0.0";
 
 /// Whether a bare `update` holds a config stamped [`BEFORE_ALL`]: the running deslag has news for
 /// it. Which it does depends on the release the crate is at, so a test that shows the hold states
-/// what it expects of both answers. `src/config/update.rs` holds the hold against a changelog it
+/// what it expects of both answers. `src/config/update.rs` holds the hold against a schema it
 /// makes.
 fn held() -> bool {
     let from = Version::Release(BEFORE_ALL.parse().expect("a release"));
-    !News::between(changelog(), &CATALOGUE, &from, &Version::current()).is_empty()
+    !News::embedded(&from, &Version::current()).is_empty()
 }
 
 /// Standard error, which `update` fills only with what it did, without the line that names the
@@ -131,7 +130,7 @@ fn dry_run_lists_the_edits_a_real_run_makes_and_writes_nothing() {
 }
 
 #[test]
-fn a_stamp_behind_a_release_with_entries_is_left_unless_told_to_move() {
+fn a_stamp_behind_a_release_with_news_is_left_unless_told_to_move() {
     let text = format!("schema_version = 1\ndeslag_version = \"{BEFORE_ALL}\" # pinned\n");
     let signposts = format!("{text}[md.lints.banned_phrases.groups]\nsignposts = true\n");
     let repo = repo_with("toml", &signposts);

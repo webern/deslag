@@ -21,11 +21,10 @@ use std::path::Path;
 use semver::Version;
 
 use crate::Error;
-use crate::changelog::Changelog;
 use crate::config::Config;
 use crate::config::edit::{self, Checked, Edit};
-use crate::lint::banned_phrases::{Catalogue, Entry as Phrase, folded};
-use crate::news::News;
+use crate::lint::banned_phrases::{Entry as Phrase, folded};
+use crate::news::Known;
 use crate::{version, write};
 
 /// What an update did, or with `dry_run` would do.
@@ -37,7 +36,7 @@ pub struct Update {
     pub dry_run: bool,
     /// The edits, in the order of the file, the stamp last.
     pub edits: Vec<Edit>,
-    /// Set when the stamp was left because the running version has entries after it.
+    /// Set when the stamp was left because something arrived after it that the running version has.
     pub held: Option<Held>,
     /// The catalogue phrases the new stamp turns on where the config has their group on, in the
     /// order of their releases.
@@ -158,8 +157,8 @@ fn is_read_only(metadata: &fs::Metadata) -> bool {
 
 /// Updates the config of the repo rooted at `root`, found as `check` finds it: the redirects it
 /// uses are made, and the stamp moves as the module says. `running` is the release of deslag that
-/// is updating it, and `to`, when given, is that release. `known` and `phrases` are the changelog
-/// and the catalogue that say whether anything lies between the stamp and `running`.
+/// is updating it, and `to`, when given, is that release. `known` says whether anything arrived
+/// between the stamp and `running`.
 ///
 /// With `dry_run` the answer is the same and nothing is written.
 pub fn update(
@@ -168,14 +167,13 @@ pub fn update(
     dry_run: bool,
     to: Option<&Version>,
     running: &Version,
-    known: &Changelog,
-    phrases: &Catalogue,
+    known: Known<'_>,
 ) -> Result<Update, Error> {
     let (config, text) = Config::load_text_at(root, explicit, running)?;
     let path = shown(root, config.path());
     let seen = config.deslag_version();
     let now = version::Version::Release(running.clone());
-    let news = News::between(known, phrases, &seen, &now);
+    let news = known.news(&seen, &now);
     let (stamp, held) = match to {
         Some(to) => (Some(to.clone()), None),
         None if news.is_empty() => (Some(running.clone()), None),
@@ -255,6 +253,7 @@ pub(crate) fn turned_on(config: &Config, phrases: &[&Phrase]) -> Vec<TurnedOn> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::paths::SchemaPaths;
     use crate::lint::banned_phrases::Catalogue;
 
     /// The release these tests run as, which is what the stamp moves to. The crate's own version
@@ -263,21 +262,18 @@ mod tests {
         Version::new(0, 3, 0)
     }
 
-    /// A changelog with no entry after the baseline, and one with an entry the stamp `0.0.0` has not
-    /// seen, in a release the running one has reached.
-    fn nothing_new() -> Changelog {
-        Changelog::from_files([("next/README.md", "")]).expect("a changelog")
+    /// A schema with nothing in it, so that nothing arrives in any range, and one with a setting
+    /// from 0.2.0, which the stamp 0.0.0 has not seen and the running release has reached. Neither
+    /// has a lint table, so no lint is news whatever this build's lints say.
+    fn nothing_new() -> SchemaPaths {
+        SchemaPaths::of(&serde_json::json!({ "type": "object", "properties": {} }))
     }
 
-    fn news() -> Changelog {
-        Changelog::from_files([
-            ("next/README.md", ""),
-            (
-                "0.0.1/feature.x.toml",
-                "kind = \"feature\"\nid = \"x\"\nsummary = \"s\"\nonboarding = \"o\"\n",
-            ),
-        ])
-        .expect("a changelog")
+    fn news() -> SchemaPaths {
+        SchemaPaths::of(&serde_json::json!({
+            "type": "object",
+            "properties": { "x": { "type": "string", "since": "0.2.0" } },
+        }))
     }
 
     /// A repo with `text` as `deslag.toml`.
@@ -317,21 +313,30 @@ mod tests {
         dir: &tempfile::TempDir,
         dry_run: bool,
         to: Option<&Version>,
-        known: &Changelog,
+        paths: &SchemaPaths,
     ) -> Result<Update, Error> {
+        let phrases = no_phrases();
         update(
             dir.path(),
             None,
             dry_run,
             to,
             &running(),
-            known,
-            &no_phrases(),
+            known(paths, &phrases),
         )
     }
 
+    /// The records of `paths` and `phrases`, with no redirect.
+    fn known<'a>(paths: &'a SchemaPaths, phrases: &'a Catalogue) -> Known<'a> {
+        Known {
+            paths,
+            redirects: &[],
+            catalogue: phrases,
+        }
+    }
+
     #[test]
-    fn a_bare_update_moves_the_stamp_when_the_changelog_has_nothing_new() {
+    fn a_bare_update_moves_the_stamp_when_nothing_is_new() {
         let (dir, path) = repo(&format!("schema_version = 1\n{REMOVED}"));
         let done = run(&dir, false, None, &nothing_new()).expect("an update");
         assert_eq!(done.held, None);
@@ -351,7 +356,7 @@ mod tests {
     }
 
     #[test]
-    fn a_bare_update_holds_the_stamp_when_the_changelog_has_news_and_still_makes_the_redirects() {
+    fn a_bare_update_holds_the_stamp_when_something_is_new_and_still_makes_the_redirects() {
         let text = format!("schema_version = 1\ndeslag_version = \"0.0.0\"\n{REMOVED}");
         let (dir, path) = repo(&text);
         let done = run(&dir, false, None, &news()).expect("an update");
@@ -404,7 +409,7 @@ mod tests {
     }
 
     #[test]
-    fn to_moves_the_stamp_whatever_the_changelog_holds() {
+    fn to_moves_the_stamp_whatever_is_new() {
         let (dir, path) = repo("schema_version = 1\ndeslag_version = \"0.0.0\" # pinned\n");
         let done = run(&dir, false, Some(&running()), &news()).expect("an update");
         assert_eq!(done.held, None);
@@ -459,7 +464,8 @@ mod tests {
 
     #[test]
     fn a_phrase_alone_holds_a_bare_update_and_to_names_the_phrases_it_turns_on() {
-        let stamped = "schema_version = 1\ndeslag_version = \"0.0.0\"\n";
+        // The schema holds nothing, so the phrases are all that is new.
+        let stamped = "schema_version = 1\ndeslag_version = \"0.0.1\"\n";
         let text = format!("{stamped}[md.lints.banned_phrases.groups]\nmetaphors = false\n");
         let (dir, path) = repo(&text);
         let phrases = new_phrases();
@@ -470,8 +476,7 @@ mod tests {
             false,
             None,
             &running(),
-            &nothing_new(),
-            &phrases,
+            known(&nothing_new(), &phrases),
         )
         .expect("held");
         assert!(held.held.is_some() && held.phrases.is_empty(), "{held:?}");
@@ -484,8 +489,7 @@ mod tests {
             true,
             Some(&sample),
             &running(),
-            &nothing_new(),
-            &phrases,
+            known(&nothing_new(), &phrases),
         )
         .expect("a dry run");
         let turned = vec![TurnedOn {
@@ -507,8 +511,7 @@ mod tests {
             false,
             Some(&sample),
             &running(),
-            &nothing_new(),
-            &phrases,
+            known(&nothing_new(), &phrases),
         )
         .expect("an update");
         assert_eq!(done.phrases, turned);
@@ -524,8 +527,7 @@ mod tests {
             false,
             Some(&sample),
             &running(),
-            &nothing_new(),
-            &phrases,
+            known(&nothing_new(), &phrases),
         )
         .expect("current");
         assert!(again.phrases.is_empty());
@@ -538,8 +540,7 @@ mod tests {
             true,
             Some(&sample),
             &running(),
-            &nothing_new(),
-            &phrases,
+            known(&nothing_new(), &phrases),
         )
         .expect("a dry run");
         assert!(none.phrases.is_empty(), "{none:?}");
@@ -572,8 +573,7 @@ mod tests {
             true,
             Some(&to),
             &running(),
-            &nothing_new(),
-            &catalogue_of(phrases),
+            known(&nothing_new(), &catalogue_of(phrases)),
         )
         .expect("a dry run");
         let line = done

@@ -11,12 +11,10 @@ use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_
 use common::schema::resolve;
 use common::{Repo, code, raw_stderr, stderr, stdout};
 use deslag::Lint;
-use deslag::changelog::{Entry, changelog};
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
 use deslag::instructions::{ALLOW, Reading, Start, guide, lints, update_json, update_text};
-use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::{banned_chars, banned_phrases, check_file};
 use deslag::news::News;
 use deslag::version::{BASELINE, Version};
@@ -479,7 +477,7 @@ fn each_lint_section_says_when_its_lint_arrived() {
 /// A release older than every release, which puts the first one in the range of a stamp. It is no
 /// newer than any deslag, so a config stamped with it loads under whatever version the crate is at;
 /// what is new to it depends on that version, so a test asks [`news`] and states what it expects
-/// from the answer. `src/instructions/update.rs` holds the exact text, for a changelog it makes.
+/// from the answer. `src/instructions/update.rs` holds the exact text, for a schema it makes.
 const OLDER: &str = "0.0.0";
 
 /// A repo whose config is stamped `stamp`.
@@ -503,19 +501,48 @@ fn release(text: &str) -> Version {
     text.parse().expect("a release")
 }
 
-/// What is new after `from`, up to the running version, in the embedded changelog and catalogue.
+/// What arrived after `from`, up to the running version, in this deslag.
 fn news(from: &Version) -> News<'static> {
-    News::between(changelog(), &CATALOGUE, from, &Version::current())
+    News::embedded(from, &Version::current())
 }
 
-/// The id and release of each entry `text` prints, in order, from the headings of the entries.
+/// The ids each heading of `text` names, in order, with the release the heading gives. Settings
+/// that share a heading are each named, with the release of the group.
 fn headings(text: &str) -> Vec<(String, String)> {
     text.lines()
-        .filter_map(|line| line.strip_prefix("### `"))
-        .map(|rest| {
-            let (id, release) = rest.split_once("` (").expect("an id and a release");
-            (id.to_string(), release.trim_end_matches(')').to_string())
+        .filter_map(|line| line.strip_prefix("### "))
+        .flat_map(|rest| {
+            let (ids, release) = rest.rsplit_once(" (").expect("ids and a release");
+            let release = release.trim_end_matches(')').to_string();
+            ids.split(", ")
+                .map(move |id| (id.trim_matches('`').to_string(), release.clone()))
+                .collect::<Vec<_>>()
         })
+        .collect()
+}
+
+/// The id of each lint, setting, redirect and phrase of `news`, with its release.
+fn arrived(news: &News) -> Vec<(String, String)> {
+    let lints = news
+        .lints()
+        .iter()
+        .map(|(lint, since)| (lint.id().to_string(), since.to_string()));
+    let settings = news
+        .settings()
+        .iter()
+        .map(|setting| (setting.path.to_string(), setting.since.to_string()));
+    let redirects = news
+        .redirects()
+        .iter()
+        .map(|(redirect, since)| (redirect.old.to_string(), since.to_string()));
+    let phrases = news
+        .phrases()
+        .iter()
+        .map(|phrase| (phrase.phrase.clone(), phrase.since.to_string()));
+    lints
+        .chain(settings)
+        .chain(redirects)
+        .chain(phrases)
         .collect()
 }
 
@@ -561,12 +588,13 @@ fn the_update_topic_prints_what_is_new_since_the_stamp() {
             "the closing names the command that records the version"
         );
     }
-    // Each entry of the range is listed under its release.
-    for (version, entry) in new.entries() {
-        let heading = format!("### `{}` ({version})\n", entry.id());
-        assert!(text.contains(&heading), "{heading}");
-    }
-    // `next` is not in the range: its entries would head their sections with `(next)`.
+    // Each lint, setting, redirect and phrase of the range is under a heading, and only those.
+    let mut listed: Vec<String> = headings(&text).into_iter().map(|(id, _)| id).collect();
+    let mut want: Vec<String> = arrived(&new).into_iter().map(|(id, _)| id).collect();
+    listed.sort();
+    want.sort();
+    assert_eq!(listed, want);
+    // `next` is not in the range: what arrives in it would head its section with `(next)`.
     assert!(!text.contains("(next)"));
 }
 
@@ -592,36 +620,28 @@ fn the_json_holds_the_entries_of_the_text() {
     assert_eq!(parsed["from"], OLDER);
     assert_eq!(parsed["to"], env!("CARGO_PKG_VERSION"));
     let entries = parsed["entries"].as_array().expect("entries");
-    let printed: Vec<(String, String)> = entries
+    // An item per id the text heads, in its order.
+    let printed: Vec<String> = entries
         .iter()
-        .map(|entry| {
-            (
-                entry["id"].as_str().expect("an id").to_string(),
-                entry["version"].as_str().expect("a version").to_string(),
-            )
-        })
+        .map(|entry| entry["id"].as_str().expect("an id").to_string())
         .collect();
-    let new = news(&release(OLDER));
-    assert_eq!(printed.len(), new.entries().len() + new.phrases().len());
-    assert_eq!(printed, headings(&text));
+    let headed: Vec<String> = headings(&text).into_iter().map(|(id, _)| id).collect();
+    assert_eq!(printed, headed);
+    assert_eq!(printed.len(), arrived(&news(&release(OLDER))).len());
     for entry in entries {
         let kind = entry["kind"].as_str().expect("a kind");
         assert!(
-            ["breaking", "lint", "setting", "feature", "phrase"].contains(&kind),
+            ["lint", "setting", "redirect", "phrase"].contains(&kind),
             "{kind}"
         );
-        for key in ["summary", "onboarding"] {
-            assert!(
-                !entry[key].as_str().expect(key).is_empty(),
-                "{key} of {entry}"
-            );
-        }
-        // Only a breaking change says whether the config needs a hand edit.
-        assert_eq!(
-            entry.get("update_does_all").is_some(),
-            kind == "breaking",
-            "{entry}"
+        assert!(
+            !entry["text"].as_str().expect("a text").is_empty(),
+            "the text of {entry}"
         );
+        assert!(entry["version"].as_str().is_some(), "{entry}");
+        // Only a redirect names its new path, and only a phrase its group.
+        assert_eq!(entry.get("new").is_some(), kind == "redirect", "{entry}");
+        assert_eq!(entry.get("group").is_some(), kind == "phrase", "{entry}");
     }
 }
 
@@ -949,16 +969,16 @@ fn a_lint_the_config_already_turns_on_is_marked() {
     // listed.
     let new = news(&release(OLDER));
     let listed = new
-        .entries()
+        .lints()
         .iter()
-        .find(|(_, entry)| matches!(entry, Entry::Lint { .. }) && entry.id() == "max_size_bytes");
+        .find(|(lint, _)| *lint == Lint::MaxSizeBytes);
     let marked: &[&str] = if listed.is_some() {
         &["max_size_bytes"]
     } else {
         &[]
     };
     let text = stdout(&update(&repo, &[]));
-    if let Some((version, _)) = listed {
+    if let Some((_, version)) = listed {
         let heading = format!("### `max_size_bytes` ({version})\n");
         let entry = text.split(&heading).nth(1).expect("the lint is listed");
         let entry = entry.split("\n### ").next().expect("an entry");
@@ -985,8 +1005,8 @@ fn a_lint_the_config_already_turns_on_is_marked() {
     assert_eq!(marks(&stdout(&since)), Vec::<&str>::new());
 }
 
-/// The lints a text marks as already in the config. A mark is a line of its own, so an entry's
-/// onboarding that speaks of the mark does not count, whatever a release moves into the range.
+/// The lints a text marks as already in the config. A mark is a line of its own, so a lint's page
+/// that speaks of the mark does not count, whatever a release moves into the range.
 fn marks(text: &str) -> Vec<&str> {
     text.lines()
         .filter_map(|line| line.strip_prefix("This config already has a `"))
@@ -1002,18 +1022,9 @@ fn the_readme_example_config_loads() {
     let example = toml_blocks(&readme)[0];
     assert!(example.contains("\ndeslag_version = \""), "{example}");
     assert_eq!(toml_misfit(example), None);
-    // The stamp is a sample, and it has to be a release that exists: it loads as the newest release
-    // in the changelog, so a stamp above that one fails. It runs as this version, whatever it is.
-    let newest = changelog()
-        .releases
-        .iter()
-        .filter_map(|release| match &release.version {
-            Version::Release(version) => Some(version),
-            Version::Next => None,
-        })
-        .max()
-        .cloned()
-        .unwrap_or(BASELINE);
+    // The stamp is a sample, and it has to be a release that exists: it loads as the newest frozen
+    // release, so a stamp above that one fails. It runs as this version, whatever it is.
+    let (newest, _) = common::frozen::releases().pop().expect("a frozen release");
     Config::parse_at(
         example,
         "deslag.toml".into(),

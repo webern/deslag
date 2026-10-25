@@ -73,7 +73,7 @@ lints.max_size_bytes.value = 800
 
 [[md.overrides]]
 globs = ["/src/instructions/update.md"]
-lints.max_size_bytes.value = 1472
+lints.max_size_bytes.value = 1585
 
 [[md.overrides]]
 globs = ["/scripts/blobstore/blobs.md"]

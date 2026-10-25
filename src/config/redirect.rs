@@ -78,6 +78,24 @@ pub const REDIRECTS: &[Redirect] = &[Redirect {
     },
 }];
 
+/// A redirect that moves nothing, for the unit tests of what reads the table rather than of the
+/// move, such as what is new to a config.
+#[cfg(test)]
+pub(crate) fn listed(
+    old: &'static str,
+    new: Option<&'static str>,
+    since: &'static str,
+) -> Redirect {
+    Redirect {
+        old,
+        new,
+        reason: None,
+        example: "true",
+        since,
+        moves: |_| Ok(false),
+    }
+}
+
 /// A rename that only the unit tests know, to test the machinery without a real rename.
 #[cfg(test)]
 pub(super) static TEST_RENAME: Redirect = Redirect {
@@ -143,11 +161,17 @@ impl Redirect {
             .expect("the old path of a redirect is in a lints table")
     }
 
-    /// What to say, once, about a config at `config_path` that sets the old path: what happened to it,
-    /// why when the redirect says, and what to do.
+    /// What to say, once, about a config at `config_path` that sets the old path: its path, then
+    /// the [`message`](Redirect::message).
     pub fn warning(&self, config_path: &str) -> String {
+        format!("{config_path}: {}", self.message())
+    }
+
+    /// What happened to the old path, why when the redirect says, and what to do, which
+    /// `deslag instructions update` prints for a redirect that is new to a config.
+    pub fn message(&self) -> String {
         let old = self.old;
-        let said = match self.new {
+        match self.new {
             Some(new) => {
                 format!(
                     "`{old}` was renamed to `{new}`; rename it in the config, or run deslag update"
@@ -163,8 +187,7 @@ impl Redirect {
                      config, or run deslag update"
                 )
             }
-        };
-        format!("{config_path}: {said}")
+        }
     }
 }
 

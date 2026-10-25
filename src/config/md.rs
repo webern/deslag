@@ -105,7 +105,7 @@ pub(super) struct MdFile {
     exclude: Vec<String>,
     // After `exclude` for the same reason.
     /// The sentences of these files that stay as written, each exempted from one lint. Only a
-    /// human writes an entry.
+    /// human writes an entry. `deslag instructions lints` says how to write one.
     #[serde(default)]
     #[schemars(extend("since" = "next"))]
     allow: Vec<AllowFile>,

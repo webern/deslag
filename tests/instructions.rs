@@ -546,6 +546,43 @@ fn arrived(news: &News) -> Vec<(String, String)> {
         .collect()
 }
 
+/// The lints a config turns on are read from every section and from its overrides.
+#[test]
+fn lints_turned_on_reads_every_section() {
+    let config = "schema_version = 1\n[md.lints.density]\n[x.lints.max_emphasis]\n\
+                  [[x.overrides]]\nglobs = [\"a\"]\n[x.overrides.lints.banned_chars]\n";
+    assert_eq!(
+        lints_turned_on(config),
+        BTreeSet::from(["density", "max_emphasis", "banned_chars"].map(String::from))
+    );
+}
+
+/// `## New lints` holds a section for each lint whose `since` is after the stamp, up to the running
+/// version, and no other: its heading, then the page `deslag instructions lints` prints for it.
+#[test]
+fn the_update_topic_prints_the_page_of_each_lint_above_the_stamp() {
+    let text = stdout(&update(&stamped(OLDER), &[]));
+    let new = news(&release(OLDER));
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut want = String::new();
+    for (lint, since) in new.lints() {
+        let file = format!("src/instructions/lints/{}.md", lint.id());
+        let page = std::fs::read_to_string(root.join(&file)).expect(&file);
+        want.push_str(&format!(
+            "\n### `{}` ({since})\n\n{}\n",
+            lint.id(),
+            page.trim()
+        ));
+    }
+    let section = text
+        .split_once("\n## New lints\n")
+        .map(|(_, rest)| rest.split("\n## ").next().expect("a section"));
+    match section {
+        Some(section) => assert_eq!(section, want),
+        None => assert!(want.is_empty(), "{text}"),
+    }
+}
+
 #[test]
 fn the_guide_names_the_update_topic() {
     assert!(guide().contains("`deslag instructions update`"));

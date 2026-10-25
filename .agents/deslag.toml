@@ -14,7 +14,6 @@ globs = [
   "/.agents/skills/**/*.md",
   "/scripts/blobstore/blobs.md",
   "/src/instructions/**/*.md",
-  "/src/changelog/releases/next/README.md",
 ]
 
 [md.lints.max_emphasis]
@@ -94,9 +93,7 @@ groups = { emoji = true }
 [rust.lints.not_at_all]
 
 # The comments of deslag's own TOML outside tests/, and not the golden files of tools/sweep, which
-# the sweep prints. They are held to the same characters and phrases as the Rust comments. A
-# released changelog directory is a record: its entries are never linted, so a later lint never
-# edits them. Only `next/` is read.
+# the sweep prints. They are held to the same characters and phrases as the Rust comments.
 [toml]
 globs = [
   "/.agents/deslag.toml",
@@ -106,7 +103,6 @@ globs = [
   "/src/**/*.toml",
   "/tools/corpus/*.toml",
 ]
-exclude = ["/src/changelog/releases/[0-9]*/*.toml"]
 
 [toml.lints.banned_chars]
 groups = { emoji = true }

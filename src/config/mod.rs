@@ -103,7 +103,8 @@ fn reading_section(rel_path: &str) -> Option<(&'static str, &str)> {
 /// - `Config::parse` matches on the probe's `schema_version`, between the stamp check and the typed
 ///   parse, and reads the old text through the frozen path;
 /// - it warns once, naming the schema it read;
-/// - a `breaking` changelog entry names the version.
+/// - each setting it changes carries the `since` of the release, as the skill
+///   `deslag-upgrade-instructions` says.
 ///
 /// The text is still read typed, never through an untyped document. The configs under
 /// `tests/configs/` keep loading.

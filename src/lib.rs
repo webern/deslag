@@ -15,8 +15,9 @@
 //!
 //! [`document`] reads a file once into the layers the lints share: its blocks, and the words and
 //! sentences of its prose. [`tag`] is where each word gets a part of speech. [`instructions`] holds
-//! what an agent setting deslag up needs to read, [`changelog`] what each release added,
-//! [`news`] what a config has not seen of that, and [`version`] how releases compare.
+//! what an agent setting deslag up needs to read, [`news`] what arrived since a config's stamp,
+//! by the release each lint, setting, redirect and phrase records, and [`version`] how releases
+//! compare.
 //! [`config::schema`] is the JSON schema of the config, [`config::paths`] the path of each setting
 //! in it, and [`explain`](mod@explain) the settings a file gets. [`output`] prints a run in the
 //! formats a machine reads, and [`fix`](mod@fix) makes the edits to a file that the lints name and
@@ -28,7 +29,6 @@ use std::io;
 use std::num::NonZeroU32;
 
 pub mod change;
-pub mod changelog;
 pub mod cli;
 pub mod config;
 pub mod document;

@@ -4,7 +4,7 @@
 use std::path::Path;
 use std::process::Command;
 
-use deslag_release::entries::{self, Entry, Kind};
+use deslag_release::entries::{Entry, Kind};
 use deslag_release::freeze::{self, Retired, Rules};
 use deslag_release::frozen::{self, EXTENSIONS};
 use deslag_release::prep::prep;
@@ -730,22 +730,4 @@ fn a_shallow_repository_has_no_tags_to_trust() {
     );
     let error = version::tags(&clone).expect_err("refused");
     assert!(error.to_string().contains("shallow"), "{error:#}");
-}
-
-#[test]
-fn the_notes_list_the_entries_by_kind_and_say_when_there_are_none() {
-    let directory = tempfile::tempdir().expect("a directory");
-    let root = directory.path();
-    tree(root, "0.0.1", false);
-    freeze_first(root);
-    commit(root);
-    prep(root, &version("0.0.1"), &[], &rules(false, Vec::new())).expect("prep");
-    assert_eq!(
-        entries::notes(root, &version("0.0.1")).expect("notes"),
-        "## Breaking changes\n\n- `zed`: Drops zed\n\n## New features\n\n- `new`: Adds new\n- `old`: s\n"
-    );
-    assert_eq!(
-        entries::notes(root, &version("0.0.2")).expect("notes"),
-        "This release adds no changelog entries.\n"
-    );
 }

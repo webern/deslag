@@ -5,8 +5,8 @@ use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 use deslag_release::freeze::Rules;
+use deslag_release::prep;
 use deslag_release::version::{self, Against};
-use deslag_release::{entries, prep};
 
 /// Makes the change that releases a version of deslag, and checks the version.
 #[derive(Parser)]
@@ -44,11 +44,6 @@ enum Command {
         /// The version.
         version: String,
     },
-    /// Print the release's notes: the entries of its directory, by kind
-    Notes {
-        /// The version.
-        version: String,
-    },
 }
 
 fn run(cli: Cli) -> anyhow::Result<()> {
@@ -78,9 +73,6 @@ fn run(cli: Cli) -> anyhow::Result<()> {
             for line in said {
                 println!("{line}");
             }
-        }
-        Command::Notes { version: text } => {
-            print!("{}", entries::notes(&root, &version::parse(&text)?)?);
         }
     }
     Ok(())

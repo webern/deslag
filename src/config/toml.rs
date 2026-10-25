@@ -43,7 +43,7 @@ pub(super) struct TomlFile {
     #[schemars(extend("default" = ["comment"]))]
     surfaces: Option<Vec<TomlSurface>>,
     /// The settings for every selected file that no override changes. A lint that needs the whole
-    /// file, such as `max_size_bytes`, or Markdown blocks, such as `list_growth`, is an error here.
+    /// file, such as `max_size_bytes`, is an error here.
     #[serde(default)]
     lints: Lints,
     /// Settings for the selected files that match a pattern.

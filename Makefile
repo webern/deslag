@@ -91,7 +91,7 @@ PYTHON_VERSION := 3.13
         check-typos \
         clean clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train \
         ci ci-fast \
-        fix fix-blobs fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
+        fix fix-catalog fix-clippy fix-fmt fix-golden fix-test-output \
         preflight preflight-python install \
         fetch-blobs fetch-crates fetch-ewt fetch-harper fetch-spacy generate-brill generate-brill-deslag \
         generate-brill-percept generate-label-audit generate-label-cost generate-label-dev \
@@ -209,9 +209,8 @@ help:
 	@echo "ci-fast          the gate to run before a push, about 40 seconds warm: preflight, check, test-exam"
 	@echo "                 and test-product; ci runs the rest"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
-	@echo "fix-blobs        rewrite everything derived from the pinned image: the catalogue and the golden"
-	@echo "                 file of list_growth; fetches the image first, needs the network, so not in fix"
-	@echo "fix-catalog      rewrite banned_phrases' catalogue counts, and the image it names, from the big tier"
+	@echo "fix-catalog      rewrite banned_phrases' catalogue counts, and the image it names, from the big"
+	@echo "                 tier; fetches the image first, needs the network, so not in fix"
 	@echo "fix-clippy       apply clippy's suggested fixes"
 	@echo "fix-fmt          rustfmt in place"
 	@echo "fix-golden       rewrite tests/golden from what each lint finds in the corpus, and"
@@ -522,8 +521,9 @@ check-clippy: preflight
 	cargo clippy $(CARGO_FLAGS) --workspace --all-features --test slow -- -D warnings
 	cargo clippy $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET) --all-targets -- -D warnings
 
-# The debug build of deslag, run against .agents/deslag.toml. list_growth judges
-# the change from where origin/main and HEAD meet, which is empty on main.
+# The debug build of deslag, run against .agents/deslag.toml, with the change from where origin/main
+# and HEAD meet, so that an allow entry the change adds or changes gets a notice. It is empty on
+# main.
 check-deslag: preflight
 	cargo run $(CARGO_FLAGS) --quiet -- check --base origin/main
 
@@ -627,15 +627,10 @@ fix-golden: preflight
 	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --profile fast --workspace --all-features --test golden
 	DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) $(SWEEP) $(SWEEP_TARGET)
 
-# What the publish-blobs workflow runs after it publishes, so a new image leaves the branch green: the
-# catalogue's counts and measured_on, and the golden file of list_growth, which names the batch of each
-# fixture. One cargo run, so the image is read once per test. Accepts whatever the image says, so read
-# the diff before committing it. The two files it writes are listed in blobstore/remeasure.sh, which runs it.
-fix-blobs: preflight fetch-blobs
-	DESLAG_FIX_CATALOG=1 DESLAG_FIX_GOLDEN=1 cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored the_catalogue_counts list_growth
-
 # Rewrites the counts of banned_phrases' catalogue from the big tier, and its measured_on from
-# blobs.lock, so read the diff before committing it.
+# blobs.lock, so read the diff before committing it. The publish-blobs workflow runs it, through
+# blobstore/remeasure.sh, after it publishes, so a new image leaves the branch green; remeasure.sh
+# lists the files it writes.
 fix-catalog: preflight fetch-blobs
 	DESLAG_FIX_CATALOG=1 cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored the_catalogue_counts
 

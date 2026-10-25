@@ -71,8 +71,7 @@ lints.max_size_bytes.value = 8000
 ```
 
 In `[rust]`, `[cpp]` and `[toml]`, `max_size_bytes` and `repo_layout` are an error, since they need
-the whole file. `list_growth` is an error in `[cpp]` and `[toml]`, and in `[rust]` without the
-`doc_comment` surface. The rest read comments.
+the whole file. The rest read comments.
 
 ## 4. See what each file reads
 
@@ -85,10 +84,9 @@ reads as you mean.
 ## 5. Measure, then fix
 
 Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
-no remote. `--base HEAD` judges only uncommitted work, so `list_growth` passes in a clean tree:
-never use it in CI. A failing file gets a report on standard error and exit code 1; exit 2 means
-deslag could not run. Tell the human what each lint fails and propose a limit above the
-file's size: add 10%, at least 500 bytes. A file needing more gets an override.
+no remote. A failing file gets a report on standard error and exit code 1; exit 2 means deslag could
+not run. Tell the human what each lint fails and propose a limit above the file's size: add 10%, at
+least 500 bytes. A file needing more gets an override.
 
 Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a
 file, rephrase around a lint or write an `allow` entry: only a human exempts a sentence, so give

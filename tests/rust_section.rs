@@ -156,12 +156,10 @@ fn the_md_section_keeps_any_glob() {
     }
 }
 
-/// Whether a lint can run on the surfaces: the whole file is never given, Markdown blocks only by
-/// the doc comments, and prose by either.
+/// Whether a lint can run on the surfaces: the whole file is never given, and prose by either.
 fn can_run(lint: Lint, surfaces: &[&str]) -> bool {
     match lint {
         Lint::MaxSizeBytes | Lint::RepoLayout => false,
-        Lint::ListGrowth => surfaces.contains(&"doc_comment"),
         Lint::MaxEmphasis
         | Lint::BannedChars
         | Lint::BannedPhrases
@@ -220,11 +218,6 @@ fn the_message_names_the_lint_the_surfaces_and_what_would_feed_it() {
         refused("[rust.lints.max_size_bytes]\n"),
         "invalid setting in deslag.toml: rust.lints.max_size_bytes is on, but it needs the whole \
          file, which only [md] reads; [rust] reads the surfaces doc_comment and comment"
-    );
-    assert_eq!(
-        refused("[rust]\nsurfaces = [\"comment\"]\n[rust.lints.list_growth]\n"),
-        "invalid setting in deslag.toml: rust.lints.list_growth is on, but it needs the blocks of \
-         Markdown, which only the doc_comment surface gives; [rust] reads the comment surface"
     );
     assert_eq!(
         refused("[rust]\nsurfaces = []\n[rust.lints.density]\n"),

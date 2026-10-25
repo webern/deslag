@@ -1,3 +1,0 @@
-# Guide
-
-- Read the options.

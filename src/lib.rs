@@ -19,9 +19,9 @@
 //! [`news`] what a config has not seen of that, [`config::schema`] the JSON schema of the config,
 //! and [`explain`](mod@explain) the settings a file gets. [`output`] prints a run in the formats a
 //! machine reads, and [`fix`](mod@fix) makes the edits to a file that the lints name and the
-//! document proves safe. [`change`] asks git what a change did, which the lints that judge a change
-//! read and [`Report::within`] narrows a run to. [`mod@write`] replaces a file whole, as `fix` and
-//! `deslag update` do.
+//! document proves safe. [`change`] asks git what a change did, which [`Report::within`] narrows a
+//! run to and which says what `allow` entries a change adds. [`mod@write`] replaces a file whole,
+//! as `fix` and `deslag update` do.
 
 use std::io;
 use std::num::NonZeroU32;
@@ -221,18 +221,5 @@ pub enum Error {
         base: String,
         /// Why not.
         problem: String,
-    },
-
-    /// A lint that judges a change selects a file in a run with no base to judge it from.
-    #[error(
-        "{lint} judges what a change did to {path}, and this run has no base to judge it from: \
-         give the branch the work merges into, such as with --base origin/main; --base HEAD \
-         judges only uncommitted work"
-    )]
-    NoBase {
-        /// The lint.
-        lint: &'static str,
-        /// The file, relative to the repo root.
-        path: String,
     },
 }

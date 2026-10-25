@@ -1,11 +1,11 @@
 //! Tests for `deslag check --format`: what holds of the JSON, SARIF and GitHub formats, on one repo
-//! where every lint fails a file, a change to it included. The cases pin the JSON of each behavior.
+//! where every lint fails a file. The cases pin the JSON of each behavior.
 
 mod common;
 
 use std::process::{Command, Output};
 
-use common::git::{commit, git, hermetic};
+use common::git::hermetic;
 use common::schema::misfit;
 use common::{Repo, code, stderr, stdout};
 use deslag::Lint;
@@ -34,8 +34,6 @@ max_entries = 2
 [md.lints.density]
 max_paragraph_chars = 60
 
-[md.lints.list_growth]
-
 [md.lints.verbs_no_nouns]
 
 [md.lints.not_at_all]
@@ -56,32 +54,27 @@ repo/
 A paragraph that runs on well past sixty characters, which is the limit here.
 
 It ships no binary. It does not build at all.
-
-- An item the change adds.
 ";
 
 /// The name of the file holding [`EVERY_LINT`].
 const ESCAPED: &str = "a, b: 100%.md";
 
-/// A repo where every lint fails a file: [`EVERY_LINT`] grew from a heading alone at HEAD.
+/// A repo where every lint fails a file: [`EVERY_LINT`], and `docs/big.md` over its budget.
 fn failing() -> Repo {
     let repo = Repo::new();
     repo.write("deslag.toml", CONFIG);
-    repo.write(ESCAPED, "# All\n");
+    repo.write(ESCAPED, EVERY_LINT);
     repo.write(
         "docs/big.md",
         &format!("# Big\n\n{}\n", "word ".repeat(100)),
     );
-    git(repo.root(), &["init", "-q"]);
-    commit(repo.root(), "base");
-    repo.write(ESCAPED, EVERY_LINT);
     repo
 }
 
-/// Runs `deslag check --base HEAD --format <format>` in `repo`.
+/// Runs `deslag check --format <format>` in `repo`.
 fn check(repo: &Repo, format: &str) -> Output {
     hermetic(&mut Command::new(env!("CARGO_BIN_EXE_deslag")))
-        .args(["check", "--base", "HEAD", "--format", format])
+        .args(["check", "--format", format])
         .current_dir(repo.root())
         .output()
         .expect("deslag runs")
@@ -143,8 +136,6 @@ fn a_clean_run_has_no_findings() {
         "# A\n\n## Repository layout\n\n```\n  a.md  <- this\n  b/    <- that\n```\n",
     );
     repo.write("b/c.txt", "");
-    git(repo.root(), &["init", "-q"]);
-    commit(repo.root(), "base");
     let sarif: Value = serde_json::from_str(&stdout(&check(&repo, "sarif"))).expect("a SARIF log");
 
     assert_eq!(json_run(&repo)["findings"], json!([]));

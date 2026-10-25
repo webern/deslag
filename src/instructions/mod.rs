@@ -76,7 +76,6 @@ fn section(lint: Lint) -> &'static str {
         Lint::BannedChars => include_str!("lints/banned_chars.md"),
         Lint::BannedPhrases => include_str!("lints/banned_phrases.md"),
         Lint::Density => include_str!("lints/density.md"),
-        Lint::ListGrowth => include_str!("lints/list_growth.md"),
         Lint::VerbsNoNouns => include_str!("lints/verbs_no_nouns.md"),
         Lint::NotAtAll => include_str!("lints/not_at_all.md"),
     }
@@ -99,12 +98,12 @@ onboarding = "Turn it on."
 "#,
         ),
         (
-            "next/lint.list_growth.toml",
+            "next/lint.not_at_all.toml",
             r#"
 kind = "lint"
-id = "list_growth"
+id = "not_at_all"
 keys = []
-summary = "Fails growing lists"
+summary = "Fails padded negations"
 onboarding = "Turn it on."
 "#,
         ),
@@ -128,7 +127,7 @@ onboarding = "Turn it on."
     #[test]
     fn a_lint_under_next_says_since_the_next_release() {
         assert_eq!(
-            since_in_test_changelog(Lint::ListGrowth).as_deref(),
+            since_in_test_changelog(Lint::NotAtAll).as_deref(),
             Some("Since the next release.")
         );
     }

@@ -96,10 +96,6 @@ fn takes(lint: Lint) -> Result<(), &'static str> {
             "its finding is a paragraph or list item, not a sentence. Set the limits in an \
              override of the file: `lints.density`",
         ),
-        Lint::ListGrowth => Err(
-            "its findings exist only against a base, so an entry would fail on the main branch \
-             the commit after it lands. Name the files it judges in the globs of an override",
-        ),
     }
 }
 
@@ -589,7 +585,6 @@ mod tests {
             ("max_emphasis", "lints.max_emphasis"),
             ("repo_layout", "lints.repo_layout"),
             ("density", "lints.density"),
-            ("list_growth", "globs of an override"),
         ] {
             let said = refused(&entry("a.md", lint, "A.", "R."));
             assert!(

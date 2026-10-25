@@ -37,18 +37,15 @@ max_paragraph_chars = 500
 # This repo writes the plain negation, `does not parse`.
 [md.lints.not_at_all]
 
-# A change may not leave the instructions with more list items than they had.
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000
 lints.repo_layout = { min_entries = 5, max_entries = 12 }
-lints.list_growth = {}
 
-# The guides under tests/ and tools/ stay a page: a short layout, a few rules, no list that grows.
+# The guides under tests/ and tools/ stay a page: a short layout and a few rules.
 [[md.overrides]]
 globs = ["/tests/AGENTS.md", "/tools/AGENTS.md"]
 lints.repo_layout = { min_entries = 5, max_entries = 10 }
-lints.list_growth = {}
 
 [[md.overrides]]
 globs = ["/tests/AGENTS.md"]
@@ -62,25 +59,13 @@ lints.max_size_bytes.value = 1300
 globs = ["/.agents/skills/**/*.md"]
 lints.max_size_bytes.value = 5000
 
-# An override can turn a lint on but not off, so list_growth names the skills it judges, and the
-# build doctrine is not among them: the owner authorized its verb list to grow by one on
-# 2026-10-03, and its budget is 5000 plus the 92 bytes that item added. The open-pr skill left the
-# list on 2026-10-24, when the owner added an anti-pattern to it: the lint cannot exempt one item,
-# and the owner is to revisit the lint.
-[[md.overrides]]
-globs = [
-  "/.agents/skills/deslag-commit/SKILL.md",
-  "/.agents/skills/deslag-design-docs/SKILL.md",
-]
-lints.list_growth = {}
-
 [[md.overrides]]
 globs = ["/.agents/skills/deslag-build-doctrine/SKILL.md"]
 lints.max_size_bytes.value = 5300
 
 [[md.overrides]]
 globs = ["/src/instructions/guide.md"]
-lints.max_size_bytes.value = 5065
+lints.max_size_bytes.value = 4847
 
 [[md.overrides]]
 globs = ["/src/instructions/lints.md", "/src/instructions/lints/*.md"]

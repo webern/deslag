@@ -5,8 +5,7 @@
 //! since, staged or not, and for the files git does not track, which count as added whole. The
 //! diff's options are all on the command line, so that a user's git config, such as
 //! `diff.noprefix` or `color.ui`, does not change the patch. [`parse`] reads the patch, so the
-//! mapping is tested without git. [`Change::base_text`] reads a file as it was at the base, for
-//! the lints that compare a file with it.
+//! mapping is tested without git. [`Change::text_at_base`] reads a file as it was at the base.
 
 mod patch;
 
@@ -27,8 +26,6 @@ pub struct Change {
     pub root: PathBuf,
     /// The base as given, such as `origin/main`.
     pub base: String,
-    /// The commit the base names. It is the merge base when the base is in HEAD's history.
-    pub commit: String,
     /// The commit where the base and HEAD meet, which the change is measured from.
     pub merge_base: String,
     /// Each file the change touched, by its path in the working tree relative to the root,
@@ -97,14 +94,6 @@ impl File {
     /// Whether the change touched what the file says, not only its name or mode.
     pub fn edits_content(&self) -> bool {
         self.status == Status::Added || self.binary || !self.hunks.is_empty()
-    }
-
-    /// Whether the change added `line` of the working file: a line of an added or binary file, or
-    /// one a hunk adds. Unlike [`File::touches`], a line beside one it removed is not added.
-    pub fn adds(&self, line: usize) -> bool {
-        self.status == Status::Added
-            || self.binary
-            || self.hunks.iter().any(|hunk| hunk.added.contains(&line))
     }
 }
 
@@ -211,49 +200,22 @@ impl Change {
         Ok(Change {
             root: root.to_path_buf(),
             base: base.to_string(),
-            commit,
             merge_base,
             files,
         })
     }
 
-    /// The text of the file at `path` as it was at the merge base, with the line endings git would
-    /// give it in the working tree, when the change edited that earlier text. `None` when the change
-    /// added the file whole, or left its text alone: there is nothing earlier to compare.
-    pub fn base_text(&self, path: &str) -> Result<Option<String>, Error> {
-        let Some(file) = self.files.get(path) else {
-            return Ok(None);
-        };
-        let Some(base_path) = &file.base_path else {
-            return Ok(None);
-        };
-        if !matches!(file.status, Status::Modified | Status::Renamed) || !file.edits_content() {
-            return Ok(None);
-        }
+    /// The text of the file at `path` as it was at the merge base, whatever the change did to it,
+    /// with the line endings git would give it in the working tree. `None` when the base does not
+    /// have a file there.
+    pub fn text_at_base(&self, path: &str) -> Result<Option<String>, Error> {
         let fail = |problem: String| Error::Change {
             base: self.base.clone(),
             problem,
         };
         // `./` makes the path relative to the root, as the diff's are, rather than to the top of
         // the repository. `--filters` converts the line endings as git does when it writes the
-        // file to the working tree, so the lines are counted as in the file on disk.
-        let object = format!("{}:./{base_path}", self.merge_base);
-        let output = git(&self.root, &["cat-file", "--filters", &object]).map_err(fail)?;
-        if !output.status.success() {
-            return Err(fail(failed("cat-file", &output)));
-        }
-        Ok(Some(String::from_utf8_lossy(&output.stdout).into_owned()))
-    }
-}
-
-impl Change {
-    /// The text of the file at `path` as it was at the merge base, whatever the change did to it,
-    /// with the line endings of [`Change::base_text`]. `None` when the base does not have a file there.
-    pub fn text_at_base(&self, path: &str) -> Result<Option<String>, Error> {
-        let fail = |problem: String| Error::Change {
-            base: self.base.clone(),
-            problem,
-        };
+        // file to the working tree.
         let object = format!("{}:./{path}", self.merge_base);
         let exists = git(&self.root, &["cat-file", "-e", &object]).map_err(fail)?;
         if !exists.status.success() {

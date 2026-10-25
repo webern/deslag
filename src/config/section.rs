@@ -123,7 +123,7 @@ impl Parts {
                     path: config_path.to_string(),
                     message: format!(
                         "{place}.{lint} is on, but it needs {}; [{name}] reads {}",
-                        stack.asks(lint.needs(), name),
+                        stack.asks(lint.needs()),
                         stack.reads()
                     ),
                 });

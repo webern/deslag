@@ -56,9 +56,6 @@ pub struct Lints {
     /// The longest a paragraph or list item may be.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub density: Option<Density>,
-    /// That a change leaves no more list items than there were at the base.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub list_growth: Option<ListGrowth>,
     /// That a sentence negates its verb, not its object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub verbs_no_nouns: Option<VerbsNoNouns>,
@@ -77,7 +74,6 @@ impl Lints {
             Lint::BannedChars => self.banned_chars.is_some(),
             Lint::BannedPhrases => self.banned_phrases.is_some(),
             Lint::Density => self.density.is_some(),
-            Lint::ListGrowth => self.list_growth.is_some(),
             Lint::VerbsNoNouns => self.verbs_no_nouns.is_some(),
             Lint::NotAtAll => self.not_at_all.is_some(),
         }
@@ -168,7 +164,6 @@ impl Merge for Lints {
         self.banned_chars.merge(&over.banned_chars);
         self.banned_phrases.merge(&over.banned_phrases);
         self.density.merge(&over.density);
-        self.list_growth.merge(&over.list_growth);
         self.verbs_no_nouns.merge(&over.verbs_no_nouns);
         self.not_at_all.merge(&over.not_at_all);
     }
@@ -718,27 +713,6 @@ impl Merge for Density {
         if over.max_item_chars.is_some() {
             self.max_item_chars = over.max_item_chars;
         }
-        if over.message.is_some() {
-            self.message.clone_from(&over.message);
-        }
-    }
-}
-
-/// `lints.list_growth`: a file fails when a change leaves it with more list items, at every depth,
-/// than it had at the base the run judges the change from.
-///
-/// Like `repo_layout`, the table itself turns the check on. It does not set an allowance: any
-/// number of items free with each change would let a list grow by that many with every change.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct ListGrowth {
-    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
-    #[serde(default)]
-    pub message: Option<String>,
-}
-
-impl Merge for ListGrowth {
-    fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);
         }

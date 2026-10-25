@@ -717,9 +717,9 @@ fn banning(text: &str, phrases: &[&Phrase]) -> String {
     toml::to_string(&config).expect("TOML")
 }
 
-/// Takes `list_growth` out of the `lints` of `holder`, a section or an override, and puts each of
-/// `phrases` in the `ban` of its `banned_phrases`. A section gets the table when it has none; an
-/// override only when it already names one.
+/// Puts each of `phrases` in the `ban` of the `banned_phrases` of `holder`, a section or an
+/// override. A section gets the table when it has none; an override only when it already names
+/// one.
 fn ban_in(holder: &mut toml::map::Map<String, toml::Value>, phrases: &[&Phrase], section: bool) {
     let lints = if section {
         Some(
@@ -733,7 +733,6 @@ fn ban_in(holder: &mut toml::map::Map<String, toml::Value>, phrases: &[&Phrase],
     let Some(lints) = lints.and_then(toml::Value::as_table_mut) else {
         return;
     };
-    lints.remove("list_growth");
     let table = if section {
         Some(
             lints
@@ -902,7 +901,7 @@ llm_repos = 1
             .filter(|finding| finding.violation.lint() == Lint::BannedPhrases)
             .count()
     };
-    // A file the repo's config gives `list_growth` runs, and finds the phrase.
+    // A file the repo's config selects finds the phrase.
     assert_eq!(check("AGENTS.md", "A zebra crossing here.\n"), 1);
     assert_eq!(
         check("src/x.rs", "// A zebra crossing here.\nfn main() {}\n"),

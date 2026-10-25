@@ -18,8 +18,7 @@
   "config": "config.toml",
   "every_file": false,
   "left_out": [
-    "repo_layout",
-    "list_growth"
+    "repo_layout"
   ],
   "lints": [
     {

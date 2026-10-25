@@ -870,7 +870,7 @@ fn every_frozen_config_updates_clean_in_every_language_and_reads_the_same_after(
             let name = format!("{release} {extension}");
             let probe = |repo: &Repo| {
                 [
-                    vec!["check", "--base", "HEAD"],
+                    vec!["check"],
                     vec!["check", "--format", "json"],
                     vec!["explain", "README.md"],
                 ]
@@ -880,6 +880,11 @@ fn every_frozen_config_updates_clean_in_every_language_and_reads_the_same_after(
                 })
             };
             let before = probe(&repo);
+            // The frozen config runs: a probe that cannot run would compare nothing.
+            assert!(
+                before.iter().all(|(code, _)| *code == 0),
+                "{name}: {before:?}"
+            );
             // `--to` moves a stamp the frozen file has, or adds one it has not, in any release.
             let output = repo.run(&["update", "--to", CURRENT]);
             assert_eq!(code(&output), 0, "{name}: {}", said(&output));
@@ -908,7 +913,8 @@ fn every_frozen_config_updates_clean_in_every_language_and_reads_the_same_after(
             assert!(stamps <= 1, "{name}: {added:?}");
             // Nothing else read differently, and nothing warns.
             assert_eq!(probe(&repo), before, "{name}");
-            let check = repo.run(&["check", "--base", "HEAD"]);
+            let check = repo.run(&["check"]);
+            assert_eq!(code(&check), 0, "{name}: {}", said(&check));
             assert!(
                 !said(&check).contains("was removed"),
                 "{name}: {}",

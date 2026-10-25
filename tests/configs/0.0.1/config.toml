@@ -53,9 +53,6 @@ max_item_chars = 300
 max_paragraph_chars = 600
 message = "{path} has a dense block"
 
-[md.lints.list_growth]
-message = "{path} has more list items"
-
 [md.lints.max_emphasis]
 free_spans = 2
 max_percent = 1.5

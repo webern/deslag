@@ -361,17 +361,17 @@ onboarding = "Set `md.globs`."
 "#,
         ),
         (
-            "0.2.0/lint.list_growth.toml",
+            "0.2.0/lint.not_at_all.toml",
             r#"
 kind = "lint"
-id = "list_growth"
+id = "not_at_all"
 keys = []
-summary = "Fails growing lists"
+summary = "Fails padded negations"
 onboarding = """
 Turn it on.
 
 ```toml
-[md.lints.list_growth]
+[md.lints.not_at_all]
 ```
 """
 "#,
@@ -448,14 +448,14 @@ Run update.
 
 ## New lints
 
-### `list_growth` (0.2.0)
+### `not_at_all` (0.2.0)
 
-Fails growing lists
+Fails padded negations
 
 Turn it on.
 
 ```toml
-[md.lints.list_growth]
+[md.lints.not_at_all]
 ```
 
 ### `repo_layout` (0.3.0)
@@ -515,9 +515,9 @@ tell them what is new.
     {
       "version": "0.2.0",
       "kind": "lint",
-      "id": "list_growth",
-      "summary": "Fails growing lists",
-      "onboarding": "Turn it on.\n\n```toml\n[md.lints.list_growth]\n```\n"
+      "id": "not_at_all",
+      "summary": "Fails padded negations",
+      "onboarding": "Turn it on.\n\n```toml\n[md.lints.not_at_all]\n```\n"
     },
     {
       "version": "0.3.0",
@@ -857,13 +857,13 @@ llm_repos = 1
         let news = News::between(&changelog, &catalogue, &from, &to);
         let config = Loaded::parse(
             "schema_version = 1\ndeslag_version = \"0.0.0\"\n[md.lints.density]\n\
-             [[md.overrides]]\nglobs = [\"/A.md\"]\nlints.list_growth = {}\n",
+             [[md.overrides]]\nglobs = [\"/A.md\"]\nlints.not_at_all = {}\n",
             "deslag.toml".into(),
             ConfigSource::Explicit,
         )
         .expect("a config");
         let reading = Reading::of(&config, &news);
-        assert_eq!(reading.set, ["density", "list_growth"]);
+        assert_eq!(reading.set, ["density", "not_at_all"]);
 
         let start = Start::Config(&reading);
         let text = update_text(&news, &from, &to, start);
@@ -895,7 +895,7 @@ llm_repos = 1
             marked,
             [
                 ("density", true),
-                ("list_growth", true),
+                ("not_at_all", true),
                 ("repo_layout", false)
             ]
         );

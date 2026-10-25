@@ -122,8 +122,6 @@ spaces = true
 max_item_chars = 300
 max_paragraph_chars = 500
 
-# list_growth: off
-
 [max_emphasis]
 free_spans = 2
 max_percent = 1.0
@@ -157,8 +155,6 @@ min_entries = 5
 max_item_chars = 300
 max_paragraph_chars = 500
 
-# list_growth: off
-
 [max_emphasis]
 free_spans = 2
 max_percent = 1.0
@@ -189,8 +185,6 @@ min_entries = 5
 [density]
 max_item_chars = 300
 max_paragraph_chars = 500
-
-# list_growth: off
 
 [max_emphasis]
 free_spans = 2
@@ -411,8 +405,6 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          # banned_phrases: off\n\
          \n\
          # density: off\n\
-         \n\
-         # list_growth: off\n\
          \n\
          # max_emphasis: off\n\
          \n\

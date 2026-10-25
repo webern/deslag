@@ -6,17 +6,14 @@
 //! whole, as the report config has no stamp to hold a new phrase back. The lints that need more
 //! than the file are left out.
 //! `repo_layout` reads the files around a file, which the corpus does not hold, so its findings
-//! are dropped. A lint that judges a change, such as `list_growth`, needs a base, which a corpus
-//! file has none of, so it is taken out of the config before any file is checked.
+//! are dropped.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use deslag::changelog::Version;
-use deslag::config::ConfigFormat;
 use deslag::{Config, Lint, check_file_at};
 use serde::Serialize;
-use serde_json::Value;
 
 use crate::load::Problem;
 use crate::measure::{Corpus, Doc, Filters, Header, Label};
@@ -100,7 +97,7 @@ pub struct Lints {
     pub config: String,
     /// Whether every file was checked, or only those the config's globs select.
     pub every_file: bool,
-    /// The lints left out: `repo_layout`, and each that judges a change.
+    /// The lints left out: `repo_layout`.
     pub left_out: Vec<String>,
     /// Each lint that failed a file, then `any`.
     pub lints: Vec<LintRow>,
@@ -109,7 +106,7 @@ pub struct Lints {
 /// A config as `lints` runs it.
 #[derive(Debug)]
 pub struct LintConfig {
-    /// The config, less the lints that judge a change.
+    /// The config.
     pub config: Config,
     /// The file it was read from, from the repository's root when it lies under it.
     pub path: PathBuf,
@@ -117,57 +114,15 @@ pub struct LintConfig {
 
 /// Whether `lints` leaves `lint` out.
 fn left_out(lint: Lint) -> bool {
-    lint == Lint::RepoLayout || lint.reads_change()
+    lint == Lint::RepoLayout
 }
 
-/// The config at `explicit`, or else the one `deslag` finds in the repository at `root`, less the
-/// lints that judge a change: it is read again, their tables are taken out of each section's
-/// `lints` and each override, and what is left is parsed as JSON.
+/// The config at `explicit`, or else the one `deslag` finds in the repository at `root`.
 pub fn load_config(root: &Path, explicit: Option<&Path>) -> Result<LintConfig, Problem> {
-    let problem = |error: &dyn std::fmt::Display| Problem(format!("the config: {error}"));
-    let loaded = Config::load(root, explicit).map_err(|error| problem(&error))?;
-    let read = loaded.path();
+    let config =
+        Config::load(root, explicit).map_err(|error| Problem(format!("the config: {error}")))?;
+    let read = config.path();
     let path = read.strip_prefix(root).unwrap_or(read).to_path_buf();
-    let text = std::fs::read_to_string(read).map_err(|error| problem(&error))?;
-    let mut value: Value = match ConfigFormat::of(read) {
-        Some(ConfigFormat::Toml) => toml::from_str(&text).map_err(|error| problem(&error))?,
-        Some(ConfigFormat::Yaml) => {
-            serde_saphyr::from_str(&text).map_err(|error| problem(&error))?
-        }
-        Some(ConfigFormat::Json) | None => {
-            serde_json::from_str(&text).map_err(|error| problem(&error))?
-        }
-    };
-
-    let mut removed = false;
-    let mut strip = |lints: Option<&mut Value>| {
-        if let Some(Value::Object(lints)) = lints {
-            for lint in Lint::ALL.into_iter().filter(|lint| lint.reads_change()) {
-                removed |= lints.remove(lint.id()).is_some();
-            }
-        }
-    };
-    for section in loaded.sections() {
-        let name = section.name();
-        strip(value.pointer_mut(&format!("/{name}/lints")));
-        if let Some(Value::Array(overrides)) = value.pointer_mut(&format!("/{name}/overrides")) {
-            for entry in overrides {
-                strip(entry.get_mut("lints"));
-            }
-        }
-    }
-    if !removed {
-        return Ok(LintConfig {
-            config: loaded,
-            path,
-        });
-    }
-    let config = Config::parse(
-        &value.to_string(),
-        read.with_extension("json"),
-        loaded.source(),
-    )
-    .map_err(|error| problem(&error))?;
     Ok(LintConfig { config, path })
 }
 
@@ -321,8 +276,7 @@ impl Lints {
     /// What was checked, in a sentence.
     pub fn scope(&self) -> String {
         format!(
-            "config: {}; {}; left out: {}, since a corpus file has no repository around it and \
-             no base\n",
+            "config: {}; {}; left out: {}, since a corpus file has no repository around it\n",
             self.config,
             if self.every_file {
                 "every file checked, at its path in its repository"

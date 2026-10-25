@@ -7,7 +7,7 @@ Deslag is a linter for LLM-authored prose. It is designed to be LLM-facing. That
 the LLM that will be responding to lint failures, so our lint failures are instructions to the LLM.
 
 Each lint checks a file for a habit, tic, or pet-peeve found in agent writing. Its report tells the
-agent how to fix it. Every lint is off until the config turns it on, but the
+agent how to fix it. Every lint is off until the config turns it on.
 
 ## Install
 

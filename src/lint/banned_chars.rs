@@ -568,9 +568,9 @@ fn note(banned: &Banned) -> String {
 }
 
 /// The advice for a file that holds banned characters.
-const DEFAULT_ADVICE: &str = "This repo writes in plain characters, and each of these has a \
-    plain equivalent. Write it as listed, or reword: an em dash often reads better as a comma, a \
-    colon, parentheses or a new sentence.\n\
+const DEFAULT_ADVICE: &str = "This repo writes in plain characters. The list gives a plain \
+    equivalent for each character, or says that none fits. Write it as listed, or reword: an em \
+    dash often reads better as a comma, a colon, parentheses or a new sentence.\n\
     \n\
     Code is not checked, so a diagram may use these characters in a code block.\n\
     \n\

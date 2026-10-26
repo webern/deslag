@@ -63,6 +63,10 @@ globs = ["/.agents/skills/deslag-build-doctrine/SKILL.md"]
 lints.max_size_bytes.value = 5300
 
 [[md.overrides]]
+globs = ["/.agents/skills/deslag-release/SKILL.md"]
+lints.max_size_bytes.value = 5600
+
+[[md.overrides]]
 globs = ["/src/instructions/guide.md"]
 lints.max_size_bytes.value = 4847
 

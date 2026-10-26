@@ -41,7 +41,8 @@ pub fn parse(text: &str) -> Result<semver::Version> {
 
 /// Whether `candidate` may be released, given the names of the tags `git tag -l 'v*'` lists and
 /// the version in `Cargo.toml`. A tag that is not `v` and a version, such as `v1.0.0-rc1`, is not
-/// a release of this tool and is left out.
+/// a release of this tool and is left out. After the highest tag X.Y.Z, only X.Y.Z+1, X.Y+1.0 and
+/// X+1.0.0 skip no version.
 pub fn check(
     candidate: &semver::Version,
     tags: &[String],
@@ -57,6 +58,19 @@ pub fn check(
             candidate > top,
             "{candidate} is not above the tag {tag}: a released version is never repeated and a \
              release never goes backwards"
+        );
+        let next = [
+            semver::Version::new(top.major, top.minor, top.patch + 1),
+            semver::Version::new(top.major, top.minor + 1, 0),
+            semver::Version::new(top.major + 1, 0, 0),
+        ];
+        ensure!(
+            next.contains(candidate),
+            "{candidate} skips a version after the tag {tag}: the next release is {}, {} or {}, \
+             and a skipped version can never be released",
+            next[0],
+            next[1],
+            next[2]
         );
     }
     match against {
@@ -181,7 +195,30 @@ mod tests {
         assert!(allowed("0.0.2", &["v0.0.1"], "0.0.2", Against::Bump));
         assert!(!allowed("0.0.2", &["v0.0.1"], "0.0.3", Against::Bump));
         assert!(allowed("0.0.2", &["v0.0.1"], "0.0.2", Against::Crate));
-        assert!(!allowed("0.0.3", &["v0.0.1"], "0.0.2", Against::Crate));
+        assert!(!allowed("0.1.0", &["v0.0.1"], "0.0.2", Against::Crate));
+    }
+
+    #[test]
+    fn only_the_three_versions_after_the_top_tag_skip_nothing() {
+        for next in ["0.0.4", "0.1.0", "1.0.0"] {
+            assert!(allowed(next, &["v0.0.3"], "0.0.3", Against::Bump), "{next}");
+        }
+        assert!(!allowed("0.0.3", &["v0.0.1"], "0.0.1", Against::Bump));
+        for skip in ["0.0.5", "0.1.1", "0.2.0", "1.0.1", "1.1.0", "2.0.0"] {
+            assert!(
+                !allowed(skip, &["v0.0.3"], "0.0.3", Against::Bump),
+                "{skip}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_skip_is_counted_from_the_top_tag() {
+        assert!(allowed("0.2.0", &[], "0.0.1", Against::Bump));
+        let tags = ["v0.0.1", "vnext", "v0.0.3", "v1.0.0-rc1"];
+        assert!(allowed("0.0.4", &tags, "0.0.3", Against::Bump));
+        assert!(!allowed("0.0.2", &tags, "0.0.1", Against::Bump));
+        assert!(!allowed("0.0.5", &tags, "0.0.3", Against::Bump));
     }
 
     #[test]
@@ -228,5 +265,11 @@ mod tests {
         assert!(said("0.0.1", &["v0.0.1"], "0.0.1").contains("not above the tag v0.0.1"));
         assert!(said("0.0.1", &["v0.0.2"], "0.0.1").contains("never goes backwards"));
         assert!(said("0.0.1", &[], "0.0.2").contains("below the version in Cargo.toml"));
+        let skipped = said("0.0.3", &["v0.0.1"], "0.0.1");
+        assert!(
+            skipped.contains("skips a version after the tag v0.0.1"),
+            "{skipped}"
+        );
+        assert!(skipped.contains("0.0.2, 0.1.0 or 1.0.0"), "{skipped}");
     }
 }

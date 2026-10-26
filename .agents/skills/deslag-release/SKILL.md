@@ -18,8 +18,9 @@ In this skill, `1.3.1` is used as an example of the current version and `1.4.0` 
 example of the version being released. Actual versions come from the repo and input.
 
 When the owner asks for a release you may run `bump-version`, open the release pull request and
-squash merge it once CI is green, and run `release`. Stop and ask when a workflow refuses the
-version, CI is red, `verify` or `build` fails, or crates.io authentication fails.
+squash merge it once CI is green, and run `release`. Stop and ask when the version skips one, a
+workflow refuses the version, CI is red, `verify` or `build` fails, or crates.io authentication
+fails.
 
 Do not push, create or move a tag, or run `cargo publish` yourself.
 
@@ -37,6 +38,17 @@ No output means the run is not listed yet: wait a few seconds and repeat until a
 `gh run watch <id> --exit-status`.
 
 ## 1. Make the release change
+
+First, the version that was released last:
+
+```bash
+gh api repos/webern/deslag/releases/latest --jq .tag_name
+```
+
+After `v1.3.1`, the versions that skip nothing are `1.3.2`, `1.4.0` and `2.0.0`. Any other
+`<version>` above it skips one: stop and ask whether that is meant, before anything runs. A
+release never goes backwards, so a skipped version is gone for good. `check-version` refuses a skip
+too, so one that gets past this step fails `bump-version` before any branch is pushed.
 
 ```bash
 gh workflow run bump-version.yml --ref main -f version=1.4.0

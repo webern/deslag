@@ -1,9 +1,10 @@
 name: bump-version
 
 # Run by hand from main with the exact version to release. It makes the release change with
-# `deslag-release prep`, checks it, and pushes it as the branch release/vX.Y.Z. The person or agent
-# running it then opens the pull request with `gh pr create`: a pull request this workflow opened
-# with the workflow token would get no CI run. The /deslag-release skill is the whole procedure.
+# `deslag-release prep`, moves the stamp of the repo's own config with `deslag update`, checks it,
+# and pushes it as the branch release/vX.Y.Z. The person or agent running it then opens the pull
+# request with `gh pr create`: a pull request this workflow opened with the workflow token would get
+# no CI run. The /deslag-release skill is the whole procedure.
 
 on:
   workflow_dispatch:
@@ -74,6 +75,10 @@ jobs:
       - name: Make the release change
         run: cargo run --locked --quiet -p deslag-release -- prep "$VERSION"
 
+      # A deslag built from the sources prep rewrote, so this release's own redirects apply.
+      - name: Update the repo's own config
+        run: cargo run --locked --quiet -- update --to "$VERSION"
+
       # The pull request's own CI runs make ci. Here the quick gate and the release gate.
       - name: Check the change
         run: make ci-fast check-release
@@ -143,8 +148,8 @@ jobs:
             commit --quiet -F - <<EOF
           chore: release $VERSION
 
-          The change that releases $VERSION, made by \`deslag-release prep $VERSION\` and checked
-          with \`make ci-fast check-release\`.
+          The change that releases $VERSION, made by \`deslag-release prep $VERSION\` and
+          \`deslag update --to $VERSION\`, and checked with \`make ci-fast check-release\`.
           EOF
           # The helper is a shell function git runs later, so GH_TOKEN stays unexpanded here.
           # shellcheck disable=SC2016

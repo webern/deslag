@@ -5,23 +5,18 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, bail, ensure};
 use serde_json::Value;
 
-use crate::entries::{self, NEXT, RELEASES};
-use crate::freeze::{self, Rules};
-use crate::frozen::{self, EXTENSIONS};
+use crate::arrival::{self, Form};
+use crate::freeze::{self, FILL, Rules};
+use crate::frozen::{self, EXTENSIONS, SCHEMA};
 use crate::version::{self, Against};
-
-/// The file of the phrase catalogue, whose `since = "next"` lines the release sets.
-const CATALOGUE: &str = "src/lint/banned_phrases.toml";
 
 /// Where the frozen configs are, from the root of the repository.
 const CONFIGS: &str = "tests/configs";
 
 /// Makes the release change for `version` in the repository at `root`, and says what it did, a
-/// line for each step.
-///
-/// The first release folds. When `version` is the crate's and `releases/<version>/` exists, the
-/// version stays, the entries of `next/` join that directory, and the newest frozen config is
-/// rewritten in place. Any other release, a hand-bumped crate version included, adds a directory.
+/// line for each step: the crate version, each form of `since` set from `next` to the version
+/// (see [`arrival`]), and the frozen directory of the release, `tests/configs/<version>/`, with
+/// its config in each language, its schema dump and their hash lines.
 ///
 /// Nothing is committed, and the tree must be clean so that the diff is the release change alone.
 /// Everything that can fail on what is in the tree is read and checked before the first write, so
@@ -35,26 +30,27 @@ pub fn prep(
     let current = version::crate_version(root)?;
     version::check(version, tags, &current, Against::Bump)?;
     ensure_clean(root)?;
-    let fold = *version == current && root.join(RELEASES).join(version.to_string()).is_dir();
     let mut said = Vec::new();
 
-    let moves = plan_moves(root, version, fold)?;
     let crate_files = crate_version_edits(root, version)?;
-    let (catalogue, phrases) = catalogue_edit(root, version)?;
-    let freezing = plan_freeze(root, version, fold, rules)?;
+    let arrivals = arrival::rewrites(root, &version.to_string())?;
+    let freezing = plan_freeze(root, version, rules)?;
 
     for edit in &crate_files {
         edit.write()?;
     }
     said.push(format!("Cargo.toml and Cargo.lock: version {version}"));
-    if let Some(edit) = &catalogue {
-        edit.write()?;
+    for (path, text) in &arrivals.files {
+        write(path, text)?;
     }
-    said.push(format!("{CATALOGUE}: {phrases} phrases set to {version}"));
-    move_entries(&moves, version, &mut said)?;
-    if let Some(freezing) = freezing {
-        write_frozen(version, &freezing, &mut said)?;
+    for (form, count) in Form::ALL.into_iter().zip(arrivals.counts) {
+        said.push(format!(
+            "{}: {count} of `{}` set to {version}",
+            form.files(),
+            form.with("next")
+        ));
     }
+    write_frozen(version, &freezing, &mut said)?;
     Ok(said)
 }
 
@@ -82,49 +78,24 @@ impl Edit {
     }
 }
 
-/// The entry files of `next/` and where they go.
-fn plan_moves(
-    root: &Path,
-    version: &semver::Version,
-    fold: bool,
-) -> Result<Vec<(PathBuf, PathBuf)>> {
-    let releases = root.join(RELEASES);
-    let into = releases.join(version.to_string());
-    ensure!(
-        fold || !into.exists(),
-        "{RELEASES}/{version} exists already: a release other than the first is made once"
-    );
-    let mut moves = Vec::new();
-    for from in entries::files(&releases.join(NEXT))? {
-        let to = into.join(from.file_name().expect("a file has a name"));
-        ensure!(
-            !to.exists(),
-            "{RELEASES}/{version}/{} exists already: an entry is in one release only",
-            to.file_name().expect("a file has a name").to_string_lossy()
-        );
-        moves.push((from, to));
-    }
-    Ok(moves)
-}
-
-/// A frozen directory to write: where, its config in each language, and the new `hashes` file.
+/// A frozen directory to write: where, its files, and the new `hashes` file.
 struct Freezing {
     directory: PathBuf,
-    configs: Vec<Edit>,
+    files: Vec<Edit>,
     hashes: Edit,
 }
 
-/// The frozen config to write, or `None` when the newest names every setting already.
-fn plan_freeze(
-    root: &Path,
-    version: &semver::Version,
-    fold: bool,
-    rules: &Rules,
-) -> Result<Option<Freezing>> {
+/// The frozen directory of `version`: the newest frozen config brought to name every setting, in
+/// each language, and the schema dump, with their hash lines. Every release writes one.
+fn plan_freeze(root: &Path, version: &semver::Version, rules: &Rules) -> Result<Freezing> {
     let configs = root.join(CONFIGS);
     let Some((newest, directory)) = frozen::releases(&configs).pop() else {
         bail!("{CONFIGS}/ holds no release");
     };
+    ensure!(
+        newest < *version,
+        "{CONFIGS}/{newest} is not below {version}: a release adds its directory once"
+    );
     let values: Vec<Value> = EXTENSIONS
         .iter()
         .map(|extension| frozen::value(&frozen::config(&directory, extension)))
@@ -133,69 +104,52 @@ fn plan_freeze(
         values.iter().all(|value| *value == values[0]),
         "the configs of {CONFIGS}/{newest} do not say the same: make them agree first"
     );
-    if freeze::missing(&values[0], &rules.paths).is_empty() {
-        return Ok(None);
-    }
-    let all = changelog_entries(root)?;
-    let value = freeze::freeze(&values[0], version, rules, &all).map_err(|problems| {
+    let fill = fill(root)?;
+    let value = freeze::freeze(&values[0], version, rules, &fill).map_err(|problems| {
         anyhow::anyhow!(
             "cannot name every setting in the frozen config:\n  {}",
             problems.join("\n  ")
         )
     })?;
-    let directory = if fold {
-        ensure!(
-            newest == *version,
-            "the first release folds into {CONFIGS}/{version}, and the newest is {CONFIGS}/{newest}"
-        );
-        directory
-    } else {
-        ensure!(
-            newest < *version,
-            "{CONFIGS}/{newest} is not below {version}"
-        );
-        configs.join(version.to_string())
-    };
+    let directory = configs.join(version.to_string());
+    let mut texts = Vec::new();
+    for extension in EXTENSIONS {
+        texts.push(freeze::render(&value, extension)?);
+    }
+    texts.push(freeze::dump(&rules.schema, version));
+
     let hashes = configs.join("hashes");
     let mut lines: Vec<String> = read(&hashes)?.lines().map(str::to_string).collect();
     let mut files = Vec::new();
-    for extension in EXTENSIONS {
-        let text = freeze::render(&value, extension)?;
-        let path = format!("{version}/config.{extension}");
-        let line = format!("{path} {}", frozen::hash(text.as_bytes()));
-        match lines
-            .iter_mut()
-            .find(|line| line.split_whitespace().next() == Some(path.as_str()))
-        {
-            Some(old) => *old = line,
-            None => lines.push(line),
-        }
+    for (name, text) in frozen::files().into_iter().zip(texts) {
+        lines.push(format!(
+            "{version}/{name} {}",
+            frozen::hash(text.as_bytes())
+        ));
         files.push(Edit {
-            path: frozen::config(&directory, extension),
+            path: directory.join(name),
             text,
         });
     }
-    Ok(Some(Freezing {
+    Ok(Freezing {
         directory,
-        configs: files,
+        files,
         hashes: Edit {
             path: hashes,
             text: lines.join("\n") + "\n",
         },
-    }))
+    })
 }
 
-/// Every entry of every release directory, `next/` included.
-fn changelog_entries(root: &Path) -> Result<Vec<entries::Entry>> {
-    let releases = root.join(RELEASES);
-    let mut all = Vec::new();
-    for item in std::fs::read_dir(&releases).with_context(|| format!("cannot list {releases:?}"))? {
-        let path = item?.path();
-        if path.is_dir() {
-            all.extend(entries::read(&path)?);
-        }
+/// The fragment of `tests/configs/fill.toml` as data, or an empty table when there is no file.
+fn fill(root: &Path) -> Result<Value> {
+    let path = root.join(FILL);
+    if !path.exists() {
+        return Ok(Value::Object(serde_json::Map::new()));
     }
-    Ok(all)
+    let parsed: toml::Value =
+        toml::from_str(&read(&path)?).with_context(|| format!("{FILL} is not TOML"))?;
+    serde_json::to_value(parsed).with_context(|| format!("{FILL} is not data"))
 }
 
 /// `Cargo.toml` and `Cargo.lock` with the version set, the `deslag` entry of the lock only.
@@ -244,59 +198,21 @@ fn set_version(item: &mut toml_edit::Item, version: &semver::Version) -> Result<
     Ok(())
 }
 
-/// The phrase catalogue with each `since = "next"` set to `version`, or `None` when it has none,
-/// and how many it set.
-fn catalogue_edit(root: &Path, version: &semver::Version) -> Result<(Option<Edit>, usize)> {
-    let path = root.join(CATALOGUE);
-    let text = read(&path)?;
-    let mut count = 0;
-    let mut out = String::with_capacity(text.len());
-    for line in text.split_inclusive('\n') {
-        let trimmed = line.trim_start();
-        let rest = trimmed.strip_prefix("since = \"next\"");
-        match rest.filter(|rest| rest.trim().is_empty() || rest.trim_start().starts_with('#')) {
-            Some(rest) => {
-                count += 1;
-                out.push_str(&line[..line.len() - trimmed.len()]);
-                out.push_str(&format!("since = \"{version}\"{rest}"));
-            }
-            None => out.push_str(line),
-        }
-    }
-    let edit = (count > 0).then_some(Edit { path, text: out });
-    Ok((edit, count))
-}
-
-/// Moves the entries of `next/` into the directory of the release.
-fn move_entries(
-    moves: &[(PathBuf, PathBuf)],
-    version: &semver::Version,
-    said: &mut Vec<String>,
-) -> Result<()> {
-    for (from, to) in moves {
-        std::fs::create_dir_all(to.parent().expect("a file has a directory"))?;
-        std::fs::rename(from, to).with_context(|| format!("cannot move {from:?} to {to:?}"))?;
-    }
-    said.push(format!(
-        "{RELEASES}: {} entries moved from {NEXT}/ to {version}/",
-        moves.len()
-    ));
-    Ok(())
-}
-
-/// Writes the frozen config in each language, and the new lines of `tests/configs/hashes`.
+/// Writes the frozen directory of the release and the new lines of `tests/configs/hashes`.
 fn write_frozen(
     version: &semver::Version,
     freezing: &Freezing,
     said: &mut Vec<String>,
 ) -> Result<()> {
     std::fs::create_dir_all(&freezing.directory)?;
-    for config in &freezing.configs {
-        config.write()?;
+    for file in &freezing.files {
+        file.write()?;
     }
     freezing.hashes.write()?;
+    let configs: Vec<String> = EXTENSIONS.map(|e| format!("config.{e}")).to_vec();
     said.push(format!(
-        "{CONFIGS}/{version}: written in {EXTENSIONS:?}, with their hash lines"
+        "{CONFIGS}/{version}: {} and {SCHEMA} written, with their hash lines",
+        configs.join(", ")
     ));
     Ok(())
 }

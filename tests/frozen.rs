@@ -1,32 +1,22 @@
 //! The frozen configs in `tests/configs/<release>/`: a config in each language that sets every
-//! setting the release had, never edited. Every later deslag must load them, and a rename of a
-//! setting that does not keep the old key working fails here, where editing the case configs
-//! would hide it.
+//! setting the release had, and the schema dump of the release, never edited. Every later deslag
+//! must load the configs, and a rename of a setting that does not keep the old key working fails
+//! here, where editing the case configs would hide it.
 
 mod common;
 
 use common::frozen::{self, EXTENSIONS};
-use common::{Repo, code, stderr};
-use deslag::config::REDIRECTS;
+use common::schema::SchemaPaths;
+use common::{code, stderr};
+use deslag::config::{REDIRECTS, SCHEMA_VERSION, schema};
+use deslag::version::Version;
 use deslag::{Config, ConfigSource};
+use serde_json::Value;
 
-/// A repo holding the config at `path`, as `deslag.<extension>`, and one Markdown file the config
-/// selects and every lint in it passes.
-fn repo_with(path: &std::path::Path, extension: &str) -> Repo {
-    let repo = Repo::new();
-    let text = std::fs::read_to_string(path).expect("a readable config");
-    repo.write(&format!("deslag.{extension}"), &text);
-    repo.write(
-        "docs/note.md",
-        "# Note\n\n## Layout\n\n```\nnote.md  <- this note\n```\n\nA short note.\n",
-    );
-    repo
-}
-
-/// That no directory is above the crate version is `no_frozen_directory_is_above_the_crate_version`
-/// in `tests/changelog.rs`, a release-time check.
+/// That no directory is above the crate version is `no_frozen_directory_is_above_the_crate_version`,
+/// below, a release-time check.
 #[test]
-fn each_directory_is_a_release_that_exists_with_a_config_in_every_language() {
+fn each_directory_is_a_release_that_exists_with_a_config_in_every_language_and_its_schema() {
     let releases = frozen::releases();
     assert!(!releases.is_empty());
     for (_, directory) in releases {
@@ -41,7 +31,7 @@ fn each_directory_is_a_release_that_exists_with_a_config_in_every_language() {
             })
             .collect();
         names.sort();
-        let mut want: Vec<String> = EXTENSIONS.map(|e| format!("config.{e}")).to_vec();
+        let mut want = frozen::files();
         want.sort();
         assert_eq!(names, want, "{directory:?}");
     }
@@ -50,23 +40,37 @@ fn each_directory_is_a_release_that_exists_with_a_config_in_every_language() {
 /// Each loads, exits 0, and says only what a redirect says: one warning for each redirect whose
 /// old path the config sets. A directory is never edited, so the older ones keep the settings a
 /// later release retired, such as `signposts` in 0.0.1, and this allows the warning. A new
-/// directory leaves them out (Releasing, in `src/changelog/releases/next/README.md`).
+/// directory leaves them out, as `deslag-release prep` retires them. A config with `allow` entries
+/// also prints the tally of the exemptions it applied, one line more.
 #[test]
 fn every_frozen_config_loads_and_warns_only_for_redirects() {
     for (release, directory) in frozen::releases() {
         for extension in EXTENSIONS {
             let path = frozen::config(&directory, extension);
             let value = frozen::value(&path);
-            let output = repo_with(&path, extension).run(&["check"]);
+            let output = frozen::repo(&path, extension).run(&["check"]);
             let said = stderr(&output);
             assert_eq!(code(&output), 0, "{release} {extension}: {said}");
+            let tally = said
+                .lines()
+                .filter(|line| line.contains(" applied; deslag explain <PATH> lists a file's."))
+                .count();
+            assert_eq!(
+                tally,
+                usize::from(allows(&value)),
+                "{release} {extension}: {said}"
+            );
 
             let used: Vec<_> = REDIRECTS
                 .iter()
                 .filter(|redirect| frozen::sets(&value, redirect.old))
                 .collect();
             let lines: Vec<_> = said.lines().collect();
-            assert_eq!(lines.len(), used.len(), "{release} {extension}: {said}");
+            assert_eq!(
+                lines.len(),
+                used.len() + tally,
+                "{release} {extension}: {said}"
+            );
             for redirect in used {
                 let tail = redirect.warning("");
                 let found = lines
@@ -166,4 +170,167 @@ fn the_hash_is_fnv_1a_64() {
     assert_eq!(frozen::hash(b""), "cbf29ce484222325");
     assert_eq!(frozen::hash(b"a"), "af63dc4c8601ec8c");
     assert_eq!(frozen::hash(b"foobar"), "85944171f73967e8");
+}
+
+/// Whether a section of `value` has an `allow` entry.
+fn allows(value: &Value) -> bool {
+    value.as_object().into_iter().flatten().any(|(_, section)| {
+        section
+            .get("allow")
+            .and_then(Value::as_array)
+            .is_some_and(|entries| !entries.is_empty())
+    })
+}
+
+/// A setting arrives in the release its `since` names, and the frozen config of a release names
+/// every setting of that release. So the config of release R names a leaf of the schema exactly
+/// when the leaf's `since` is R or older: a new setting written as an old release fails here, as no
+/// config of that release names it.
+#[test]
+fn a_leaf_is_in_a_frozen_config_once_its_since_is_released() {
+    let paths = SchemaPaths::of(&schema());
+    let mut wrong = Vec::new();
+    for (release, directory) in frozen::releases() {
+        let value = frozen::value(&frozen::config(&directory, "toml"));
+        let at = Version::Release(release.clone());
+        for leaf in &paths.leaves {
+            let since = paths.since.get(leaf).expect("every leaf has a since");
+            let named = frozen::names(&value, leaf);
+            if named != (*since <= at) {
+                wrong.push(format!(
+                    "`{leaf}` arrived in {since}, and tests/configs/{release}/ {} it",
+                    if named { "names" } else { "does not name" }
+                ));
+            }
+        }
+    }
+    assert!(
+        wrong.is_empty(),
+        "{}\n\na setting that is not released yet has `since` \"next\", and the release that \
+         writes its version freezes a config naming it",
+        wrong.join("\n")
+    );
+}
+
+/// `tests/configs/fill.toml`.
+fn fill_path() -> std::path::PathBuf {
+    frozen::root().join("fill.toml")
+}
+
+/// The paths `value` sets, each as the schema writes it: a value that is not a table, or an empty
+/// table, with `[]` for each list on the way.
+fn set_paths(value: &Value, at: &str, out: &mut Vec<String>) {
+    let join = |key: &str| {
+        if at.is_empty() {
+            key.to_string()
+        } else {
+            format!("{at}.{key}")
+        }
+    };
+    match value {
+        Value::Object(object) if !object.is_empty() => {
+            for (key, child) in object {
+                match child {
+                    Value::Array(items) if items.iter().all(Value::is_object) => {
+                        for item in items {
+                            set_paths(item, &format!("{}[]", join(key)), out);
+                        }
+                    }
+                    _ => set_paths(child, &join(key), out),
+                }
+            }
+        }
+        _ => out.push(at.to_string()),
+    }
+}
+
+/// The freeze takes a setting the newest config leaves out from the schema's default, else from
+/// `tests/configs/fill.toml`. So the fill holds paths of the schema with no default, and every
+/// leaf with no default is in the fill or already in the newest frozen config, so that the next
+/// release can freeze. The fill is a config fragment, and loads as one.
+#[test]
+fn the_fill_holds_the_leaves_with_no_default() {
+    let paths = SchemaPaths::of(&schema());
+    let text = std::fs::read_to_string(fill_path()).expect("tests/configs/fill.toml");
+    let fill = frozen::value(&fill_path());
+    let mut set = Vec::new();
+    set_paths(&fill, "", &mut set);
+    assert!(!set.is_empty());
+    for path in &set {
+        let folded = SchemaPaths::fold(path);
+        assert!(
+            paths.all.contains(&folded),
+            "tests/configs/fill.toml sets `{path}`, which is not in the schema"
+        );
+        assert!(
+            !paths.defaults.contains_key(&folded),
+            "tests/configs/fill.toml sets `{path}`, which has a default the freeze takes first"
+        );
+    }
+
+    let (release, directory) = frozen::releases().pop().expect("a frozen release");
+    let newest = frozen::value(&frozen::config(&directory, "toml"));
+    for leaf in &paths.leaves {
+        if paths.defaults.contains_key(leaf) {
+            continue;
+        }
+        assert!(
+            frozen::names(&fill, leaf) || frozen::names(&newest, leaf),
+            "`{leaf}` has no default and neither tests/configs/fill.toml nor \
+             tests/configs/{release}/ sets it: add a value to tests/configs/fill.toml, so that the \
+             release can freeze a config naming it"
+        );
+    }
+
+    let fragment = format!("schema_version = {SCHEMA_VERSION}\n{text}");
+    Config::parse(&fragment, fill_path(), ConfigSource::Explicit)
+        .unwrap_or_else(|error| panic!("tests/configs/fill.toml: {error:#?}"));
+}
+
+/// No directory of frozen configs is above the crate version.
+///
+/// This and the one below are release-time checks, so they are not part of `make ci`: they compare
+/// the files with the crate's version, and a test must hold whatever version the crate is at. The
+/// release change writes both, so they hold again by the time of the release.
+#[test]
+#[ignore = "fails while a directory of tests/configs/ is above the crate version"]
+fn no_frozen_directory_is_above_the_crate_version() {
+    let current = Version::current();
+    for (release, directory) in frozen::releases() {
+        assert!(
+            Version::Release(release) <= current,
+            "{directory:?} is above {current}, the version in Cargo.toml"
+        );
+    }
+}
+
+/// A release freezes a config in each language under `tests/configs/`, naming every setting the
+/// schema has. A setting added since the newest freeze fails this until the release adds a
+/// directory.
+#[test]
+#[ignore = "fails until the release change freezes configs naming every setting"]
+fn the_newest_frozen_configs_name_every_setting() {
+    let (release, directory) = frozen::releases().pop().expect("a frozen release");
+    let paths = SchemaPaths::of(&schema());
+    let mut left_out = Vec::new();
+    for extension in EXTENSIONS {
+        let value = frozen::value(&frozen::config(&directory, extension));
+        let missing: Vec<_> = paths
+            .leaves
+            .iter()
+            .filter(|leaf| !frozen::names(&value, leaf))
+            .collect();
+        if !missing.is_empty() {
+            left_out.push(format!(
+                "tests/configs/{release}/config.{extension} leaves out {missing:?}"
+            ));
+        }
+    }
+    assert!(
+        left_out.is_empty(),
+        "{}\n\nthe release change, `deslag-release prep`, adds a directory named for the new \
+         version, with a config in each language that sets every setting, and its lines in \
+         tests/configs/hashes. It edits no older config and no test",
+        left_out.join("\n")
+    );
 }

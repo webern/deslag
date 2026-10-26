@@ -43,9 +43,11 @@ impl CommentSurface {
 #[serde(deny_unknown_fields)]
 pub(super) struct OverrideFile {
     /// The files this override applies to.
+    #[schemars(extend("since" = "0.0.1"))]
     globs: Vec<String>,
     /// The settings it lays over the section's.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     lints: Lints,
     // Last, so that an override written as a JSON array keeps `lints` where it was: the config
     // reads a struct by position.
@@ -54,6 +56,7 @@ pub(super) struct OverrideFile {
     /// extension. Nothing re-includes a file. Only a human adds an exclude; never add one to make
     /// a check pass.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     exclude: Vec<String>,
 }
 

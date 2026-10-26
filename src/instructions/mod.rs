@@ -8,7 +8,6 @@
 mod update;
 
 use crate::Lint;
-use crate::changelog::{Changelog, changelog};
 use crate::config::{CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION};
 use crate::version::Version;
 
@@ -41,10 +40,7 @@ pub fn guide() -> String {
 pub fn lints() -> String {
     let mut text = LINTS.replace("{version}", env!("CARGO_PKG_VERSION"));
     for lint in Lint::ALL {
-        text.push_str(&format!("\n## `{}`\n\n", lint.id()));
-        if let Some(line) = since(changelog(), lint) {
-            text.push_str(&format!("{line}\n\n"));
-        }
+        text.push_str(&format!("\n## `{}`\n\n{}\n\n", lint.id(), since(lint)));
         text.push_str(section(lint));
     }
     text.push_str(&format!(
@@ -57,18 +53,17 @@ pub fn lints() -> String {
 /// The heading of the section on `allow` entries, which is no lint's id.
 pub const ALLOW: &str = "allow";
 
-/// The line that says which release of `changelog` `lint` arrived in. A lint with no entry does not
-/// get a line: the library does not panic over a changelog it was built with, and the changelog
-/// tests name the entry to add.
-fn since(changelog: &Changelog, lint: Lint) -> Option<String> {
-    changelog.arrived_in(lint).map(|arrived| match arrived {
+/// The line that says which release `lint` arrived in, from [`Lint::since`].
+fn since(lint: Lint) -> String {
+    match lint.since() {
         Version::Release(version) => format!("Since {version}."),
         Version::Next => "Since the next release.".to_string(),
-    })
+    }
 }
 
-/// What the lints topic says about `lint`: what it fails and a table that turns it on. A new
-/// `Lint` does not compile until it has a file here.
+/// What the lints topic says about `lint`: what it fails and a table that turns it on, which
+/// `deslag instructions update` prints for a lint that is new. A new `Lint` does not compile until
+/// it has a file here.
 fn section(lint: Lint) -> &'static str {
     match lint {
         Lint::MaxSizeBytes => include_str!("lints/max_size_bytes.md"),
@@ -79,62 +74,5 @@ fn section(lint: Lint) -> &'static str {
         Lint::Density => include_str!("lints/density.md"),
         Lint::VerbsNoNouns => include_str!("lints/verbs_no_nouns.md"),
         Lint::NotAtAll => include_str!("lints/not_at_all.md"),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    const FILES: &[(&str, &str)] = &[
-        ("next/README.md", ""),
-        (
-            "0.2.0/lint.density.toml",
-            r#"
-kind = "lint"
-id = "density"
-keys = []
-summary = "Fails walls of text"
-onboarding = "Turn it on."
-"#,
-        ),
-        (
-            "next/lint.not_at_all.toml",
-            r#"
-kind = "lint"
-id = "not_at_all"
-keys = []
-summary = "Fails padded negations"
-onboarding = "Turn it on."
-"#,
-        ),
-    ];
-
-    fn since_in_test_changelog(lint: Lint) -> Option<String> {
-        since(
-            &Changelog::from_files(FILES.iter().copied()).expect("a changelog"),
-            lint,
-        )
-    }
-
-    #[test]
-    fn a_lint_of_a_release_says_since_that_release() {
-        assert_eq!(
-            since_in_test_changelog(Lint::Density).as_deref(),
-            Some("Since 0.2.0.")
-        );
-    }
-
-    #[test]
-    fn a_lint_under_next_says_since_the_next_release() {
-        assert_eq!(
-            since_in_test_changelog(Lint::NotAtAll).as_deref(),
-            Some("Since the next release.")
-        );
-    }
-
-    #[test]
-    fn a_lint_with_no_entry_gets_no_line() {
-        assert_eq!(since_in_test_changelog(Lint::RepoLayout), None);
     }
 }

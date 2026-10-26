@@ -63,8 +63,9 @@ The change that releases 1.4.0, made by the bump-version workflow.
 gh pr view release/v1.4.0 --json number --jq .number
 ```
 
-Read `gh pr diff <n>` before the merge. For 1.4.0 expect renames from `next/` to `releases/1.4.0/`,
-a rewritten `tests/configs/1.4.0/` and `hashes`; ask about more. A new pull request lists its checks
+Read `gh pr diff <n>` before the merge. For 1.4.0 expect the crate version, each `since` of
+`"next"` under `src/` set to `"1.4.0"`, a new `tests/configs/1.4.0/` of four files, and `hashes`;
+ask about more. A new pull request lists its checks
 after a few seconds, so repeat until it does:
 
 ```bash

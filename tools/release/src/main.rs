@@ -36,9 +36,9 @@ enum Command {
     /// Make every edit of the release change, and commit nothing
     ///
     /// It refuses a tree with uncommitted changes, and reads all it needs before it writes.
-    /// It sets the version in Cargo.toml and Cargo.lock, moves the entries of next/ into the
-    /// release's directory, sets the phrases at `since = "next"`, writes the frozen configs when
-    /// the newest leaves out a setting, and adds their hash lines. Review the diff, then run
+    /// It sets the version in Cargo.toml and Cargo.lock, sets each `since` of `next` under src/
+    /// to the version, writes tests/configs/<version>/ with a config in each language that names
+    /// every setting and the schema dump, and adds their hash lines. Review the diff, then run
     /// `make ci-fast` and `make check-release`.
     Prep {
         /// The version.

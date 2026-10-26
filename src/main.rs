@@ -7,10 +7,8 @@ use std::process::ExitCode;
 use anyhow::Context;
 use clap::Parser;
 
-use deslag::changelog::changelog;
 use deslag::cli::{Cli, Command, Format, Topic, UpdateArgs, UpdateFormat};
 use deslag::instructions::{self, Reading, Start};
-use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::news::News;
 use deslag::output::{github, json, sarif};
 use deslag::version::{BASELINE, Version};
@@ -39,7 +37,7 @@ fn load_config(
         eprintln!("deslag: warning: {warning}");
     }
     let (stamp, running) = (config.deslag_version(), Version::current());
-    let news = News::between(changelog(), &CATALOGUE, &stamp, &running);
+    let news = News::embedded(&stamp, &running);
     if let Some(notice) = instructions::notice(&news, &stamp, &running) {
         eprintln!("deslag: note: {notice}");
     }
@@ -97,8 +95,7 @@ fn run() -> anyhow::Result<ExitCode> {
                 args.dry_run,
                 args.to.as_ref(),
                 &deslag::version::current_release(),
-                changelog(),
-                &CATALOGUE,
+                deslag::news::Known::embedded(),
             )?;
             for line in done.lines() {
                 eprintln!("deslag: {line}");
@@ -147,7 +144,7 @@ fn update(args: &UpdateArgs) -> anyhow::Result<String> {
         }
     };
     let to = Version::current();
-    let news = News::between(changelog(), &CATALOGUE, &from, &to);
+    let news = News::embedded(&from, &to);
     let reading;
     let start = match &found {
         Found::Config(config) => {

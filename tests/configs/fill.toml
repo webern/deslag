@@ -1,0 +1,33 @@
+# Values the freeze writes for settings with no schema default; tests/frozen.rs holds it to them.
+[[md.allow]]
+path = "docs/note.md"
+lint = "not_at_all"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[md.lints.not_at_all]
+message = "{path} pads a negation"
+
+[[rust.allow]]
+path = "src/lib.rs"
+lint = "not_at_all"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[rust.lints.not_at_all]
+
+[[cpp.allow]]
+path = "src/a.c"
+lint = "not_at_all"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[cpp.lints.not_at_all]
+
+[[toml.allow]]
+path = "Cargo.toml"
+lint = "not_at_all"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[toml.lints.not_at_all]

@@ -43,13 +43,15 @@ deslag/
 
 `make test-blobs` fetches the corpus's big tier first; see `scripts/blobstore/blobs.md`. The
 `/deslag-build-doctrine` skill governs the Makefile, `scripts/`, CI and dependencies; read it before
-changing any of them. A change that adds a lint, setting, feature or migration adds a file under
-`src/changelog/releases/next/`; its README says how.
+changing any of them. Read `/deslag-upgrade-instructions` before a change that adds, renames or
+removes a lint or a setting.
 
 ## Skills
 
 - `/deslag-build-doctrine`: the build system, Makefile, scripts, CI, dependencies.
 - `/deslag-test-doctrine`: guidance for writing and maintaining tests.
+- `/deslag-upgrade-instructions`: what a new, renamed or removed lint or setting writes for an
+  agent upgrading deslag.
 - `/deslag-open-pr`, `/deslag-commit`, `/deslag-release`: opening a pull request, rules for git
   commits, releasing.
 

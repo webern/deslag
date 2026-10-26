@@ -185,13 +185,11 @@ help:
 	@echo "check-doc        build the docs with warnings denied"
 	@echo "check-fmt        rustfmt in check mode"
 	@echo "check-publish    cargo publish --dry-run; slow, so not part of check"
-	@echo "check-release    fail while src/changelog/releases/next/ holds an entry, a catalogue phrase has"
-	@echo "                 since = \"next\", or the crate version is a pre-release or has a build part; it"
-	@echo "                 also fails while a release directory, a tests/configs/ directory or a catalogue"
-	@echo "                 phrase is above the crate version, or the newest tests/configs/ directory leaves"
-	@echo "                 out a setting, so a release that adds a setting adds a directory there, and one"
-	@echo "                 that does not needs none; the release change fixes all of these, so not part of"
-	@echo "                 check, and the release workflow runs it"
+	@echo "check-release    fail while a lint, setting, redirect or catalogue phrase has since \"next\", a"
+	@echo "                 since names a release above the crate version, the crate version is a"
+	@echo "                 pre-release or has a build part, a tests/configs/ directory is above it, or the"
+	@echo "                 newest tests/configs/ directory leaves out a setting; deslag-release prep fixes"
+	@echo "                 all of these, so not part of check, and the release workflow runs it"
 	@echo "check-typos      spell check the tree"
 	@echo "clean            remove everything make created"
 	@echo "clean-blobs      remove the fetched big tier, edits not yet published too, and crane"
@@ -542,16 +540,15 @@ check-fmt: preflight
 check-publish: preflight
 	cargo publish $(CARGO_FLAGS) --dry-run --all-features -p deslag
 
-# Fails while src/changelog/releases/next/ holds an entry, while a catalogue phrase has
-# since = "next", and while the crate version is a pre-release or has a build part: a release is
-# X.Y.Z. It also fails while a release directory, a tests/configs/ directory or a catalogue phrase
-# is above the crate version. The change that bumps the version in Cargo.toml fixes all of these,
-# so `check` cannot run this. It runs every ignored test in tests/changelog.rs: those are the
-# release-time checks, so a new one there rides along. One of them fails while the newest
-# tests/configs/ directory leaves out a setting, so a release that adds a setting adds a directory
-# there, and one that does not needs none.
+# Fails while a lint, setting, redirect or catalogue phrase has since = "next", while a since
+# names a release above the crate version, and while the crate version is a pre-release or has a
+# build part: a release is X.Y.Z. It also fails while a tests/configs/ directory is above the crate
+# version, or the newest leaves out a setting. `deslag-release prep` fixes all of these, so `check`
+# cannot run this. It runs every ignored test in tests/since.rs and tests/frozen.rs: those are the
+# release-time checks, so a new one there rides along. It runs both files whatever fails, so one
+# run names every check left.
 check-release: preflight
-	cargo test $(CARGO_FLAGS) --all-features --test changelog -- --ignored
+	cargo test $(CARGO_FLAGS) --all-features --no-fail-fast --test since --test frozen -- --ignored
 
 check-typos: preflight
 	typos

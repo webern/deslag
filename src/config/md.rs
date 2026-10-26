@@ -46,6 +46,7 @@ struct FencesFile {
     /// `c++`, `c`, `h`, the C and C++ extensions and `toml`. `[]` reads none.
     #[serde(default)]
     #[schemars(extend("default" = ["rust", "cpp", "toml"]))]
+    #[schemars(extend("since" = "0.0.1"))]
     languages: Option<Vec<FenceLanguage>>,
     /// The comments to read in a fence, for every language: `doc_comment` is the `///` and `//!`
     /// lines and the `/** */` and `/*! */` blocks, `comment` the other `//` lines and `/* */`
@@ -53,6 +54,7 @@ struct FencesFile {
     /// language. `[]` turns reading off, as `languages = []` does.
     #[serde(default)]
     #[schemars(extend("default" = ["doc_comment", "comment"]))]
+    #[schemars(extend("since" = "0.0.1"))]
     surfaces: Option<Vec<CommentSurface>>,
 }
 
@@ -78,28 +80,34 @@ pub(super) struct MdFile {
     /// The files this section lints.
     #[serde(default)]
     #[schemars(extend("default" = DEFAULT_GLOBS))]
+    #[schemars(extend("since" = "0.0.1"))]
     globs: Option<Vec<String>>,
     /// The settings for every selected file that no override changes.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     lints: Lints,
     /// Settings for the selected files that match a pattern.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     overrides: Vec<OverrideFile>,
     // Last, so that a section written as a JSON array keeps `lints`, `overrides` and `fences` where
     // an older config had them: the config reads a struct by position.
     /// Which fenced code in these files is read for its comments. Overrides cannot change it.
     #[serde(default)]
+    #[schemars(extend("since" = "0.0.1"))]
     fences: FencesFile,
     /// Files `globs` match that this section leaves out, such as generated code. A pattern is
     /// written as in `globs`, from the repo root with a `/`, else by file name, and needing no
     /// extension. A file the walk skips stays skipped, and nothing re-includes one. Only a human
     /// adds an exclude; never add one to make a check pass.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     exclude: Vec<String>,
     // After `exclude` for the same reason.
     /// The sentences of these files that stay as written, each exempted from one lint. Only a
-    /// human writes an entry.
+    /// human writes an entry. `deslag instructions lints` says how to write one.
     #[serde(default)]
+    #[schemars(extend("since" = "next"))]
     allow: Vec<AllowFile>,
 }
 

@@ -1,6 +1,7 @@
-//! The frozen configs under `tests/configs/`: for each release that adds a setting, one config per
-//! language that sets every setting then. Nothing but a release edits them, and every later deslag
-//! must load them. `tests/configs/hashes` holds a line for each file, so that an edit shows.
+//! The frozen configs under `tests/configs/`: for each release, one config per language that sets
+//! every setting then, and the config schema as that release prints it. Nothing but a release
+//! writes them, and every later deslag must load the configs. `tests/configs/hashes` holds a line
+//! for each file, so that an edit shows.
 //!
 //! This module reads them and reads paths in them, and the tool and `tests/` share it.
 
@@ -11,6 +12,19 @@ use serde_json::{Map, Value};
 
 /// The languages of a release's configs, as the extensions of their files.
 pub const EXTENSIONS: [&str; 3] = ["toml", "yaml", "json"];
+
+/// The file of a release's schema dump.
+pub const SCHEMA: &str = "schema.json";
+
+/// The files of a release's directory, in the order of their lines in `hashes`: the config in
+/// each language, then the schema dump.
+pub fn files() -> Vec<String> {
+    EXTENSIONS
+        .iter()
+        .map(|extension| format!("config.{extension}"))
+        .chain([SCHEMA.to_string()])
+        .collect()
+}
 
 /// The directories of `configs`, `tests/configs/`, each with the release it is named for, oldest
 /// first. A file there, such as `hashes`, is not a release.

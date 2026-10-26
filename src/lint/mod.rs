@@ -20,13 +20,16 @@ use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::fmt;
 use std::path::Path;
+use std::sync::LazyLock;
 
 use schemars::JsonSchema;
+use schemars::generate::SchemaSettings;
 use serde::Serialize;
 
 use crate::Error;
 use crate::change::{self, Change};
-use crate::config::{Allow, Config, Section};
+use crate::config::paths::SINCE;
+use crate::config::{Allow, Config, Lints, Section};
 use crate::document::{Document, Edit, Location, Need};
 use crate::glob::{self, RepoFile};
 use crate::version::Version;
@@ -81,6 +84,29 @@ impl Lint {
             Lint::VerbsNoNouns => "verbs_no_nouns",
             Lint::NotAtAll => "not_at_all",
         }
+    }
+
+    /// The release it arrived in: the `since` of its table in the schema of [`Lints`]. A new
+    /// `Lint` does not compile without a field of `Lints`, and `tests/since.rs` fails on a field
+    /// without a `since`, so this panics only in a build those tests fail.
+    pub fn since(self) -> Version {
+        static LINTS: LazyLock<serde_json::Value> = LazyLock::new(|| {
+            SchemaSettings::draft07()
+                .into_generator()
+                .into_root_schema_for::<Lints>()
+                .to_value()
+        });
+        let since = LINTS["properties"][self.id()][SINCE]
+            .as_str()
+            .unwrap_or_else(|| {
+                panic!(
+                    "the field `{}` of `Lints` in src/config/lints.rs has no `{SINCE}`",
+                    self.id()
+                )
+            });
+        since
+            .parse()
+            .unwrap_or_else(|error| panic!("the `{SINCE}` of the lint `{}`: {error}", self.id()))
     }
 
     /// The least of a document that it runs on.

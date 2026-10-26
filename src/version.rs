@@ -1,12 +1,13 @@
-//! The version a changelog release, or a phrase of the catalogue, arrived in, and the releases a
-//! config is compared with: the running one and the baseline.
+//! The release a lint, a setting, a redirect or a phrase of the catalogue arrived in, its `since`,
+//! and the releases a config is compared with: the running one and the baseline.
 
 use std::fmt;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize, Serializer};
 
-/// The release a config with no `deslag_version` is taken to be from: the first in the changelog.
+/// The release a config with no `deslag_version` is taken to be from: the first release, the
+/// oldest under `tests/configs/`.
 pub const BASELINE: semver::Version = semver::Version::new(0, 0, 1);
 
 /// A released version, or the one not released yet.

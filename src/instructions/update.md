@@ -10,11 +10,13 @@ What is new in deslag {to}, since {from}
 ## Closing
 
 Offer each new lint and phrase to the person, with what it fails. Add the table of each lint they
-choose, and keep off each phrase they want off, as its entry says: a phrase is on once the
-version moves. Once they have chosen, run `deslag update --to {to}`, adding your
-`--config-path` if any. It sets `deslag_version` to "{to}", ending this list, and edits renamed or
-removed settings. If the person cannot be asked now, change nothing, not even `deslag_version`, and
-tell them what is new.
+choose, and keep off each phrase they want off, as its section says: a phrase is on once the
+version moves. A new setting keeps its default until the config sets it; name it to the person,
+and set it only if they ask.
+
+Once they have chosen, run `deslag update --to {to}`, adding your `--config-path` if any. It sets
+`deslag_version` to "{to}", ending this list, and edits renamed or removed settings. If the person
+cannot be asked now, change nothing, not even `deslag_version`, and tell them what is new.
 
 ## Current
 

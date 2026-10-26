@@ -11,11 +11,12 @@
 use serde::Serialize;
 
 use crate::Lint;
-use crate::changelog::{Entry, Kind, Version};
+use crate::changelog::{Entry, Kind};
 use crate::config::Config;
 use crate::config::update::{TurnedOn, turned_on};
 use crate::lint::banned_phrases::Entry as Phrase;
 use crate::news::News;
+use crate::version::Version;
 
 /// The fixed words of the text, as written: a section for each piece, headed by its name.
 const WORDS: &str = include_str!("update.md");

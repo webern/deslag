@@ -9,10 +9,10 @@ use std::collections::{BTreeSet, HashSet};
 use std::path::Path;
 use std::sync::OnceLock;
 
-use deslag::changelog::Version;
 use deslag::config::{BannedPhrases, PhraseGroups};
 use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::banned_phrases;
+use deslag::version::Version;
 use deslag_corpus::candidates::{Sieve, candidates};
 use deslag_corpus::chars::chars;
 use deslag_corpus::compare::Sides;

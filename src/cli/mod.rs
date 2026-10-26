@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-use crate::changelog::{current_release, parse_release};
+use crate::version::{current_release, parse_release};
 
 /// The `deslag` command line.
 #[derive(Debug, Parser)]

@@ -5,11 +5,11 @@
 //! - `prep X.Y.Z` makes every edit of the release change and commits nothing.
 //!
 //! `src/changelog/releases/next/README.md` says how a release goes. The library also holds the
-//! schema paths and the frozen-config helpers that deslag's tests share.
+//! frozen-config helpers that deslag's tests share; the schema paths are in
+//! `deslag::config::paths`.
 
 pub mod entries;
 pub mod freeze;
 pub mod frozen;
 pub mod prep;
-pub mod schema;
 pub mod version;

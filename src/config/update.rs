@@ -21,12 +21,12 @@ use std::path::Path;
 use semver::Version;
 
 use crate::Error;
-use crate::changelog::{self, Changelog};
+use crate::changelog::Changelog;
 use crate::config::Config;
 use crate::config::edit::{self, Checked, Edit};
 use crate::lint::banned_phrases::{Catalogue, Entry as Phrase, folded};
 use crate::news::News;
-use crate::write;
+use crate::{version, write};
 
 /// What an update did, or with `dry_run` would do.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -174,7 +174,7 @@ pub fn update(
     let (config, text) = Config::load_text_at(root, explicit, running)?;
     let path = shown(root, config.path());
     let seen = config.deslag_version();
-    let now = changelog::Version::Release(running.clone());
+    let now = version::Version::Release(running.clone());
     let news = News::between(known, phrases, &seen, &now);
     let (stamp, held) = match to {
         Some(to) => (Some(to.clone()), None),
@@ -183,7 +183,7 @@ pub fn update(
             None,
             Some(Held {
                 stamp: config.stamp().cloned(),
-                taken: config.stamp().cloned().unwrap_or(changelog::BASELINE),
+                taken: config.stamp().cloned().unwrap_or(version::BASELINE),
                 running: running.clone(),
             }),
         ),

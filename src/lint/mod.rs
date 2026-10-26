@@ -26,10 +26,10 @@ use serde::Serialize;
 
 use crate::Error;
 use crate::change::{self, Change};
-use crate::changelog::Version;
 use crate::config::{Allow, Config, Section};
 use crate::document::{Document, Edit, Location, Need};
 use crate::glob::{self, RepoFile};
+use crate::version::Version;
 
 pub use allow::Exemption;
 

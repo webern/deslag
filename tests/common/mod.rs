@@ -13,9 +13,10 @@ pub mod schema;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-use deslag::changelog::{Version, changelog};
+use deslag::changelog::changelog;
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::news::News;
+use deslag::version::Version;
 
 /// A throwaway directory used as a repository root, removed when it goes out of scope.
 pub struct Repo {

@@ -12,7 +12,7 @@ use serde_json::Value;
 
 use crate::entries::{Entry, Kind};
 use crate::frozen::{self, EXTENSIONS};
-use crate::schema::SchemaPaths;
+use deslag::config::paths::SchemaPaths;
 
 /// A setting a redirect retired.
 #[derive(Debug, Clone)]

@@ -8,8 +8,9 @@
 mod update;
 
 use crate::Lint;
-use crate::changelog::{Changelog, Version, changelog};
+use crate::changelog::{Changelog, changelog};
 use crate::config::{CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION};
+use crate::version::Version;
 
 pub use update::{Reading, Start, notice, update_json, update_text};
 

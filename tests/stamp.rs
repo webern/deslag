@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::process::Output;
 
 use common::{Repo, code, notice, notice_for, raw_stderr, stderr, without_notice};
-use deslag::changelog::{BASELINE, Version};
+use deslag::version::{BASELINE, Version};
 use deslag::{Config, ConfigSource};
 
 /// The config languages, as the extension of the file that holds each.

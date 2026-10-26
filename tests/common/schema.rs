@@ -3,7 +3,7 @@
 
 use serde_json::Value;
 
-pub use deslag_release::schema::{SchemaPaths, resolve};
+pub use deslag::config::paths::{SchemaPaths, resolve};
 
 /// The keywords the schemas deslag prints use, which are all `misfit` knows.
 const KEYWORDS: &[&str] = &[

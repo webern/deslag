@@ -8,8 +8,9 @@
 //! new is exactly what the stamp keeps off. `next` is out of the range, as the range ends at a
 //! release.
 
-use crate::changelog::{Changelog, Entry, Version};
+use crate::changelog::{Changelog, Entry};
 use crate::lint::banned_phrases::{Catalogue, Entry as Phrase};
+use crate::version::Version;
 
 /// What lies after `from` up to `to`.
 #[derive(Debug)]

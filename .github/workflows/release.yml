@@ -80,7 +80,8 @@ jobs:
         with:
           tool: typos
 
-      # The one rule for a version: above every tag, equal to Cargo.toml, never repeated.
+      # The one rule for a version: above every tag, skipping none, equal to Cargo.toml, never
+      # repeated.
       - name: Validate the version
         run: cargo run --locked --quiet -p deslag-release -- check-version "$VERSION" --equal-crate
 

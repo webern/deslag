@@ -26,6 +26,6 @@ renamed or removed since. It selects them by the release each arrived in, its `s
   under the redirect only.
 - A new catalogue phrase gets `since = "next"` in `src/lint/banned_phrases.toml`.
 
-Write nothing else for the upgrading agent: the release notes are GitHub's list of merged pull
-requests. When something is missing, `cargo test` names it: `tests/since.rs` fails on a schema
-field without a `since`, and a lint without a page or a `Lints` field does not compile.
+Write nothing else for the upgrading agent. When something is missing, `cargo test` names it:
+`tests/since.rs` fails on a schema field without a `since`, and a lint without a page or a `Lints`
+field does not compile.

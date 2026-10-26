@@ -3,7 +3,8 @@
 //! the rest of the file, in every language the config may be written in. A stamp older than the
 //! running deslag, with something released since, makes `check`, `fix` and `explain` say so. Only
 //! the tests here and in `tests/instructions.rs` see that note, through `raw_stderr`: `stderr`
-//! leaves it out, so a release does not change what any other test sees.
+//! leaves it out, so a release does not change what any other test sees. The last test reads
+//! deslag's own config, which every release stamps with its version.
 
 mod common;
 
@@ -595,4 +596,28 @@ fn a_config_written_as_a_json_array_still_loads() {
     );
     assert_eq!(code, 1, "stderr: {stderr}");
     assert!(stderr.contains("max_size_bytes"), "stderr: {stderr}");
+}
+
+/// deslag's own config is stamped with the crate version, which `deslag update --to <version>`
+/// writes right after `deslag-release prep`, so that every release runs the real upgrade on a real
+/// config. A stamp left behind would hold off, in this repo alone, the catalogue phrases released
+/// since.
+#[test]
+fn the_repos_own_config_is_stamped_with_the_crate_version() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let config = Config::load(root, None).expect("the repo's own config loads");
+    let path = config.path().strip_prefix(root).unwrap_or(config.path());
+    let stamp = config.stamp().map(ToString::to_string);
+    let has = match &stamp {
+        Some(stamp) => format!("deslag_version = \"{stamp}\""),
+        None => "no deslag_version".to_string(),
+    };
+    let version = env!("CARGO_PKG_VERSION");
+    assert_eq!(
+        stamp.as_deref(),
+        Some(version),
+        "{} has {has}, and the crate is {version}: run `deslag update --to {version}` from the \
+         repo root, as `cargo run -- update --to {version}`",
+        path.display(),
+    );
 }

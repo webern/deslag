@@ -33,13 +33,15 @@ enum Command {
         #[arg(long)]
         equal_crate: bool,
     },
-    /// Make every edit of the release change, and commit nothing
+    /// Make every edit of the release change but the stamp of .agents/deslag.toml, and commit
+    /// nothing
     ///
     /// It refuses a tree with uncommitted changes, and reads all it needs before it writes.
     /// It sets the version in Cargo.toml and Cargo.lock, sets each `since` of `next` under src/
     /// to the version, writes tests/configs/<version>/ with a config in each language that names
-    /// every setting and the schema dump, and adds their hash lines. Review the diff, then run
-    /// `make ci-fast` and `make check-release`.
+    /// every setting and the schema dump, and adds their hash lines. Then run
+    /// `cargo run -- update --to <version>`, a deslag built from what this wrote, review the
+    /// diff, and run `make ci-fast` and `make check-release`.
     Prep {
         /// The version.
         version: String,

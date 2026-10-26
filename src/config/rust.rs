@@ -50,13 +50,13 @@ pub(super) struct RustFile {
     /// end in `.rs`. A file the walk skips stays skipped, and nothing re-includes one. Only a human
     /// adds an exclude; never add one to make a check pass.
     #[serde(default)]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     exclude: Vec<String>,
     // After `exclude` for the same reason.
     /// The sentences of these files that stay as written, each exempted from one lint. Only a
     /// human writes an entry. `deslag instructions lints` says how to write one.
     #[serde(default)]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     allow: Vec<AllowFile>,
 }
 

@@ -68,7 +68,7 @@ pub struct Lints {
     pub verbs_no_nouns: Option<VerbsNoNouns>,
     /// That a negation drops `at all`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     pub not_at_all: Option<NotAtAll>,
 }
 
@@ -794,7 +794,7 @@ impl Merge for VerbsNoNouns {
 pub struct NotAtAll {
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     pub message: Option<String>,
 }
 

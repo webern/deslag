@@ -56,7 +56,7 @@ pub(super) struct OverrideFile {
     /// extension. Nothing re-includes a file. Only a human adds an exclude; never add one to make
     /// a check pass.
     #[serde(default)]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     exclude: Vec<String>,
 }
 

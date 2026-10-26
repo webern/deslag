@@ -1,0 +1,136 @@
+deslag_version = "0.0.3"
+schema_version = 1
+
+[cpp]
+exclude = []
+globs = ["/src/**/*.c", "/include/**/*.h"]
+surfaces = ["doc_comment"]
+
+[[cpp.allow]]
+lint = "not_at_all"
+path = "src/a.c"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[cpp.lints.not_at_all]
+
+[[cpp.overrides]]
+exclude = []
+globs = ["/vendor/**"]
+
+[md]
+exclude = []
+globs = ["docs/*.md"]
+
+[[md.allow]]
+lint = "not_at_all"
+path = "docs/note.md"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[md.fences]
+languages = ["rust"]
+surfaces = ["comment"]
+
+[md.lints.banned_chars]
+allow = ["é"]
+message = "{path} has a banned character"
+
+[md.lints.banned_chars.ban]
+"¤" = "write the currency's name"
+
+[md.lints.banned_chars.groups]
+arrows = true
+box_drawing = true
+bullets = true
+checks = true
+dashes = true
+ellipsis = true
+emoji = false
+invisible = true
+math = true
+quotes = true
+section = true
+spaces = true
+
+[md.lints.banned_phrases]
+allow = ["not silently ignored"]
+message = "{path} has a banned phrase"
+
+[md.lints.banned_phrases.ban]
+"in order to" = "write to"
+
+[md.lints.banned_phrases.groups]
+insistence = true
+metaphors = true
+precision = true
+
+[md.lints.density]
+max_item_chars = 300
+max_paragraph_chars = 600
+message = "{path} has a dense block"
+
+[md.lints.max_emphasis]
+free_spans = 2
+max_percent = 1.5
+message = "{path} has too much emphasis"
+
+[md.lints.max_size_bytes]
+message = "{path} is over {max_size_bytes} bytes"
+value = 20000
+
+[md.lints.not_at_all]
+message = "{path} pads a negation"
+
+[md.lints.repo_layout]
+heading = "Layout"
+max_entries = 15
+max_width = 100
+message = "{path} needs a layout"
+min_entries = 1
+
+[md.lints.verbs_no_nouns]
+message = "{path} negates an object"
+
+[[md.overrides]]
+exclude = []
+globs = ["docs/note.md"]
+
+[md.overrides.lints.banned_phrases.groups]
+
+[md.overrides.lints.max_size_bytes]
+value = 8000
+
+[rust]
+exclude = []
+globs = ["/src/**/*.rs"]
+surfaces = ["doc_comment"]
+
+[[rust.allow]]
+lint = "not_at_all"
+path = "src/lib.rs"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[rust.lints.not_at_all]
+
+[[rust.overrides]]
+exclude = []
+globs = ["/src/tag/**"]
+
+[toml]
+exclude = []
+globs = ["/Cargo.toml", "/crates/**/Cargo.toml"]
+surfaces = ["comment"]
+
+[[toml.allow]]
+lint = "not_at_all"
+path = "Cargo.toml"
+quote = "It does not parse at all."
+reason = "A frozen config sets every setting."
+
+[toml.lints.not_at_all]
+
+[[toml.overrides]]
+exclude = []
+globs = ["/tools/**"]

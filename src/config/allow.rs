@@ -40,12 +40,12 @@ pub(super) struct AllowFile {
     /// character that shows as nothing or acts on the reader: a control or format character,
     /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
     /// tab, CR or LF.
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     path: String,
     /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases`,
     /// `verbs_no_nouns` and `not_at_all`. One entry names one lint.
     #[schemars(schema_with = "lint_schema")]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     lint: String,
     /// The sentence, as the file holds it, without the `>` that a block quote starts its lines
     /// with and the byte order mark that opens a file. A `>` inside a code span that wraps across
@@ -59,13 +59,13 @@ pub(super) struct AllowFile {
     /// character but a control character other than a tab, CR or LF, since it must equal the
     /// sentence, which the file holds anyway. Reports, notices and `deslag explain` write each
     /// character that shows as nothing or acts on the reader as `<U+XXXX>`.
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     quote: String,
     /// Why the sentence must stay as it is. Required. A `path` or `reason` may not hold a
     /// character that shows as nothing or acts on the reader: a control or format character,
     /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
     /// tab, CR or LF.
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.3"))]
     reason: String,
 }
 

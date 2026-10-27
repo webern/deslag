@@ -1,19 +1,16 @@
 //! `banned_phrases`: a file must not hold the phrases the config bans.
 //!
-//! The phrases come in [`GROUPS`], each on by default and switched by the config, which may also
-//! ban more phrases, each with the advice its report gives. The groups' phrases are in
-//! `banned_phrases.toml`: each does not match any `human` file of the corpus and matches `llm`
-//! files of at least 40 repositories, counts that `make test-blobs` checks. A phrase in `ban` takes
-//! its advice from `ban`, whatever the groups say. The report names the group of each phrase it
-//! lists, so that a human can switch the group off. A phrase is split into tokens by the code that
-//! splits the document's prose, and matches the same row of tokens in one block of prose, whatever
-//! the case, the style of apostrophe, and the whitespace, line breaks and formatting between them.
-//! A code span, HTML, an image, a URL or a footnote reference is a token no phrase holds, so no
-//! match crosses one. Code blocks, HTML blocks and frontmatter hold no tokens, but the comments
-//! of a code block in a language that `[md]` reads (`fences`) are prose and do.
-//!
-//! A phrase of the catalogue reports wherever its group is on, from the release that ships it,
-//! whatever the config's `deslag_version` says.
+//! The phrases are the config's `ban`, each with the advice its report gives, or with none, when the
+//! report says the phrase is banned in this repo and to reword the sentence. The catalogue in
+//! `banned_phrases.toml` is the list deslag recommends, which `deslag instructions update` offers;
+//! it bans nothing by itself. Each of its phrases does not match any `human` file of the corpus and
+//! matches `llm` files of at least 40 repositories, counts that `make test-blobs` checks. A phrase
+//! is split into tokens by the code that splits the document's prose, and matches the same row of
+//! tokens in one block of prose, whatever the case, the style of apostrophe, and the whitespace,
+//! line breaks and formatting between them. A code span, HTML, an image, a URL or a footnote
+//! reference is a token no phrase holds, so no match crosses one. Code blocks, HTML blocks and
+//! frontmatter hold no tokens, but the comments of a code block in a language that `[md]` reads
+//! (`fences`) are prose and do.
 //!
 //! A match that lies inside a match of an `allow` phrase is not reported. Of the rest, where two
 //! overlap, the one that starts first is reported, or the longer when both start at one token, so
@@ -25,7 +22,7 @@ use std::sync::LazyLock;
 
 use serde::Deserialize;
 
-use crate::config::{BannedPhrases, PhraseGroups};
+use crate::config::BannedPhrases;
 use crate::document::{Document, Location, Token, TokenKind};
 use crate::lint::{Keep, Mark, MarkKind};
 use crate::version::Version;
@@ -41,10 +38,8 @@ pub struct Match {
     /// Its tokens as the source writes them, with a space where whitespace parts two of them and
     /// the markup between them left out.
     pub quote: String,
-    /// The advice the config gives for it; empty means delete it.
+    /// The advice the config gives for it; empty means it gives none.
     pub advice: String,
-    /// The group it is banned by, or `None` when the config's `ban` holds it.
-    pub group: Option<&'static str>,
 }
 
 impl Match {
@@ -67,22 +62,21 @@ impl Match {
             location: document.locate(tokens[0].range.start..last.range.end),
             quote,
             advice: phrase.advice.to_string(),
-            group: phrase.group,
         }
     }
 
     /// What the report says of it: the phrase, and what to do about it.
     fn note(&self) -> String {
         let advice = match self.advice.as_str() {
-            "" => "delete it",
+            "" => NO_ADVICE,
             advice => advice,
         };
-        match self.group {
-            Some(group) => format!("\"{}\"; {advice} (group: {group})", self.quote),
-            None => format!("\"{}\"; {advice}", self.quote),
-        }
+        format!("\"{}\"; {advice}", self.quote)
     }
 }
+
+/// What the report says of a phrase whose `ban` entry gives no advice.
+pub const NO_ADVICE: &str = "banned in this repo; reword the sentence";
 
 /// A file that holds banned phrases.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -99,8 +93,6 @@ struct Phrase<'s> {
     tokens: Vec<String>,
     /// The advice the config gives for it.
     advice: &'s str,
-    /// The group it comes from, or `None` for the config's own.
-    group: Option<&'static str>,
 }
 
 /// Phrases, each under its first token, so that each token of a document costs one lookup.
@@ -111,18 +103,17 @@ struct Phrases<'s> {
 
 impl<'s> Phrases<'s> {
     /// Splits and indexes `phrases`, each given with its advice.
-    fn new(phrases: impl Iterator<Item = (&'s str, &'s str, Option<&'static str>)>) -> Phrases<'s> {
+    fn new(phrases: impl Iterator<Item = (&'s str, &'s str)>) -> Phrases<'s> {
         let mut by_first: HashMap<String, Vec<Phrase<'s>>> = HashMap::new();
-        for (text, advice, group) in phrases {
+        for (text, advice) in phrases {
             let tokens = folded(text);
             let Some(first) = tokens.first() else {
                 continue;
             };
-            by_first.entry(first.clone()).or_default().push(Phrase {
-                tokens,
-                advice,
-                group,
-            });
+            by_first
+                .entry(first.clone())
+                .or_default()
+                .push(Phrase { tokens, advice });
         }
         for phrases in by_first.values_mut() {
             phrases.sort_by_key(|phrase| std::cmp::Reverse(phrase.tokens.len()));
@@ -149,70 +140,7 @@ impl<'s> Phrases<'s> {
     }
 }
 
-/// A group of phrases that the config switches on or off as one.
-pub struct Group {
-    /// Its key in `lints.banned_phrases.groups`.
-    pub name: &'static str,
-    /// Whether it is on when the config does not say.
-    pub on_by_default: bool,
-    /// Its switch in the config.
-    pub switch: fn(&PhraseGroups) -> Option<bool>,
-}
-
-impl Group {
-    /// Whether `groups` has it on.
-    pub fn on(&self, groups: &PhraseGroups) -> bool {
-        (self.switch)(groups).unwrap_or(self.on_by_default)
-    }
-}
-
-/// Every group; the phrases of each are in [`CATALOGUE`].
-pub const GROUPS: &[Group] = &[
-    Group {
-        name: "insistence",
-        on_by_default: true,
-        switch: |groups| groups.insistence,
-    },
-    Group {
-        name: "metaphors",
-        on_by_default: true,
-        switch: |groups| groups.metaphors,
-    },
-    Group {
-        name: "precision",
-        on_by_default: true,
-        switch: |groups| groups.precision,
-    },
-];
-
-/// The group an entry of the catalogue is in, by its name in [`GROUPS`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum GroupName {
-    /// `insistence`.
-    Insistence,
-    /// `metaphors`.
-    Metaphors,
-    /// `precision`.
-    Precision,
-}
-
-impl GroupName {
-    /// Its group in [`GROUPS`].
-    pub fn group(self) -> &'static Group {
-        let name = match self {
-            GroupName::Insistence => "insistence",
-            GroupName::Metaphors => "metaphors",
-            GroupName::Precision => "precision",
-        };
-        GROUPS
-            .iter()
-            .find(|group| group.name == name)
-            .expect("every group name is in GROUPS")
-    }
-}
-
-/// The phrases the groups ban, read from `banned_phrases.toml`.
+/// The phrases deslag recommends, read from `banned_phrases.toml`.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Catalogue {
@@ -229,8 +157,6 @@ pub struct Catalogue {
 pub struct Entry {
     /// The phrase.
     pub phrase: String,
-    /// Its group.
-    pub group: GroupName,
     /// The advice the report gives with it.
     pub advice: String,
     /// The version of deslag it first ships in.
@@ -251,41 +177,17 @@ pub fn folded(phrase: &str) -> Vec<String> {
     Token::split(phrase).iter().map(Token::folded).collect()
 }
 
-/// Checks one file, read into `document`. A file with no settings is not checked. A phrase of the
-/// catalogue is reported when its group is on.
+/// Checks one file, read into `document`, for the phrases of its `ban`. A file with no settings is
+/// not checked.
 pub fn check(document: &Document<'_>, settings: Option<&BannedPhrases>) -> Option<Over> {
-    check_in(&CATALOGUE, document, settings)
-}
-
-/// [`check`] against `catalogue`, which a test may hold entries of its own in.
-fn check_in(
-    catalogue: &Catalogue,
-    document: &Document<'_>,
-    settings: Option<&BannedPhrases>,
-) -> Option<Over> {
     let settings = settings?;
-    let banned: Vec<Vec<String>> = settings
-        .ban
-        .iter()
-        .flatten()
-        .map(|(phrase, _)| folded(phrase))
-        .collect();
-    let own = settings.ban.iter().flatten();
-    let own = own.map(|(phrase, advice)| (phrase.as_str(), advice.as_str(), None));
-    // A phrase in `ban` keeps the advice `ban` gives it.
-    let grouped = catalogue.entries.iter().filter(|entry| {
-        entry.group.group().on(&settings.groups) && !banned.contains(&folded(&entry.phrase))
-    });
-    let grouped = grouped.map(|entry| {
-        let group = Some(entry.group.group().name);
-        (entry.phrase.as_str(), entry.advice.as_str(), group)
-    });
-    let ban = Phrases::new(own.chain(grouped));
+    let banned = settings.ban.iter().flatten();
+    let ban = Phrases::new(banned.map(|(phrase, advice)| (phrase.as_str(), advice.as_str())));
     if ban.by_first.is_empty() {
         return None;
     }
     let allowed = settings.allow.iter().flatten();
-    let allow = Phrases::new(allowed.map(|phrase| (phrase.as_str(), "", None)));
+    let allow = Phrases::new(allowed.map(|phrase| (phrase.as_str(), "")));
 
     let mut matches = Vec::new();
     for (block, _) in document.walk() {
@@ -398,36 +300,46 @@ const DEFAULT_ADVICE: &str = "This repo keeps these phrases out of its writing. 
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use super::*;
 
-    /// A catalogue with a phrase from the first release, one from a later release and one from
-    /// `next`, all in default-on groups.
-    fn catalogue() -> Catalogue {
-        let entry = |phrase: &str, since: &str| {
-            format!(
-                "[[entry]]\nphrase = \"{phrase}\"\ngroup = \"metaphors\"\nadvice = \"x\"\n\
-                 since = \"{since}\"\nllm_files = 1\nllm_repos = 1\n"
-            )
+    /// The notes of what `ban` finds in `text`.
+    fn notes(text: &str, ban: &[(&str, &str)]) -> Vec<String> {
+        let ban: BTreeMap<String, String> = ban
+            .iter()
+            .map(|(phrase, advice)| (phrase.to_string(), advice.to_string()))
+            .collect();
+        let settings = BannedPhrases {
+            ban: Some(ban),
+            ..BannedPhrases::default()
         };
-        let text = [
-            "measured_on = \"x\"\n".to_string(),
-            entry("old phrase", "0.0.1"),
-            entry("later phrase", "0.0.2"),
-            entry("unreleased phrase", "next"),
-        ]
-        .concat();
-        toml::from_str(&text).expect("a catalogue")
+        let over = check(&Document::markdown(text), Some(&settings));
+        over.map(|over| over.matches.iter().map(Match::note).collect())
+            .unwrap_or_default()
     }
 
-    /// An entry reports whatever release it arrived in: no config holds a phrase back.
+    /// The catalogue bans nothing: an empty table finds none of its phrases.
     #[test]
-    fn an_entry_reports_whatever_its_release() {
-        let text = "An old phrase, a later phrase and an unreleased phrase.\n";
-        let settings = BannedPhrases::default();
-        let over = check_in(&catalogue(), &Document::markdown(text), Some(&settings));
-        let quotes: Vec<String> = over
-            .map(|over| over.matches.into_iter().map(|found| found.quote).collect())
-            .unwrap_or_default();
-        assert_eq!(quotes, ["old phrase", "later phrase", "unreleased phrase"]);
+    fn an_empty_table_bans_no_phrase_of_the_catalogue() {
+        let text = format!("{}.\n", CATALOGUE.entries[0].phrase);
+        assert_eq!(notes(&text, &[]), Vec::<String>::new());
+        let found = notes(&text, &[(&CATALOGUE.entries[0].phrase, "x")]);
+        assert_eq!(found.len(), 1, "{found:?}");
+    }
+
+    /// A phrase with no advice prints the standard message.
+    #[test]
+    fn a_phrase_with_no_advice_says_it_is_banned_here() {
+        assert_eq!(
+            notes(
+                "We circle back.\n",
+                &[("circle back", ""), ("we", "say who")]
+            ),
+            [
+                "\"We\"; say who",
+                "\"circle back\"; banned in this repo; reword the sentence"
+            ]
+        );
     }
 }

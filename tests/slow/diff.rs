@@ -19,9 +19,10 @@ use deslag::{Config, check_file, check_repo};
 use serde_json::Value;
 
 /// A config under which each lint fails something small.
-const CONFIG: &str = "schema_version = 1
+const CONFIG: &str = "schema_version = 2
 
 [md.lints.banned_chars]
+groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 [md.lints.density]
 max_paragraph_chars = 60
@@ -1069,7 +1070,7 @@ fn a_retained_finding_reports_exactly_its_marks() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1
+        "schema_version = 2
 
 [md.lints.max_size_bytes]
 value = 100
@@ -1083,6 +1084,7 @@ min_entries = 5
 max_entries = 5
 
 [md.lints.banned_chars]
+groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 [md.lints.banned_phrases.ban]
 \"in order to\" = \"write to\"

@@ -1,4 +1,5 @@
-# The phrases `banned_phrases` bans by default, each in one of the groups in `banned_phrases.rs`.
+# The phrases deslag recommends for `banned_phrases.ban`. The catalogue bans nothing by itself: a
+# file fails on a phrase only where a `ban` lists it.
 #
 # An entry has no `human` file on the corpus's big tier and `llm` files in at least 40
 # repositories. Its counts are for the image `measured_on` names, and `make test-blobs` fails when
@@ -13,7 +14,6 @@ measured_on = "ghcr.io/webern/deslag-blobs:v7@sha256:d9a3047c38e2f9e7845f15f4a4f
 
 [[entry]]
 phrase = "deliberately not"
-group = "insistence"
 advice = "say what it does; what it does not do rarely needs saying"
 since = "0.0.1"
 llm_files = 92
@@ -21,7 +21,6 @@ llm_repos = 56
 
 [[entry]]
 phrase = "not silently"
-group = "insistence"
 advice = "say what it does instead, such as the error it reports"
 since = "0.0.1"
 llm_files = 112
@@ -29,7 +28,6 @@ llm_repos = 65
 
 [[entry]]
 phrase = "never silently"
-group = "insistence"
 advice = "say what it does instead, such as the error it reports"
 since = "0.0.1"
 llm_files = 57
@@ -37,7 +35,6 @@ llm_repos = 40
 
 [[entry]]
 phrase = "load-bearing"
-group = "metaphors"
 advice = "say what depends on it"
 since = "0.0.1"
 llm_files = 197
@@ -45,7 +42,6 @@ llm_repos = 70
 
 [[entry]]
 phrase = "lands on"
-group = "metaphors"
 advice = "say what happens, such as \"is merged into\" or \"reaches\""
 since = "0.0.1"
 llm_files = 73
@@ -53,7 +49,6 @@ llm_repos = 51
 
 [[entry]]
 phrase = "it lands"
-group = "metaphors"
 advice = "say what happens, such as \"it is merged\" or \"it ships\""
 since = "0.0.1"
 llm_files = 48
@@ -61,7 +56,6 @@ llm_repos = 41
 
 [[entry]]
 phrase = "byte-identical"
-group = "precision"
 advice = "say \"identical\", or name the check that shows it"
 since = "0.0.1"
 llm_files = 175

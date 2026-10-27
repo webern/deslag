@@ -61,22 +61,7 @@ fn rename<T>(old: &mut Option<T>, new: &mut Option<T>) -> Result<bool, BothSet> 
 }
 
 /// Every redirect, in the order they are applied. Each applies in the section its `old` path names.
-pub const REDIRECTS: &[Redirect] = &[Redirect {
-    old: "md.lints.banned_phrases.groups.signposts",
-    new: None,
-    reason: Some(
-        "its one phrase fell below the catalogue's floor of 40 repositories and nothing \
-         replaces it",
-    ),
-    example: "true",
-    since: "0.0.1",
-    moves: |lints| {
-        Ok(lints
-            .banned_phrases
-            .as_mut()
-            .is_some_and(|phrases| phrases.groups.signposts.take().is_some()))
-    },
-}];
+pub const REDIRECTS: &[Redirect] = &[];
 
 /// A redirect that moves nothing, for the unit tests of what reads the table rather than of the
 /// move, such as what is new to a config.
@@ -112,6 +97,23 @@ pub(super) static TEST_RENAME: Redirect = Redirect {
             &mut density.max_paragraph_len,
             &mut density.max_paragraph_chars,
         )
+    },
+};
+
+/// A removal in `[md]` that only the unit tests know, to test the machinery without a real removal.
+/// It reads the table of keys that [`BannedPhrases`](crate::config::BannedPhrases) has in tests.
+#[cfg(test)]
+pub(super) static TEST_REMOVAL: Redirect = Redirect {
+    old: "md.lints.banned_phrases.groups.signposts",
+    new: None,
+    reason: Some("a test removes it"),
+    example: "true",
+    since: "0.0.1",
+    moves: |lints| {
+        Ok(lints
+            .banned_phrases
+            .as_mut()
+            .is_some_and(|phrases| phrases.groups.signposts.take().is_some()))
     },
 };
 
@@ -191,15 +193,14 @@ impl Redirect {
     }
 }
 
-/// The redirects in force: the table, and the test rename and the test removal in `[rust]` when
-/// testing.
+/// The redirects in force: the table, and the test removals and the test rename when testing.
 pub(crate) fn in_force() -> impl Iterator<Item = &'static Redirect> {
     let table = REDIRECTS.iter();
     #[cfg(test)]
     let table = std::iter::once(&TEST_RUST_REMOVAL)
         .filter(|_| RUST_REMOVAL_IN_FORCE.get())
         .chain(table)
-        .chain(std::iter::once(&TEST_RENAME));
+        .chain([&TEST_REMOVAL, &TEST_RENAME]);
     table
 }
 
@@ -284,7 +285,7 @@ mod tests {
     use super::*;
     use crate::config::{Config, ConfigSource};
 
-    const TOML: &str = "schema_version = 1\n";
+    const TOML: &str = "schema_version = 2\n";
 
     fn load(extension: &str, text: &str) -> Result<Config, Error> {
         let path = PathBuf::from(format!("deslag.{extension}"));
@@ -314,12 +315,12 @@ mod tests {
                     .iter()
                     .map(|(k, v)| format!("      {k}: {v}\n"))
                     .collect();
-                format!("schema_version: 1\nmd:\n  lints:\n    density:\n{body}")
+                format!("schema_version: 2\nmd:\n  lints:\n    density:\n{body}")
             }
             _ => {
                 let body: Vec<String> = keys.iter().map(|(k, v)| format!("\"{k}\":{v}")).collect();
                 format!(
-                    "{{\"schema_version\":1,\"md\":{{\"lints\":{{\"density\":{{{}}}}}}}}}",
+                    "{{\"schema_version\":2,\"md\":{{\"lints\":{{\"density\":{{{}}}}}}}}}",
                     body.join(",")
                 )
             }
@@ -328,16 +329,13 @@ mod tests {
 
     const FORMATS: [&str; 3] = ["toml", "yaml", "json"];
 
-    /// A removal says why the setting went when the redirect knows, and the signposts group, whose
-    /// only phrase fell below the catalogue's floor, says nothing replaced it.
+    /// A removal says why the setting went when the redirect knows.
     #[test]
     fn a_removal_gives_its_reason_when_it_has_one() {
-        let signposts = REDIRECTS.first().expect("a redirect");
         assert_eq!(
-            signposts.warning("deslag.toml"),
+            TEST_REMOVAL.warning("deslag.toml"),
             "deslag.toml: `md.lints.banned_phrases.groups.signposts` was removed, and the setting \
-             is ignored; its one phrase fell below the catalogue's floor of 40 repositories \
-             and nothing replaces it; delete it from the config, or run deslag update"
+             is ignored; a test removes it; delete it from the config, or run deslag update"
         );
         assert_eq!(
             TEST_RUST_REMOVAL.warning("deslag.toml"),
@@ -451,7 +449,7 @@ mod tests {
 
     #[test]
     fn the_old_key_in_a_section_and_in_overrides_warns_once() {
-        let text = "schema_version = 1\n\
+        let text = "schema_version = 2\n\
                     [md.lints.density]\nmax_paragraph_len = 100\n\
                     [[md.overrides]]\nglobs = [\"a.md\"]\nlints.density.max_paragraph_len = 200\n\
                     [[md.overrides]]\nglobs = [\"b.md\"]\nlints.density.max_paragraph_len = 300\n";
@@ -473,7 +471,7 @@ mod tests {
     /// Old in the section and new in an override is not both set: the override still wins.
     #[test]
     fn old_and_new_in_different_tables_are_not_both_set() {
-        let text = "schema_version = 1\n\
+        let text = "schema_version = 2\n\
                     [md.lints.density]\nmax_paragraph_len = 100\n\
                     [[md.overrides]]\nglobs = [\"a.md\"]\nlints.density.max_paragraph_chars = 200\n";
         let config = load("toml", text).expect("a config");
@@ -489,7 +487,7 @@ mod tests {
         assert_eq!(paragraph("b.md"), Some(100));
         assert_eq!(paragraph("a.md"), Some(200));
 
-        let reverse = "schema_version = 1\n\
+        let reverse = "schema_version = 2\n\
                        [md.lints.density]\nmax_paragraph_chars = 100\n\
                        [[md.overrides]]\nglobs = [\"a.md\"]\nlints.density.max_paragraph_len = 200\n";
         let config = load("toml", reverse).expect("a config");
@@ -505,7 +503,7 @@ mod tests {
     /// An override that sets both says which override it is.
     #[test]
     fn both_set_in_an_override_names_the_override() {
-        let text = "schema_version = 1\n\
+        let text = "schema_version = 2\n\
                     [[md.overrides]]\nglobs = [\"a.md\"]\n\
                     [[md.overrides]]\nglobs = [\"b.md\"]\n\
                     lints.density = { max_paragraph_len = 1, max_paragraph_chars = 2 }\n";
@@ -517,7 +515,7 @@ mod tests {
     /// "unknown key" as the old key alone, not a both-set error.
     #[test]
     fn both_set_in_a_younger_section_is_an_unknown_key() {
-        let text = "schema_version = 1\n\
+        let text = "schema_version = 2\n\
                     [rust.lints.density]\nmax_paragraph_len = 1\nmax_paragraph_chars = 2\n";
         let message = load("toml", text).expect_err("both set").to_string();
         assert!(
@@ -530,7 +528,7 @@ mod tests {
     /// An anchor and a merge key can bring the old key under a map that sets the new.
     #[test]
     fn a_yaml_merge_key_bringing_the_old_key_under_the_new_is_both_set() {
-        let text = "schema_version: 1\n\
+        let text = "schema_version: 2\n\
                     md:\n  lints:\n    density: &d\n      max_paragraph_len: 300\n  overrides:\n    \
                     - globs: [\"a.md\"]\n      lints:\n        density:\n          <<: *d\n          \
                     max_paragraph_chars: 400\n";
@@ -543,7 +541,7 @@ mod tests {
         );
 
         // The same anchor without the new key is the old key once, in two tables.
-        let text = "schema_version: 1\n\
+        let text = "schema_version: 2\n\
                     md:\n  lints:\n    density: &d\n      max_paragraph_len: 300\n  overrides:\n    \
                     - globs: [\"a.md\"]\n      lints:\n        density: *d\n";
         let config = load("yaml", text).expect("a config");
@@ -553,7 +551,7 @@ mod tests {
     /// JSON reads a struct written as an array by position, the hidden field last.
     #[test]
     fn a_json_array_table_reaches_the_hidden_field_in_its_last_place() {
-        let text = r#"{"schema_version":1,"md":{"lints":{"density":[null,null,null,300]}}}"#;
+        let text = r#"{"schema_version":2,"md":{"lints":{"density":[null,null,null,300]}}}"#;
         let config = load("json", text).expect("a config");
         assert_eq!(config.warnings().len(), 1);
         let paragraph = config
@@ -565,7 +563,7 @@ mod tests {
         assert_eq!(paragraph, Some(300));
 
         // The new key is in the old key's place, the first.
-        let text = r#"{"schema_version":1,"md":{"lints":{"density":[300]}}}"#;
+        let text = r#"{"schema_version":2,"md":{"lints":{"density":[300]}}}"#;
         let config = load("json", text).expect("a config");
         assert!(config.warnings().is_empty());
     }

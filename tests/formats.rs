@@ -11,18 +11,18 @@ fn global_config_in(extension: &str, global: u64) -> String {
         "toml" => config_text(Some(global), &[]),
         "yaml" | "yml" => {
             format!(
-                "schema_version: 1\nmd:\n  lints:\n    max_size_bytes:\n      value: {global}\n"
+                "schema_version: 2\nmd:\n  lints:\n    max_size_bytes:\n      value: {global}\n"
             )
         }
         "json" => format!(
-            "{{\"schema_version\": 1, \"md\": {{\"lints\": {{\"max_size_bytes\": {{\"value\": {global}}}}}}}}}"
+            "{{\"schema_version\": 2, \"md\": {{\"lints\": {{\"max_size_bytes\": {{\"value\": {global}}}}}}}}}"
         ),
         other => panic!("no config language for .{other}"),
     }
 }
 
 /// One config that uses every part of the schema, written in each language.
-const FULL_TOML: &str = r#"schema_version = 1
+const FULL_TOML: &str = r#"schema_version = 2
 
 [md]
 globs = ["*.md"]
@@ -45,7 +45,7 @@ lints.max_size_bytes = { value = 20, message = "Trim {path} to {max_size_bytes} 
 "#;
 
 const FULL_YAML: &str = r#"# the same config as FULL_TOML
-schema_version: 1
+schema_version: 2
 md:
   globs: ["*.md"]
   lints:
@@ -68,7 +68,7 @@ md:
 "#;
 
 const FULL_JSON: &str = r#"{
-  "schema_version": 1,
+  "schema_version": 2,
   "md": {
     "globs": ["*.md"],
     "lints": {
@@ -207,7 +207,7 @@ fn config_path_reads_the_language_its_extension_names() {
 #[test]
 fn a_config_path_in_an_unknown_language_is_an_error() {
     let repo = Repo::new();
-    repo.write("deslag.ini", "schema_version = 1\n");
+    repo.write("deslag.ini", "schema_version = 2\n");
     repo.write("AGENTS.md", "# A\n");
 
     let output = repo.run(&["check", "--config-path", "deslag.ini"]);
@@ -225,32 +225,32 @@ fn yaml_and_json_are_held_to_the_schema() {
     let cases = [
         (
             "deslag.yaml",
-            "schema_version: 1\nmd:\n  lints:\n    max_size_lines:\n      value: 5\n",
+            "schema_version: 2\nmd:\n  lints:\n    max_size_lines:\n      value: 5\n",
             "max_size_lines",
         ),
         (
             "deslag.yaml",
-            "schema_version: 1\nmd:\n  lints:\n    max_size_bytes:\n      value: lots\n",
+            "schema_version: 2\nmd:\n  lints:\n    max_size_bytes:\n      value: lots\n",
             "cannot parse",
         ),
         ("deslag.yaml", "schema_version: 0\n", "cannot parse"),
         ("deslag.yaml", "md: [unclosed\n", "cannot parse"),
         (
             "deslag.json",
-            "{\"schema_version\": 1, \"md\": {\"lints\": {\"max_size_lines\": {}}}}",
+            "{\"schema_version\": 2, \"md\": {\"lints\": {\"max_size_lines\": {}}}}",
             "max_size_lines",
         ),
         (
             "deslag.json",
-            "{\"schema_version\": 1, \"md\": {\"lints\": {\"max_size_bytes\": {\"value\": -1}}}}",
+            "{\"schema_version\": 2, \"md\": {\"lints\": {\"max_size_bytes\": {\"value\": -1}}}}",
             "cannot parse",
         ),
-        ("deslag.json", "{\"schema_version\": 1,", "cannot parse"),
+        ("deslag.json", "{\"schema_version\": 2,", "cannot parse"),
         ("deslag.json", "{\"md\": {}}", "schema_version"),
         (
             "deslag.json",
-            "{\"schema_version\": 2}",
-            "declares schema_version 2",
+            "{\"schema_version\": 3}",
+            "declares schema_version 3",
         ),
     ];
     for (path, text, expected) in cases {
@@ -275,17 +275,17 @@ fn a_parse_error_is_reported_once() {
     for (path, text, marker) in [
         (
             "deslag.toml",
-            "schema_version = 1\n[md]\nlintz = 1\n",
+            "schema_version = 2\n[md]\nlintz = 1\n",
             "TOML parse error at line 3, column 1",
         ),
         (
             "deslag.yaml",
-            "schema_version: 1\nmd:\n  lintz: 1\n",
+            "schema_version: 2\nmd:\n  lintz: 1\n",
             "error: line 3 column 3",
         ),
         (
             "deslag.json",
-            "{\"schema_version\": 1, \"md\": {\"lintz\": 1}}",
+            "{\"schema_version\": 2, \"md\": {\"lintz\": 1}}",
             "at line 1 column 36",
         ),
     ] {

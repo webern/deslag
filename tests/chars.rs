@@ -33,6 +33,15 @@ fn chars(banned: &[(char, Option<String>, Vec<usize>)]) -> Vec<char> {
     banned.iter().map(|(ch, ..)| *ch).collect()
 }
 
+/// Settings with every group on but `emoji`, which is what an empty table banned in schema 1.
+fn most() -> BannedChars {
+    settings(
+        "groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, \
+         checks = true, section = true, box_drawing = true, spaces = true, invisible = true, \
+         quotes = true }",
+    )
+}
+
 /// Settings parsed from a TOML table, as a config would write them.
 fn settings(toml: &str) -> BannedChars {
     let lints: Lints = toml::from_str(&format!("[banned_chars]\n{toml}")).expect("valid settings");
@@ -112,30 +121,17 @@ fn letters_of_other_languages_are_found_and_not_banned() {
 }
 
 #[test]
-fn an_empty_table_bans_the_groups_that_are_on_by_default() {
+fn an_empty_table_bans_nothing_and_a_group_bans_only_once_it_is_named() {
     let text = "a \u{2014} b \u{2192} c \u{201C}d\u{201D} \u{1F680}\n";
-    let banned = banned(text, &BannedChars::default());
-    assert_eq!(
-        chars(&banned),
-        vec!['\u{2014}', '\u{2192}', '\u{201C}', '\u{201D}']
-    );
-    for group in GROUPS {
-        let on = matches!(
-            group.name,
-            "dashes"
-                | "arrows"
-                | "ellipsis"
-                | "bullets"
-                | "math"
-                | "checks"
-                | "section"
-                | "box_drawing"
-                | "spaces"
-                | "invisible"
-                | "quotes"
-        );
-        assert_eq!(group.on_by_default, on, "{}", group.name);
-    }
+    assert_eq!(banned(text, &BannedChars::default()), Vec::new());
+    let dashes = BannedChars {
+        groups: CharGroups {
+            dashes: Some(true),
+            ..CharGroups::default()
+        },
+        ..BannedChars::default()
+    };
+    assert_eq!(chars(&banned(text, &dashes)), vec!['\u{2014}']);
 }
 
 #[test]
@@ -146,7 +142,7 @@ fn no_settings_check_nothing() {
 #[test]
 fn the_groups_switch_on_and_off() {
     let text = "a \u{2014} b \u{2192} c \u{201C}d\u{201D} \u{1F680}\n";
-    let settings = settings("groups = { dashes = false, quotes = true, emoji = true }");
+    let settings = settings("groups = { arrows = true, quotes = true, emoji = true }");
     assert_eq!(
         chars(&banned(text, &settings)),
         vec!['\u{2192}', '\u{201C}', '\u{201D}', '\u{1F680}']
@@ -156,11 +152,11 @@ fn the_groups_switch_on_and_off() {
 #[test]
 fn a_character_in_two_groups_takes_the_first_that_is_on() {
     let text = "done \u{2705}\n";
-    let both = settings("groups = { emoji = true }");
+    let both = settings("groups = { checks = true, emoji = true }");
     assert_eq!(banned(text, &both)[0].1.as_deref(), Some("yes"));
-    let emoji_only = settings("groups = { checks = false, emoji = true }");
+    let emoji_only = settings("groups = { emoji = true }");
     assert_eq!(banned(text, &emoji_only)[0].1.as_deref(), Some(""));
-    let neither = settings("groups = { checks = false }");
+    let neither = settings("groups = {}");
     assert_eq!(banned(text, &neither), vec![]);
 }
 
@@ -195,13 +191,12 @@ fn ban_adds_characters_and_changes_what_to_write() {
 #[test]
 fn every_occurrence_counts_and_has_its_place() {
     let text = "a \u{2014}\u{2014} b\nc\nd \u{2014}\n\u{2192} \u{2014}\n";
-    let over =
-        check(&Document::markdown(text), Some(&BannedChars::default())).expect("banned characters");
+    let over = check(&Document::markdown(text), Some(&most())).expect("banned characters");
     assert_eq!(over.count(), 5);
     let second = &over.banned[0].locations[1];
     assert_eq!((second.start, second.end, second.column), (5, 8, 4));
     assert_eq!(
-        banned(text, &BannedChars::default()),
+        banned(text, &most()),
         vec![
             ('\u{2014}', Some("-".to_string()), vec![1, 1, 3, 4]),
             ('\u{2192}', Some("->".to_string()), vec![4]),
@@ -319,7 +314,7 @@ d \u{2B01} e \u{279C}
 f \u{2192} g \u{21D0}
 ";
     assert_eq!(
-        banned(text, &BannedChars::default()),
+        banned(text, &most()),
         vec![
             ('\u{21A9}', None, vec![1]),
             ('\u{21E7}', None, vec![1]),

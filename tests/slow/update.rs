@@ -46,7 +46,7 @@ fn read(repo: &Repo, extension: &str) -> String {
     std::fs::read_to_string(repo.root().join(format!("deslag.{extension}"))).expect("a config")
 }
 
-const SIGNPOSTS: &str = "# Why this is here.\nschema_version = 1 # the format\n\n\
+const SIGNPOSTS: &str = "# Why this is here.\nschema_version = 2 # the format\n\n\
     # The section.\n[md]\nglobs = [\"*.md\"]\n\n\
     [md.lints.banned_phrases.groups]\n# The groups.\nsignposts = false # off\ninsistence = true\n\n\
     [[md.overrides]]\nglobs = [\"a.md\"]\nlints.banned_phrases.groups.signposts = true\n";
@@ -70,7 +70,7 @@ fn it_deletes_the_removed_key_and_sets_the_stamp_and_a_second_run_says_current()
     assert_eq!(
         read(&repo, "toml"),
         format!(
-            "# Why this is here.\nschema_version = 1 # the format\ndeslag_version = \"{CURRENT}\"\n\n\
+            "# Why this is here.\nschema_version = 2 # the format\ndeslag_version = \"{CURRENT}\"\n\n\
              # The section.\n[md]\nglobs = [\"*.md\"]\n\n\
              [md.lints.banned_phrases.groups]\n# The groups.\ninsistence = true\n\n\
              [[md.overrides]]\nglobs = [\"a.md\"]\nlints.banned_phrases.groups = {{}}\n"
@@ -110,7 +110,7 @@ fn dry_run_lists_the_edits_a_real_run_makes_and_writes_nothing() {
 
 #[test]
 fn a_stamp_behind_a_release_with_news_is_left_unless_told_to_move() {
-    let text = format!("schema_version = 1\ndeslag_version = \"{BEFORE_ALL}\" # pinned\n");
+    let text = format!("schema_version = 2\ndeslag_version = \"{BEFORE_ALL}\" # pinned\n");
     let signposts = format!("{text}[md.lints.banned_phrases.groups]\nsignposts = true\n");
     let repo = repo_with("toml", &signposts);
 
@@ -150,7 +150,7 @@ fn a_stamp_behind_a_release_with_news_is_left_unless_told_to_move() {
         assert_eq!(
             read(&repo, "toml"),
             format!(
-                "schema_version = 1\ndeslag_version = \"{CURRENT}\" # pinned\n[md.lints.banned_phrases.groups]\n"
+                "schema_version = 2\ndeslag_version = \"{CURRENT}\" # pinned\n[md.lints.banned_phrases.groups]\n"
             )
         );
     } else {
@@ -166,7 +166,7 @@ fn a_stamp_behind_a_release_with_news_is_left_unless_told_to_move() {
 fn a_bare_update_with_nothing_else_to_do_still_says_to_read_what_is_new() {
     let repo = repo_with(
         "toml",
-        &format!("schema_version = 1\ndeslag_version = \"{BEFORE_ALL}\"\n"),
+        &format!("schema_version = 2\ndeslag_version = \"{BEFORE_ALL}\"\n"),
     );
     let output = repo.run(&["update"]);
     assert_eq!(code(&output), 0);
@@ -187,7 +187,7 @@ fn a_bare_update_with_nothing_else_to_do_still_says_to_read_what_is_new() {
 
 #[test]
 fn a_to_that_is_not_the_running_release_exits_2_and_writes_nothing() {
-    let repo = repo_with("toml", "schema_version = 1\n");
+    let repo = repo_with("toml", "schema_version = 2\n");
     let running = semver::Version::parse(CURRENT).expect("the crate version");
     let newer = format!("{}.0.0", running.major + 1);
     // No release is older than 0.0.0, so a deslag at it has none to refuse.
@@ -199,13 +199,13 @@ fn a_to_that_is_not_the_running_release_exits_2_and_writes_nothing() {
         let output = repo.run(&["update", "--to", to]);
         assert_eq!(code(&output), 2, "{to}: {}", raw_stderr(&output));
         assert_eq!(stdout(&output), "");
-        assert_eq!(read(&repo, "toml"), "schema_version = 1\n", "{to}");
+        assert_eq!(read(&repo, "toml"), "schema_version = 2\n", "{to}");
     }
 }
 
 #[test]
 fn a_stamp_newer_than_the_running_deslag_exits_2_and_writes_nothing() {
-    let text = "schema_version = 1\ndeslag_version = \"99.0.0\"\n[md.lints.banned_phrases.groups]\nsignposts = true\n";
+    let text = "schema_version = 2\ndeslag_version = \"99.0.0\"\n[md.lints.banned_phrases.groups]\nsignposts = true\n";
     let repo = repo_with("toml", text);
     let output = repo.run(&["update"]);
     assert_eq!(code(&output), 2);
@@ -222,11 +222,11 @@ fn a_config_that_will_not_load_exits_2_and_writes_nothing() {
     for (name, text) in [
         (
             "an unknown key",
-            "schema_version = 1\n[md.lints.density]\nnope = 1\n",
+            "schema_version = 2\n[md.lints.density]\nnope = 1\n",
         ),
         (
             "both set",
-            "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = true\nsignposts = false\n",
+            "schema_version = 2\n[md.lints.banned_phrases.groups]\nsignposts = true\nsignposts = false\n",
         ),
         ("no schema_version", "[md]\n"),
     ] {
@@ -245,23 +245,23 @@ fn the_stamp_is_set_in_each_language_and_the_file_is_otherwise_the_same() {
     let cases = [
         (
             "toml",
-            "# c\nschema_version = 1 # s\n[md]\nglobs = [\"*.md\"]\n",
+            "# c\nschema_version = 2 # s\n[md]\nglobs = [\"*.md\"]\n",
             format!(
-                "# c\nschema_version = 1 # s\ndeslag_version = \"{CURRENT}\"\n[md]\nglobs = [\"*.md\"]\n"
+                "# c\nschema_version = 2 # s\ndeslag_version = \"{CURRENT}\"\n[md]\nglobs = [\"*.md\"]\n"
             ),
         ),
         (
             "yaml",
-            "# c\nschema_version: 1 # s\nmd:\n  globs: [\"*.md\"]\n",
+            "# c\nschema_version: 2 # s\nmd:\n  globs: [\"*.md\"]\n",
             format!(
-                "# c\nschema_version: 1 # s\ndeslag_version: \"{CURRENT}\"\nmd:\n  globs: [\"*.md\"]\n"
+                "# c\nschema_version: 2 # s\ndeslag_version: \"{CURRENT}\"\nmd:\n  globs: [\"*.md\"]\n"
             ),
         ),
         (
             "json",
-            "{\n  \"schema_version\": 1,\n  \"md\": {\"globs\": [\"*.md\"]}\n}\n",
+            "{\n  \"schema_version\": 2,\n  \"md\": {\"globs\": [\"*.md\"]}\n}\n",
             format!(
-                "{{\n  \"schema_version\": 1,\n  \"deslag_version\": \"{CURRENT}\",\n  \"md\": {{\"globs\": [\"*.md\"]}}\n}}\n"
+                "{{\n  \"schema_version\": 2,\n  \"deslag_version\": \"{CURRENT}\",\n  \"md\": {{\"globs\": [\"*.md\"]}}\n}}\n"
             ),
         ),
     ];
@@ -305,19 +305,19 @@ fn lines_changed(old: &str, new: &str) -> (Vec<String>, Vec<String>) {
 /// A YAML config with comments that sets the removed key in the section and in an override, and
 /// the same config after the delete. The lines that go are the keys' own, a comment on the same
 /// line included.
-const YAML_SIGNPOSTS: &str = "# Why this is here.\nschema_version: 1 # the format\nmd:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      # The groups.\n      groups:\n        insistence: true # on\n        # signposts are fine here\n        signposts: false # off\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups: # only this\n            signposts: true # yes\n";
+const YAML_SIGNPOSTS: &str = "# Why this is here.\nschema_version: 2 # the format\nmd:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      # The groups.\n      groups:\n        insistence: true # on\n        # signposts are fine here\n        signposts: false # off\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups: # only this\n            signposts: true # yes\n";
 
 fn yaml_after_the_delete(stamp: &str) -> String {
     format!(
-        "# Why this is here.\nschema_version: 1 # the format\n{stamp}md:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      # The groups.\n      groups:\n        insistence: true # on\n        # signposts are fine here\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups: {{}} # only this\n"
+        "# Why this is here.\nschema_version: 2 # the format\n{stamp}md:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      # The groups.\n      groups:\n        insistence: true # on\n        # signposts are fine here\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases:\n          groups: {{}} # only this\n"
     )
 }
 
-const JSON_SIGNPOSTS: &str = "{\n  \"schema_version\": 1,\n  \"md\": {\n    \"globs\": [\"*.md\"],\n    \"lints\": {\"banned_phrases\": {\"groups\": {\n      \"insistence\": true,\n      \"signposts\": false\n    }}},\n    \"overrides\": [{\"globs\": [\"a.md\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}]\n  }\n}\n";
+const JSON_SIGNPOSTS: &str = "{\n  \"schema_version\": 2,\n  \"md\": {\n    \"globs\": [\"*.md\"],\n    \"lints\": {\"banned_phrases\": {\"groups\": {\n      \"insistence\": true,\n      \"signposts\": false\n    }}},\n    \"overrides\": [{\"globs\": [\"a.md\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}]\n  }\n}\n";
 
 fn json_after_the_delete(stamp: &str) -> String {
     format!(
-        "{{\n  \"schema_version\": 1,\n{stamp}  \"md\": {{\n    \"globs\": [\"*.md\"],\n    \"lints\": {{\"banned_phrases\": {{\"groups\": {{\n      \"insistence\": true\n    }}}}}},\n    \"overrides\": [{{\"globs\": [\"a.md\"], \"lints\": {{\"banned_phrases\": {{\"groups\": {{}}}}}}}}]\n  }}\n}}\n"
+        "{{\n  \"schema_version\": 2,\n{stamp}  \"md\": {{\n    \"globs\": [\"*.md\"],\n    \"lints\": {{\"banned_phrases\": {{\"groups\": {{\n      \"insistence\": true\n    }}}}}},\n    \"overrides\": [{{\"globs\": [\"a.md\"], \"lints\": {{\"banned_phrases\": {{\"groups\": {{}}}}}}}}]\n  }}\n}}\n"
     )
 }
 
@@ -405,20 +405,20 @@ fn the_settings_a_yaml_or_json_config_gets_are_the_same_after_the_delete() {
 const WITH_RUST: [(&str, &str); 3] = [
     (
         "toml",
-        "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = true # off\ninsistence = true\n\n\
+        "schema_version = 2\n[md.lints.banned_phrases.groups]\nsignposts = true # off\ninsistence = true\n\n\
          [rust]\nglobs = [\"src/*.rs\"]\n# Rust comments are prose.\n\
          [rust.lints.banned_phrases.groups]\ninsistence = false # on\n\n\
          [[rust.overrides]]\nglobs = [\"src/lib.rs\"]\nlints.density.max_item_chars = 200\n",
     ),
     (
         "yaml",
-        "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true # off\n        insistence: true\n\
+        "schema_version: 2\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true # off\n        insistence: true\n\
          rust:\n  globs: [\"src/*.rs\"]\n  # Rust comments are prose.\n  lints:\n    banned_phrases:\n      groups:\n        insistence: false # on\n  overrides:\n\
          \x20   - globs: [\"src/lib.rs\"]\n      lints:\n        density: {max_item_chars: 200}\n",
     ),
     (
         "json",
-        "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": true\n  }}}},\n\
+        "{\n  \"schema_version\": 2,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": true\n  }}}},\n\
          \x20 \"rust\": {\n    \"globs\": [\"src/*.rs\"],\n    \"lints\": {\"banned_phrases\": {\"groups\": {\"insistence\": false}}},\n\
          \x20   \"overrides\": [{\"globs\": [\"src/lib.rs\"], \"lints\": {\"density\": {\"max_item_chars\": 200}}}]\n  }\n}\n",
     ),
@@ -466,15 +466,15 @@ fn the_removed_key_in_a_rust_section_is_refused_by_the_loader_and_nothing_is_wri
     for (extension, text) in [
         (
             "toml",
-            "schema_version = 1\n[rust.lints.banned_phrases.groups]\nsignposts = true\n",
+            "schema_version = 2\n[rust.lints.banned_phrases.groups]\nsignposts = true\n",
         ),
         (
             "yaml",
-            "schema_version: 1\nrust:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n",
+            "schema_version: 2\nrust:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n",
         ),
         (
             "json",
-            "{\"schema_version\": 1, \"rust\": {\"overrides\": [{\"globs\": [\"a.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}]}}\n",
+            "{\"schema_version\": 2, \"rust\": {\"overrides\": [{\"globs\": [\"a.rs\"], \"lints\": {\"banned_phrases\": {\"groups\": {\"signposts\": true}}}}]}}\n",
         ),
     ] {
         let repo = repo_with(extension, text);
@@ -514,11 +514,11 @@ fn dry_run_lists_the_yaml_and_json_edits_a_real_run_makes_and_writes_nothing() {
 #[test]
 fn what_cannot_be_cut_from_a_yaml_or_json_config_is_refused_whole_with_the_edits_spelled_out() {
     let yaml = |lines: &str| {
-        format!("schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n{lines}")
+        format!("schema_version: 2\nmd:\n  lints:\n    banned_phrases:\n      groups:\n{lines}")
     };
     let array =
-        "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":[true,false]}}}}";
-    let alias = "schema_version: 1\nmd:\n  lints:\n    banned_phrases: &p\n      groups:\n        signposts: true\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases: *p\n";
+        "{\"schema_version\":2,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":[true,false]}}}}";
+    let alias = "schema_version: 2\nmd:\n  lints:\n    banned_phrases: &p\n      groups:\n        signposts: true\n  overrides:\n    - globs: [\"a.md\"]\n      lints:\n        banned_phrases: *p\n";
     let merge = yaml("        <<: {signposts: true}\n");
     let anchored = yaml("        &s signposts: true\n");
     let explicit = yaml("        ? signposts\n        : true\n");
@@ -592,7 +592,7 @@ fn what_cannot_be_cut_from_a_yaml_or_json_config_is_refused_whole_with_the_edits
 #[test]
 fn the_rerun_command_keeps_the_flags_that_chose_the_file_and_the_version() {
     let repo = Repo::new();
-    repo.write("conf/mine.yaml", "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        &s signposts: true\n");
+    repo.write("conf/mine.yaml", "schema_version: 2\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        &s signposts: true\n");
     let output = repo.run(&["update", "--config-path", "conf/mine.yaml", "--to", CURRENT]);
     assert_eq!(code(&output), 2);
     assert!(
@@ -607,28 +607,28 @@ fn the_rerun_command_keeps_the_flags_that_chose_the_file_and_the_version() {
 #[test]
 fn a_config_path_is_the_file_that_is_edited() {
     let repo = Repo::new();
-    repo.write("deslag.toml", "schema_version = 1\n");
+    repo.write("deslag.toml", "schema_version = 2\n");
     repo.write(
         "other.toml",
-        "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = true\n",
+        "schema_version = 2\n[md.lints.banned_phrases.groups]\nsignposts = true\n",
     );
     let output = repo.run(&["update", "--config-path", "other.toml", "--to", CURRENT]);
     assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     assert_eq!(
         std::fs::read_to_string(repo.root().join("other.toml")).expect("a file"),
         format!(
-            "schema_version = 1\ndeslag_version = \"{CURRENT}\"\n[md.lints.banned_phrases.groups]\n"
+            "schema_version = 2\ndeslag_version = \"{CURRENT}\"\n[md.lints.banned_phrases.groups]\n"
         )
     );
     assert_eq!(
         std::fs::read_to_string(repo.root().join("deslag.toml")).expect("a file"),
-        "schema_version = 1\n"
+        "schema_version = 2\n"
     );
 }
 
 #[test]
 fn a_toml_with_mixed_line_endings_is_refused_by_name_and_not_touched() {
-    let text = "schema_version = 1\r\n[md.lints.banned_phrases.groups]\nsignposts = true\r\n";
+    let text = "schema_version = 2\r\n[md.lints.banned_phrases.groups]\nsignposts = true\r\n";
     let repo = repo_with("toml", text);
     let output = repo.run(&["update"]);
     assert_eq!(code(&output), 2);
@@ -643,7 +643,7 @@ fn a_toml_with_mixed_line_endings_is_refused_by_name_and_not_touched() {
 
 #[test]
 fn a_toml_the_editor_would_not_write_back_alike_is_refused_with_its_edits_and_not_touched() {
-    let text = "schema_version = 1\n[md . lints . banned_phrases . groups]\nsignposts = true\n\
+    let text = "schema_version = 2\n[md . lints . banned_phrases . groups]\nsignposts = true\n\
                 insistence = false\n[md.lints.density]\nmax_item_chars = 5\n";
     let repo = repo_with("toml", text);
     for args in [
@@ -669,12 +669,12 @@ fn a_file_with_nothing_to_edit_is_current_or_held_whatever_its_layout() {
     // edit, and the editor's trouble with how they are written does not matter when it stays.
     let mixed = |stamp: &str| {
         format!(
-            "schema_version = 1\r\ndeslag_version = \"{stamp}\"\r\n[md.lints.density]\nmax_item_chars = 5\r\n"
+            "schema_version = 2\r\ndeslag_version = \"{stamp}\"\r\n[md.lints.density]\nmax_item_chars = 5\r\n"
         )
     };
     let spaced = |stamp: &str| {
         format!(
-            "schema_version = 1\ndeslag_version = \"{stamp}\"\n[md . lints . banned_phrases . groups]\n\
+            "schema_version = 2\ndeslag_version = \"{stamp}\"\n[md . lints . banned_phrases . groups]\n\
              insistence = false\n[md.lints.density]\nmax_item_chars = 5\n"
         )
     };
@@ -697,14 +697,14 @@ fn a_file_with_nothing_to_edit_is_current_or_held_whatever_its_layout() {
 
 #[test]
 fn crlf_and_a_byte_order_mark_come_back_as_they_were() {
-    let text = "\u{feff}# c\r\nschema_version = 1\r\n[md.lints.banned_phrases.groups]\r\n# groups\r\nsignposts = true\r\ninsistence = true\r\n";
+    let text = "\u{feff}# c\r\nschema_version = 2\r\n[md.lints.banned_phrases.groups]\r\n# groups\r\nsignposts = true\r\ninsistence = true\r\n";
     let repo = repo_with("toml", text);
     let output = repo.run(&["update", "--to", CURRENT]);
     assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     assert_eq!(
         read(&repo, "toml"),
         format!(
-            "\u{feff}# c\r\nschema_version = 1\r\ndeslag_version = \"{CURRENT}\"\r\n[md.lints.banned_phrases.groups]\r\n# groups\r\ninsistence = true\r\n"
+            "\u{feff}# c\r\nschema_version = 2\r\ndeslag_version = \"{CURRENT}\"\r\n[md.lints.banned_phrases.groups]\r\n# groups\r\ninsistence = true\r\n"
         )
     );
 }
@@ -782,7 +782,7 @@ fn the_messages_name_the_file_as_it_really_is() {
     let repo = Repo::new();
     repo.write(
         "ci/lints.toml",
-        "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = true\n",
+        "schema_version = 2\n[md.lints.banned_phrases.groups]\nsignposts = true\n",
     );
     let output = repo.run(&[
         "update",
@@ -994,7 +994,7 @@ fn phrase_repo() -> Repo {
     repo.write(
         "deslag.toml",
         &format!(
-            "schema_version = 1\ndeslag_version = \"{BEFORE_ALL}\"\n\
+            "schema_version = 2\ndeslag_version = \"{BEFORE_ALL}\"\n\
              [md.lints.banned_phrases]\nban = {{ \"zebra crossing\" = \"say the road\" }}\n\
              [[md.overrides]]\nglobs = [\"docs/*.md\"]\nlints.banned_phrases.groups = {{}}\n\
              {sections}"

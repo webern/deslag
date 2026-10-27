@@ -396,7 +396,7 @@ mod tests {
     }
 
     fn load_toml(text: &str) -> Config {
-        load("deslag.toml", &format!("schema_version = 1\n{text}"))
+        load("deslag.toml", &format!("schema_version = 2\n{text}"))
             .unwrap_or_else(|error| panic!("{text}: {error}"))
     }
 
@@ -556,13 +556,13 @@ mod tests {
     /// The three languages write the same exclude.
     #[test]
     fn toml_yaml_and_json_load_the_same_exclude() {
-        let toml = "schema_version = 1\n[rust]\nglobs = [\"/src/**/*.rs\"]\n\
+        let toml = "schema_version = 2\n[rust]\nglobs = [\"/src/**/*.rs\"]\n\
                     exclude = [\"/src/proto/**\"]\n\
                     [[rust.overrides]]\nglobs = [\"/src/**/*.rs\"]\nexclude = [\"/src/gen/**\"]\n";
-        let yaml = "schema_version: 1\nrust:\n  globs: [\"/src/**/*.rs\"]\n  \
+        let yaml = "schema_version: 2\nrust:\n  globs: [\"/src/**/*.rs\"]\n  \
                     exclude: [\"/src/proto/**\"]\n  overrides:\n    - globs: [\"/src/**/*.rs\"]\n      \
                     exclude: [\"/src/gen/**\"]\n";
-        let json = r#"{"schema_version": 1, "rust": {"globs": ["/src/**/*.rs"],
+        let json = r#"{"schema_version": 2, "rust": {"globs": ["/src/**/*.rs"],
             "exclude": ["/src/proto/**"],
             "overrides": [{"globs": ["/src/**/*.rs"], "exclude": ["/src/gen/**"]}]}}"#;
         let from_toml = load("deslag.toml", toml).expect("toml");
@@ -584,7 +584,7 @@ mod tests {
         // `[md]`: globs, lints, overrides, fences, exclude.
         let md = load(
             "deslag.json",
-            r#"[1, [["*.md"], {}, [], {}, ["/docs/adr/**"]]]"#,
+            r#"[2, [["*.md"], {}, [], {}, ["/docs/adr/**"]]]"#,
         )
         .expect("a config");
         assert!(md.md().selects("a.md"));
@@ -592,14 +592,14 @@ mod tests {
         // Before `fences` the place is the fences table, and a list of patterns is not one.
         let before = refused(
             "deslag.json",
-            r#"[1, [["*.md"], {}, [], ["/docs/adr/**"]]]"#,
+            r#"[2, [["*.md"], {}, [], ["/docs/adr/**"]]]"#,
         );
         assert!(before.contains("invalid type"), "{before}");
 
         // `[rust]`: globs, surfaces, lints, overrides, exclude.
         let rust = load(
             "deslag.json",
-            r#"[1, {}, null, [["/src/**/*.rs"], null, {}, [], ["/src/proto/**"]]]"#,
+            r#"[2, {}, null, [["/src/**/*.rs"], null, {}, [], ["/src/proto/**"]]]"#,
         )
         .expect("a config");
         let rust = &rust.sections()[1];
@@ -609,7 +609,7 @@ mod tests {
         // An override: globs, lints, exclude.
         let over = load(
             "deslag.json",
-            r#"[1, [null, {}, [[["/docs/**/*.md"], {}, ["/docs/adr/**"]]]]]"#,
+            r#"[2, [null, {}, [[["/docs/**/*.md"], {}, ["/docs/adr/**"]]]]]"#,
         )
         .expect("a config");
         assert_eq!(over.md().overrides_excluding("docs/adr/a.md").len(), 1);
@@ -624,7 +624,7 @@ mod tests {
             "[[md.overrides]]\nglobs = [\"a.md\"]\nexclude = [\"docs/[\"]\n",
             "[rust]\nexclude = [\"{a\"]\n",
         ] {
-            let error = load("deslag.toml", &format!("schema_version = 1\n{text}"))
+            let error = load("deslag.toml", &format!("schema_version = 2\n{text}"))
                 .expect_err("a bad pattern");
             assert!(matches!(error, Error::Glob { .. }), "{text}: {error}");
             assert!(
@@ -642,12 +642,12 @@ mod tests {
             "[rust]\nexcludes = [\"a/**\"]\n",
             "[[md.overrides]]\nglobs = [\"a.md\"]\nexcludes = [\"b.md\"]\n",
         ] {
-            let said = refused("deslag.toml", &format!("schema_version = 1\n{text}"));
+            let said = refused("deslag.toml", &format!("schema_version = 2\n{text}"));
             assert!(said.contains("unknown field `excludes`"), "{text}: {said}");
         }
         let said = refused(
             "deslag.toml",
-            "schema_version = 1\n[[md.overrides]]\nexclude = [\"b.md\"]\n",
+            "schema_version = 2\n[[md.overrides]]\nexclude = [\"b.md\"]\n",
         );
         assert!(said.contains("missing field `globs`"), "{said}");
     }

@@ -88,7 +88,6 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
             text: redirect.message(),
             already_set: None,
             new: Some(redirect.new),
-            group: None,
         });
     }
     for (lint, since) in news.lints() {
@@ -101,7 +100,6 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
                 .is_some_and(|reading| reading.set.contains(lint))
                 .then_some(true),
             new: None,
-            group: None,
         });
     }
     for setting in grouped(news.settings()).into_iter().flatten() {
@@ -112,7 +110,6 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
             text: setting.description.to_string(),
             already_set: None,
             new: None,
-            group: None,
         });
     }
     for phrase in news.phrases() {
@@ -123,7 +120,6 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
             text: format!("{}\n\n{}", phrase.advice, keep_off(phrase)),
             already_set: None,
             new: None,
-            group: Some(phrase.group.group().name),
         });
     }
     items
@@ -290,20 +286,11 @@ struct Item<'a> {
     /// redirect.
     #[serde(skip_serializing_if = "Option::is_none")]
     new: Option<Option<&'a str>>,
-    /// The group of the phrase; given only for a phrase.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    group: Option<&'a str>,
 }
 
-/// Where `phrase` reports, and what to do to keep it.
-fn keep_off(phrase: &Phrase) -> String {
-    let group = phrase.group.group().name;
-    format!(
-        "Every file whose `banned_phrases` table has the group `{group}` on fails on it now, \
-         whatever `deslag_version` says. To keep it, add `\"{}\"` to `allow` in the table, or \
-         switch the group off with `groups.{group} = false`.",
-        phrase.phrase
-    )
+/// Where `phrase` reports.
+fn keep_off(_phrase: &Phrase) -> String {
+    "A file fails on it only where a `ban` lists it.".to_string()
 }
 
 /// The text of the section of `src/instructions/update.md` headed `name`, placeholders and all.
@@ -400,7 +387,6 @@ measured_on = "x"
 
 [[entry]]
 phrase = "load-bearing"
-group = "metaphors"
 advice = "say what it does"
 since = "0.2.0"
 llm_files = 1
@@ -408,7 +394,6 @@ llm_repos = 1
 
 [[entry]]
 phrase = "never silently"
-group = "insistence"
 advice = "say what it does instead"
 since = "0.3.0"
 llm_files = 1
@@ -761,7 +746,7 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         let (from, to) = (version("0.0.0"), version("0.3.0"));
         let news = News::between(&paths, &[], &catalogue, &from, &to);
         let config = Loaded::parse(
-            &format!("schema_version = 1\ndeslag_version = \"0.0.0\"\n{tables}"),
+            &format!("schema_version = 2\ndeslag_version = \"0.0.0\"\n{tables}"),
             "deslag.toml".into(),
             ConfigSource::Explicit,
         )

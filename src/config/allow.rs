@@ -329,7 +329,7 @@ mod tests {
 
     fn load(text: &str) -> Result<Config, crate::Error> {
         Config::parse(
-            &format!("schema_version = 1\n{text}"),
+            &format!("schema_version = 2\n{text}"),
             PathBuf::from("deslag.toml"),
             ConfigSource::Explicit,
         )
@@ -682,7 +682,7 @@ mod tests {
     #[test]
     fn an_entry_written_as_a_json_array_is_read_by_position() {
         let config = Config::parse(
-            r#"[1, [null, {"banned_chars": {}}, [], [], [], [["a.md", "banned_chars", "A.", "R."]]]]"#,
+            r#"[2, [null, {"banned_chars": {}}, [], [], [], [["a.md", "banned_chars", "A.", "R."]]]]"#,
             PathBuf::from("deslag.json"),
             ConfigSource::Explicit,
         )

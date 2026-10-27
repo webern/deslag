@@ -139,7 +139,7 @@ mod tests {
 
     fn load(text: &str) -> Result<Config, crate::Error> {
         Config::parse(
-            &format!("schema_version = 1\n{text}"),
+            &format!("schema_version = 2\n{text}"),
             PathBuf::from("deslag.toml"),
             ConfigSource::Explicit,
         )
@@ -201,7 +201,7 @@ mod tests {
     #[test]
     fn a_section_written_as_a_json_array_keeps_lints_where_an_older_config_had_them() {
         let config = Config::parse(
-            r#"[1, [null, {"banned_chars": {}}]]"#,
+            r#"[2, [null, {"banned_chars": {}}]]"#,
             PathBuf::from("deslag.json"),
             ConfigSource::Explicit,
         )

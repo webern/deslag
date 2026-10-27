@@ -1,8 +1,8 @@
 //! `banned_chars`: a file must not hold characters, such as the em dash, that have something plain
 //! to write instead.
 //!
-//! The characters come in [`GROUPS`], each on by default but `emoji`, and switched by the config,
-//! which may also allow a character or ban one more: `allow` beats `ban`, and `ban` the groups.
+//! The characters come in [`GROUPS`], each off until the config switches it on, and the config
+//! may also allow a character or ban one more: `allow` beats `ban`, and `ban` the groups.
 //! Only text outside code is checked: code blocks and code spans are skipped, but for the comments
 //! of a code block in a language that `[md]` reads (`fences`), so a diagram in a fenced block may
 //! use box-drawing characters and arrows outside its comments. Frontmatter, headings, tables and
@@ -11,7 +11,7 @@
 //!
 //! [`scan`] needs only the document: it finds every character outside code that is not ASCII,
 //! but a byte order mark that opens the file. [`check`] picks out the ones the settings ban. On the
-//! corpus, the default groups must flag four times as many `llm/` fixtures as `human/` ones.
+//! corpus, every group but `emoji` must flag four times as many `llm/` fixtures as `human/` ones.
 //!
 //! [`edits`] names a fix for a banned character only where its replacement is exact: named for
 //! that character alone, by `ban` or a rule of one character, and holding no letter or digit. The
@@ -53,8 +53,6 @@ impl Rule {
 pub struct Group {
     /// Its key in `lints.banned_chars.groups`.
     pub name: &'static str,
-    /// Whether it is on when the config does not say.
-    pub on_by_default: bool,
     /// Its switch in the config.
     pub switch: fn(&CharGroups) -> Option<bool>,
     /// Its characters. A character in more than one rule takes the first.
@@ -94,7 +92,6 @@ const fn choice(first: char, last: char, name: &'static str) -> Rule {
 pub const GROUPS: &[Group] = &[
     Group {
         name: "dashes",
-        on_by_default: true,
         switch: |groups| groups.dashes,
         rules: &[
             one('\u{2014}', "em dash", "-"),
@@ -110,7 +107,6 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "arrows",
-        on_by_default: true,
         switch: |groups| groups.arrows,
         rules: &[
             one('\u{2192}', "rightwards arrow", "->"),
@@ -142,7 +138,6 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "ellipsis",
-        on_by_default: true,
         switch: |groups| groups.ellipsis,
         rules: &[
             one('\u{2026}', "horizontal ellipsis", "..."),
@@ -151,7 +146,6 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "bullets",
-        on_by_default: true,
         switch: |groups| groups.bullets,
         rules: &[
             one('\u{2022}', "bullet", "-"),
@@ -165,7 +159,6 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "math",
-        on_by_default: true,
         switch: |groups| groups.math,
         rules: &[
             one('\u{00D7}', "multiplication sign", "x"),
@@ -180,7 +173,6 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "checks",
-        on_by_default: true,
         switch: |groups| groups.checks,
         rules: &[
             one('\u{2705}', "white heavy check mark", "yes"),
@@ -197,13 +189,11 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "section",
-        on_by_default: true,
         switch: |groups| groups.section,
         rules: &[one('\u{00A7}', "section sign", "section")],
     },
     Group {
         name: "box_drawing",
-        on_by_default: true,
         switch: |groups| groups.box_drawing,
         rules: &[
             one('\u{2502}', "box drawings light vertical", "|"),
@@ -218,7 +208,6 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "spaces",
-        on_by_default: true,
         switch: |groups| groups.spaces,
         rules: &[
             one('\u{00A0}', "no-break space", " "),
@@ -229,13 +218,11 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "invisible",
-        on_by_default: true,
         switch: |groups| groups.invisible,
         rules: INVISIBLE,
     },
     Group {
         name: "quotes",
-        on_by_default: true,
         switch: |groups| groups.quotes,
         rules: &[
             one('\u{2018}', "left single quotation mark", "'"),
@@ -250,7 +237,6 @@ pub const GROUPS: &[Group] = &[
     },
     Group {
         name: "emoji",
-        on_by_default: false,
         switch: |groups| groups.emoji,
         rules: &[
             one('\u{FE0F}', "variation selector-16", ""),
@@ -411,7 +397,7 @@ fn verdict(settings: &BannedChars, ch: char) -> Option<(Option<String>, bool)> {
     }
     GROUPS
         .iter()
-        .filter(|group| (group.switch)(&settings.groups).unwrap_or(group.on_by_default))
+        .filter(|group| (group.switch)(&settings.groups).unwrap_or(false))
         .find_map(|group| rule(group.rules, ch))
         .map(|rule| (rule.instead.map(str::to_string), rule.first != rule.last))
 }

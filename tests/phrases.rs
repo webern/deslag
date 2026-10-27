@@ -2,9 +2,9 @@
 //! and which settings are refused. The reports are pinned by the cases.
 
 use deslag::Document;
-use deslag::config::{BannedPhrases, Lints, Merge, PhraseGroups};
+use deslag::config::{BannedPhrases, Lints, Merge};
 use deslag::document::{Token, TokenKind};
-use deslag::lint::banned_phrases::{CATALOGUE, GROUPS, check, folded};
+use deslag::lint::banned_phrases::{CATALOGUE, check, folded};
 
 /// Settings parsed from a TOML table, as a config would write them.
 fn settings(toml: &str) -> BannedPhrases {
@@ -23,12 +23,6 @@ fn banning(phrases: &[&str]) -> BannedPhrases {
                 .map(|phrase| (phrase.to_string(), phrase.to_string()))
                 .collect(),
         ),
-        groups: PhraseGroups {
-            insistence: Some(false),
-            metaphors: Some(false),
-            precision: Some(false),
-            ..PhraseGroups::default()
-        },
         ..BannedPhrases::default()
     }
 }
@@ -364,20 +358,6 @@ fn a_phrase_in_both_ban_and_allow_is_refused() {
                 .to_string()
         )
     );
-}
-
-#[test]
-fn every_group_has_phrases_and_every_phrase_a_group() {
-    for group in GROUPS {
-        assert!(
-            CATALOGUE
-                .entries
-                .iter()
-                .any(|entry| entry.group.group().name == group.name),
-            "{} has no phrases",
-            group.name
-        );
-    }
 }
 
 #[test]

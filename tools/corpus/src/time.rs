@@ -78,7 +78,7 @@ pub const BINARY_BYTES: u64 = 200_000_000;
 /// The config of the scratch repository that startup is timed in: two lints that read the
 /// sentences and their tags, so a run reads the file and tags it.
 const STARTUP_CONFIG: &str =
-    "schema_version = 1\n\n[md.lints.banned_phrases]\n\n[md.lints.verbs_no_nouns]\n";
+    "schema_version = 2\n\n[md.lints.banned_phrases]\n\n[md.lints.verbs_no_nouns]\n";
 
 /// The one file of the scratch repository: one sentence, which neither lint fails.
 const STARTUP_TEXT: &str = "The parser reads each file once and reports what it finds.\n";

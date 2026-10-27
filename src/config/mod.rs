@@ -6,7 +6,7 @@
 //! overrides for the files matching a pattern:
 //!
 //! ```toml
-//! schema_version = 1
+//! schema_version = 2
 //! deslag_version = "0.0.1"
 //!
 //! [md]
@@ -67,7 +67,7 @@ use crate::version::{BASELINE, Version, current_release, parse_release};
 pub use allow::Allow;
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, Lints, MaxEmphasis, MaxSizeBytes, Merge,
-    NotAtAll, PhraseGroups, RepoLayout, VerbsNoNouns,
+    NotAtAll, RepoLayout, VerbsNoNouns,
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{
@@ -94,29 +94,41 @@ fn reading_section(rel_path: &str) -> Option<(&'static str, &str)> {
 
 /// The config schema this build of deslag reads.
 ///
-/// A key being added does not change it, and neither does a rename, or a removal whose old value
-/// is simply ignored: those are a [`Redirect`], which reads the old key, warns, and keeps the
+/// Schema 2 makes the config name everything deslag fails on. Against schema 1:
+///
+/// | In schema 1                                          | In schema 2                               |
+/// | ---------------------------------------------------- | ----------------------------------------- |
+/// | `banned_phrases.groups.<g> = bool`, default true     | no `groups` key; unknown fields refused   |
+/// | an empty `banned_phrases` table bans the catalogue   | bans nothing; `ban` is the whole list     |
+/// | a `ban` value `""` means "delete it"                 | means no advice: the standard message     |
+/// | `banned_chars.groups.<g>`, default true but `emoji`  | the same keys, every default `false`      |
+/// | an empty `banned_chars` table bans 11 groups         | bans nothing                              |
+/// | `allow` turns one catalogue phrase off               | `allow` keeps its other two uses          |
+///
+/// A key being added does not change the schema, and neither does a rename, or a removal whose old
+/// value is simply ignored: those are a [`Redirect`], which reads the old key, warns, and keeps the
 /// version. A bump is for a change to what a config already written means, such as a default that
 /// flips or a table whose empty form means something new. A bump is made like this:
 ///
-/// - the reader of the old schema is frozen as a module, such as [`v1`], never edited again;
-/// - a step of the migration reads a config of the old schema through it, rewrites the text in the
+/// - the reader of the old schema is frozen as a module, such as `v1`, never edited again;
+/// - a step in [`migrate`] reads a config of the old schema through it, rewrites the text in the
 ///   words of the new schema, and keeps the result only if it means what the old text did;
 /// - `Config::parse` refuses a config of an older schema, saying to run `deslag update`, which
 ///   runs the steps;
-/// - each frozen config under `tests/configs/` of an older schema has its migrated text beside it.
+/// - each frozen config under `tests/configs/` of an older schema has its migrated text beside it,
+///   `config.migrated.toml`.
 ///
 /// A config written for a later schema than this is refused rather than half understood.
-pub const SCHEMA_VERSION: NonZeroU32 = NonZeroU32::MIN;
+pub const SCHEMA_VERSION: NonZeroU32 = NonZeroU32::new(2).expect("2 is not zero");
 
 /// The config file as it is written on disk.
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 #[schemars(title = "deslag config")]
 struct ConfigFile {
-    /// The schema the file is written against, which may not be later than the one this build
-    /// reads.
-    #[schemars(range(max = SCHEMA_VERSION.get()))]
+    /// The schema the file is written against, which is the one this build reads. `deslag update`
+    /// rewrites a config of an older schema; a later one is refused.
+    #[schemars(range(min = SCHEMA_VERSION.get(), max = SCHEMA_VERSION.get()))]
     #[schemars(extend("since" = "0.0.1"))]
     schema_version: NonZeroU32,
     /// The Markdown section.
@@ -300,6 +312,7 @@ impl Config {
             }
             _ => {}
         }
+        let old_schema = head.schema_version.filter(|found| *found < SCHEMA_VERSION);
         let stamp = head
             .deslag_version
             .map(|text| parse_stamp(&text, &path_string))
@@ -313,6 +326,14 @@ impl Config {
                 });
             }
             _ => {}
+        }
+        // An older schema means something else by text this one reads, so it is not read at all.
+        if let Some(found) = old_schema {
+            return Err(Error::OldSchema {
+                path: path_string,
+                found,
+                supported: SCHEMA_VERSION,
+            });
         }
 
         let file: ConfigFile = deserialize(text, format).map_err(parse_error)?;
@@ -517,16 +538,16 @@ mod tests {
     /// in one and not in the other, or in another order, moves the stamp.
     #[test]
     fn a_json_array_reads_the_stamp_where_head_and_the_file_agree_it_is() {
-        let config = load_json(r#"[1, {}, "0.0.1"]"#);
+        let config = load_json(r#"[2, {}, "0.0.1"]"#);
         assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
-        assert_eq!(load_json("[1, {}]").stamp(), None);
-        assert_eq!(load_json("[1]").sections().len(), 1);
+        assert_eq!(load_json("[2, {}]").stamp(), None);
+        assert_eq!(load_json("[2]").sections().len(), 1);
     }
 
     /// A section added after `deslag_version` keeps the positions of an array written before it.
     #[test]
     fn a_json_array_reads_the_rust_section_after_the_stamp() {
-        let config = load_json(r#"[1, {}, "0.0.1", {"lints": {"density": {}}}]"#);
+        let config = load_json(r#"[2, {}, "0.0.1", {"lints": {"density": {}}}]"#);
         assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
         let names: Vec<&str> = config.sections().iter().map(Section::name).collect();
         assert_eq!(names, ["md", "rust"]);
@@ -537,12 +558,12 @@ mod tests {
     /// keeps its positions.
     #[test]
     fn a_json_array_reads_the_cpp_section_after_the_rust_section() {
-        let config = load_json(r#"[1, {}, "0.0.1", null, {"lints": {"density": {}}}]"#);
+        let config = load_json(r#"[2, {}, "0.0.1", null, {"lints": {"density": {}}}]"#);
         assert_eq!(config.stamp(), Some(&semver::Version::new(0, 0, 1)));
         let names: Vec<&str> = config.sections().iter().map(Section::name).collect();
         assert_eq!(names, ["md", "cpp"]);
         assert!(config.sections()[1].lints_for("a.c").density.is_some());
-        let both = load_json(r#"[1, {}, "0.0.1", {}, {}]"#);
+        let both = load_json(r#"[2, {}, "0.0.1", {}, {}]"#);
         let names: Vec<&str> = both.sections().iter().map(Section::name).collect();
         assert_eq!(names, ["md", "rust", "cpp"]);
     }
@@ -550,7 +571,7 @@ mod tests {
     /// The TOML section follows the C and C++ one in an array.
     #[test]
     fn a_json_array_reads_the_toml_section_after_the_cpp_section() {
-        let config = load_json(r#"[1, {}, "0.0.1", null, null, {"lints": {"density": {}}}]"#);
+        let config = load_json(r#"[2, {}, "0.0.1", null, null, {"lints": {"density": {}}}]"#);
         let names: Vec<&str> = config.sections().iter().map(Section::name).collect();
         assert_eq!(names, ["md", "toml"]);
         assert!(config.sections()[1].lints_for("a.toml").density.is_some());
@@ -576,7 +597,7 @@ mod tests {
         };
         let config = Config {
             sections: vec![everything("md"), everything("rust"), everything("cpp")],
-            ..load_json("[1]")
+            ..load_json("[2]")
         };
         let said = config
             .sole_section_for("a.c")
@@ -590,7 +611,7 @@ mod tests {
 
     fn load_toml(text: &str) -> Config {
         Config::parse(
-            &format!("schema_version = 1\n{text}"),
+            &format!("schema_version = 2\n{text}"),
             PathBuf::from("deslag.toml"),
             ConfigSource::Explicit,
         )

@@ -154,7 +154,7 @@ fn no_frozen_config_is_edited_and_each_has_a_line_in_hashes() {
 #[test]
 fn a_lint_setting_is_named_by_any_section_that_sets_it() {
     let value = serde_json::json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "md": { "globs": ["*.md"], "lints": { "density": { "max_item_chars": 1 } } },
     });
     assert!(frozen::names(&value, "md.lints.density.max_item_chars"));

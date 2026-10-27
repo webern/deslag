@@ -13,7 +13,7 @@ use deslag::output::json;
 use serde_json::{Value, json};
 
 /// Settings under which each lint fails a file of [`failing`].
-const CONFIG: &str = "schema_version = 1
+const CONFIG: &str = "schema_version = 2
 
 [md.lints.max_size_bytes]
 value = 400
@@ -27,6 +27,7 @@ min_entries = 2
 max_entries = 2
 
 [md.lints.banned_chars]
+groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 [md.lints.banned_phrases.ban]
 \"in order to\" = \"write to\"
@@ -323,7 +324,7 @@ fn offsets_hold_after_bytes_that_are_not_utf8() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[md.lints.banned_chars]\n",
+        "schema_version = 2\n\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
     repo.write_bytes("README.md", bytes);
     let run = |format: &str| {
@@ -366,7 +367,7 @@ fn offsets_hold_after_bytes_that_are_not_utf8_in_rust() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[rust.lints.banned_chars]\n",
+        "schema_version = 2\n\n[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
     repo.write_bytes("lib.rs", bytes);
     let run = |format: &str| {
@@ -403,7 +404,7 @@ fn offsets_hold_after_bytes_that_are_not_utf8_in_c() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[cpp.lints.banned_chars]\n",
+        "schema_version = 2\n\n[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
     repo.write_bytes("test.c", bytes);
     let run = |format: &str| {

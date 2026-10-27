@@ -8,7 +8,7 @@ use serde_json::Value;
 
 /// A config with two overrides that overlap on `docs/guide.md`. The basename pattern is the less
 /// specific, so the second override merges before the first.
-const TOML: &str = r#"schema_version = 1
+const TOML: &str = r#"schema_version = 2
 
 [md]
 globs = ["*.md"]
@@ -35,7 +35,7 @@ lints.banned_chars = { groups = { emoji = true } }
 "#;
 
 const YAML: &str = r#"# the same config as TOML
-schema_version: 1
+schema_version: 2
 md:
   globs: ["*.md"]
   lints:
@@ -64,7 +64,7 @@ md:
 "#;
 
 const JSON: &str = r#"{
-  "schema_version": 1,
+  "schema_version": 2,
   "md": {
     "globs": ["*.md"],
     "lints": {
@@ -103,18 +103,18 @@ const EXPECTED: &str = r#"# docs/guide.md
 #   override 1: globs = ["/docs/**/*.md"]
 
 [banned_chars.groups]
-arrows = true
-box_drawing = true
-bullets = true
-checks = true
-dashes = true
-ellipsis = true
+arrows = false
+box_drawing = false
+bullets = false
+checks = false
+dashes = false
+ellipsis = false
 emoji = true
-invisible = true
-math = true
-quotes = true
-section = true
-spaces = true
+invisible = false
+math = false
+quotes = false
+section = false
+spaces = false
 
 # banned_phrases: off
 
@@ -250,10 +250,10 @@ fn explain_reads_the_config_path() {
     );
 }
 
-/// A repo with the config `text` after `schema_version = 1`, and each of `paths` holding a file.
+/// A repo with the config `text` after `schema_version = 2`, and each of `paths` holding a file.
 fn repo_of(text: &str, paths: &[&str]) -> Repo {
     let repo = Repo::new();
-    repo.write("deslag.toml", &format!("schema_version = 1\n{text}"));
+    repo.write("deslag.toml", &format!("schema_version = 2\n{text}"));
     for path in paths {
         repo.write(path, "# A file\n");
     }
@@ -387,7 +387,7 @@ fn an_exclude_does_not_bring_back_a_file_the_walk_skips() {
 #[test]
 fn a_budget_in_the_frontmatter_is_the_last_layer() {
     let repo = Repo::new();
-    repo.write("deslag.toml", "schema_version = 1\n");
+    repo.write("deslag.toml", "schema_version = 2\n");
     repo.write("AGENTS.md", "---\nmax_size_bytes: 300\n---\n# Agents\n");
     let (code, stdout, stderr) = explain(&repo, &["AGENTS.md"]);
     assert_eq!((code, stderr.as_str()), (0, ""));
@@ -506,7 +506,7 @@ fn no_default_in_the_schema_is_a_table_of_nulls() {
 #[test]
 fn explain_reads_a_file_that_is_not_utf8_with_a_dollar_for_each_bad_byte() {
     let repo = Repo::new();
-    repo.write("deslag.toml", "schema_version = 1\n");
+    repo.write("deslag.toml", "schema_version = 2\n");
     repo.write_bytes(
         "AGENTS.md",
         b"---\nmax_size_bytes: 3\xff\xfe\n---\n# Agents\n",
@@ -518,7 +518,7 @@ fn explain_reads_a_file_that_is_not_utf8_with_a_dollar_for_each_bad_byte() {
 
 /// A config whose `[md]` reads fenced code by default, `[rust]` reads both surfaces and `[cpp]` only
 /// the plain comments.
-const CODE: &str = r#"schema_version = 1
+const CODE: &str = r#"schema_version = 2
 
 [md]
 globs = ["*.md"]
@@ -625,7 +625,7 @@ fn a_toml_file_reads_its_comments_as_plain() {
 #[test]
 fn a_section_that_reads_no_surface_says_it_reads_nothing() {
     let repo = Repo::new();
-    repo.write("deslag.toml", "schema_version = 1\n[rust]\nsurfaces = []\n");
+    repo.write("deslag.toml", "schema_version = 2\n[rust]\nsurfaces = []\n");
     repo.write("src/lib.rs", "//! Docs.\n// note\n");
     let (_, stdout, _) = explain(&repo, &["src/lib.rs"]);
     assert!(
@@ -675,7 +675,7 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[md]\nfences.languages = []\n",
+        "schema_version = 2\n[md]\nfences.languages = []\n",
     );
     repo.write("a.md", "```rust\n// fenced\n```\n");
     let (_, stdout, _) = explain(&repo, &["a.md"]);
@@ -684,7 +684,7 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
 
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[md]\nfences.surfaces = []\n",
+        "schema_version = 2\n[md]\nfences.surfaces = []\n",
     );
     let (_, stdout, _) = explain(&repo, &["a.md"]);
     assert!(stdout.contains("# reads: markdown\n"), "{stdout}");
@@ -692,7 +692,7 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
 
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[md]\nfences = { languages = [\"rust\"], surfaces = [\"comment\"] }\n",
+        "schema_version = 2\n[md]\nfences = { languages = [\"rust\"], surfaces = [\"comment\"] }\n",
     );
     let (_, stdout, _) = explain(&repo, &["a.md"]);
     assert!(
@@ -703,7 +703,7 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
     // Surfaces that the same languages read are named together.
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[md]\nfences.languages = [\"rust\", \"cpp\"]\n",
+        "schema_version = 2\n[md]\nfences.languages = [\"rust\", \"cpp\"]\n",
     );
     let (_, stdout, _) = explain(&repo, &["a.md"]);
     assert!(
@@ -715,7 +715,7 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
     // a config that asks for the doc comment alone.
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[md]\nfences = { languages = [\"toml\"], surfaces = [\"doc_comment\", \"comment\"] }\n",
+        "schema_version = 2\n[md]\nfences = { languages = [\"toml\"], surfaces = [\"doc_comment\", \"comment\"] }\n",
     );
     let (_, stdout, _) = explain(&repo, &["a.md"]);
     assert!(
@@ -724,7 +724,7 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
     );
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[md]\nfences = { languages = [\"toml\"], surfaces = [\"doc_comment\"] }\n",
+        "schema_version = 2\n[md]\nfences = { languages = [\"toml\"], surfaces = [\"doc_comment\"] }\n",
     );
     let (_, stdout, _) = explain(&repo, &["a.md"]);
     assert!(stdout.contains("# reads: markdown\n"), "{stdout}");
@@ -765,7 +765,7 @@ fn a_file_no_section_selects_says_why() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[md]\n[rust]\nglobs = [\"/src/**/*.rs\"]\n",
+        "schema_version = 2\n[md]\n[rust]\nglobs = [\"/src/**/*.rs\"]\n",
     );
     for (path, line) in [
         ("notes.txt", "no section, so deslag check never reads it"),

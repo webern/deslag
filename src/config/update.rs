@@ -225,17 +225,17 @@ mod tests {
 
     /// A catalogue with a phrase of the release running, one for each of two groups.
     fn new_phrases() -> Catalogue {
-        let entry = |phrase: &str, group: &str| {
+        let entry = |phrase: &str| {
             format!(
-                "[[entry]]\nphrase = \"{phrase}\"\ngroup = \"{group}\"\nadvice = \"x\"\n\
+                "[[entry]]\nphrase = \"{phrase}\"\nadvice = \"x\"\n\
                  since = \"{}\"\nllm_files = 1\nllm_repos = 1\n",
                 running()
             )
         };
         let text = [
             "measured_on = \"x\"\n".to_string(),
-            entry("load-bearing", "metaphors"),
-            entry("never silently", "insistence"),
+            entry("load-bearing"),
+            entry("never silently"),
         ]
         .concat();
         toml::from_str(&text).expect("a catalogue")
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn a_bare_update_moves_the_stamp_when_nothing_is_new() {
-        let (dir, path) = repo(&format!("schema_version = 1\n{REMOVED}"));
+        let (dir, path) = repo(&format!("schema_version = 2\n{REMOVED}"));
         let done = run(&dir, false, None, &nothing_new()).expect("an update");
         assert_eq!(done.held, None);
         let stamps: Vec<_> = done
@@ -281,7 +281,7 @@ mod tests {
         assert_eq!(
             fs::read_to_string(path).expect("a config"),
             format!(
-                "schema_version = 1\ndeslag_version = \"{}\"\n[md.lints.banned_phrases.groups]\n",
+                "schema_version = 2\ndeslag_version = \"{}\"\n[md.lints.banned_phrases.groups]\n",
                 running()
             )
         );
@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn a_bare_update_holds_the_stamp_when_something_is_new_and_still_makes_the_redirects() {
-        let text = format!("schema_version = 1\ndeslag_version = \"0.0.0\"\n{REMOVED}");
+        let text = format!("schema_version = 2\ndeslag_version = \"0.0.0\"\n{REMOVED}");
         let (dir, path) = repo(&text);
         let done = run(&dir, false, None, &news()).expect("an update");
         assert_eq!(
@@ -309,7 +309,7 @@ mod tests {
         assert_eq!(done.edits.len(), 1);
         assert_eq!(
             fs::read_to_string(path).expect("a config"),
-            "schema_version = 1\ndeslag_version = \"0.0.0\"\n[md.lints.banned_phrases.groups]\n"
+            "schema_version = 2\ndeslag_version = \"0.0.0\"\n[md.lints.banned_phrases.groups]\n"
         );
         let lines = done.lines();
         assert!(
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn a_held_update_with_nothing_else_to_do_changes_nothing() {
-        let text = "schema_version = 1\ndeslag_version = \"0.0.0\"\n";
+        let text = "schema_version = 2\ndeslag_version = \"0.0.0\"\n";
         let (dir, path) = repo(text);
         let done = run(&dir, false, None, &news()).expect("an update");
         assert!(done.edits.is_empty() && done.held.is_some(), "{done:?}");
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn to_moves_the_stamp_whatever_is_new() {
-        let (dir, path) = repo("schema_version = 1\ndeslag_version = \"0.0.0\" # pinned\n");
+        let (dir, path) = repo("schema_version = 2\ndeslag_version = \"0.0.0\" # pinned\n");
         let done = run(&dir, false, Some(&running()), &news()).expect("an update");
         assert_eq!(done.held, None);
         assert_eq!(
@@ -355,7 +355,7 @@ mod tests {
         assert_eq!(
             fs::read_to_string(path).expect("a config"),
             format!(
-                "schema_version = 1\ndeslag_version = \"{}\" # pinned\n",
+                "schema_version = 2\ndeslag_version = \"{}\" # pinned\n",
                 running()
             )
         );
@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     fn a_dry_run_writes_nothing() {
-        let text = format!("schema_version = 1\n{REMOVED}");
+        let text = format!("schema_version = 2\n{REMOVED}");
         let (dir, path) = repo(&text);
         let done = run(&dir, true, None, &nothing_new()).expect("an update");
         assert_eq!(done.edits.len(), 2);
@@ -396,7 +396,7 @@ mod tests {
     #[test]
     fn a_phrase_alone_holds_a_bare_update_and_to_prints_the_stamp_edit_alone() {
         // The schema holds nothing, so the phrases are all that is new.
-        let text = "schema_version = 1\ndeslag_version = \"0.0.1\"\n[md.lints.banned_phrases]\n";
+        let text = "schema_version = 2\ndeslag_version = \"0.0.1\"\n[md.lints.banned_phrases]\n";
         let (dir, path) = repo(text);
         let (paths, phrases) = (nothing_new(), new_phrases());
         let update_to = |to| {
@@ -428,21 +428,21 @@ mod tests {
     #[test]
     fn a_yaml_or_json_key_is_deleted_and_a_second_run_has_nothing_to_do() {
         let now = running();
-        let yaml = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true # off\n        insistence: false\n";
-        let json = "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{\"signposts\":true}}}}}";
+        let yaml = "schema_version: 2\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true # off\n        insistence: false\n";
+        let json = "{\"schema_version\":2,\"md\":{\"lints\":{\"banned_phrases\":{\"groups\":{\"signposts\":true}}}}}";
         for (extension, text, edited) in [
             (
                 "yaml",
                 yaml,
                 format!(
-                    "schema_version: 1\ndeslag_version: \"{now}\"\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        insistence: false\n"
+                    "schema_version: 2\ndeslag_version: \"{now}\"\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        insistence: false\n"
                 ),
             ),
             (
                 "json",
                 json,
                 format!(
-                    "{{\"schema_version\":1,\"deslag_version\":\"{now}\",\"md\":{{\"lints\":{{\"banned_phrases\":{{\"groups\":{{}}}}}}}}}}"
+                    "{{\"schema_version\":2,\"deslag_version\":\"{now}\",\"md\":{{\"lints\":{{\"banned_phrases\":{{\"groups\":{{}}}}}}}}}}"
                 ),
             ),
         ] {
@@ -458,9 +458,9 @@ mod tests {
 
     #[test]
     fn an_edit_that_is_wrong_is_refused_by_the_check_and_the_file_is_not_written() {
-        let toml = format!("schema_version = 1\n{REMOVED}");
-        let yaml = "schema_version: 1\n# a comment\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n        insistence: false\n";
-        let json = "{\n  \"schema_version\": 1,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": false\n  }}}}\n}\n";
+        let toml = format!("schema_version = 2\n{REMOVED}");
+        let yaml = "schema_version: 2\n# a comment\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n        insistence: false\n";
+        let json = "{\n  \"schema_version\": 2,\n  \"md\": {\"lints\": {\"banned_phrases\": {\"groups\": {\n    \"signposts\": true,\n    \"insistence\": false\n  }}}}\n}\n";
         let wrong: [(&str, &str, edit::Damage); 5] = [
             // It loads as the same config, and a comment is gone.
             ("yaml", yaml, |text| text.replace("# a comment\n", "")),
@@ -498,7 +498,7 @@ mod tests {
     #[test]
     fn a_read_only_config_is_refused_before_anything_is_written() {
         use std::os::unix::fs::PermissionsExt;
-        let text = format!("schema_version = 1\n{REMOVED}");
+        let text = format!("schema_version = 2\n{REMOVED}");
         let (dir, path) = repo(&text);
         // 0464: the owner cannot write the file and the group can, which is still read-only.
         for mode in [0o444, 0o464] {
@@ -520,7 +520,7 @@ mod tests {
         fs::set_permissions(&path, fs::Permissions::from_mode(0o644)).expect("permissions");
         fs::write(
             &path,
-            format!("schema_version = 1\ndeslag_version = \"{}\"\n", running()),
+            format!("schema_version = 2\ndeslag_version = \"{}\"\n", running()),
         )
         .expect("a config");
         fs::set_permissions(&path, fs::Permissions::from_mode(0o444)).expect("permissions");

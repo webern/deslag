@@ -7,7 +7,7 @@ mod common;
 use std::path::PathBuf;
 
 use common::schema::SchemaPaths;
-use common::{Repo, code, stderr};
+
 use deslag::config::{REDIRECTS, Redirect, schema};
 use deslag::version::Version;
 use deslag::{Config, ConfigSource};
@@ -51,7 +51,7 @@ fn config_with_all(settings: &[(&str, &Value)], over: bool) -> Value {
     } else {
         json!({ "lints": nested })
     };
-    json!({ "schema_version": 1, "md": md })
+    json!({ "schema_version": 2, "md": md })
 }
 
 /// `value` set at `path`, as a whole config.
@@ -121,7 +121,7 @@ fn each_redirect_old_set_compiles_equal_to_new_set_or_neither_and_warns_once() {
             // The override variant selects a.md; the section variant has no override.
             let target = match redirect.new {
                 Some(new) => config_with(new, &example, over),
-                None => json!({ "schema_version": 1 }),
+                None => json!({ "schema_version": 2 }),
             };
             for extension in ["toml", "yaml", "json"] {
                 let (old_warnings, old) =
@@ -206,7 +206,7 @@ fn every_section_but_the_one_a_redirect_names_refuses_its_old_key() {
                 } else {
                     (json!({ "lints": nested }), format!("{section}.lints"))
                 };
-                let config = json!({ "schema_version": 1, *section: table });
+                let config = json!({ "schema_version": 2, *section: table });
                 for extension in ["toml", "yaml", "json"] {
                     let name = format!("{} in {place} {extension}", redirect.old);
                     let error = load(extension, &written(&config, extension))
@@ -257,101 +257,4 @@ fn every_redirect_has_a_since_that_parses() {
             redirect.since
         );
     }
-}
-
-// The signposts group.
-
-const SIGNPOSTS_TOML: &str = "schema_version = 1\n\
-    [md.lints.banned_phrases.groups]\nsignposts = false\ninsistence = false\n\
-    [[md.overrides]]\nglobs = [\"a.md\"]\n\
-    [md.overrides.lints.banned_phrases.groups]\nsignposts = true\n";
-
-const SIGNPOSTS_YAML: &str = "schema_version: 1\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        \
-    signposts: false\n        insistence: false\n  overrides:\n    - globs: [\"a.md\"]\n      \
-    lints:\n        banned_phrases:\n          groups:\n            signposts: true\n";
-
-const SIGNPOSTS_JSON: &str = r#"{"schema_version":1,"md":{"lints":{"banned_phrases":
-    {"groups":{"signposts":false,"insistence":false}}},"overrides":[{"globs":["a.md"],
-    "lints":{"banned_phrases":{"groups":{"signposts":true}}}}]}}"#;
-
-/// The same, with the groups written by position, signposts first.
-const SIGNPOSTS_ARRAY: &str = r#"{"schema_version":1,"md":{"lints":{"banned_phrases":
-    {"groups":[false,false]}},"overrides":[{"globs":["a.md"],
-    "lints":{"banned_phrases":{"groups":[true]}}}]}}"#;
-
-#[test]
-fn signposts_in_a_section_and_an_override_warns_once_in_every_language() {
-    for (extension, text) in [
-        ("toml", SIGNPOSTS_TOML),
-        ("yaml", SIGNPOSTS_YAML),
-        ("json", SIGNPOSTS_JSON),
-        ("json", SIGNPOSTS_ARRAY),
-    ] {
-        let config = load(extension, text).unwrap_or_else(|e| panic!("{extension}: {e:#?}"));
-        assert_eq!(
-            config.warnings(),
-            [format!(
-                "deslag.{extension}: `md.lints.banned_phrases.groups.signposts` was removed, and \
-                 the setting is ignored; its one phrase fell below the catalogue's floor of 40 \
-                 repositories and nothing replaces it; delete it from the config, or run \
-                 deslag update"
-            )],
-            "{text}"
-        );
-        // The other group is read as it is written, and the removed one is cleared.
-        let lints = config.md().lints_for("b.md");
-        let groups = lints.banned_phrases.expect("banned_phrases").groups;
-        assert_eq!(
-            (groups.signposts, groups.insistence),
-            (None, Some(false)),
-            "{text}"
-        );
-        let over = config
-            .md()
-            .lints_for("a.md")
-            .banned_phrases
-            .expect("on")
-            .groups;
-        assert_eq!(over.signposts, None, "{text}");
-    }
-}
-
-#[test]
-fn signposts_set_to_null_or_left_out_says_nothing() {
-    let null =
-        r#"{"schema_version":1,"md":{"lints":{"banned_phrases":{"groups":{"signposts":null}}}}}"#;
-    assert!(load("json", null).expect("a config").warnings().is_empty());
-    assert!(
-        load("toml", "schema_version = 1\n")
-            .expect("a config")
-            .warnings()
-            .is_empty()
-    );
-}
-
-#[test]
-fn signposts_as_a_wrong_type_is_the_error_it_was() {
-    let text = "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = 5\n";
-    let error = load("toml", text).expect_err("a wrong type");
-    let cause = std::error::Error::source(&error)
-        .expect("a cause")
-        .to_string();
-    assert!(cause.contains("line 3, column 13"), "{cause}");
-}
-
-#[test]
-fn the_warning_prints_once_and_the_run_exits_0() {
-    let repo = Repo::new();
-    repo.write("deslag.toml", SIGNPOSTS_TOML);
-    repo.write("README.md", "A short readme.\n");
-    let output = repo.check();
-    assert_eq!(code(&output), 0);
-    let said = stderr(&output);
-    assert_eq!(said.lines().count(), 1, "{said}");
-    assert!(
-        said.starts_with("deslag: warning: ")
-            && said.contains("deslag.toml: `md.lints.banned_phrases.groups.signposts` was removed")
-            && said.ends_with("; delete it from the config, or run deslag update\n"),
-        "{said}"
-    );
 }

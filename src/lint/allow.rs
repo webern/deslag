@@ -628,7 +628,7 @@ pub(crate) fn label(root: &Path, config: &Config) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::BannedChars;
+    use crate::config::{BannedChars, CharGroups};
     use crate::document::{Fences, Reader, Stack, Surface};
     use crate::lint::{Lint, banned_chars};
 
@@ -1104,9 +1104,16 @@ mod tests {
         }
     }
 
-    /// The finding of `banned_chars`, with its defaults, in `document`.
+    /// The finding of `banned_chars`, with its dashes on, in `document`.
     fn banned(document: &Document<'_>) -> Option<Violation> {
-        banned_chars::check(document, Some(&BannedChars::default())).map(Violation::BannedChars)
+        let settings = BannedChars {
+            groups: CharGroups {
+                dashes: Some(true),
+                ..CharGroups::default()
+            },
+            ..BannedChars::default()
+        };
+        banned_chars::check(document, Some(&settings)).map(Violation::BannedChars)
     }
 
     /// How the one entry that quotes `quote` came out against `source`, read as Markdown, where

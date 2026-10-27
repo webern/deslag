@@ -17,7 +17,7 @@ use common::blobs::{Entry, Exclusion, Tried, load_blobs};
 use common::corpus::{TREE, load_corpus};
 use common::fixture::{Fixture, Sidecar};
 use deslag::Document;
-use deslag::config::{BannedPhrases, NotAtAll, PhraseGroups, VerbsNoNouns};
+use deslag::config::{BannedPhrases, NotAtAll, VerbsNoNouns};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
 use deslag::lint::{not_at_all, verbs_no_nouns};
 use serde_json::{Value, json};
@@ -690,12 +690,6 @@ fn the_catalogue_counts_are_the_big_tiers() {
         .entries
         .iter()
         .map(|entry| BannedPhrases {
-            groups: PhraseGroups {
-                insistence: Some(false),
-                metaphors: Some(false),
-                precision: Some(false),
-                ..PhraseGroups::default()
-            },
             ban: Some([(entry.phrase.clone(), String::new())].into()),
             ..BannedPhrases::default()
         })

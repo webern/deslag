@@ -600,8 +600,7 @@ fn a_config_written_as_a_json_array_still_loads() {
 
 /// deslag's own config is stamped with the crate version, which `deslag update --to <version>`
 /// writes right after `deslag-release prep`, so that every release runs the real upgrade on a real
-/// config. A stamp left behind would hold off, in this repo alone, the catalogue phrases released
-/// since.
+/// config.
 #[test]
 fn the_repos_own_config_is_stamped_with_the_crate_version() {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));

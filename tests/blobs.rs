@@ -20,7 +20,6 @@ use deslag::Document;
 use deslag::config::{BannedPhrases, NotAtAll, PhraseGroups, VerbsNoNouns};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
 use deslag::lint::{not_at_all, verbs_no_nouns};
-use deslag::version::Version;
 use serde_json::{Value, json};
 
 /// Where `make fetch-blobs` unpacks the big tier.
@@ -720,12 +719,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
                             let document = Document::markdown(&text);
                             let entries = (0..settings.len())
                                 .filter(|at| {
-                                    banned_phrases::check(
-                                        &document,
-                                        Some(&settings[*at]),
-                                        &Version::Next,
-                                    )
-                                    .is_some()
+                                    banned_phrases::check(&document, Some(&settings[*at])).is_some()
                                 })
                                 .collect();
                             Found {

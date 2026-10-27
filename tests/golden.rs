@@ -34,8 +34,7 @@ use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::density;
 use deslag::lint::repo_layout::Problem;
 use deslag::tag::{Confidence, Features, Origin, RULES_VERSION, Reading, Tag, VERSION};
-use deslag::version::Version;
-use deslag::{Config, ConfigSource, Lint, Violation, check_file_at};
+use deslag::{Config, ConfigSource, Lint, Violation, check_file};
 
 /// Set to 1 to rewrite the golden files instead of comparing with them.
 const FIX: &str = "DESLAG_FIX_GOLDEN";
@@ -200,14 +199,8 @@ fn every_lint_finds_what_its_golden_file_says() {
     let fixtures = corpus();
     let mut found: BTreeMap<Lint, Vec<(&Fixture, String)>> = BTreeMap::new();
     for fixture in fixtures {
-        let findings = check_file_at(
-            &config,
-            &fixture.path,
-            &fixture.bytes,
-            empty.path(),
-            &Version::Next,
-        )
-        .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
+        let findings = check_file(&config, &fixture.path, &fixture.bytes, empty.path())
+            .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
         for finding in &findings {
             if let Some(record) = record_of(&finding.violation) {
                 let lint = finding.violation.lint();

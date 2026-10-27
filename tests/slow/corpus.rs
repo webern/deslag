@@ -26,8 +26,7 @@ use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{
     Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, verbs_no_nouns,
 };
-use deslag::version::Version;
-use deslag::{Config, ConfigSource, Document, Violation, check_file_at};
+use deslag::{Config, ConfigSource, Document, Violation, check_file};
 
 /// How many fixtures each collected category must hold at least.
 const MIN_PER_CATEGORY: usize = 350;
@@ -810,14 +809,8 @@ fn the_corpus_locations_hold_what_they_point_at() {
 
     for fixture in corpus() {
         let text = String::from_utf8_lossy(&fixture.bytes);
-        let findings = check_file_at(
-            &config,
-            &fixture.path,
-            &fixture.bytes,
-            empty.path(),
-            &Version::Next,
-        )
-        .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
+        let findings = check_file(&config, &fixture.path, &fixture.bytes, empty.path())
+            .unwrap_or_else(|error| panic!("{}: {error}", fixture.path));
         for finding in &findings {
             let lint = finding.violation.lint();
             let context = format!("{} {lint}", fixture.slug());
@@ -1241,7 +1234,7 @@ fn the_phrase_groups_match_no_human_fixture_and_each_matches_llm_fixtures() {
     for fixture in fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let document = Document::markdown(&text);
-        let Some(over) = banned_phrases::check(&document, Some(&settings), &Version::Next) else {
+        let Some(over) = banned_phrases::check(&document, Some(&settings)) else {
             continue;
         };
         assert_ne!(

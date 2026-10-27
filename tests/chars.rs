@@ -480,10 +480,9 @@ fn covered(rules: &[deslag::lint::banned_chars::Rule]) -> Vec<(u32, u32)> {
 }
 
 /// A group that bans a character no range of it banned before changes the verdict of every config
-/// that has the group on, the moment the binary updates, and nothing says so. A phrase of the
-/// catalogue is held back by the config's `deslag_version`; a character is not, because the unit
-/// of `banned_chars` is a rule that is a character or a range, and rules overlap by design, so only
-/// a character outside every range could change a verdict, and none was planned. This pins the
+/// that has the group on, the moment the binary updates, and nothing says so. The unit of
+/// `banned_chars` is a rule that is a character or a range, and rules overlap by design, so only a
+/// character outside every range could change a verdict, and none was planned. This pins the
 /// ranges, so that one is noticed.
 #[test]
 fn each_group_covers_the_characters_it_covered() {
@@ -498,11 +497,9 @@ fn each_group_covers_the_characters_it_covered() {
         assert_eq!(
             now, *ranges,
             "the group `{}` now covers a character outside the ranges it covered, or no longer \
-             covers one. A character outside every range turns on at once for every config that \
-             has the group on, which is what the `deslag_version` gate on the phrase catalogue \
-             prevents for phrases. Build the character gate first: a `since` on `Rule`, read by \
-             `verdict` and by `contradiction`, rewritten from `next` at the release. Then change \
-             this pin. A rule inside a range needs neither.",
+             covers one. A character outside every range changes at once the verdict of every \
+             config that has the group on, and nothing says so. Make sure that is meant, then \
+             change this pin. A rule inside a range does not move it.",
             group.name
         );
     }

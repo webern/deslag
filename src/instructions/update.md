@@ -1,7 +1,7 @@
 # The words of deslag instructions update
 
 `{from}` is the release the config was last updated by and `{to}` the one running. A heading names
-its piece and is not printed. `{turned}` is what moving the stamp turns on.
+its piece and is not printed.
 
 ## Heading
 
@@ -9,10 +9,12 @@ What is new in deslag {to}, since {from}
 
 ## Closing
 
-Offer each new lint and phrase to the person, with what it fails. Add the table of each lint they
-choose, and keep off each phrase they want off, as its section says: a phrase is on once the
-version moves. A new setting keeps its default until the config sets it; name it to the person,
-and set it only if they ask.
+Nothing `check` finds depends on `deslag_version`.
+
+Offer each new lint to the person, with what it fails, and add the table of each they choose. Name
+each new phrase, which is on already, and keep off each they want off, as its section says. A new
+setting keeps its default until the config sets it; name it to the person, and set it only if they
+ask.
 
 Once they have chosen, run `deslag update --to {to}`, adding your `--config-path` if any. It sets
 `deslag_version` to "{to}", ending this list, and edits renamed or removed settings. If the person
@@ -30,17 +32,3 @@ Nothing is new in deslag {to} since {from}.
 
 No deslag config was found here, so this shows what is new since {from}, the release a config with
 no `deslag_version` is taken to be from. Run it at the root of the repository to read its config.
-
-## Stamp
-
-Moving `deslag_version` to {to} turns on {turned}.
-
-## Stamp none
-
-Nothing else `check` finds depends on `deslag_version`, so there is nothing to compare. Only the
-note that the config is behind goes.
-
-## Stamp phrases
-
-To see what they would flag, search the text for them, or move the stamp by hand, run `check` and
-put it back.

@@ -48,7 +48,7 @@ pub use change::Change;
 pub use config::{Config, ConfigSource};
 pub use document::Document;
 pub use explain::explain;
-pub use lint::{Finding, Lint, Report, Violation, check_file, check_file_at, check_repo};
+pub use lint::{Finding, Lint, Report, Violation, check_file, check_repo};
 
 /// Everything that can go wrong inside the library.
 ///

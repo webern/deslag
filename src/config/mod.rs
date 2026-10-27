@@ -48,6 +48,9 @@ pub mod search;
 pub mod section;
 pub mod toml;
 pub mod update;
+// TODO: remove the dead_code guard when the migration reads the frozen reader.
+#[allow(dead_code)]
+mod v1;
 
 use std::num::NonZeroU32;
 use std::path::{Path, PathBuf};
@@ -91,23 +94,19 @@ fn reading_section(rel_path: &str) -> Option<(&'static str, &str)> {
 
 /// The config schema this build of deslag reads.
 ///
-/// A key being added does not change it, and neither does a rename or a removal: those are a
-/// [`Redirect`], which reads the old key, warns, and keeps the version. A bump is for a change a
-/// redirect cannot carry, such as a value that changes shape. A config written for a later schema
-/// than this is refused rather than half understood.
+/// A key being added does not change it, and neither does a rename, or a removal whose old value
+/// is simply ignored: those are a [`Redirect`], which reads the old key, warns, and keeps the
+/// version. A bump is for a change to what a config already written means, such as a default that
+/// flips or a table whose empty form means something new. A bump is made like this:
 ///
-/// No schema older than this one exists, so nothing migrates. The first bump is made like this:
+/// - the reader of the old schema is frozen as a module, such as [`v1`], never edited again;
+/// - a step of the migration reads a config of the old schema through it, rewrites the text in the
+///   words of the new schema, and keeps the result only if it means what the old text did;
+/// - `Config::parse` refuses a config of an older schema, saying to run `deslag update`, which
+///   runs the steps;
+/// - each frozen config under `tests/configs/` of an older schema has its migrated text beside it.
 ///
-/// - a module freezes the old struct path, from `ConfigFile` down to the changed lint, with a
-///   `From` into the current `ConfigFile`;
-/// - `Config::parse` matches on the probe's `schema_version`, between the stamp check and the typed
-///   parse, and reads the old text through the frozen path;
-/// - it warns once, naming the schema it read;
-/// - each setting it changes carries the `since` of the release, as the skill
-///   `deslag-upgrade-instructions` says.
-///
-/// The text is still read typed, never through an untyped document. The configs under
-/// `tests/configs/` keep loading.
+/// A config written for a later schema than this is refused rather than half understood.
 pub const SCHEMA_VERSION: NonZeroU32 = NonZeroU32::MIN;
 
 /// The config file as it is written on disk.

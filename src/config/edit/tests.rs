@@ -2268,3 +2268,5 @@ fn a_setting_is_looked_for_in_the_section_its_path_names_and_in_no_other() {
         assert!(places("rust.globs").is_empty());
     }
 }
+
+mod migrate;

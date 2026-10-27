@@ -1,8 +1,8 @@
 //! The text that has been checked, and the check that makes it.
 //!
 //! [`Checked`] does not have a constructor outside this file: its field is private to this module,
-//! and [`check`] is the one function here that fills it. Whatever takes a `&Checked` to write a
-//! file is given text that this check passed.
+//! and [`check`] and [`migrated`] are the functions here that fill it. Whatever takes a `&Checked`
+//! to write a file is given text that one of them passed.
 
 use semver::Version;
 
@@ -12,7 +12,7 @@ use crate::config::Config;
 /// Text that has been read back as a config and found to be the one intended, and to differ from
 /// the old text in no line that an edit is not for.
 ///
-/// Only the check that ends [`edit`](super::edit) makes one.
+/// Only the checks that end [`edit`](super::edit) and [`migrate`](super::migrate) make one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Checked(String);
 
@@ -80,6 +80,38 @@ pub(super) fn check(
     lines::only_the_edits_changed(old_text, &text, &touched, &edits).map_err(|why| {
         refuse(format!(
             "the edited config changes more than its edits: {why}"
+        ))
+    })?;
+    Ok(Edited {
+        text: Checked(text),
+        edits,
+    })
+}
+
+/// Keeps the text of `plan`, a migration of `old_text`, only if every line of `old_text` it removes
+/// is one an edit is for, and `verify`, the caller's check of what the text means at the new
+/// schema, passes it. The schema and the settings change by design, so this is the caller's to
+/// judge and not [`check`]'s.
+pub(super) fn migrated(
+    old_text: &str,
+    path: &str,
+    plan: Plan,
+    verify: impl FnOnce(&str) -> Result<(), String>,
+) -> Result<Edited, Refusal> {
+    let Plan {
+        text,
+        edits,
+        touched,
+    } = plan;
+    let refuse = |reason: String| Refusal::of(reason, path, &edits);
+    lines::only_touched_lines_removed(old_text, &text, &touched).map_err(|why| {
+        refuse(format!(
+            "the migrated config changes more than its edits: {why}"
+        ))
+    })?;
+    verify(&text).map_err(|why| {
+        refuse(format!(
+            "the migrated config does not mean what the old one did: {why}"
         ))
     })?;
     Ok(Edited {

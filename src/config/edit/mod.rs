@@ -14,6 +14,12 @@
 //!   line), a key sealed because a delete left its parent empty, a renamed key, or a line an edit
 //!   changed in one place. The file ends in a line ending if and only if it did.
 //!
+//! [`migrate`] makes text the other way: it makes a list of [`TableEdit`]s, which add, replace and
+//! delete what a config says, and the caller's check reads the new text at the new schema and
+//! judges what it means. The check by lines still keeps every line the edits are not for, so no
+//! comment is lost. Only TOML is migrated; a YAML or JSON config is refused with every edit spelled
+//! out.
+//!
 //! Nothing here writes, so nothing can write text that was not checked.
 //!
 //! The text is edited and never written out from a parsed tree, which would lose comments (TOML),
@@ -28,6 +34,7 @@ mod checked;
 mod json;
 mod lines;
 mod remove;
+mod table;
 mod toml;
 mod yaml;
 
@@ -38,6 +45,7 @@ use std::path::Path;
 use semver::Version;
 
 pub use checked::{Checked, Edited};
+pub use table::{Scalar, TableEdit, TablePath};
 
 use crate::Error;
 use crate::config::{Config, ConfigFormat, Redirect};
@@ -76,6 +84,14 @@ pub enum Edit {
         to: Version,
         /// Where it is, or where it goes.
         at: StampAt,
+    },
+    /// A migration's edit of a table.
+    Table {
+        /// What the edit does.
+        edit: TableEdit,
+        /// The line of the key or the item it changes, or of the table it makes, when the file
+        /// has it.
+        line: Option<usize>,
     },
 }
 
@@ -121,7 +137,9 @@ impl Edit {
     /// where it goes is part of what it says.
     fn line(&self) -> Option<usize> {
         match self {
-            Edit::Delete { line, .. } | Edit::Rename { line, .. } => *line,
+            Edit::Delete { line, .. } | Edit::Rename { line, .. } | Edit::Table { line, .. } => {
+                *line
+            }
             Edit::Stamp { .. } => None,
         }
     }
@@ -149,6 +167,7 @@ impl Edit {
                 };
                 format!("{at}: {verb} deslag_version to \"{to}\" ({was})")
             }
+            Edit::Table { edit, .. } => edit.report(&at, would, ConfigFormat::of(Path::new(path))),
         }
     }
 
@@ -219,6 +238,7 @@ impl Edit {
                     format!("{path}: set `deslag_version` to \"{to}\" at the top level")
                 }
             },
+            Edit::Table { edit, .. } => edit.instruction(&at, ConfigFormat::of(Path::new(path))),
         }
     }
 }
@@ -288,6 +308,9 @@ enum TouchKind {
     Parent,
     /// The stamp.
     Stamp,
+    /// A TOML line a migration's edit rewrites in place: a value set, or an inline table or a list
+    /// that gains or loses a member. It takes its own lines and no others.
+    Rewrite,
 }
 
 /// A change to the bytes of a text: `range` becomes `with`.
@@ -367,6 +390,88 @@ pub fn edit(
         None => plan,
     };
     checked::check(old, text, path, stamp, plan)
+}
+
+/// `text`, the contents of the config at `path`, with each of `edits` made in order, as a
+/// migration from one schema to the next makes them. `path` is what to call the file in what it
+/// says, and its extension is the config's language.
+///
+/// The new text is kept only if every line of `text` it lacks is one an edit is for, and `verify`
+/// passes it. `verify` is the caller's: it reads the text at the new schema and compares what it
+/// means with what the old text meant, and says why when they differ. The edits returned are those
+/// that changed something, in the order given.
+///
+/// A YAML or JSON config is refused, with every edit to make by hand: only the TOML editor can add
+/// keys and tables. Anything else it cannot do safely is a [`Refusal`] too, and nothing is edited.
+pub fn migrate(
+    text: &str,
+    path: &str,
+    edits: Vec<TableEdit>,
+    verify: impl FnOnce(&str) -> Result<(), String>,
+) -> Result<Edited, Refusal> {
+    let language = ConfigFormat::of(Path::new(path));
+    let plan = match language {
+        _ if edits.is_empty() => Plan {
+            text: text.to_string(),
+            edits: Vec::new(),
+            touched: Vec::new(),
+        },
+        Some(ConfigFormat::Toml) => toml::migrate(text, path, edits)?,
+        Some(language) => return Err(by_hand(text, path, edits, language)),
+        None => {
+            let edits: Vec<Edit> = edits
+                .into_iter()
+                .map(|edit| Edit::Table { edit, line: None })
+                .collect();
+            return Err(Refusal::of(
+                format!("cannot tell the language of {path}"),
+                path,
+                &edits,
+            ));
+        }
+    };
+    #[cfg(test)]
+    let plan = match WRONG_EDIT.get() {
+        Some(wrong) => {
+            let text = wrong(&plan.text);
+            Plan { text, ..plan }
+        }
+        None => plan,
+    };
+    checked::migrated(text, path, plan, verify)
+}
+
+/// The refusal of a migration of a YAML or JSON config: every edit, at the line of its key where
+/// the scan finds it, to make by hand.
+fn by_hand(text: &str, path: &str, edits: Vec<TableEdit>, language: ConfigFormat) -> Refusal {
+    let scan = match language {
+        ConfigFormat::Yaml => yaml::scan(text),
+        _ => json::scan(text),
+    };
+    let edits: Vec<Edit> = edits
+        .into_iter()
+        .map(|edit| {
+            let mut key = edit.table().0.clone();
+            match &edit {
+                TableEdit::Create { .. } => {}
+                TableEdit::Set { key: name, .. }
+                | TableEdit::Delete { key: name, .. }
+                | TableEdit::Unlist { key: name, .. } => key.push(Part::Key(name.clone())),
+            }
+            let line = scan.as_ref().ok().and_then(|scan| {
+                scan.members
+                    .iter()
+                    .find(|member| member.path == key)
+                    .map(|member| member.line)
+            });
+            Edit::Table { edit, line }
+        })
+        .collect();
+    Refusal::of(
+        format!("{path} needs edits that deslag makes in TOML only"),
+        path,
+        &edits,
+    )
 }
 
 /// A function that damages the text of a plan.

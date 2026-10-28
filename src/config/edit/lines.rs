@@ -68,28 +68,7 @@ pub(super) fn only_the_edits_changed(
     for &(emptied, _) in &sealed_lines {
         may_remove[emptied] = true;
     }
-    if let Some(&stray) = removed.iter().find(|&&index| !may_remove[index])
-        && !same_without_allowed(&old_lines, &removed, &may_remove)
-    {
-        let line = old_lines[stray];
-        let ending_changed = added.iter().any(|&index| {
-            let now = new_lines[index];
-            now.content == line.content && now.end != line.end && !line.end.is_empty()
-        });
-        return Err(if ending_changed {
-            format!(
-                "it changes the line ending of line {}, `{}`, which no edit is for",
-                stray + 1,
-                line.content
-            )
-        } else {
-            format!(
-                "it removes line {}, `{}`, which no edit is for",
-                stray + 1,
-                line.content
-            )
-        });
-    }
+    no_stray_removal(&old_lines, &new_lines, (&removed, &added), &may_remove)?;
 
     let stamp = edits.iter().find_map(|edit| match edit {
         Edit::Stamp { from, to, at } => Some((from.as_ref(), to, *at)),
@@ -144,6 +123,64 @@ pub(super) fn only_the_edits_changed(
         }
     }
     Ok(())
+}
+
+/// Whether `new`, a migration of `old`, keeps every line of `old` but those `touched` are for:
+/// each line removed is one an edit is for, a comment directly above one, or a blank line next to
+/// those, and the file ends in a line ending if and only if it did. The lines a migration adds are
+/// new settings, so this does not judge them; the check of what the new text means does.
+pub(super) fn only_touched_lines_removed(
+    old: &str,
+    new: &str,
+    touched: &[Touch],
+) -> Result<(), String> {
+    if old.ends_with('\n') != new.ends_with('\n') {
+        return Err("it changes whether the file ends in a line ending".to_string());
+    }
+    let old_lines = lines(old);
+    let new_lines = lines(new);
+    let Some((removed, added)) = diff(&old_lines, &new_lines, MOST_CHANGED) else {
+        return Err(format!(
+            "it changes more than {MOST_CHANGED} lines, which its edits do not"
+        ));
+    };
+    let may_remove = removable(&old_lines, touched);
+    no_stray_removal(&old_lines, &new_lines, (&removed, &added), &may_remove)
+}
+
+/// Whether every line of `old` at `removed` is one that `may` go, or taking them out leaves the
+/// text that taking out only those would. The error names the first that is not, and says when it
+/// is its line ending that changed, which `added` shows.
+fn no_stray_removal(
+    old: &[Line<'_>],
+    new: &[Line<'_>],
+    (removed, added): (&[usize], &[usize]),
+    may: &[bool],
+) -> Result<(), String> {
+    let Some(&stray) = removed.iter().find(|&&index| !may[index]) else {
+        return Ok(());
+    };
+    if same_without_allowed(old, removed, may) {
+        return Ok(());
+    }
+    let line = old[stray];
+    let ending_changed = added.iter().any(|&index| {
+        let now = new[index];
+        now.content == line.content && now.end != line.end && !line.end.is_empty()
+    });
+    Err(if ending_changed {
+        format!(
+            "it changes the line ending of line {}, `{}`, which no edit is for",
+            stray + 1,
+            line.content
+        )
+    } else {
+        format!(
+            "it removes line {}, `{}`, which no edit is for",
+            stray + 1,
+            line.content
+        )
+    })
 }
 
 /// The lines of `text`, each with the bytes that end it.

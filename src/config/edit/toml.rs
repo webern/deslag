@@ -13,6 +13,12 @@
 //! line between, and nothing else: the comments above those stay, and so do the comment lines that
 //! open a table when other keys follow. A renamed key keeps its value, its comments and its place
 //! among the keys of its table.
+//!
+//! A migration's edits of tables are made by the `apply` module, on the same footing.
+
+mod apply;
+
+pub(super) use apply::migrate;
 
 use std::ops::RangeInclusive;
 
@@ -307,18 +313,19 @@ fn cut_marks(index: usize) -> (String, String) {
     )
 }
 
-/// Whether the comment lines directly above the key of `found` open its table and the table has other
-/// keys after it, so that they may be about the table, or about the key that is now first, and stay.
-fn opening_comments_stay(lines: &[&str], found: &Found) -> bool {
+/// Whether the comment lines directly above a key, whose lines are `line` to `last_line`, open its
+/// table and the table has other keys after it, so that they may be about the table, or about the
+/// key that is now first, and stay.
+fn opening_comments_stay(lines: &[&str], line: usize, last_line: usize) -> bool {
     let is_comment = |line: &str| line.trim_start().starts_with('#');
-    let key = found.line - 1;
+    let key = line - 1;
     let mut top = key;
     while top > 0 && is_comment(lines[top - 1]) {
         top -= 1;
     }
     let opens = top < key && (top == 0 || lines[top - 1].trim_start().starts_with('['));
     let next = lines
-        .get(found.last_line..)
+        .get(last_line..)
         .unwrap_or_default()
         .iter()
         .find(|line| !line.trim().is_empty() && !is_comment(line));
@@ -364,27 +371,49 @@ fn cut(mut text: String, count: usize) -> Option<String> {
     Some(text)
 }
 
-/// Deletes the key of `found`. A key on its own line is not removed from the tree: it is marked, so
-/// that the line goes from the text and everything above it stays where it is.
+/// Deletes the key of `found`.
 fn delete(root: &mut Table, found: &Found, lines: &[&str], marks: &mut usize) -> Option<()> {
     let (_, parents, leaf) = split(found.redirect.old).ok()?;
     let mut steps = found.place.steps();
     steps.extend(parents.iter().map(|key| Step::Key(key)));
+    delete_value(
+        root,
+        &steps,
+        leaf,
+        Some((found.line, found.last_line)),
+        lines,
+        marks,
+    )
+}
 
-    let mut table = table_at(root, &steps)?;
+/// Deletes the key `leaf` of the table at `steps`, which holds a value, and whose lines in the text
+/// as it was are `at`, when it has lines there. A key on its own line is not removed from the tree:
+/// it is marked, so that the line goes from the text and everything above it stays where it is.
+fn delete_value(
+    root: &mut Table,
+    steps: &[Step<'_>],
+    leaf: &str,
+    at: Option<(usize, usize)>,
+    lines: &[&str],
+    marks: &mut usize,
+) -> Option<()> {
+    let mut table = table_at(root, steps)?;
     let on_its_own_line = match &table {
         TableMut::Table(table) => !(table.is_dotted() && table.len() == 1),
         TableMut::Inline(_) => false,
     };
     let like = table.like();
-    if on_its_own_line && like.get(leaf).is_some_and(Item::is_value) {
+    if let (true, Some((line, last_line))) = (
+        on_its_own_line && like.get(leaf).is_some_and(Item::is_value),
+        at,
+    ) {
         let key = like.key(leaf)?;
         let before = key
             .leaf_decor()
             .prefix()
             .and_then(|prefix| prefix.as_str())
             .unwrap_or("");
-        let kept = kept_before(before, opening_comments_stay(lines, found));
+        let kept = kept_before(before, opening_comments_stay(lines, line, last_line));
         let (start, end) = cut_marks(*marks);
         *marks += 1;
         like.key_mut(leaf)?
@@ -403,8 +432,11 @@ fn delete(root: &mut Table, found: &Found, lines: &[&str], marks: &mut usize) ->
         return Some(());
     }
 
-    let taken = take(root, &steps, leaf)?;
-    seal(root, &steps, taken.leaf)
+    let taken = take(root, steps, leaf)?;
+    if steps.is_empty() {
+        return Some(());
+    }
+    seal(root, steps, taken.leaf)
 }
 
 /// A key taken out of a table: its value, and its decoration, which is the space and the comment

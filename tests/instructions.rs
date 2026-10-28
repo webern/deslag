@@ -930,67 +930,6 @@ fn update_md_meets_its_budget() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
-/// The closing says what moving the stamp turns on in the config that was read, and says nothing
-/// of it where no config was.
-#[test]
-fn the_closing_says_what_moving_the_stamp_turns_on_in_this_config() {
-    let current = env!("CARGO_PKG_VERSION");
-    // The line is in the closing, after the entries, whatever they print.
-    let line = |output: &Output| {
-        let text = stdout(output);
-        let closing = text.rsplit("\n## Finish\n").next().expect("a closing");
-        closing
-            .lines()
-            .find(|line| line.starts_with("Moving `deslag_version`"))
-            .map(str::to_string)
-    };
-
-    // The catalogue holds phrases the stamp keeps off, and the lint's default groups are on. Whether
-    // the running release has shipped any since OLDER depends on the release.
-    let phrases = Repo::new();
-    phrases.write(
-        "deslag.toml",
-        &format!(
-            "schema_version = {SCHEMA_VERSION}\ndeslag_version = \"{OLDER}\"\n\n\
-             [md.lints.banned_phrases]\n"
-        ),
-    );
-    // With nothing new there is no closing at all, and the topic says the config is current.
-    let new = news(&release(OLDER));
-    let no_phrase = format!(
-        "Moving `deslag_version` to {current} turns on no phrase in this config. Nothing \
-         else `check` finds depends on `deslag_version`, so there is nothing to compare. \
-         Only the note that the config is behind goes."
-    );
-    let line_with = line(&update(&phrases, &[]));
-    if new.is_empty() {
-        assert_eq!(line_with, None);
-    } else if new.phrases().is_empty() {
-        assert_eq!(line_with.as_deref(), Some(no_phrase.as_str()));
-    } else {
-        let line_with = line_with.expect("a line");
-        let start = format!(
-            "Moving `deslag_version` to {current} turns on these phrases in this config: `"
-        );
-        assert!(line_with.starts_with(&start), "{line_with}");
-        assert!(
-            line_with.ends_with("To see what they would flag, search the text for them, or move the stamp by hand, run `check` and put it back."),
-            "{line_with}"
-        );
-    }
-
-    // A config that does not turn the lint on has none of them turned on.
-    let none = update(&stamped(OLDER), &[]);
-    assert_eq!(
-        line(&none).as_deref(),
-        (!new.is_empty()).then_some(no_phrase.as_str())
-    );
-
-    // With `--since`, or with no config, no config was read.
-    assert_eq!(line(&update(&phrases, &["--since", OLDER])), None);
-    assert_eq!(line(&update(&Repo::new(), &[])), None);
-}
-
 /// A lint the config already turns on is listed as new, with a mark that says so.
 #[test]
 fn a_lint_the_config_already_turns_on_is_marked() {

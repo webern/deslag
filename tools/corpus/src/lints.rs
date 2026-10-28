@@ -1,18 +1,16 @@
 //! `lints`: what a config's lints find in the corpus, per label and per tool, which is how a
 //! setting is chosen before it is committed.
 //!
-//! Each file is checked as `deslag` checks it in its repository: through `check_file_at`, at its
-//! path there, so the config's overrides apply to it as they would, and with the phrase catalogue
-//! whole, as the report config has no stamp to hold a new phrase back. The lints that need more
-//! than the file are left out.
+//! Each file is checked as `deslag` checks it in its repository: through `check_file`, at its
+//! path there, so the config's overrides apply to it as they would. The lints that need more than
+//! the file are left out.
 //! `repo_layout` reads the files around a file, which the corpus does not hold, so its findings
 //! are dropped.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use deslag::version::Version;
-use deslag::{Config, Lint, check_file_at};
+use deslag::{Config, Lint, check_file};
 use serde::Serialize;
 
 use crate::load::Problem;
@@ -137,7 +135,7 @@ pub fn lints(
     let docs: Vec<&Doc> = filters
         .apply(corpus)
         .into_iter()
-        // A path that two sections select passes: `check_file_at` reports it.
+        // A path that two sections select passes: `check_file` reports it.
         .filter(|doc| {
             every_file
                 || config
@@ -151,14 +149,8 @@ pub fn lints(
             .map(|doc| {
                 let bytes = std::fs::read(corpus.root.join(&doc.path))
                     .map_err(|error| Problem(format!("{}: {error}", doc.path)))?;
-                let findings = check_file_at(
-                    config,
-                    &doc.source_path,
-                    &bytes,
-                    &corpus.root,
-                    &Version::Next,
-                )
-                .map_err(|error| Problem(format!("{}: {error}", doc.path)))?;
+                let findings = check_file(config, &doc.source_path, &bytes, &corpus.root)
+                    .map_err(|error| Problem(format!("{}: {error}", doc.path)))?;
                 Ok(findings
                     .iter()
                     .map(|finding| finding.violation.lint())

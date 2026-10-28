@@ -3,17 +3,15 @@
 //!
 //! The range is [`News`]. The text and the JSON print the settings renamed or removed, then the new
 //! lints, each as the page `deslag instructions lints` prints for it, then the new settings, each
-//! as its doc comment in the schema, and last the phrases the running version turns on. Settings
-//! with the same doc comment share a heading. When a config was read, a lint the config already has
-//! a table for says so, and the closing says which of those phrases moving the stamp turns on in it.
-//! The notice asks whether the range holds anything. The fixed words of the text are in
+//! as its doc comment in the schema, and last the catalogue phrases. Settings with the same doc
+//! comment share a heading. When a config was read, a lint the config already has a table for says
+//! so. The notice asks whether the range holds anything. The fixed words of the text are in
 //! `src/instructions/update.md`.
 
 use serde::Serialize;
 
 use crate::Lint;
 use crate::config::Config;
-use crate::config::update::{TurnedOn, turned_on};
 use crate::lint::banned_phrases::Entry as Phrase;
 use crate::news::{News, Setting};
 use crate::version::Version;
@@ -39,8 +37,6 @@ pub enum Start<'a> {
 /// and hands this to [`Start`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Reading {
-    /// The phrases that moving the stamp to the running version turns on in the config.
-    pub turned_on: Vec<TurnedOn>,
     /// The lints of the range that some table of the config already turns on.
     pub set: Vec<Lint>,
 }
@@ -59,10 +55,7 @@ impl Reading {
             .map(|(lint, _)| *lint)
             .filter(|lint| tables.iter().any(|lints| lints.is_on(*lint)))
             .collect();
-        Reading {
-            turned_on: turned_on(config, news.phrases()),
-            set,
-        }
+        Reading { set }
     }
 }
 
@@ -229,12 +222,7 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
             ));
         }
     }
-    text.push_str("\n## Finish\n\n");
-    // Only a config that was read can say what moving its stamp turns on.
-    if let Start::Config(reading) = start {
-        text.push_str(&format!("{}\n\n", stamp_line(reading, &words)));
-    }
-    text.push_str(&format!("{}\n", words("Closing")));
+    text.push_str(&format!("\n## Finish\n\n{}\n", words("Closing")));
     text
 }
 
@@ -244,32 +232,6 @@ fn reading_of<'a>(start: Start<'a>) -> Option<&'a Reading> {
         Start::Config(reading) => Some(reading),
         Start::Since | Start::NoConfig => None,
     }
-}
-
-/// The line that says what moving the stamp turns on in the config: the phrases `reading` found,
-/// or that there are none, and then how to see what they flag, or that nothing else `check` finds
-/// depends on the stamp. `words` gives a piece of the fixed words with `{from}` and `{to}` filled.
-/// It speaks of the stamp's move alone, which is all the stamp does: a new lint stays off until the
-/// config names it, and a new setting takes its default whatever the stamp.
-fn stamp_line(reading: &Reading, words: &dyn Fn(&str) -> String) -> String {
-    let turned = if reading.turned_on.is_empty() {
-        "no phrase in this config".to_string()
-    } else {
-        let listed: Vec<String> = reading
-            .turned_on
-            .iter()
-            .map(|turned| format!("`{}` ({})", turned.phrase, turned.group))
-            .collect();
-        format!("these phrases in this config: {}", listed.join(", "))
-    };
-    let next = words(if reading.turned_on.is_empty() {
-        "Stamp none"
-    } else {
-        "Stamp phrases"
-    });
-    // A paragraph of the file is wrapped, and the line is one.
-    let next = next.split_whitespace().collect::<Vec<_>>().join(" ");
-    format!("{} {next}", words("Stamp").replace("{turned}", &turned))
 }
 
 /// The JSON of `deslag instructions update`: the items of [`update_text`], in its order, for a
@@ -305,7 +267,7 @@ enum ItemKind {
     Setting,
     /// A setting renamed or removed.
     Redirect,
-    /// A phrase of the catalogue that the running version turns on.
+    /// A phrase of the catalogue.
     Phrase,
 }
 
@@ -333,14 +295,14 @@ struct Item<'a> {
     group: Option<&'a str>,
 }
 
-/// What to do to keep `phrase` from reporting once the stamp reaches the release it arrived in.
+/// Where `phrase` reports, and what to do to keep it.
 fn keep_off(phrase: &Phrase) -> String {
     let group = phrase.group.group().name;
     format!(
-        "Every file whose `banned_phrases` table has the group `{group}` on \
-         fails on it once `deslag_version` reaches {}. To keep it, add `\"{}\"` to `allow` in the \
-         table, or switch the group off with `groups.{group} = false`.",
-        phrase.since, phrase.phrase
+        "Every file whose `banned_phrases` table has the group `{group}` on fails on it now, \
+         whatever `deslag_version` says. To keep it, add `\"{}\"` to `allow` in the table, or \
+         switch the group off with `groups.{group} = false`.",
+        phrase.phrase
     )
 }
 
@@ -461,7 +423,7 @@ llm_repos = 1
     }
 
     /// The text of the range after 0.0.1 up to `next` over [`paths`] and [`redirects`], for a config
-    /// that was read and turns nothing on.
+    /// that was read.
     fn text_to_next() -> String {
         let (paths, redirects, catalogue) = (paths(), redirects(), no_phrases());
         let (from, to) = (version("0.0.1"), Version::Next);
@@ -470,7 +432,7 @@ llm_repos = 1
     }
 
     /// The text, whole: a redirect, each lint the range holds with its page, the settings grouped
-    /// by doc comment in path order, and the closing with the stamp line. A key added to a lint
+    /// by doc comment in path order, and the closing. A key added to a lint
     /// that is not new is a setting, and nothing under the table of a new lint is one.
     #[test]
     fn the_text_holds_the_redirects_the_lints_and_the_settings_grouped() {
@@ -523,12 +485,12 @@ What rust leaves out.
 
 ## Finish
 
-Moving `deslag_version` to next turns on no phrase in this config. Nothing else `check` finds depends on `deslag_version`, so there is nothing to compare. Only the note that the config is behind goes.
+Nothing `check` finds depends on `deslag_version`.
 
-Offer each new lint and phrase to the person, with what it fails. Add the table of each lint they
-choose, and keep off each phrase they want off, as its section says: a phrase is on once the
-version moves. A new setting keeps its default until the config sets it; name it to the person,
-and set it only if they ask.
+Offer each new lint to the person, with what it fails, and add the table of each they choose. Name
+each new phrase, which is on already, and keep off each they want off, as its section says. A new
+setting keeps its default until the config sets it; name it to the person, and set it only if they
+ask.
 
 Once they have chosen, run `deslag update --to next`, adding your `--config-path` if any. It sets
 `deslag_version` to "next", ending this list, and edits renamed or removed settings. If the person
@@ -743,9 +705,9 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         assert!(settings < new_phrases && new_phrases < finish, "{text}");
         assert!(text.contains(
             "### `never silently` (0.3.0)\n\nsay what it does instead\n\nEvery file whose \
-             `banned_phrases` table has the group `insistence` on fails on \
-             it once `deslag_version` reaches 0.3.0. To keep it, add `\"never silently\"` to \
-             `allow` in the table, or switch the group off with `groups.insistence = false`.\n"
+             `banned_phrases` table has the group `insistence` on fails on it now, whatever \
+             `deslag_version` says. To keep it, add `\"never silently\"` to `allow` in the \
+             table, or switch the group off with `groups.insistence = false`.\n"
         ));
         // 0.2.0 is the stamp, so its phrase has been seen.
         assert!(!text.contains("load-bearing"), "{text}");
@@ -809,59 +771,6 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         (reading, text)
     }
 
-    /// What the stamp line of the text reads for a config of `tables`.
-    fn stamp_line_for(tables: &str) -> Option<String> {
-        let (_, text) = read_with(tables);
-        text.lines()
-            .find(|line| line.starts_with("Moving `deslag_version`"))
-            .map(str::to_string)
-    }
-
-    /// The stamp line of a config in which moving the stamp turns on nothing.
-    const NONE_TURNED_ON: &str = "Moving `deslag_version` to 0.3.0 turns on no phrase in this \
-        config. Nothing else `check` finds depends on `deslag_version`, so there is nothing to \
-        compare. Only the note that the config is behind goes.";
-
-    #[test]
-    fn the_closing_names_the_phrases_that_moving_the_stamp_turns_on_in_the_config() {
-        let line = stamp_line_for("[md.lints.banned_phrases]\n");
-        assert_eq!(
-            line.as_deref(),
-            Some(
-                "Moving `deslag_version` to 0.3.0 turns on these phrases in this config: \
-                 `load-bearing` (metaphors), `never silently` (insistence). To see what they \
-                 would flag, search the text for them, or move the stamp by hand, run `check` and \
-                 put it back."
-            )
-        );
-        // Only the phrase of a group that is on, and that the config neither allows nor bans.
-        let line = stamp_line_for(
-            "[md.lints.banned_phrases]\nallow = [\"load-bearing\"]\n\
-             [md.lints.banned_phrases.groups]\ninsistence = false\n",
-        );
-        assert_eq!(line.as_deref(), Some(NONE_TURNED_ON));
-    }
-
-    #[test]
-    fn the_closing_says_no_phrase_turns_on_in_a_config_without_the_lint() {
-        assert_eq!(
-            stamp_line_for("[md.lints.density]\n").as_deref(),
-            Some(NONE_TURNED_ON)
-        );
-    }
-
-    #[test]
-    fn the_closing_says_nothing_of_the_stamp_where_no_config_was_read() {
-        let (paths, catalogue) = (paths(), phrases());
-        let (from, to) = (version("0.0.0"), version("0.3.0"));
-        let news = News::between(&paths, &[], &catalogue, &from, &to);
-        for start in [Start::Since, Start::NoConfig] {
-            let text = update_text(&news, &from, &to, start);
-            assert!(text.contains("## Finish"), "{text}");
-            assert!(!text.contains("Moving `deslag_version`"), "{text}");
-        }
-    }
-
     /// A lint the config already has a table for says so in the text and in the JSON, whether the
     /// table is the section's or an override's, and a lint it lacks does not. The lints of
     /// [`paths`] from 0.0.1 are in the range from 0.0.0.
@@ -911,16 +820,7 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
 
     #[test]
     fn update_md_has_each_piece_the_text_prints() {
-        for name in [
-            "Heading",
-            "Closing",
-            "Current",
-            "Nothing new",
-            "No config",
-            "Stamp",
-            "Stamp none",
-            "Stamp phrases",
-        ] {
+        for name in ["Heading", "Closing", "Current", "Nothing new", "No config"] {
             assert!(!piece(name).is_empty(), "{name}");
         }
     }

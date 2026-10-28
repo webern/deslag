@@ -229,19 +229,10 @@ fn passes(
     };
     let mut fixed = Vec::new();
     let mut bound = None;
-    let stamp = config.deslag_version();
     for pass in 0.. {
         let lint::Checked {
             document, findings, ..
-        } = lint::check_text(
-            config,
-            section,
-            relative,
-            text.as_bytes(),
-            &text,
-            dir,
-            &stamp,
-        )?;
+        } = lint::check_text(config, section, relative, text.as_bytes(), &text, dir)?;
         let places: Vec<(Mark, Result<Edit, &'static str>)> = findings
             .iter()
             .flat_map(|finding| finding.violation.edits())

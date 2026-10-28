@@ -4,9 +4,10 @@
 # repositories. Its counts are for the image `measured_on` names, and `make test-blobs` fails when
 # they drift; `make fix-catalog` rewrites them and `measured_on`. `since` is the release the entry
 # first ships in, or `next` for the unreleased one; tests/since.rs holds it to `next` or a release
-# no later than the crate version. A config reports the entry only once its `deslag_version` has
-# reached `since`, so a new phrase is `next`, and `deslag-release prep` rewrites `next` to the
-# version: `make check-release` fails while one is left, since no stamp ever reaches `next`.
+# no later than the crate version. `deslag instructions update` offers an entry to a config whose
+# `deslag_version` is below its `since`, so a new phrase is `next`, and `deslag-release prep`
+# rewrites `next` to the version: `make check-release` fails while one is left, since nothing
+# offers `next`.
 
 measured_on = "ghcr.io/webern/deslag-blobs:v7@sha256:d9a3047c38e2f9e7845f15f4a4f8a66b715595879f818e4ad4cd0997077c85fb"
 

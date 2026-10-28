@@ -547,7 +547,6 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         ..Report::default()
     };
 
-    let stamp = config.deslag_version();
     let walked = glob::walk(root)?;
     let known: BTreeSet<String> = match config.has_allow() {
         true => walked.iter().map(|file| file.relative.clone()).collect(),
@@ -560,15 +559,7 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         let contents = read(&file)?;
         let dir = file.absolute.parent().unwrap_or(root);
         let text = decode(&contents);
-        let checked = check_text(
-            config,
-            section,
-            &file.relative,
-            &contents,
-            &text,
-            dir,
-            &stamp,
-        )?;
+        let checked = check_text(config, section, &file.relative, &contents, &text, dir)?;
         report.findings.extend(checked.findings);
         exemptions.extend(checked.exemptions);
     }
@@ -640,23 +631,9 @@ pub fn check_file(
     contents: &[u8],
     dir: &Path,
 ) -> Result<Vec<Finding>, Error> {
-    check_file_at(config, relative, contents, dir, &config.deslag_version())
-}
-
-/// [`check_file`], with the phrases of the catalogue held to `stamp` and not to the config's:
-/// [`Version::Next`] puts the whole catalogue in force. For a test or a tool that means the
-/// catalogue as shipped, whatever stamp the config it lints with has. The `allow` entries are as
-/// [`check_file`] has them: applied, and not reported when they fail.
-pub fn check_file_at(
-    config: &Config,
-    relative: &str,
-    contents: &[u8],
-    dir: &Path,
-    stamp: &Version,
-) -> Result<Vec<Finding>, Error> {
     let text = decode(contents);
     let section = config.section_to_read(relative)?;
-    Ok(check_text(config, section, relative, contents, &text, dir, stamp)?.findings)
+    Ok(check_text(config, section, relative, contents, &text, dir)?.findings)
 }
 
 /// What running the lints over one file came to.
@@ -669,11 +646,10 @@ pub(crate) struct Checked<'a> {
     pub exemptions: Vec<Exemption>,
 }
 
-/// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it,
-/// `text`, its `contents` decoded, and the `stamp` the phrases of the catalogue are held to, which
-/// is the config's unless the caller means the catalogue whole. Returns the document the lints read
-/// with what they found, for a caller that edits it: the section's stack reads the file, so a fix
-/// reads a file as the check does. The section's `allow` entries for the file are applied here, so
+/// Runs every lint over one file, as [`check_file`] does, given the `section` that selects it and
+/// `text`, its `contents` decoded. Returns the document the lints read with what they found, for a
+/// caller that edits it: the section's stack reads the file, so a fix reads a file as the check
+/// does. The section's `allow` entries for the file are applied here, so
 /// that `check`, `fix` and `--diff` agree on what is exempt: a fix never edits an exempted
 /// occurrence.
 pub(crate) fn check_text<'a>(
@@ -683,7 +659,6 @@ pub(crate) fn check_text<'a>(
     contents: &[u8],
     text: &'a str,
     dir: &Path,
-    stamp: &Version,
 ) -> Result<Checked<'a>, Error> {
     let lints = section.lints_for(relative);
     let contradiction = lints.contradiction().or_else(|| {
@@ -713,10 +688,8 @@ pub(crate) fn check_text<'a>(
                 .map(Violation::RepoLayout),
             Lint::BannedChars => banned_chars::check(&document, lints.banned_chars.as_ref())
                 .map(Violation::BannedChars),
-            Lint::BannedPhrases => {
-                banned_phrases::check(&document, lints.banned_phrases.as_ref(), stamp)
-                    .map(Violation::BannedPhrases)
-            }
+            Lint::BannedPhrases => banned_phrases::check(&document, lints.banned_phrases.as_ref())
+                .map(Violation::BannedPhrases),
             Lint::Density => {
                 density::check(&document, lints.density.as_ref()).map(Violation::Density)
             }

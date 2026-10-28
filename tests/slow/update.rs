@@ -8,19 +8,17 @@
 use crate::common;
 
 use std::path::{Path, PathBuf};
-use std::process::Output;
 
 use common::frozen::{self, EXTENSIONS};
 use common::schema::SchemaPaths;
-use common::{Repo, code, stderr, stdout};
+use common::{Repo, code, raw_stderr, stderr, stdout};
 use deslag::config::schema;
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::news::News;
 use deslag::version::Version;
 
 /// The release running, which `--to` accepts. A test that needs the stamp to move passes it, because
-/// a bare `update` holds the stamp back once something arrived after the config's, and a test
-/// must not turn on what arrived.
+/// a bare `update` holds the stamp back once something arrived after the config's.
 const CURRENT: &str = env!("CARGO_PKG_VERSION");
 
 /// A release before every release, so a stamp of it is behind every lint released so far. No
@@ -34,25 +32,6 @@ const BEFORE_ALL: &str = "0.0.0";
 fn held() -> bool {
     let from = Version::Release(BEFORE_ALL.parse().expect("a release"));
     !News::embedded(&from, &Version::current()).is_empty()
-}
-
-/// Standard error, which `update` fills only with what it did, without the line that names the
-/// catalogue phrases a move of the stamp turns on. Which phrases those are depends on the
-/// catalogue, so a release that adds one would otherwise edit every test that moves a stamp; the
-/// tests about that line ask for [`raw_said`].
-fn said(output: &Output) -> String {
-    raw_said(output)
-        .split_inclusive('\n')
-        .filter(|line| {
-            !line.contains(": turned on these phrases, ")
-                && !line.contains(": would turn on these phrases, ")
-        })
-        .collect()
-}
-
-/// Standard error, every line of it.
-fn raw_said(output: &Output) -> String {
-    common::raw_stderr(output)
 }
 
 /// A repo holding `text` as `deslag.<extension>` and a Markdown file for `check` to read.
@@ -76,9 +55,9 @@ const SIGNPOSTS: &str = "# Why this is here.\nschema_version = 1 # the format\n\
 fn it_deletes_the_removed_key_and_sets_the_stamp_and_a_second_run_says_current() {
     let repo = repo_with("toml", SIGNPOSTS);
     let output = repo.run(&["update", "--to", CURRENT]);
-    assert_eq!(code(&output), 0, "{}", said(&output));
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     assert_eq!(stdout(&output), "");
-    let lines: Vec<String> = said(&output).lines().map(str::to_string).collect();
+    let lines: Vec<String> = raw_stderr(&output).lines().map(str::to_string).collect();
     assert_eq!(
         lines,
         [
@@ -101,12 +80,12 @@ fn it_deletes_the_removed_key_and_sets_the_stamp_and_a_second_run_says_current()
     // Nothing warns now, and the lint is still on.
     let check = repo.check();
     assert_eq!(code(&check), 0);
-    assert_eq!(said(&check), "");
+    assert_eq!(raw_stderr(&check), "");
 
     let before = read(&repo, "toml");
     let again = repo.run(&["update"]);
     assert_eq!(code(&again), 0);
-    assert_eq!(said(&again), "deslag: deslag.toml is current\n");
+    assert_eq!(raw_stderr(&again), "deslag: deslag.toml is current\n");
     assert_eq!(read(&repo, "toml"), before);
 }
 
@@ -116,13 +95,13 @@ fn dry_run_lists_the_edits_a_real_run_makes_and_writes_nothing() {
     let dry = repo.run(&["update", "--dry-run", "--to", CURRENT]);
     assert_eq!(code(&dry), 0);
     assert_eq!(read(&repo, "toml"), SIGNPOSTS);
-    let dry = said(&dry);
+    let dry = raw_stderr(&dry);
     assert!(
         dry.contains("would delete") && dry.contains("would set"),
         "{dry}"
     );
 
-    let real = said(&repo.run(&["update", "--to", CURRENT]));
+    let real = raw_stderr(&repo.run(&["update", "--to", CURRENT]));
     let as_done = dry
         .replace("would delete", "deleted")
         .replace("would set", "set");
@@ -137,8 +116,8 @@ fn a_stamp_behind_a_release_with_news_is_left_unless_told_to_move() {
 
     // The redirect is made, the stamp stays, and the output says what to run.
     let output = repo.run(&["update"]);
-    assert_eq!(code(&output), 0, "{}", said(&output));
-    let said_bare = said(&output);
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
+    let said_bare = raw_stderr(&output);
     assert!(
         said_bare.contains("deleted `md.lints.banned_phrases.groups.signposts`"),
         "{said_bare}"
@@ -160,10 +139,10 @@ fn a_stamp_behind_a_release_with_news_is_left_unless_told_to_move() {
     // `--to` moves it, keeping the comment on its line. A deslag with nothing after the stamp is
     // already at the stamp, and there is nothing to move.
     let output = repo.run(&["update", "--to", CURRENT]);
-    assert_eq!(code(&output), 0, "{}", said(&output));
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     if held() {
         assert_eq!(
-            said(&output),
+            raw_stderr(&output),
             format!(
                 "deslag: deslag.toml: set deslag_version to \"{CURRENT}\" (it was \"{BEFORE_ALL}\")\n"
             )
@@ -175,7 +154,7 @@ fn a_stamp_behind_a_release_with_news_is_left_unless_told_to_move() {
             )
         );
     } else {
-        assert_eq!(said(&output), "deslag: deslag.toml is current\n");
+        assert_eq!(raw_stderr(&output), "deslag: deslag.toml is current\n");
         assert_eq!(
             read(&repo, "toml"),
             format!("{text}[md.lints.banned_phrases.groups]\n")
@@ -191,7 +170,7 @@ fn a_bare_update_with_nothing_else_to_do_still_says_to_read_what_is_new() {
     );
     let output = repo.run(&["update"]);
     assert_eq!(code(&output), 0);
-    let said = said(&output);
+    let said = raw_stderr(&output);
     assert_eq!(said.lines().count(), 1, "{said}");
     if held() {
         assert!(
@@ -218,7 +197,7 @@ fn a_to_that_is_not_the_running_release_exits_2_and_writes_nothing() {
         .chain([newer.as_str(), "next", "0.0.1-rc.1", "0.0.1+x", "nonsense"])
     {
         let output = repo.run(&["update", "--to", to]);
-        assert_eq!(code(&output), 2, "{to}: {}", said(&output));
+        assert_eq!(code(&output), 2, "{to}: {}", raw_stderr(&output));
         assert_eq!(stdout(&output), "");
         assert_eq!(read(&repo, "toml"), "schema_version = 1\n", "{to}");
     }
@@ -231,9 +210,9 @@ fn a_stamp_newer_than_the_running_deslag_exits_2_and_writes_nothing() {
     let output = repo.run(&["update"]);
     assert_eq!(code(&output), 2);
     assert!(
-        said(&output).contains("upgrade deslag"),
+        raw_stderr(&output).contains("upgrade deslag"),
         "{}",
-        said(&output)
+        raw_stderr(&output)
     );
     assert_eq!(read(&repo, "toml"), text);
 }
@@ -253,12 +232,12 @@ fn a_config_that_will_not_load_exits_2_and_writes_nothing() {
     ] {
         let repo = repo_with("toml", text);
         let output = repo.run(&["update"]);
-        assert_eq!(code(&output), 2, "{name}: {}", said(&output));
+        assert_eq!(code(&output), 2, "{name}: {}", raw_stderr(&output));
         assert_eq!(read(&repo, "toml"), text, "{name}");
     }
     let output = Repo::new().run(&["update"]);
     assert_eq!(code(&output), 2);
-    assert!(said(&output).contains("no deslag config found"));
+    assert!(raw_stderr(&output).contains("no deslag config found"));
 }
 
 #[test]
@@ -289,17 +268,17 @@ fn the_stamp_is_set_in_each_language_and_the_file_is_otherwise_the_same() {
     for (extension, text, want) in cases {
         let repo = repo_with(extension, text);
         let output = repo.run(&["update", "--to", CURRENT]);
-        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        assert_eq!(code(&output), 0, "{extension}: {}", raw_stderr(&output));
         assert_eq!(read(&repo, extension), want, "{extension}");
         let check = repo.check();
         assert_eq!(
-            (code(&check), said(&check)),
+            (code(&check), raw_stderr(&check)),
             (0, String::new()),
             "{extension}"
         );
         let again = repo.run(&["update"]);
         assert_eq!(
-            said(&again),
+            raw_stderr(&again),
             format!("deslag: deslag.{extension} is current\n")
         );
     }
@@ -359,18 +338,18 @@ fn a_yaml_or_json_config_has_its_removed_key_deleted_and_keeps_its_other_lines()
         let repo = repo_with(extension, text);
         let before = repo.check();
         assert!(
-            said(&before).contains("`md.lints.banned_phrases.groups.signposts` was removed"),
+            raw_stderr(&before).contains("`md.lints.banned_phrases.groups.signposts` was removed"),
             "{extension}: {}",
-            said(&before)
+            raw_stderr(&before)
         );
         let output = repo.run(&["update", "--to", CURRENT]);
-        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        assert_eq!(code(&output), 0, "{extension}: {}", raw_stderr(&output));
         let line = |number: usize| {
             format!(
                 "deslag: deslag.{extension}:{number}: deleted `md.lints.banned_phrases.groups.signposts`, which was removed"
             )
         };
-        let lines: Vec<String> = said(&output).lines().map(str::to_string).collect();
+        let lines: Vec<String> = raw_stderr(&output).lines().map(str::to_string).collect();
         let (first, second) = if extension == "yaml" {
             (11, 17)
         } else {
@@ -391,13 +370,13 @@ fn a_yaml_or_json_config_has_its_removed_key_deleted_and_keeps_its_other_lines()
         // Nothing warns, the same settings are read, and a second run is current.
         let check = repo.check();
         assert_eq!(
-            (code(&check), said(&check)),
+            (code(&check), raw_stderr(&check)),
             (0, String::new()),
             "{extension}"
         );
         let again = repo.run(&["update"]);
         assert_eq!(
-            said(&again),
+            raw_stderr(&again),
             format!("deslag: deslag.{extension} is current\n")
         );
         assert_eq!(read(&repo, extension), want, "{extension}");
@@ -411,12 +390,12 @@ fn the_settings_a_yaml_or_json_config_gets_are_the_same_after_the_delete() {
         repo.write("a.md", "A short note.\n");
         let explain = |repo: &Repo| {
             let output = repo.run(&["explain", "README.md", "a.md"]);
-            assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+            assert_eq!(code(&output), 0, "{extension}: {}", raw_stderr(&output));
             stdout(&output)
         };
         let before = explain(&repo);
         let output = repo.run(&["update", "--to", CURRENT]);
-        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        assert_eq!(code(&output), 0, "{extension}: {}", raw_stderr(&output));
         assert_eq!(explain(&repo), before, "{extension}");
     }
 }
@@ -455,12 +434,12 @@ fn a_config_with_a_rust_section_has_the_removed_key_deleted_and_the_rust_section
         );
         let explain = |repo: &Repo| {
             let output = repo.run(&["explain", "README.md", "src/lib.rs"]);
-            assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+            assert_eq!(code(&output), 0, "{extension}: {}", raw_stderr(&output));
             stdout(&output)
         };
         let before = explain(&repo);
         let output = repo.run(&["update", "--to", CURRENT]);
-        assert_eq!(code(&output), 0, "{extension}: {}", said(&output));
+        assert_eq!(code(&output), 0, "{extension}: {}", raw_stderr(&output));
         let after = read(&repo, extension);
         let (gone, added) = lines_changed(text, &after);
         assert_eq!(gone.len(), 1, "{extension}: {gone:?}");
@@ -473,7 +452,7 @@ fn a_config_with_a_rust_section_has_the_removed_key_deleted_and_the_rust_section
         assert_eq!(explain(&repo), before, "{extension}");
         let check = repo.check();
         assert_eq!(
-            (code(&check), said(&check)),
+            (code(&check), raw_stderr(&check)),
             (0, String::new()),
             "{extension}"
         );
@@ -500,8 +479,8 @@ fn the_removed_key_in_a_rust_section_is_refused_by_the_loader_and_nothing_is_wri
     ] {
         let repo = repo_with(extension, text);
         let output = repo.run(&["update", "--to", CURRENT]);
-        assert_eq!(code(&output), 2, "{extension}: {}", said(&output));
-        let message = said(&output);
+        assert_eq!(code(&output), 2, "{extension}: {}", raw_stderr(&output));
+        let message = raw_stderr(&output);
         assert!(
             message.contains("groups.signposts") && message.contains("[rust] never had it"),
             "{extension}: {message}"
@@ -515,13 +494,13 @@ fn dry_run_lists_the_yaml_and_json_edits_a_real_run_makes_and_writes_nothing() {
     for (extension, text) in [("yaml", YAML_SIGNPOSTS), ("json", JSON_SIGNPOSTS)] {
         let repo = repo_with(extension, text);
         let dry = repo.run(&["update", "--dry-run", "--to", CURRENT]);
-        assert_eq!(code(&dry), 0, "{extension}: {}", said(&dry));
+        assert_eq!(code(&dry), 0, "{extension}: {}", raw_stderr(&dry));
         assert_eq!(read(&repo, extension), text, "{extension}");
-        let dry = said(&dry);
+        let dry = raw_stderr(&dry);
         assert_eq!(dry.matches("would delete").count(), 2, "{dry}");
         assert!(dry.contains("would set deslag_version"), "{dry}");
 
-        let real = said(&repo.run(&["update", "--to", CURRENT]));
+        let real = raw_stderr(&repo.run(&["update", "--to", CURRENT]));
         let as_done = dry
             .replace("would delete", "deleted")
             .replace("would set", "set");
@@ -587,7 +566,7 @@ fn what_cannot_be_cut_from_a_yaml_or_json_config_is_refused_whole_with_the_edits
             &["update", "--to", CURRENT],
         ] {
             let output = repo.run(args);
-            let said = said(&output);
+            let said = raw_stderr(&output);
             assert_eq!(code(&output), 2, "{name} {args:?}: {said}");
             assert_eq!(read(&repo, extension), text, "{name} {args:?}");
             assert!(said.contains("nothing was written"), "{name}: {said}");
@@ -617,11 +596,11 @@ fn the_rerun_command_keeps_the_flags_that_chose_the_file_and_the_version() {
     let output = repo.run(&["update", "--config-path", "conf/mine.yaml", "--to", CURRENT]);
     assert_eq!(code(&output), 2);
     assert!(
-        said(&output).contains(&format!(
+        raw_stderr(&output).contains(&format!(
             "then run `deslag update --config-path conf/mine.yaml --to {CURRENT}`"
         )),
         "{}",
-        said(&output)
+        raw_stderr(&output)
     );
 }
 
@@ -634,7 +613,7 @@ fn a_config_path_is_the_file_that_is_edited() {
         "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = true\n",
     );
     let output = repo.run(&["update", "--config-path", "other.toml", "--to", CURRENT]);
-    assert_eq!(code(&output), 0, "{}", said(&output));
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     assert_eq!(
         std::fs::read_to_string(repo.root().join("other.toml")).expect("a file"),
         format!(
@@ -653,7 +632,7 @@ fn a_toml_with_mixed_line_endings_is_refused_by_name_and_not_touched() {
     let repo = repo_with("toml", text);
     let output = repo.run(&["update"]);
     assert_eq!(code(&output), 2);
-    let said = said(&output);
+    let said = raw_stderr(&output);
     assert!(said.contains("mixed line endings"), "{said}");
     assert!(
         said.contains("deslag.toml:3: delete the key `signposts`") && said.contains("then run"),
@@ -673,7 +652,7 @@ fn a_toml_the_editor_would_not_write_back_alike_is_refused_with_its_edits_and_no
     ] {
         let output = repo.run(args);
         assert_eq!(code(&output), 2);
-        let said = said(&output);
+        let said = raw_stderr(&output);
         assert!(said.contains("byte for byte"), "{said}");
         assert!(
             said.contains("deslag.toml:3: delete the key `signposts`")
@@ -707,7 +686,7 @@ fn a_file_with_nothing_to_edit_is_current_or_held_whatever_its_layout() {
             let repo = repo_with("toml", &text);
             for args in [&["update"][..], &["update", "--dry-run"]] {
                 let output = repo.run(args);
-                let said = said(&output);
+                let said = raw_stderr(&output);
                 assert_eq!(code(&output), 0, "{args:?}: {said}");
                 assert!(said.contains(says), "{args:?}: {said}");
                 assert_eq!(read(&repo, "toml"), text);
@@ -721,7 +700,7 @@ fn crlf_and_a_byte_order_mark_come_back_as_they_were() {
     let text = "\u{feff}# c\r\nschema_version = 1\r\n[md.lints.banned_phrases.groups]\r\n# groups\r\nsignposts = true\r\ninsistence = true\r\n";
     let repo = repo_with("toml", text);
     let output = repo.run(&["update", "--to", CURRENT]);
-    assert_eq!(code(&output), 0, "{}", said(&output));
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     assert_eq!(
         read(&repo, "toml"),
         format!(
@@ -742,12 +721,12 @@ fn the_write_keeps_the_permissions_and_a_symlink_stays_a_link() {
         .expect("a link");
 
     let output = repo.run(&["update", "--to", CURRENT]);
-    assert_eq!(code(&output), 0, "{}", said(&output));
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     // The messages name the file that was written, not the link.
     assert!(
-        said(&output).contains("real/deslag.toml:10: deleted"),
+        raw_stderr(&output).contains("real/deslag.toml:10: deleted"),
         "{}",
-        said(&output)
+        raw_stderr(&output)
     );
     assert!(
         std::fs::symlink_metadata(repo.root().join("deslag.toml"))
@@ -779,7 +758,7 @@ fn a_read_only_config_is_refused_with_exit_2_and_not_touched() {
         &["update", "--dry-run", "--to", CURRENT],
     ] {
         let output = repo.run(args);
-        let said = said(&output);
+        let said = raw_stderr(&output);
         assert_eq!(code(&output), 2, "{args:?}: {said}");
         assert!(
             said.contains("deslag.toml is read-only") && said.contains("nothing was written"),
@@ -811,11 +790,11 @@ fn the_messages_name_the_file_as_it_really_is() {
         "./ci/../ci/lints.toml",
         "--dry-run",
     ]);
-    assert_eq!(code(&output), 0, "{}", said(&output));
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     assert!(
-        said(&output).contains("deslag: ci/lints.toml:3: would delete"),
+        raw_stderr(&output).contains("deslag: ci/lints.toml:3: would delete"),
         "{}",
-        said(&output)
+        raw_stderr(&output)
     );
 }
 
@@ -831,8 +810,12 @@ fn a_write_that_fails_leaves_the_original() {
     let output = repo.run(&["update"]);
     std::fs::set_permissions(dir, std::fs::Permissions::from_mode(0o755)).expect("permissions");
     if enforced {
-        assert_eq!(code(&output), 2, "{}", said(&output));
-        assert!(said(&output).contains("cannot write"), "{}", said(&output));
+        assert_eq!(code(&output), 2, "{}", raw_stderr(&output));
+        assert!(
+            raw_stderr(&output).contains("cannot write"),
+            "{}",
+            raw_stderr(&output)
+        );
         assert_eq!(read(&repo, "toml"), SIGNPOSTS);
     }
 }
@@ -887,7 +870,7 @@ fn every_frozen_config_updates_clean_in_every_language_and_reads_the_same_after(
             );
             // `--to` moves a stamp the frozen file has, or adds one it has not, in any release.
             let output = repo.run(&["update", "--to", CURRENT]);
-            assert_eq!(code(&output), 0, "{name}: {}", said(&output));
+            assert_eq!(code(&output), 0, "{name}: {}", raw_stderr(&output));
             let now = read(&repo, extension);
             let (removed, added) = lines_changed(&text, &now);
             // The signposts lines go, an older stamp is replaced, and the line of a table the
@@ -914,15 +897,15 @@ fn every_frozen_config_updates_clean_in_every_language_and_reads_the_same_after(
             // Nothing else read differently, and nothing warns.
             assert_eq!(probe(&repo), before, "{name}");
             let check = repo.run(&["check"]);
-            assert_eq!(code(&check), 0, "{name}: {}", said(&check));
+            assert_eq!(code(&check), 0, "{name}: {}", raw_stderr(&check));
             assert!(
-                !said(&check).contains("was removed"),
+                !raw_stderr(&check).contains("was removed"),
                 "{name}: {}",
-                said(&check)
+                raw_stderr(&check)
             );
             let again = repo.run(&["update", "--to", CURRENT]);
             assert_eq!(
-                said(&again),
+                raw_stderr(&again),
                 format!("deslag: deslag.{extension} is current\n"),
                 "{name}"
             );
@@ -948,41 +931,21 @@ fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() 
         if code(&output) == 2 {
             // A case that tests a config deslag refuses to load is refused here, for the same
             // reason, and left alone.
-            assert_eq!(said(&output), said(&before), "{name}");
+            assert_eq!(raw_stderr(&output), raw_stderr(&before), "{name}");
             assert_eq!(read(&repo, "toml"), text, "{name}");
             refused += 1;
             continue;
         }
-        assert_eq!(code(&output), 0, "{name}: {}", said(&output));
+        assert_eq!(code(&output), 0, "{name}: {}", raw_stderr(&output));
         let (removed, added) = lines_changed(&text, &read(&repo, "toml"));
         assert!(removed.is_empty(), "{name}: {removed:?}");
         assert_eq!(added, [format!("deslag_version = \"{CURRENT}\"")], "{name}");
 
-        // `check` says what it said of the config stamped by hand with the running version. A config
-        // with no stamp is taken to be from the baseline, and the move from there turns on the
-        // phrases of the releases between, which is what the catalogue's own tests are about.
-        let by_hand_repo = Repo::copy_of(&case);
-        let line = format!("deslag_version = \"{CURRENT}\"\n");
-        let stamped: String = text
-            .split_inclusive('\n')
-            .flat_map(|each| {
-                let stamp = each
-                    .starts_with("schema_version = ")
-                    .then_some(line.as_str());
-                [each, stamp.unwrap_or_default()]
-            })
-            .collect();
-        assert_ne!(stamped, text, "{name}: no schema_version line");
-        by_hand_repo.write("deslag.toml", &stamped);
-        let by_hand = by_hand_repo.check();
+        // `check` says what it said before: nothing it finds depends on the stamp.
         let after = repo.check();
-        assert_eq!(code(&by_hand), code(&after), "{name}");
-        assert_eq!(stdout(&by_hand), stdout(&after), "{name}");
-        // The messages name the temp directory each repo is in.
-        let said = |repo: &Repo, output: &Output| {
-            common::stderr(output).replace(&repo.root().display().to_string(), "<repo>")
-        };
-        assert_eq!(said(&by_hand_repo, &by_hand), said(&repo, &after), "{name}");
+        assert_eq!(code(&before), code(&after), "{name}");
+        assert_eq!(stdout(&before), stdout(&after), "{name}");
+        assert_eq!(stderr(&before), stderr(&after), "{name}");
     }
     assert!(
         count - refused >= 40,
@@ -990,19 +953,19 @@ fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() 
     );
 }
 
-/// The phrases of the catalogue the running version has shipped.
-fn shipped() -> Vec<&'static str> {
+/// Every phrase of the catalogue, and those the running version has shipped, which
+/// `instructions update` offers to a config stamped [`BEFORE_ALL`].
+fn phrases() -> (Vec<&'static str>, Vec<&'static str>) {
     let current = Version::current();
-    let on = CATALOGUE
-        .entries
-        .iter()
-        .filter(|entry| entry.on_at(&current));
-    on.map(|entry| entry.phrase.as_str()).collect()
+    let every = CATALOGUE.entries.iter();
+    let shipped = every.clone().filter(|entry| entry.since <= current);
+    let phrase = |entry: &'static deslag::lint::banned_phrases::Entry| entry.phrase.as_str();
+    (every.map(phrase).collect(), shipped.map(phrase).collect())
 }
 
 /// The file that holds a section's comments in [`phrase_repo`], and the marker a comment of its
 /// language opens with, for every section of the schema but `[md]`. A section the schema gains
-/// fails here until the gate is shown to cover it.
+/// fails here until the lint is shown to cover it.
 fn comment_files() -> Vec<(String, &'static str, &'static str)> {
     let schema = schema();
     let paths = SchemaPaths::of(&schema);
@@ -1012,16 +975,16 @@ fn comment_files() -> Vec<(String, &'static str, &'static str)> {
             "rust" => ("src/lib.rs", "//"),
             "cpp" => ("src/lib.cpp", "//"),
             "toml" => ("data/sample.toml", "#"),
-            other => panic!("[{other}] is a section the phrase gate is not tested over"),
+            other => panic!("[{other}] is a section the phrases are not tested over"),
         };
         files.push((section.to_string(), file, marker));
     }
     files
 }
 
-/// A repo whose stamp is before every release, with the shipped phrases in a Markdown file, in the
-/// comments of a file of each other section, and in a Markdown file an override covers, and the
-/// groups on. A phrase of `ban` is there too.
+/// A repo whose stamp is before every release, with every catalogue phrase in a Markdown file, in
+/// the comments of a file of each other section, and in a Markdown file an override covers, and
+/// the groups on. A phrase of `ban` is there too.
 fn phrase_repo() -> Repo {
     let repo = Repo::new();
     let sections: String = comment_files()
@@ -1037,14 +1000,15 @@ fn phrase_repo() -> Repo {
              {sections}"
         ),
     );
-    let prose: String = shipped()
+    let (every, _) = phrases();
+    let prose: String = every
         .iter()
         .map(|phrase| format!("It is the {phrase} here.\n\n"))
         .collect();
     repo.write("README.md", &prose);
     repo.write("docs/more.md", &prose);
     for (_, file, marker) in comment_files() {
-        let comments: String = shipped()
+        let comments: String = every
             .iter()
             .map(|phrase| format!("{marker} It is the {phrase} here.\n"))
             .collect();
@@ -1054,22 +1018,33 @@ fn phrase_repo() -> Repo {
 }
 
 #[test]
-fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() {
+fn every_catalogue_phrase_reports_whatever_the_stamp_in_every_section() {
     let repo = phrase_repo();
-    let shipped = shipped();
-    // A deslag at the first release ships no phrase, and these steps then have none to show.
-    let any = !shipped.is_empty();
+    let (every, shipped) = phrases();
 
-    // The stamp is before every phrase: only the `ban` phrase would report, and the text has none.
+    // The stamp is before every phrase, and each reports, in the Markdown, under the override and
+    // in the comments of every section.
     let before = repo.check();
-    assert_eq!(code(&before), 0, "{}", stderr(&before));
-    assert_eq!(stderr(&before), "");
+    assert_eq!(code(&before), 1, "{}", stderr(&before));
+    let report = stderr(&before);
+    let files = comment_files();
+    let files = files.iter().map(|(_, file, _)| *file);
+    for file in ["README.md", "docs/more.md"].into_iter().chain(files) {
+        assert!(
+            report.contains(&format!("{file} has {} banned phrase", every.len())),
+            "{file}: {report}"
+        );
+    }
 
     // The topic lists each shipped phrase, and bare `update` holds the stamp for them.
     let topic = repo.run(&["instructions", "update"]);
     assert_eq!(code(&topic), 0);
     let topic = stdout(&topic);
-    assert_eq!(topic.contains("## New phrases"), any, "{topic}");
+    assert_eq!(
+        topic.contains("## New phrases"),
+        !shipped.is_empty(),
+        "{topic}"
+    );
     for phrase in &shipped {
         assert!(
             topic.contains(&format!("### `{phrase}` (")),
@@ -1078,58 +1053,26 @@ fn the_shipped_phrases_stay_off_until_the_stamp_reaches_them_in_every_section() 
     }
     let bare = repo.run(&["update"]);
     assert_eq!(
-        said(&bare).contains(&format!("deslag_version stays {BEFORE_ALL}")),
+        raw_stderr(&bare).contains(&format!("deslag_version stays {BEFORE_ALL}")),
         held(),
         "{}",
-        said(&bare)
+        raw_stderr(&bare)
     );
-    assert_eq!(code(&repo.check()), 0);
 
-    // `--dry-run` names them and moves nothing.
-    let dry = raw_said(&repo.run(&["update", "--dry-run", "--to", CURRENT]));
-    assert_eq!(dry.contains("would turn on these phrases"), any, "{dry}");
-    assert_eq!(code(&repo.check()), 0);
-
-    // `--to` names every phrase the move turns on, with its group.
+    // `--to` prints the stamp edit alone, and `check` says what it said before.
     let moved = repo.run(&["update", "--to", CURRENT]);
-    assert_eq!(code(&moved), 0, "{}", said(&moved));
-    let said_moved = raw_said(&moved);
-    for entry in CATALOGUE
-        .entries
-        .iter()
-        .filter(|e| shipped.contains(&e.phrase.as_str()))
-    {
-        let named = format!("`{}` ({})", entry.phrase, entry.group.group().name);
-        assert!(said_moved.contains(&named), "{named}: {said_moved}");
-    }
-
-    // Now each fires, in the Markdown, under the override and in the comments of every section.
+    assert_eq!(code(&moved), 0, "{}", raw_stderr(&moved));
+    assert_eq!(
+        raw_stderr(&moved),
+        format!(
+            "deslag: deslag.toml: set deslag_version to \"{CURRENT}\" (it was \"{BEFORE_ALL}\")\n"
+        )
+    );
     let after = repo.check();
-    assert_eq!(code(&after), i32::from(any));
-    let report = stderr(&after);
-    let files = comment_files();
-    let files = files.iter().map(|(_, file, _)| *file);
-    for file in ["README.md", "docs/more.md"].into_iter().chain(files) {
-        assert_eq!(
-            report.contains(&format!("{file} has {} banned phrase", shipped.len())),
-            any,
-            "{file}: {report}"
-        );
-    }
+    assert_eq!(code(&after), code(&before));
+    assert_eq!(stderr(&after), report);
 
     // The topic has nothing more to say about them.
     let topic = stdout(&repo.run(&["instructions", "update"]));
     assert!(!topic.contains("## New phrases"), "{topic}");
-}
-
-#[test]
-fn a_phrase_in_ban_reports_whatever_the_stamp() {
-    let repo = phrase_repo();
-    repo.write("zebra.md", "A zebra crossing here.\n");
-    let output = repo.check();
-    assert_eq!(code(&output), 1);
-    let report = stderr(&output);
-    assert!(report.contains("zebra.md has 1 banned phrase"), "{report}");
-    assert!(report.contains("say the road"), "{report}");
-    assert!(!report.contains("README.md has"), "{report}");
 }

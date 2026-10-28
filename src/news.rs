@@ -6,10 +6,8 @@
 //! a phrase in the catalogue. What is new is what arrived after the stamp, up to the running
 //! release, so nothing is copied per release. The note `check` prints, the topic
 //! `deslag instructions update` prints and the hold of a bare `deslag update` all ask [`News`], so
-//! they cannot disagree about whether something is new. A phrase is new when the gate of the
-//! `banned_phrases` lint holds it back at the stamp and not at the running version
-//! ([`Entry::on_at`](crate::lint::banned_phrases::Entry::on_at)), so what is new is exactly what
-//! the stamp keeps off. `next` is out of the range, as the range ends at a release.
+//! they cannot disagree about whether something is new. `next` is out of the range, as the range
+//! ends at a release.
 
 use crate::Lint;
 use crate::config::paths::{self, SchemaPaths};
@@ -69,8 +67,7 @@ pub struct Setting<'a> {
 
 impl<'a> News<'a> {
     /// What arrived after `from`, up to and including `to`: the lints of [`Lint::ALL`] and the
-    /// settings by their `since` in `paths`, the `redirects` and the phrases of `catalogue` that
-    /// the stamp `from` holds back and `to` does not.
+    /// settings by their `since` in `paths`, the `redirects` and the phrases of `catalogue`.
     ///
     /// Every `since` comes from what it is handed, so a lint of this build arrives only in a
     /// schema that holds its table. A lint's is that of its table in `md`, `md.lints.<id>`: every
@@ -155,7 +152,7 @@ impl<'a> News<'a> {
         let mut phrases: Vec<&Phrase> = catalogue
             .entries
             .iter()
-            .filter(|phrase| !phrase.on_at(from) && phrase.on_at(to))
+            .filter(|phrase| in_range(&phrase.since))
             .collect();
         phrases.sort_by(|a, b| a.since.cmp(&b.since));
 
@@ -196,7 +193,7 @@ impl<'a> News<'a> {
         &self.redirects
     }
 
-    /// The phrases the stamp keeps off that the running version turns on, oldest release first.
+    /// The catalogue phrases that arrived, oldest release first.
     pub fn phrases(&self) -> &[&'a Phrase] {
         &self.phrases
     }

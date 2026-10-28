@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "banned_phrases",
-      "report": "ERROR: deslag detected banned phrases!\n\nREADME.md has 2 banned phrases.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 3: \"load-bearing\"; say what depends on it (group: metaphors)\n  line 5: \"it lands\"; say what happens, such as \"it is merged\" or \"it ships\" (group: metaphors)",
+      "report": "ERROR: deslag detected banned phrases!\n\nREADME.md has 2 banned phrases.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 3: \"load-bearing\"; say what depends on it\n  line 5: \"it lands\"; say what happens, such as \"it is merged\" or \"it ships\"",
       "marks": [
         {
           "kind": "occurrence",
@@ -16,7 +16,7 @@
           "column": 14,
           "end_line": 3,
           "end_column": 26,
-          "note": "\"load-bearing\"; say what depends on it (group: metaphors)"
+          "note": "\"load-bearing\"; say what depends on it"
         },
         {
           "kind": "occurrence",
@@ -26,7 +26,7 @@
           "column": 27,
           "end_line": 5,
           "end_column": 35,
-          "note": "\"it lands\"; say what happens, such as \"it is merged\" or \"it ships\" (group: metaphors)"
+          "note": "\"it lands\"; say what happens, such as \"it is merged\" or \"it ships\""
         }
       ]
     }

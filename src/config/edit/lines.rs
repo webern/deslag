@@ -860,23 +860,23 @@ mod tests {
     #[test]
     fn only_the_parent_a_delete_left_empty_may_be_sealed() {
         let old =
-            "schema_version = 1\n[[md.overrides]]\nlints.banned_phrases.groups.signposts = true\n";
+            "schema_version = 2\n[[md.overrides]]\nlints.banned_phrases.groups.signposts = true\n";
         let touched = [touch(3..=3)];
         let edits = [deleted("md.lints.banned_phrases.groups.signposts")];
-        let sealed = "schema_version = 1\n[[md.overrides]]\nlints.banned_phrases.groups = {}\n";
+        let sealed = "schema_version = 2\n[[md.overrides]]\nlints.banned_phrases.groups = {}\n";
         assert!(only_the_edits(old, sealed, &touched, &edits).is_ok());
         for (name, new) in [
             (
                 "a stray key",
-                "schema_version = 1\n[[md.overrides]]\nlints.banned_phrases.groups = {}\nzz = {}\n",
+                "schema_version = 2\n[[md.overrides]]\nlints.banned_phrases.groups = {}\nzz = {}\n",
             ),
             (
                 "another parent",
-                "schema_version = 1\n[[md.overrides]]\nlints.banned_phrases = {}\n",
+                "schema_version = 2\n[[md.overrides]]\nlints.banned_phrases = {}\n",
             ),
             (
                 "the key itself",
-                "schema_version = 1\n[[md.overrides]]\nlints.banned_phrases.groups.signposts = {}\n",
+                "schema_version = 2\n[[md.overrides]]\nlints.banned_phrases.groups.signposts = {}\n",
             ),
         ] {
             let why = only_the_edits(old, new, &touched, &edits).expect_err(name);

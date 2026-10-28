@@ -1,17 +1,60 @@
 //! The frozen configs in `tests/configs/<release>/`: a config in each language that sets every
 //! setting the release had, and the schema dump of the release, never edited. Every later deslag
 //! must load the configs, and a rename of a setting that does not keep the old key working fails
-//! here, where editing the case configs would hide it.
+//! here, where editing the case configs would hide it. A config of an older schema loads once
+//! `deslag update` has rewritten it, which these tests do in memory; the directory of each holds
+//! the rewritten TOML too, as `config.migrated.toml`.
 
 mod common;
 
-use common::frozen::{self, EXTENSIONS};
+use std::path::Path;
+
+use common::frozen::{self, EXTENSIONS, MIGRATED};
 use common::schema::SchemaPaths;
 use common::{code, stderr};
-use deslag::config::{REDIRECTS, SCHEMA_VERSION, schema};
+use deslag::config::migrate::{MIGRATIONS, migrate};
+use deslag::config::{ConfigFormat, REDIRECTS, SCHEMA_VERSION, schema};
 use deslag::version::Version;
 use deslag::{Config, ConfigSource};
 use serde_json::Value;
+
+/// The `schema_version` of the frozen config at `path`.
+fn schema_of(path: &Path) -> u32 {
+    let value = frozen::value(path);
+    let schema = value["schema_version"]
+        .as_u64()
+        .expect("a frozen config has a schema");
+    u32::try_from(schema).expect("a schema fits")
+}
+
+/// Whether the frozen configs of `directory` are of a schema older than the build's.
+fn older(directory: &Path) -> bool {
+    schema_of(&frozen::config(directory, "toml")) < SCHEMA_VERSION.get()
+}
+
+/// `text`, the config at `path`, as `deslag update` rewrites it at the build's schema: the same
+/// text when it is of that schema already.
+fn current(text: &str, path: &str) -> String {
+    match migrate(text, path) {
+        Ok(Some(edited)) => edited.text.as_str().to_string(),
+        Ok(None) => text.to_string(),
+        Err(refusal) => panic!("{path}: {refusal:?}"),
+    }
+}
+
+/// The frozen config of `directory` in `extension` as the build loads it, and the language it is
+/// then in: a config of an older schema in TOML once rewritten, and in YAML or JSON not at all,
+/// as `deslag update` rewrites only TOML. That the three languages say the same is
+/// `the_languages_of_a_release_say_the_same`.
+fn loadable(directory: &Path, extension: &str) -> Option<String> {
+    let path = frozen::config(directory, extension);
+    let text = std::fs::read_to_string(&path).expect("a readable config");
+    match (older(directory), extension) {
+        (false, _) => Some(text),
+        (true, "toml") => Some(current(&text, &path.display().to_string())),
+        (true, _) => None,
+    }
+}
 
 /// That no directory is above the crate version is `no_frozen_directory_is_above_the_crate_version`,
 /// below, a release-time check.
@@ -32,21 +75,30 @@ fn each_directory_is_a_release_that_exists_with_a_config_in_every_language_and_i
             .collect();
         names.sort();
         let mut want = frozen::files();
+        // A directory of an older schema holds its TOML as `deslag update` rewrote it.
+        if older(&directory) {
+            want.push(MIGRATED.to_string());
+        }
         want.sort();
         assert_eq!(names, want, "{directory:?}");
     }
 }
 
-/// Each loads, exits 0, and says only what a redirect says: one warning for each redirect whose
-/// old path the config sets. A directory is never edited, so the older ones keep the settings a
-/// later release retired, such as `signposts` in 0.0.1, and this allows the warning. A new
-/// directory leaves them out, as `deslag-release prep` retires them. A config with `allow` entries
-/// also prints the tally of the exemptions it applied, one line more.
+/// Each loads, once rewritten where it is of an older schema, exits 0, and says only what a
+/// redirect says: one warning for each redirect whose old path the config sets. A directory is
+/// never edited, so the older ones keep the settings a later release retired, and this allows the
+/// warning. A new directory leaves them out, as `deslag-release prep` retires them. A config with
+/// `allow` entries also prints the tally of the exemptions it applied, one line more.
 #[test]
 fn every_frozen_config_loads_and_warns_only_for_redirects() {
+    let scratch = tempfile::tempdir().expect("a directory");
     for (release, directory) in frozen::releases() {
         for extension in EXTENSIONS {
-            let path = frozen::config(&directory, extension);
+            let Some(text) = loadable(&directory, extension) else {
+                continue;
+            };
+            let path = scratch.path().join(format!("{release}.{extension}"));
+            std::fs::write(&path, &text).expect("a config");
             let value = frozen::value(&path);
             let output = frozen::repo(&path, extension).run(&["check"]);
             let said = stderr(&output);
@@ -87,22 +139,83 @@ fn every_frozen_config_loads_and_warns_only_for_redirects() {
     }
 }
 
+/// The three languages of a release hold the same data, and where the build loads them, they
+/// compile to the same settings.
 #[test]
-fn the_languages_of_a_release_compile_to_the_same_settings() {
+fn the_languages_of_a_release_say_the_same() {
     for (release, directory) in frozen::releases() {
+        let values: Vec<Value> = EXTENSIONS
+            .iter()
+            .map(|extension| frozen::value(&frozen::config(&directory, extension)))
+            .collect();
+        assert_eq!(values[0], values[1], "{release}: toml and yaml differ");
+        assert_eq!(values[0], values[2], "{release}: toml and json differ");
         let compiled: Vec<String> = EXTENSIONS
             .iter()
-            .map(|extension| {
+            .filter_map(|extension| {
+                let text = loadable(&directory, extension)?;
                 let path = frozen::config(&directory, extension);
-                let text = std::fs::read_to_string(&path).expect("a readable config");
                 let config = Config::parse(&text, path, ConfigSource::Explicit)
                     .unwrap_or_else(|error| panic!("{release} {extension}: {error:#?}"));
-                format!("{:?}", config.sections())
+                Some(format!("{:?}", config.sections()))
             })
             .collect();
-        assert_eq!(compiled[0], compiled[1], "{release}: toml and yaml differ");
-        assert_eq!(compiled[0], compiled[2], "{release}: toml and json differ");
+        assert!(!compiled.is_empty(), "{release}: no language loads");
+        assert!(
+            compiled.iter().all(|settings| *settings == compiled[0]),
+            "{release}: the languages compile differently"
+        );
     }
+}
+
+/// A frozen config of a schema older than the build's is rewritten by `deslag update`'s migration
+/// in TOML, into the text its `config.migrated.toml` froze, which the steps after it rewrite as
+/// they rewrite the config. In YAML and JSON it is refused with every edit to make by hand. And in
+/// each language, the step from its schema holds the frozen rewrite to mean what the config meant,
+/// read by the frozen reader of that schema: every lints table, and each override over it, alone
+/// and in chains.
+#[test]
+fn a_frozen_config_of_an_older_schema_migrates_in_toml_and_is_refused_with_its_edits_otherwise() {
+    let mut proved = 0;
+    for (release, directory) in frozen::releases() {
+        let schema = schema_of(&frozen::config(&directory, "toml"));
+        if schema >= SCHEMA_VERSION.get() {
+            continue;
+        }
+        proved += 1;
+        let record_path = directory.join(MIGRATED);
+        let record = std::fs::read_to_string(&record_path).expect("the frozen rewrite");
+        let step = MIGRATIONS
+            .iter()
+            .find(|step| step.from.get() == schema)
+            .unwrap_or_else(|| panic!("{release}: no migration from schema {schema}"));
+        for extension in EXTENSIONS {
+            let path = frozen::config(&directory, extension);
+            let name = path.display().to_string();
+            let text = std::fs::read_to_string(&path).expect("a readable config");
+            let format = ConfigFormat::of(&path).expect("a language");
+            (step.verify)(&text, format, &record, ConfigFormat::Toml)
+                .unwrap_or_else(|why| panic!("{release} {extension}: {why}"));
+            if extension == "toml" {
+                assert_eq!(
+                    current(&text, &name),
+                    current(&record, &record_path.display().to_string()),
+                    "{release}: the migration does not write {MIGRATED}"
+                );
+                continue;
+            }
+            let refusal = migrate(&text, &name).expect_err("YAML and JSON are refused");
+            assert!(
+                refusal.reason.contains("TOML only")
+                    && refusal
+                        .todo
+                        .iter()
+                        .any(|line| line.contains("schema_version")),
+                "{release} {extension}: {refusal:?}"
+            );
+        }
+    }
+    assert!(proved >= 1, "no frozen config is of an older schema");
 }
 
 /// Frozen configs are never edited or removed. A rename or removal of a setting that edits them to
@@ -154,7 +267,7 @@ fn no_frozen_config_is_edited_and_each_has_a_line_in_hashes() {
 #[test]
 fn a_lint_setting_is_named_by_any_section_that_sets_it() {
     let value = serde_json::json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "md": { "globs": ["*.md"], "lints": { "density": { "max_item_chars": 1 } } },
     });
     assert!(frozen::names(&value, "md.lints.density.max_item_chars"));

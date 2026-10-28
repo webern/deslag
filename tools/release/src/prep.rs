@@ -85,8 +85,9 @@ struct Freezing {
     hashes: Edit,
 }
 
-/// The frozen directory of `version`: the newest frozen config brought to name every setting, in
-/// each language, and the schema dump, with their hash lines. Every release writes one.
+/// The frozen directory of `version`: the newest frozen config, rewritten at the build's schema
+/// where it is of an older one, brought to name every setting, in each language, and the schema
+/// dump, with their hash lines. Every release writes one.
 fn plan_freeze(root: &Path, version: &semver::Version, rules: &Rules) -> Result<Freezing> {
     let configs = root.join(CONFIGS);
     let Some((newest, directory)) = frozen::releases(&configs).pop() else {
@@ -104,8 +105,9 @@ fn plan_freeze(root: &Path, version: &semver::Version, rules: &Rules) -> Result<
         values.iter().all(|value| *value == values[0]),
         "the configs of {CONFIGS}/{newest} do not say the same: make them agree first"
     );
+    let newest_value = current(&frozen::config(&directory, "toml"))?;
     let fill = fill(root)?;
-    let value = freeze::freeze(&values[0], version, rules, &fill).map_err(|problems| {
+    let value = freeze::freeze(&newest_value, version, rules, &fill).map_err(|problems| {
         anyhow::anyhow!(
             "cannot name every setting in the frozen config:\n  {}",
             problems.join("\n  ")
@@ -139,6 +141,26 @@ fn plan_freeze(root: &Path, version: &semver::Version, rules: &Rules) -> Result<
             text: lines.join("\n") + "\n",
         },
     })
+}
+
+/// The frozen TOML config at `path` as data, rewritten as `deslag update` rewrites a config of an
+/// older schema, so that the freeze fills a config of the schema it writes.
+fn current(path: &Path) -> Result<Value> {
+    let text = read(path)?;
+    let name = path.display().to_string();
+    let text = match deslag::config::migrate::migrate(&text, &name) {
+        Ok(Some(edited)) => edited.text.as_str().to_string(),
+        Ok(None) => text,
+        Err(refusal) => bail!(
+            "cannot rewrite {name} at the schema of this deslag: {}
+  {}",
+            refusal.reason,
+            refusal.todo.join("\n  ")
+        ),
+    };
+    let parsed: toml::Value =
+        toml::from_str(&text).with_context(|| format!("{name} is not TOML"))?;
+    serde_json::to_value(parsed).with_context(|| format!("{name} is not data"))
 }
 
 /// The fragment of `tests/configs/fill.toml` as data, or an empty table when there is no file.
@@ -223,4 +245,31 @@ fn read(path: &Path) -> Result<String> {
 
 fn write(path: &Path, text: &str) -> Result<()> {
     std::fs::write(path, text).with_context(|| format!("cannot write {path:?}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The newest frozen config is filled at the schema of the build: one of an older schema is
+    /// read as `deslag update` rewrites it, and one of the build's schema as it is.
+    #[test]
+    fn the_newest_frozen_config_is_read_at_the_schema_of_the_build() {
+        let directory = tempfile::tempdir().expect("a directory");
+        let path = directory.path().join("config.toml");
+        std::fs::write(&path, "schema_version = 1\n[md.lints.banned_phrases]\n").expect("writes");
+        let value = current(&path).expect("it is rewritten");
+        assert_eq!(value["schema_version"], 2, "{value}");
+        assert_eq!(
+            value["md"]["lints"]["banned_phrases"]["ban"]["load-bearing"], "say what depends on it",
+            "{value}"
+        );
+
+        let text = "schema_version = 2\n[md]\nglobs = [\"*.md\"]\n";
+        std::fs::write(&path, text).expect("writes");
+        assert_eq!(
+            current(&path).expect("it reads"),
+            serde_json::json!({ "schema_version": 2, "md": { "globs": ["*.md"] } })
+        );
+    }
 }

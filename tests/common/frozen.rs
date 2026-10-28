@@ -9,7 +9,9 @@
 
 use std::path::{Path, PathBuf};
 
-pub use deslag_release::frozen::{EXTENSIONS, SCHEMA, config, files, hash, names, sets, value};
+pub use deslag_release::frozen::{
+    EXTENSIONS, MIGRATED, SCHEMA, config, files, hash, names, sets, value,
+};
 
 use super::Repo;
 
@@ -52,11 +54,16 @@ pub fn releases() -> Vec<(semver::Version, PathBuf)> {
 }
 
 /// The frozen files, each as its path from `tests/configs/` with `/` for separators, and the hash
-/// of its bytes, in the order of the lines of `hashes`. A file that is gone has no hash.
+/// of its bytes, in the order of the lines of `hashes`: the files of each release, then its
+/// [`MIGRATED`] where it has one. A file that is gone has no hash.
 pub fn hash_lines() -> Vec<(String, Option<String>)> {
     let mut lines = Vec::new();
     for (release, directory) in releases() {
-        for name in files() {
+        let migrated = directory
+            .join(MIGRATED)
+            .is_file()
+            .then(|| MIGRATED.to_string());
+        for name in files().into_iter().chain(migrated) {
             let hash = std::fs::read(directory.join(&name))
                 .ok()
                 .map(|bytes| hash(&bytes));

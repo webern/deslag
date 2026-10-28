@@ -214,7 +214,7 @@ mod tests {
     fn catalogue() -> Catalogue {
         let entry = |phrase: &str, since: &str| {
             format!(
-                "[[entry]]\nphrase = \"{phrase}\"\ngroup = \"precision\"\nadvice = \"x\"\n\
+                "[[entry]]\nphrase = \"{phrase}\"\nadvice = \"x\"\n\
                  since = \"{since}\"\nllm_files = 1\nllm_repos = 1\n"
             )
         };

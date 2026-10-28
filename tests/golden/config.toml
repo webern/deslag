@@ -4,7 +4,7 @@
 # Every lint needs a table here, under which some fixtures of the corpus fail and some pass. A
 # lint whose table alone turns it on runs at its defaults, so a changed default moves its file.
 
-schema_version = 1
+schema_version = 2
 
 # Fenced code is not read, which keeps the golden files to the Markdown itself.
 # tests/slow/corpus.rs runs the default, which reads it, over the same corpus.
@@ -25,17 +25,38 @@ max_percent = 1.0
 
 [md.lints.banned_chars]
 
-# The default groups run too. These run each part of the matcher: one word, a row of words, an
-# apostrophe, a hyphen, and a match dropped inside an allowed phrase. They are not advice.
+[md.lints.banned_chars.groups]
+dashes = true
+arrows = true
+ellipsis = true
+bullets = true
+math = true
+checks = true
+section = true
+box_drawing = true
+spaces = true
+invisible = true
+quotes = true
+
+# Only a phrase in ban fails a file: the first five, then the catalogue's. The first five run each
+# part of the matcher: one word, a row of words, an apostrophe, a hyphen, and a match dropped
+# inside an allowed phrase. They are not advice.
 [md.lints.banned_phrases]
 allow = ["please note that"]
 
 [md.lints.banned_phrases.ban]
-comprehensive = ""
-"in order to" = ""
-"let's" = ""
-"note that" = ""
-production-ready = ""
+comprehensive = "delete it"
+"in order to" = "delete it"
+"let's" = "delete it"
+"note that" = "delete it"
+production-ready = "delete it"
+byte-identical = 'say "identical", or name the check that shows it'
+"deliberately not" = "say what it does; what it does not do rarely needs saying"
+"it lands" = 'say what happens, such as "it is merged" or "it ships"'
+"lands on" = 'say what happens, such as "is merged into" or "reaches"'
+load-bearing = "say what depends on it"
+"never silently" = "say what it does instead, such as the error it reports"
+"not silently" = "say what it does instead, such as the error it reports"
 
 [md.lints.density]
 

@@ -11,7 +11,7 @@ use deslag::Document;
 use deslag::document::{Edit, Refusal};
 
 /// A config that turns on `banned_chars` with its default groups.
-const CONFIG: &str = "schema_version = 1\n\n[md.lints.banned_chars]\n";
+const CONFIG: &str = "schema_version = 2\n\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n";
 
 /// Replaces every `from` in `text` with `to` through [`Document::apply`]. Returns the text made
 /// and why each edit was refused.
@@ -366,7 +366,7 @@ fn a_ban_value_is_written_unless_it_holds_a_letter_or_digit() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[md.lints.banned_chars]\nban = { \"\\u2014\" = \", \", \"\\u00ae\" \
+        "schema_version = 2\n\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\nban = { \"\\u2014\" = \", \", \"\\u00ae\" \
          = \"(R)\" }\n",
     );
     repo.write("README.md", "# Notes\n\nA \u{2014} b\u{00AE}.\n");
@@ -390,7 +390,7 @@ fn a_ban_value_the_file_bans_stops_fix_before_it_writes() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[md.lints.banned_chars]\nban = { \"\\u2014\" = \"\\u2013\" }\n",
+        "schema_version = 2\n\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\nban = { \"\\u2014\" = \"\\u2013\" }\n",
     );
     let text = "# Notes\n\nA \u{2014} b \u{201C}c\u{201D}.\n";
     repo.write("README.md", text);
@@ -459,7 +459,7 @@ fn a_path_a_section_excludes_is_refused_with_the_pattern() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[md]\nexclude = [\"/docs/adr/**\"]\n\n[md.lints.banned_chars]\n",
+        "schema_version = 2\n\n[md]\nexclude = [\"/docs/adr/**\"]\n\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
     repo.write("README.md", text);
     repo.write("docs/adr/0001.md", text);

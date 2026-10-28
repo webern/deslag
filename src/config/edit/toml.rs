@@ -737,7 +737,7 @@ mod tests {
 
     #[test]
     fn a_rename_to_another_section_is_not_done_and_leaves_the_text_alone() {
-        let text = "schema_version = 1\n[md.lints.density]\n# why\nmax_paragraph_len = 300 # t\n\
+        let text = "schema_version = 2\n[md.lints.density]\n# why\nmax_paragraph_len = 300 # t\n\
                     [rust.lints.other]\nx = 1\n";
         let (done, after) = move_to(text, "rust.lints.other.max_paragraph_chars");
         assert_eq!(done, None);
@@ -746,25 +746,25 @@ mod tests {
 
     #[test]
     fn a_rename_to_another_table_makes_the_table_and_moves_the_comments() {
-        let text = "schema_version = 1\n[md.lints.density]\n# why\nmax_paragraph_len = 300 # t\n\
+        let text = "schema_version = 2\n[md.lints.density]\n# why\nmax_paragraph_len = 300 # t\n\
                     max_item_chars = 4\n";
         let (done, text) = move_to(text, "md.lints.other.max_paragraph_chars");
         assert_eq!(done, Some(()));
         assert_eq!(
             text,
-            "schema_version = 1\n[md.lints.density]\nmax_item_chars = 4\n\n[md.lints.other]\n# why\n\
+            "schema_version = 2\n[md.lints.density]\nmax_item_chars = 4\n\n[md.lints.other]\n# why\n\
              max_paragraph_chars = 300 # t\n"
         );
     }
 
     #[test]
     fn a_rename_that_empties_a_dotted_table_leaves_it_empty_and_the_new_one_beside_it() {
-        let text = "schema_version = 1\n[md.lints]\ndensity.max_paragraph_len = 3\n";
+        let text = "schema_version = 2\n[md.lints]\ndensity.max_paragraph_len = 3\n";
         let (done, text) = move_to(text, "md.lints.other.max_paragraph_chars");
         assert_eq!(done, Some(()));
         assert_eq!(
             text,
-            "schema_version = 1\n[md.lints]\ndensity = {}\n\n[md.lints.other]\nmax_paragraph_chars = 3\n"
+            "schema_version = 2\n[md.lints]\ndensity = {}\n\n[md.lints.other]\nmax_paragraph_chars = 3\n"
         );
     }
 

@@ -23,9 +23,10 @@ const OTHER: &str = "Other \u{2014} text.";
 const PHRASE: &str = "We did it in order to win.";
 
 /// The settings under which the lints of these tests find something.
-const LINTS: &str = "schema_version = 1
+const LINTS: &str = "schema_version = 2
 
 [md.lints.banned_chars]
+groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 [md.lints.banned_phrases.ban]
 \"in order to\" = \"write to\"
@@ -277,7 +278,7 @@ fn a_base_with_no_readable_config_marks_every_entry_added() {
     let repo = Repo::new();
     git(repo.root(), &["init", "-q", "-b", "main"]);
     repo.write("a.md", &text);
-    repo.write("deslag.toml", "schema_version = 1\n[md\n");
+    repo.write("deslag.toml", "schema_version = 2\n[md\n");
     commit(repo.root(), "base");
     repo.write("deslag.toml", &config(&entries));
     let run = run_json(repo.root(), &["check", "--base", "main"]);
@@ -483,9 +484,10 @@ fn an_entry_exempts_a_sentence_of_a_comment_in_the_rust_section() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1
+        "schema_version = 2
 
 [rust.lints.banned_chars]
+groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 [[rust.allow]]
 path = \"src/lib.rs\"
@@ -543,7 +545,7 @@ fn an_entry_names_one_lint_so_a_sentence_with_two_takes_two_entries() {
 #[test]
 fn an_entry_for_a_lint_that_is_off_for_the_file_fails() {
     let repo = repo(
-        "schema_version = 1
+        "schema_version = 2
 
 [md.lints.banned_phrases.ban]
 \"in order to\" = \"write to\"
@@ -738,11 +740,16 @@ fn an_entry_names_an_invisible_character_it_exempts_with_a_toml_escape() {
     assert_eq!(statuses(&run), ["no_finding"]);
 }
 
+/// The groups of `banned_chars` that an empty table banned in schema 1, every one but `emoji`.
+const ON: &str = "groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, \
+    math = true, checks = true, section = true, box_drawing = true, spaces = true, \
+    invisible = true, quotes = true }";
+
 /// A config whose `banned_chars` table holds `settings`, with one entry for `a.md` whose quote is
 /// `quote`, written in the escapes of a TOML string.
 fn escaped(settings: &str, quote: &str) -> String {
     format!(
-        "schema_version = 1\n\n[md.lints.banned_chars]\n{settings}\n\n[[md.allow]]\npath = \"a.md\"\n\
+        "schema_version = 2\n\n[md.lints.banned_chars]\n{settings}\n\n[[md.allow]]\npath = \"a.md\"\n\
          lint = \"banned_chars\"\nquote = \"{quote}\"\nreason = \"A quoted title.\"\n"
     )
 }
@@ -754,8 +761,8 @@ fn a_quote_holds_an_invisible_character_whether_or_not_the_config_bans_it() {
     let joined = "The team \\U0001F469\\u200D\\U0001F4BB ships";
     let cases = [
         // An emoji sequence with a zero-width joiner, which no group bans.
-        ("", format!("{joined} \\u2014 fast."), "applied", "<U+200D>"),
-        ("", format!("{joined} fast."), "no_finding", "<U+200D>"),
+        (ON, format!("{joined} \\u2014 fast."), "applied", "<U+200D>"),
+        (ON, format!("{joined} fast."), "no_finding", "<U+200D>"),
         // A bidi override, which the config bans or not.
         (
             "ban = { \"\\u202E\" = \"\" }",
@@ -771,13 +778,13 @@ fn a_quote_holds_an_invisible_character_whether_or_not_the_config_bans_it() {
         ),
         // A zero-width space that the config does not ban.
         (
-            "groups = { invisible = false }",
+            "groups = { dashes = true, invisible = false }",
             "A zero\\u200Bwidth \\u2014 title.".to_string(),
             "applied",
             "<U+200B>",
         ),
         (
-            "groups = { invisible = false }",
+            "groups = { dashes = true, invisible = false }",
             "A zero\\u200Bwidth title.".to_string(),
             "no_finding",
             "<U+200B>",

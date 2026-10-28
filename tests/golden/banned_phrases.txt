@@ -8,16 +8,18 @@
 allow = ["please note that"]
 
 [md.lints.banned_phrases.ban]
-comprehensive = ""
-"in order to" = ""
-"let's" = ""
-"note that" = ""
-production-ready = ""
-
-[md.lints.banned_phrases.groups]
-insistence = true
-metaphors = true
-precision = true
+byte-identical = 'say "identical", or name the check that shows it'
+comprehensive = "delete it"
+"deliberately not" = "say what it does; what it does not do rarely needs saying"
+"in order to" = "delete it"
+"it lands" = 'say what happens, such as "it is merged" or "it ships"'
+"lands on" = 'say what happens, such as "is merged into" or "reaches"'
+"let's" = "delete it"
+load-bearing = "say what depends on it"
+"never silently" = "say what it does instead, such as the error it reports"
+"not silently" = "say what it does instead, such as the error it reports"
+"note that" = "delete it"
+production-ready = "delete it"
 
 core/den-code-comments.md matches:1
 core/den-design-decisions.md matches:2

@@ -142,7 +142,7 @@ fn an_over_emphasized_file_gets_the_whole_report() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\n[md.lints.max_emphasis]\nfree_spans = 1\nmax_percent = 5\n",
+        "schema_version = 2\n\n[md.lints.max_emphasis]\nfree_spans = 1\nmax_percent = 5\n",
     );
     repo.write(
         "AGENTS.md",
@@ -177,7 +177,7 @@ fn a_calm_file_is_clean() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\n[md.lints.max_emphasis]\nfree_spans = 2\n",
+        "schema_version = 2\n\n[md.lints.max_emphasis]\nfree_spans = 2\n",
     );
     repo.write("AGENTS.md", "# A\n\nYou **must** read this, *twice*.\n");
 
@@ -191,7 +191,7 @@ fn an_override_can_tighten_the_limit_and_replace_the_advice() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\
+        "schema_version = 2\n\
          \n[md.lints.max_emphasis]\nfree_spans = 5\n\
          \n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\
          lints.max_emphasis = { free_spans = 0, message = \"Calm {path} down to {free_spans}.\" }\n",
@@ -215,7 +215,7 @@ fn both_lints_report_on_one_file() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\
+        "schema_version = 2\n\
          \n[md.lints.max_size_bytes]\nvalue = 5\n\
          \n[md.lints.max_emphasis]\nfree_spans = 0\n",
     );
@@ -240,7 +240,7 @@ fn a_percent_out_of_range_is_an_error() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"*.md\"]\nlints.max_emphasis.max_percent = 101\n",
+        "schema_version = 2\n\n[[md.overrides]]\nglobs = [\"*.md\"]\nlints.max_emphasis.max_percent = 101\n",
     );
     repo.write("AGENTS.md", "# A\n");
 
@@ -275,7 +275,7 @@ fn a_file_just_over_its_share_is_not_reported_at_it() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[md.lints.max_emphasis]\nfree_spans = 2\nmax_percent = 1\n",
+        "schema_version = 2\n\n[md.lints.max_emphasis]\nfree_spans = 2\nmax_percent = 1\n",
     );
     repo.write("a.md", &text);
     let output = repo.check();

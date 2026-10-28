@@ -1,5 +1,12 @@
-schema_version = 1
+schema_version = 2
 
 [cpp.lints.banned_phrases.ban]
 "delve into" = "say what you found instead"
-"it's worth noting" = ""
+"it's worth noting" = "delete it"
+byte-identical = 'say "identical", or name the check that shows it'
+"deliberately not" = "say what it does; what it does not do rarely needs saying"
+"it lands" = 'say what happens, such as "it is merged" or "it ships"'
+"lands on" = 'say what happens, such as "is merged into" or "reaches"'
+load-bearing = "say what depends on it"
+"never silently" = "say what it does instead, such as the error it reports"
+"not silently" = "say what it does instead, such as the error it reports"

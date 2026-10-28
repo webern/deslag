@@ -1,4 +1,4 @@
-schema_version = 1
+schema_version = 2
 
 [cpp.lints.max_emphasis]
 free_spans = 1

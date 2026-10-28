@@ -18,7 +18,7 @@ fn load(extension: &str, text: &str) -> Result<Config, Error> {
 }
 
 fn toml(text: &str) -> Result<Config, Error> {
-    load("toml", &format!("schema_version = 1\n{text}"))
+    load("toml", &format!("schema_version = 2\n{text}"))
 }
 
 /// What loading `text` says is wrong with it, with its causes.
@@ -37,7 +37,7 @@ fn refused(text: &str) -> String {
 /// string.
 fn repo(config: &str) -> Repo {
     let repo = Repo::new();
-    repo.write("deslag.toml", &format!("schema_version = 1\n{config}"));
+    repo.write("deslag.toml", &format!("schema_version = 2\n{config}"));
     repo.write(
         "src/lib.c",
         "/// A doc \u{2014} comment.\nint f(void) {\n    // A plain \u{2014} comment.\n    \
@@ -58,7 +58,9 @@ fn found(output: &std::process::Output) -> Vec<String> {
 
 #[test]
 fn a_config_without_a_cpp_section_reads_no_c_file() {
-    let repo = repo("[md.lints.banned_chars]\n");
+    let repo = repo(
+        "[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.check();
     assert_eq!(code(&output), 1);
     let said = stderr(&output);
@@ -70,7 +72,9 @@ fn a_config_without_a_cpp_section_reads_no_c_file() {
 
 #[test]
 fn a_cpp_section_with_no_keys_reads_the_comments_of_every_file_of_the_extensions() {
-    let repo = repo("[cpp.lints.banned_chars]\n");
+    let repo = repo(
+        "[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.check();
     assert_eq!(code(&output), 1);
     let said = stderr(&output);
@@ -108,7 +112,7 @@ fn surfaces_choose_the_comments_that_are_read() {
         ("[\"comment\"]", "  line 3: U+2014 em dash"),
     ] {
         let repo = repo(&format!(
-            "[cpp]\nsurfaces = {surfaces}\n[cpp.lints.banned_chars]\n"
+            "[cpp]\nsurfaces = {surfaces}\n[cpp.lints.banned_chars]\ngroups = {{ dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }}\n"
         ));
         let output = repo.check();
         assert_eq!(code(&output), 1, "{surfaces}");
@@ -126,7 +130,7 @@ fn surfaces_choose_the_comments_that_are_read() {
 fn globs_choose_the_files_and_an_override_changes_a_lint_for_some() {
     let repo = repo(
         "[cpp]\nglobs = [\"/src/**/*.c\"]\n[cpp.lints.banned_phrases.ban]\n\"delve\" = \"\"\n\
-         [[cpp.overrides]]\nglobs = [\"/src/other/**\"]\nlints.banned_chars = {}\n",
+         [[cpp.overrides]]\nglobs = [\"/src/other/**\"]\nlints.banned_chars = { groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true } }\n",
     );
     repo.write("src/other/mod.c", "// A \u{2014} dash, and we delve.\n");
     repo.write("src/other/mod.h", "// A \u{2014} dash, and we delve.\n");
@@ -172,7 +176,7 @@ fn every_glob_of_the_cpp_section_ends_in_an_extension_it_reads_and_an_override_g
         .map(|extension| format!("\"a.{extension}\""))
         .join(", ");
     toml(&format!("[cpp]\nglobs = [{globs}]\n")).expect("globs of C and C++ files");
-    toml("[cpp]\n[[cpp.overrides]]\nglobs = [\"/src/tag/**\"]\nlints.banned_chars = {}\n")
+    toml("[cpp]\n[[cpp.overrides]]\nglobs = [\"/src/tag/**\"]\nlints.banned_chars = { groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true } }\n")
         .expect("an override glob narrows the section's");
 }
 
@@ -247,7 +251,7 @@ fn the_message_names_the_lint_the_surfaces_and_what_would_feed_it() {
 }
 
 /// `[md]` selects every file, so a C file is selected by both sections.
-const BOTH: &str = "[md]\nglobs = [\"**\"]\n[cpp.lints.banned_chars]\n";
+const BOTH: &str = "[md]\nglobs = [\"**\"]\n[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n";
 
 #[test]
 fn a_file_that_two_sections_select_is_an_error_that_names_both() {
@@ -271,14 +275,16 @@ fn a_file_that_two_sections_select_is_an_error_that_names_both() {
     }
     // The error is of the file, so a repo with no C file in it still runs.
     let no_c = Repo::new();
-    no_c.write("deslag.toml", &format!("schema_version = 1\n{BOTH}"));
+    no_c.write("deslag.toml", &format!("schema_version = 2\n{BOTH}"));
     no_c.write("a.md", "Text.\n");
     assert_eq!(code(&no_c.check()), 0);
 }
 
 #[test]
 fn the_rust_and_cpp_sections_never_select_one_file() {
-    let repo = repo("[rust.lints.banned_chars]\n[cpp.lints.banned_chars]\n");
+    let repo = repo(
+        "[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     repo.write("src/lib.rs", "// A \u{2014} dash.\n");
     let output = repo.check();
     assert_eq!(code(&output), 1, "{}", stderr(&output));
@@ -297,7 +303,7 @@ fn a_path_named_alone_is_read_by_the_section_for_its_extension() {
         check_file(config, path, text.as_bytes(), Path::new(".")).map(|found| found.len())
     };
     let with =
-        toml("[cpp]\nglobs = [\"/src/*.c\"]\n[cpp.lints.banned_chars]\n[md.lints.banned_chars]\n")
+        toml("[cpp]\nglobs = [\"/src/*.c\"]\n[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n")
             .expect("a config");
     // The section that selects it, then the section for the extension, then `[md]`.
     assert_eq!(run(&with, "src/a.c").expect("findings"), 1);
@@ -308,7 +314,7 @@ fn a_path_named_alone_is_read_by_the_section_for_its_extension() {
     assert_eq!(run(&with, "notes.txt").expect("findings"), 1);
     assert_eq!(run(&with, "a.tcc").expect("findings"), 1);
 
-    let without = toml("[md.lints.banned_chars]\n").expect("a config");
+    let without = toml("[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n").expect("a config");
     for extension in EXTENSIONS {
         let said = run(&without, &format!("src/a.{extension}"))
             .expect_err("no section reads it")
@@ -330,7 +336,7 @@ fn fix_edits_a_comment_where_the_edit_leaves_it_reading_as_it_did() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[cpp.lints.banned_chars]\n",
+        "schema_version = 2\n[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
     repo.write(
         "src/quote.c",
@@ -347,7 +353,9 @@ fn fix_edits_a_comment_where_the_edit_leaves_it_reading_as_it_did() {
 
 #[test]
 fn explain_names_the_cpp_section_for_a_c_file() {
-    let repo = repo("[cpp.lints.banned_chars]\n");
+    let repo = repo(
+        "[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.run(&["explain", "src/lib.c"]);
     assert_eq!(code(&output), 0, "{}", stderr(&output));
     assert!(
@@ -359,14 +367,14 @@ fn explain_names_the_cpp_section_for_a_c_file() {
 
 #[test]
 fn a_cpp_section_is_read_in_every_language_alike() {
-    let toml_text = "schema_version = 1\n[cpp]\nglobs = [\"/src/*.c\"]\nsurfaces = [\"comment\"]\n\
-                     [cpp.lints.banned_chars]\n[[cpp.overrides]]\nglobs = [\"a.c\"]\n\
+    let toml_text = "schema_version = 2\n[cpp]\nglobs = [\"/src/*.c\"]\nsurfaces = [\"comment\"]\n\
+                     [cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[[cpp.overrides]]\nglobs = [\"a.c\"]\n\
                      lints.density = {}\n";
-    let yaml = "schema_version: 1\ncpp:\n  globs: [\"/src/*.c\"]\n  surfaces: [comment]\n  \
-                lints:\n    banned_chars: {}\n  overrides:\n    - globs: [\"a.c\"]\n      \
+    let yaml = "schema_version: 2\ncpp:\n  globs: [\"/src/*.c\"]\n  surfaces: [comment]\n  \
+                lints:\n    banned_chars: {groups: {dashes: true, arrows: true, ellipsis: true, bullets: true, math: true, checks: true, section: true, box_drawing: true, spaces: true, invisible: true, quotes: true}}\n  overrides:\n    - globs: [\"a.c\"]\n      \
                 lints:\n        density: {}\n";
-    let json = r#"{"schema_version":1,"cpp":{"globs":["/src/*.c"],"surfaces":["comment"],
-        "lints":{"banned_chars":{}},"overrides":[{"globs":["a.c"],"lints":{"density":{}}}]}}"#;
+    let json = r#"{"schema_version":2,"cpp":{"globs":["/src/*.c"],"surfaces":["comment"],
+        "lints":{"banned_chars":{"groups":{"dashes":true,"arrows":true,"ellipsis":true,"bullets":true,"math":true,"checks":true,"section":true,"box_drawing":true,"spaces":true,"invisible":true,"quotes":true}}},"overrides":[{"globs":["a.c"],"lints":{"density":{}}}]}}"#;
     let compiled: Vec<String> = [("toml", toml_text), ("yaml", yaml), ("json", json)]
         .into_iter()
         .map(|(extension, text)| {
@@ -382,8 +390,8 @@ fn a_cpp_section_is_read_in_every_language_alike() {
 #[test]
 fn the_schema_takes_a_cpp_section_and_refuses_an_unknown_surface() {
     let fits = "[cpp]\nglobs = [\"/src/*.c\"]\nsurfaces = [\"doc_comment\", \"comment\"]\n\
-                [cpp.lints.banned_chars]\n[[cpp.overrides]]\nglobs = [\"a.c\"]\nlints.density = {}\n";
-    assert_eq!(toml_misfit(&format!("schema_version = 1\n{fits}")), None);
-    let unknown = "schema_version = 1\n[cpp]\nsurfaces = [\"docstring\"]\n";
+                [cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[[cpp.overrides]]\nglobs = [\"a.c\"]\nlints.density = {}\n";
+    assert_eq!(toml_misfit(&format!("schema_version = 2\n{fits}")), None);
+    let unknown = "schema_version = 2\n[cpp]\nsurfaces = [\"docstring\"]\n";
     assert!(toml_misfit(unknown).is_some());
 }

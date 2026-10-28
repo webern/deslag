@@ -11,10 +11,9 @@ What is new in deslag {to}, since {from}
 
 Nothing `check` finds depends on `deslag_version`.
 
-Offer each new lint to the person, with what it fails, and add the table of each they choose. Name
-each new phrase, which is on already, and keep off each they want off, as its section says. A new
-setting keeps its default until the config sets it; name it to the person, and set it only if they
-ask.
+Offer each new lint to the person, with what it fails, and add the table of each they choose.
+Offer each new phrase too, and add its `ban` line to each table they choose. A new setting keeps
+its default until the config sets it; name it to the person, and set it only if they ask.
 
 Once they have chosen, run `deslag update --to {to}`, adding your `--config-path` if any. It sets
 `deslag_version` to "{to}", ending this list, and edits renamed or removed settings. If the person

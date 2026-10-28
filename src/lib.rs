@@ -133,6 +133,20 @@ pub enum Error {
         supported: NonZeroU32,
     },
 
+    /// The config is written for an older schema, which `deslag update` rewrites.
+    #[error(
+        "{path} is schema {found} and this deslag reads schema {supported}; run `deslag update`, \
+         which rewrites it"
+    )]
+    OldSchema {
+        /// The config file.
+        path: String,
+        /// The version the file declares.
+        found: NonZeroU32,
+        /// The version this build reads.
+        supported: NonZeroU32,
+    },
+
     /// The config was last updated by a later deslag than this one.
     #[error(
         "{path} was last updated by deslag {stamp}, and this is deslag {current}; upgrade deslag"

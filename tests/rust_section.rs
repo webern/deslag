@@ -15,7 +15,7 @@ fn load(extension: &str, text: &str) -> Result<Config, Error> {
 }
 
 fn toml(text: &str) -> Result<Config, Error> {
-    load("toml", &format!("schema_version = 1\n{text}"))
+    load("toml", &format!("schema_version = 2\n{text}"))
 }
 
 /// What loading `text` says is wrong with it, with its causes.
@@ -34,7 +34,7 @@ fn refused(text: &str) -> String {
 /// a string.
 fn repo(config: &str) -> Repo {
     let repo = Repo::new();
-    repo.write("deslag.toml", &format!("schema_version = 1\n{config}"));
+    repo.write("deslag.toml", &format!("schema_version = 2\n{config}"));
     repo.write(
         "src/lib.rs",
         "/// A doc \u{2014} comment.\npub fn f() {\n    // A plain \u{2014} comment.\n    let _ = \"a \u{2014} string\";\n}\n",
@@ -54,7 +54,9 @@ fn found(output: &std::process::Output) -> Vec<String> {
 
 #[test]
 fn a_config_without_a_rust_section_reads_no_rust_file() {
-    let repo = repo("[md.lints.banned_chars]\n");
+    let repo = repo(
+        "[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.check();
     assert_eq!(code(&output), 1);
     let said = stderr(&output);
@@ -66,7 +68,9 @@ fn a_config_without_a_rust_section_reads_no_rust_file() {
 
 #[test]
 fn a_rust_section_with_no_keys_reads_the_doc_comments_and_comments_of_every_rs_file() {
-    let repo = repo("[rust.lints.banned_chars]\n");
+    let repo = repo(
+        "[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.check();
     assert_eq!(code(&output), 1);
     let said = stderr(&output);
@@ -87,7 +91,7 @@ fn surfaces_choose_the_comments_that_are_read() {
         ("[\"comment\"]", "  line 3: U+2014 em dash"),
     ] {
         let repo = repo(&format!(
-            "[rust]\nsurfaces = {surfaces}\n[rust.lints.banned_chars]\n"
+            "[rust]\nsurfaces = {surfaces}\n[rust.lints.banned_chars]\ngroups = {{ dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }}\n"
         ));
         let output = repo.check();
         assert_eq!(code(&output), 1, "{surfaces}");
@@ -105,7 +109,7 @@ fn surfaces_choose_the_comments_that_are_read() {
 fn globs_choose_the_rust_files_and_an_override_changes_a_lint_for_some() {
     let repo = repo(
         "[rust]\nglobs = [\"/src/**/*.rs\"]\n[rust.lints.banned_phrases.ban]\n\"delve\" = \"\"\n\
-         [[rust.overrides]]\nglobs = [\"/src/other/**\"]\nlints.banned_chars = {}\n",
+         [[rust.overrides]]\nglobs = [\"/src/other/**\"]\nlints.banned_chars = { groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true } }\n",
     );
     repo.write("src/other/mod.rs", "// A \u{2014} dash, and we delve.\n");
     repo.write("build.rs", "// We delve.\n");
@@ -145,7 +149,7 @@ fn every_glob_of_the_rust_section_ends_in_rs_and_an_override_glob_need_not() {
         );
     }
     toml("[rust]\nglobs = [\"/src/**/*.rs\", \"build.rs\"]\n").expect("globs of Rust files");
-    toml("[rust]\n[[rust.overrides]]\nglobs = [\"/src/tag/**\"]\nlints.banned_chars = {}\n")
+    toml("[rust]\n[[rust.overrides]]\nglobs = [\"/src/tag/**\"]\nlints.banned_chars = { groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true } }\n")
         .expect("an override glob narrows the section's");
 }
 
@@ -227,7 +231,7 @@ fn the_message_names_the_lint_the_surfaces_and_what_would_feed_it() {
 }
 
 /// `[md]` selects every file, so a Rust file is selected by both sections.
-const BOTH: &str = "[md]\nglobs = [\"**\"]\n[rust.lints.banned_chars]\n";
+const BOTH: &str = "[md]\nglobs = [\"**\"]\n[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n";
 
 #[test]
 fn a_file_that_two_sections_select_is_an_error_that_names_both() {
@@ -251,7 +255,7 @@ fn a_file_that_two_sections_select_is_an_error_that_names_both() {
     }
     // The error is of the file, so a repo with no Rust file in it still runs.
     let no_rust = Repo::new();
-    no_rust.write("deslag.toml", &format!("schema_version = 1\n{BOTH}"));
+    no_rust.write("deslag.toml", &format!("schema_version = 2\n{BOTH}"));
     no_rust.write("a.md", "Text.\n");
     assert_eq!(code(&no_rust.check()), 0);
 }
@@ -263,7 +267,7 @@ fn a_path_named_alone_is_read_by_the_section_for_its_extension() {
         check_file(config, path, text.as_bytes(), Path::new(".")).map(|found| found.len())
     };
     let with = toml(
-        "[rust]\nglobs = [\"/src/*.rs\"]\n[rust.lints.banned_chars]\n[md.lints.banned_chars]\n",
+        "[rust]\nglobs = [\"/src/*.rs\"]\n[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     )
     .expect("a config");
     // The section that selects it, then the section for the extension, then `[md]`.
@@ -271,7 +275,7 @@ fn a_path_named_alone_is_read_by_the_section_for_its_extension() {
     assert_eq!(run(&with, "elsewhere/a.rs").expect("findings"), 1);
     assert_eq!(run(&with, "notes.txt").expect("findings"), 1);
 
-    let without = toml("[md.lints.banned_chars]\n").expect("a config");
+    let without = toml("[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n").expect("a config");
     let said = run(&without, "src/a.rs")
         .expect_err("no section reads it")
         .to_string();
@@ -288,7 +292,7 @@ fn fix_edits_a_comment_where_the_edit_leaves_it_reading_as_it_did() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[rust.lints.banned_chars]\n",
+        "schema_version = 2\n[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
     repo.write("notes.txt", "Notes.\n");
     repo.write(
@@ -313,7 +317,9 @@ fn fix_edits_a_comment_where_the_edit_leaves_it_reading_as_it_did() {
 
 #[test]
 fn explain_names_the_rust_section_for_a_rust_file() {
-    let repo = repo("[rust.lints.banned_chars]\n");
+    let repo = repo(
+        "[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.run(&["explain", "src/lib.rs"]);
     assert_eq!(code(&output), 0, "{}", stderr(&output));
     assert!(
@@ -325,14 +331,14 @@ fn explain_names_the_rust_section_for_a_rust_file() {
 
 #[test]
 fn a_rust_section_is_read_in_every_language_alike() {
-    let toml_text = "schema_version = 1\n[rust]\nglobs = [\"/src/*.rs\"]\nsurfaces = [\"comment\"]\n\
-                     [rust.lints.banned_chars]\n[[rust.overrides]]\nglobs = [\"a.rs\"]\n\
+    let toml_text = "schema_version = 2\n[rust]\nglobs = [\"/src/*.rs\"]\nsurfaces = [\"comment\"]\n\
+                     [rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[[rust.overrides]]\nglobs = [\"a.rs\"]\n\
                      lints.density = {}\n";
-    let yaml = "schema_version: 1\nrust:\n  globs: [\"/src/*.rs\"]\n  surfaces: [comment]\n  \
-                lints:\n    banned_chars: {}\n  overrides:\n    - globs: [\"a.rs\"]\n      \
+    let yaml = "schema_version: 2\nrust:\n  globs: [\"/src/*.rs\"]\n  surfaces: [comment]\n  \
+                lints:\n    banned_chars: {groups: {dashes: true, arrows: true, ellipsis: true, bullets: true, math: true, checks: true, section: true, box_drawing: true, spaces: true, invisible: true, quotes: true}}\n  overrides:\n    - globs: [\"a.rs\"]\n      \
                 lints:\n        density: {}\n";
-    let json = r#"{"schema_version":1,"rust":{"globs":["/src/*.rs"],"surfaces":["comment"],
-        "lints":{"banned_chars":{}},"overrides":[{"globs":["a.rs"],"lints":{"density":{}}}]}}"#;
+    let json = r#"{"schema_version":2,"rust":{"globs":["/src/*.rs"],"surfaces":["comment"],
+        "lints":{"banned_chars":{"groups":{"dashes":true,"arrows":true,"ellipsis":true,"bullets":true,"math":true,"checks":true,"section":true,"box_drawing":true,"spaces":true,"invisible":true,"quotes":true}}},"overrides":[{"globs":["a.rs"],"lints":{"density":{}}}]}}"#;
     let compiled: Vec<String> = [("toml", toml_text), ("yaml", yaml), ("json", json)]
         .into_iter()
         .map(|(extension, text)| {
@@ -348,8 +354,8 @@ fn a_rust_section_is_read_in_every_language_alike() {
 #[test]
 fn the_schema_takes_a_rust_section_and_refuses_an_unknown_surface() {
     let fits = "[rust]\nglobs = [\"/src/*.rs\"]\nsurfaces = [\"doc_comment\", \"comment\"]\n\
-                [rust.lints.banned_chars]\n[[rust.overrides]]\nglobs = [\"a.rs\"]\nlints.density = {}\n";
-    assert_eq!(toml_misfit(&format!("schema_version = 1\n{fits}")), None);
-    let unknown = "schema_version = 1\n[rust]\nsurfaces = [\"docstring\"]\n";
+                [rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[[rust.overrides]]\nglobs = [\"a.rs\"]\nlints.density = {}\n";
+    assert_eq!(toml_misfit(&format!("schema_version = 2\n{fits}")), None);
+    let unknown = "schema_version = 2\n[rust]\nsurfaces = [\"docstring\"]\n";
     assert!(toml_misfit(unknown).is_some());
 }

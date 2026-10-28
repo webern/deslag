@@ -15,7 +15,7 @@ fn load(extension: &str, text: &str) -> Result<Config, Error> {
 }
 
 fn toml(text: &str) -> Result<Config, Error> {
-    load("toml", &format!("schema_version = 1\n{text}"))
+    load("toml", &format!("schema_version = 2\n{text}"))
 }
 
 /// What loading `text` says is wrong with it, with its causes.
@@ -34,7 +34,7 @@ fn refused(text: &str) -> String {
 /// a key, and in a string.
 fn repo(config: &str) -> Repo {
     let repo = Repo::new();
-    repo.write("deslag.toml", &format!("schema_version = 1\n{config}"));
+    repo.write("deslag.toml", &format!("schema_version = 2\n{config}"));
     repo.write(
         "Cargo.toml",
         "# A leading \u{2014} comment.\n[package]\nname = \"a\" # A trailing \u{2014} comment.\n\
@@ -55,7 +55,9 @@ fn found(output: &std::process::Output) -> Vec<String> {
 
 #[test]
 fn a_config_without_a_toml_section_reads_no_toml_file() {
-    let repo = repo("[md.lints.banned_chars]\n");
+    let repo = repo(
+        "[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.check();
     assert_eq!(code(&output), 1);
     let said = stderr(&output);
@@ -67,7 +69,9 @@ fn a_config_without_a_toml_section_reads_no_toml_file() {
 
 #[test]
 fn a_toml_section_with_no_keys_reads_the_comments_of_every_toml_file_and_no_value() {
-    let repo = repo("[toml.lints.banned_chars]\n");
+    let repo = repo(
+        "[toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.check();
     assert_eq!(code(&output), 1);
     let said = stderr(&output);
@@ -98,7 +102,9 @@ fn a_toml_section_with_no_keys_reads_the_comments_of_every_toml_file_and_no_valu
 
 #[test]
 fn the_comment_surface_reads_the_comments_and_none_reads_nothing() {
-    let repo = repo("[toml]\nsurfaces = [\"comment\"]\n[toml.lints.banned_chars]\n");
+    let repo = repo(
+        "[toml]\nsurfaces = [\"comment\"]\n[toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     assert_eq!(code(&repo.check()), 1);
     let repo = self::repo("[toml]\nsurfaces = []\n");
     assert_eq!(code(&repo.check()), 0);
@@ -108,7 +114,7 @@ fn the_comment_surface_reads_the_comments_and_none_reads_nothing() {
 fn globs_choose_the_files_and_an_override_changes_a_lint_for_some() {
     let repo = repo(
         "[toml]\nglobs = [\"/crates/**/*.toml\"]\n[toml.lints.banned_phrases.ban]\n\"delve\" = \"\"\n\
-         [[toml.overrides]]\nglobs = [\"/crates/other/**\"]\nlints.banned_chars = {}\n",
+         [[toml.overrides]]\nglobs = [\"/crates/other/**\"]\nlints.banned_chars = { groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true } }\n",
     );
     repo.write(
         "crates/other/Cargo.toml",
@@ -161,7 +167,7 @@ fn every_glob_of_the_toml_section_ends_in_toml_and_an_override_glob_need_not() {
         );
     }
     toml("[toml]\nglobs = [\"/src/**/*.toml\", \"Cargo.toml\"]\n").expect("globs of TOML files");
-    toml("[toml]\n[[toml.overrides]]\nglobs = [\"/src/tag/**\"]\nlints.banned_chars = {}\n")
+    toml("[toml]\n[[toml.overrides]]\nglobs = [\"/src/tag/**\"]\nlints.banned_chars = { groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true } }\n")
         .expect("an override glob narrows the section's");
 }
 
@@ -232,7 +238,7 @@ fn the_message_names_the_lint_the_surface_and_what_would_feed_it() {
 }
 
 /// `[md]` selects every file, so a TOML file is selected by both sections.
-const BOTH: &str = "[md]\nglobs = [\"**\"]\n[toml.lints.banned_chars]\n";
+const BOTH: &str = "[md]\nglobs = [\"**\"]\n[toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n";
 
 #[test]
 fn a_file_that_two_sections_select_is_an_error_that_names_both() {
@@ -258,7 +264,7 @@ fn a_file_that_two_sections_select_is_an_error_that_names_both() {
     let no_toml = Repo::new();
     no_toml.write(
         "deslag.json",
-        r#"{"schema_version":1,"md":{"globs":["**"]},"toml":{"lints":{"banned_chars":{}}}}"#,
+        r#"{"schema_version":2,"md":{"globs":["**"]},"toml":{"lints":{"banned_chars":{"groups":{"dashes":true,"arrows":true,"ellipsis":true,"bullets":true,"math":true,"checks":true,"section":true,"box_drawing":true,"spaces":true,"invisible":true,"quotes":true}}}}}"#,
     );
     no_toml.write("a.md", "Text.\n");
     assert_eq!(code(&no_toml.check()), 0);
@@ -266,8 +272,9 @@ fn a_file_that_two_sections_select_is_an_error_that_names_both() {
 
 #[test]
 fn the_rust_cpp_and_toml_sections_never_select_one_file() {
-    let repo =
-        repo("[rust.lints.banned_chars]\n[cpp.lints.banned_chars]\n[toml.lints.banned_chars]\n");
+    let repo = repo(
+        "[rust.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[cpp.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     repo.write("src/lib.rs", "// A \u{2014} dash.\n");
     repo.write("src/lib.c", "// A \u{2014} dash.\n");
     let output = repo.check();
@@ -288,7 +295,7 @@ fn a_path_named_alone_is_read_by_the_section_for_its_extension() {
         check_file(config, path, text.as_bytes(), Path::new(".")).map(|found| found.len())
     };
     let with = toml(
-        "[toml]\nglobs = [\"/src/*.toml\"]\n[toml.lints.banned_chars]\n[md.lints.banned_chars]\n",
+        "[toml]\nglobs = [\"/src/*.toml\"]\n[toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     )
     .expect("a config");
     // The section that selects it, then the section for the extension, then `[md]`.
@@ -297,7 +304,7 @@ fn a_path_named_alone_is_read_by_the_section_for_its_extension() {
     assert_eq!(run(&with, "notes.txt").expect("findings"), 1);
     assert_eq!(run(&with, "Cargo.lock").expect("findings"), 1);
 
-    let without = toml("[md.lints.banned_chars]\n").expect("a config");
+    let without = toml("[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n").expect("a config");
     let said = run(&without, "src/a.toml")
         .expect_err("no section reads it")
         .to_string();
@@ -314,7 +321,7 @@ fn fix_edits_a_comment_and_leaves_a_string_alone_and_keeps_the_line_breaks() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n[toml.lints.banned_chars]\n",
+        "schema_version = 2\n[toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
     repo.write(
         "quote.toml",
@@ -332,7 +339,9 @@ fn fix_edits_a_comment_and_leaves_a_string_alone_and_keeps_the_line_breaks() {
 
 #[test]
 fn explain_names_the_toml_section_for_a_toml_file() {
-    let repo = repo("[toml.lints.banned_chars]\n");
+    let repo = repo(
+        "[toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
+    );
     let output = repo.run(&["explain", "Cargo.toml"]);
     assert_eq!(code(&output), 0, "{}", stderr(&output));
     assert!(
@@ -344,14 +353,14 @@ fn explain_names_the_toml_section_for_a_toml_file() {
 
 #[test]
 fn a_toml_section_is_read_in_every_language_alike() {
-    let toml_text = "schema_version = 1\n[toml]\nglobs = [\"/src/*.toml\"]\nsurfaces = [\"comment\"]\n\
-                     [toml.lints.banned_chars]\n[[toml.overrides]]\nglobs = [\"a.toml\"]\n\
+    let toml_text = "schema_version = 2\n[toml]\nglobs = [\"/src/*.toml\"]\nsurfaces = [\"comment\"]\n\
+                     [toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[[toml.overrides]]\nglobs = [\"a.toml\"]\n\
                      lints.density = {}\n";
-    let yaml = "schema_version: 1\ntoml:\n  globs: [\"/src/*.toml\"]\n  surfaces: [comment]\n  \
-                lints:\n    banned_chars: {}\n  overrides:\n    - globs: [\"a.toml\"]\n      \
+    let yaml = "schema_version: 2\ntoml:\n  globs: [\"/src/*.toml\"]\n  surfaces: [comment]\n  \
+                lints:\n    banned_chars: {groups: {dashes: true, arrows: true, ellipsis: true, bullets: true, math: true, checks: true, section: true, box_drawing: true, spaces: true, invisible: true, quotes: true}}\n  overrides:\n    - globs: [\"a.toml\"]\n      \
                 lints:\n        density: {}\n";
-    let json = r#"{"schema_version":1,"toml":{"globs":["/src/*.toml"],"surfaces":["comment"],
-        "lints":{"banned_chars":{}},"overrides":[{"globs":["a.toml"],"lints":{"density":{}}}]}}"#;
+    let json = r#"{"schema_version":2,"toml":{"globs":["/src/*.toml"],"surfaces":["comment"],
+        "lints":{"banned_chars":{"groups":{"dashes":true,"arrows":true,"ellipsis":true,"bullets":true,"math":true,"checks":true,"section":true,"box_drawing":true,"spaces":true,"invisible":true,"quotes":true}}},"overrides":[{"globs":["a.toml"],"lints":{"density":{}}}]}}"#;
     let compiled: Vec<String> = [("toml", toml_text), ("yaml", yaml), ("json", json)]
         .into_iter()
         .map(|(extension, text)| {
@@ -367,8 +376,8 @@ fn a_toml_section_is_read_in_every_language_alike() {
 #[test]
 fn the_schema_takes_a_toml_section_and_refuses_a_doc_comment_surface() {
     let fits = "[toml]\nglobs = [\"/src/*.toml\"]\nsurfaces = [\"comment\"]\n\
-                [toml.lints.banned_chars]\n[[toml.overrides]]\nglobs = [\"a.toml\"]\nlints.density = {}\n";
-    assert_eq!(toml_misfit(&format!("schema_version = 1\n{fits}")), None);
-    let unknown = "schema_version = 1\n[toml]\nsurfaces = [\"doc_comment\"]\n";
+                [toml.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n[[toml.overrides]]\nglobs = [\"a.toml\"]\nlints.density = {}\n";
+    assert_eq!(toml_misfit(&format!("schema_version = 2\n{fits}")), None);
+    let unknown = "schema_version = 2\n[toml]\nsurfaces = [\"doc_comment\"]\n";
     assert!(toml_misfit(unknown).is_some());
 }

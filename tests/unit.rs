@@ -318,7 +318,7 @@ fn a_config_key_that_is_not_a_byte_count_is_an_error() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n[md.lints.max_size_bytes]\nvalue = \"lots\"\n",
+        "schema_version = 2\n[md.lints.max_size_bytes]\nvalue = \"lots\"\n",
     );
     repo.write("AGENTS.md", "# A\n");
 
@@ -473,7 +473,7 @@ fn a_config_message_replaces_the_advice() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\
+        "schema_version = 2\n\
          \n[md.lints.max_size_bytes]\nvalue = 10\n\
          message = \"Cut {path} to {max_size_bytes} bytes.\"\n",
     );
@@ -502,7 +502,7 @@ fn an_override_sets_only_the_fields_it_names() {
     // The override changes the message for one file and inherits the section's budget.
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\
+        "schema_version = 2\n\
          \n[md.lints.max_size_bytes]\nvalue = 10\n\
          \n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\
          lints.max_size_bytes.message = \"Only a human may edit AGENTS.md.\"\n",
@@ -534,7 +534,7 @@ fn md_globs_choose_which_files_are_markdown() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\
+        "schema_version = 2\n\
          \n[md]\nglobs = [\"/docs/**/*.md\", \"*.markdown\"]\n\
          \n[md.lints.max_size_bytes]\nvalue = 5\n",
     );
@@ -568,7 +568,7 @@ fn an_md_glob_with_no_markdown_extension_still_loads() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n\
+        "schema_version = 2\n\
          \n[md]\nglobs = [\"docs/**\", \"*\", \"README\"]\n\
          \n[md.lints.max_size_bytes]\nvalue = 5\n",
     );
@@ -604,7 +604,7 @@ fn a_config_without_a_schema_version_is_an_error() {
 #[test]
 fn a_config_from_a_later_schema_is_an_error() {
     let repo = Repo::new();
-    repo.write(".deslag/config.toml", "schema_version = 2\n");
+    repo.write(".deslag/config.toml", "schema_version = 3\n");
     repo.write("AGENTS.md", "# A\n");
 
     let output = repo.check();
@@ -612,7 +612,7 @@ fn a_config_from_a_later_schema_is_an_error() {
 
     assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
-        stderr.contains("declares schema_version 2, but this deslag reads schema_version 1"),
+        stderr.contains("declares schema_version 3, but this deslag reads schema_version 2"),
         "stderr: {stderr}"
     );
 }
@@ -622,7 +622,7 @@ fn an_unknown_lint_is_an_error() {
     let repo = Repo::new();
     repo.write(
         ".deslag/config.toml",
-        "schema_version = 1\n[md.lints.max_size_lines]\nvalue = 5\n",
+        "schema_version = 2\n[md.lints.max_size_lines]\nvalue = 5\n",
     );
     repo.write("AGENTS.md", "# A\n");
 

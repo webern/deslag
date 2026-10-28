@@ -1,6 +1,19 @@
-schema_version = 1
+schema_version = 2
 
 [md.lints.banned_chars]
+
+[md.lints.banned_chars.groups]
+dashes = true
+arrows = true
+ellipsis = true
+bullets = true
+math = true
+checks = true
+section = true
+box_drawing = true
+spaces = true
+invisible = true
+quotes = true
 
 [[md.allow]]
 path = "docs/log.md"

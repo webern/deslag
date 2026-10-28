@@ -15,7 +15,7 @@ use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
 use deslag::instructions::{ALLOW, Reading, Start, guide, lints, update_json, update_text};
-use deslag::lint::{banned_chars, banned_phrases, check_file};
+use deslag::lint::{banned_chars, check_file};
 use deslag::news::News;
 use deslag::version::{BASELINE, Version};
 use deslag::{Config, ConfigSource};
@@ -357,15 +357,16 @@ fn the_schema_refuses_what_deslag_refuses() {
     for text in [
         "[md]",
         "schema_version = 0",
-        "schema_version = 2",
-        "schema_version = 1\n[md.lints.max_size]\nvalue = 1",
-        "schema_version = 1\n[md.lints.max_size_bytes]\nvalue = \"big\"",
-        "schema_version = 1\n[md.lints.max_emphasis]\nmax_percent = 101",
-        "schema_version = 1\n[md.lints.density]\nmax_item_chars = 0",
-        "schema_version = 1\n[md.lints.banned_chars.groups]\ndash = false",
-        "schema_version = 1\n[[md.overrides]]\nlints.density = {}",
-        "schema_version = 1\n[rust]\nsurfaces = [\"docstring\"]",
-        "schema_version = 1\n[rust]\nstrings = []",
+        "schema_version = 1",
+        "schema_version = 3",
+        "schema_version = 2\n[md.lints.max_size]\nvalue = 1",
+        "schema_version = 2\n[md.lints.max_size_bytes]\nvalue = \"big\"",
+        "schema_version = 2\n[md.lints.max_emphasis]\nmax_percent = 101",
+        "schema_version = 2\n[md.lints.density]\nmax_item_chars = 0",
+        "schema_version = 2\n[md.lints.banned_chars.groups]\ndash = false",
+        "schema_version = 2\n[[md.overrides]]\nlints.density = {}",
+        "schema_version = 2\n[rust]\nsurfaces = [\"docstring\"]",
+        "schema_version = 2\n[rust]\nstrings = []",
     ] {
         assert!(toml_misfit(text).is_some(), "the schema accepts {text:?}");
         let repo = Repo::new();
@@ -374,36 +375,6 @@ fn the_schema_refuses_what_deslag_refuses() {
         assert_eq!(code(&output), 2, "{text:?}");
         assert!(stderr(&output).starts_with("deslag:"), "{text:?}");
     }
-}
-
-#[test]
-fn a_config_that_still_sets_the_removed_signposts_group_is_read_with_a_warning() {
-    let schema_text = schema().to_string();
-    assert!(
-        !schema_text.contains("signposts"),
-        "the schema still names the group"
-    );
-    for text in [
-        "schema_version = 1\n[md.lints.banned_phrases.groups]\nsignposts = false\n",
-        "schema_version = 1\n[[md.overrides]]\nglobs = [\"docs/*.md\"]\n\
-         [md.overrides.lints.banned_phrases.groups]\nsignposts = true\n",
-    ] {
-        let repo = Repo::new();
-        repo.write("deslag.toml", text);
-        repo.write("README.md", "A short readme.\n");
-        let output = repo.check();
-        assert_eq!(code(&output), 0, "{text:?}: {}", stderr(&output));
-        let said = stderr(&output);
-        assert!(
-            said.contains("warning") && said.contains("banned_phrases.groups.signposts"),
-            "{text:?}: {said}"
-        );
-    }
-    // A config without it says nothing.
-    let repo = Repo::new();
-    repo.write("deslag.toml", "schema_version = 1\n");
-    repo.write("README.md", "A short readme.\n");
-    assert!(!stderr(&repo.check()).contains("warning"));
 }
 
 #[test]
@@ -429,31 +400,28 @@ fn every_table_in_the_schema_refuses_unknown_keys() {
     walk(&schema(), "");
 }
 
+/// The schema names every group of characters, each off until the config switches it on, as the
+/// lint reads it; `banned_phrases` has no groups.
 #[test]
-fn the_schema_gives_each_group_its_default() {
+fn the_schema_gives_each_group_of_characters_and_no_phrase_groups() {
     let root = schema();
-    let chars = banned_chars::GROUPS
-        .iter()
-        .map(|group| (group.name, group.on_by_default));
-    let phrases = banned_phrases::GROUPS
-        .iter()
-        .map(|group| (group.name, group.on_by_default));
-    let lints: [(&str, Vec<(&str, bool)>); 2] = [
-        ("banned_chars", chars.collect()),
-        ("banned_phrases", phrases.collect()),
-    ];
-    for (lint, groups) in lints {
-        let table = table(&root, table(&root, lints_schema(&root), lint), "groups");
-        let properties = table["properties"].as_object().expect("the groups");
-        assert_eq!(properties.len(), groups.len(), "{lint}");
-        for (name, on_by_default) in groups {
-            assert_eq!(
-                properties[name]["default"],
-                Value::Bool(on_by_default),
-                "{lint}.groups.{name}"
-            );
-        }
+    let chars = table(
+        &root,
+        table(&root, lints_schema(&root), "banned_chars"),
+        "groups",
+    );
+    let properties = chars["properties"].as_object().expect("the groups");
+    assert_eq!(properties.len(), banned_chars::GROUPS.len());
+    for group in banned_chars::GROUPS {
+        assert_eq!(
+            properties[group.name]["default"],
+            Value::Bool(false),
+            "banned_chars.groups.{}",
+            group.name
+        );
     }
+    let phrases = table(&root, lints_schema(&root), "banned_phrases");
+    assert!(phrases["properties"].get("groups").is_none(), "{phrases:#}");
 }
 
 /// Each lint's section says which release the lint arrived in, as [`Lint::since`] has it.
@@ -549,8 +517,8 @@ fn arrived(news: &News) -> Vec<(String, String)> {
 /// The lints a config turns on are read from every section and from its overrides.
 #[test]
 fn lints_turned_on_reads_every_section() {
-    let config = "schema_version = 1\n[md.lints.density]\n[x.lints.max_emphasis]\n\
-                  [[x.overrides]]\nglobs = [\"a\"]\n[x.overrides.lints.banned_chars]\n";
+    let config = "schema_version = 2\n[md.lints.density]\n[x.lints.max_emphasis]\n\
+                  [[x.overrides]]\nglobs = [\"a\"]\n[x.overrides.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n";
     assert_eq!(
         lints_turned_on(config),
         BTreeSet::from(["density", "max_emphasis", "banned_chars"].map(String::from))
@@ -676,9 +644,9 @@ fn the_json_holds_the_entries_of_the_text() {
             "the text of {entry}"
         );
         assert!(entry["version"].as_str().is_some(), "{entry}");
-        // Only a redirect names its new path, and only a phrase its group.
+        // Only a redirect names its new path, and only a phrase its advice.
         assert_eq!(entry.get("new").is_some(), kind == "redirect", "{entry}");
-        assert_eq!(entry.get("group").is_some(), kind == "phrase", "{entry}");
+        assert_eq!(entry.get("advice").is_some(), kind == "phrase", "{entry}");
     }
 }
 

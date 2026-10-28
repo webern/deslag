@@ -21,12 +21,21 @@ use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayou
 use deslag::config::{NotAtAll, VerbsNoNouns};
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
+use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{
     Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, verbs_no_nouns,
 };
 use deslag::{Config, ConfigSource, Document, Violation, check_file};
+
+/// `banned_chars` with every group on but `emoji`, as the configs here turn it on.
+fn most_chars() -> BannedChars {
+    let table = "groups = { dashes = true, arrows = true, ellipsis = true, bullets = true, \
+                 math = true, checks = true, section = true, box_drawing = true, spaces = true, \
+                 invisible = true, quotes = true }";
+    toml::from_str(table).expect("banned_chars settings")
+}
 
 /// How many fixtures each collected category must hold at least.
 const MIN_PER_CATEGORY: usize = 350;
@@ -655,7 +664,7 @@ fn the_corpus_emphasis_reports_agree_with_the_library() {
     repo.write(
         "deslag.toml",
         &format!(
-            "schema_version = 1\n\n[md.lints.max_emphasis]\n\
+            "schema_version = 2\n\n[md.lints.max_emphasis]\n\
              free_spans = {FREE_SPANS}\nmax_percent = {MAX_PERCENT}\n"
         ),
     );
@@ -957,9 +966,9 @@ fn the_corpus_banned_characters_agree_with_the_library() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[md.lints.banned_chars]\n",
+        "schema_version = 2\n\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
-    let settings = BannedChars::default();
+    let settings = most_chars();
 
     let paths = place_real(&repo, fixtures);
     let mut expected: Vec<(String, usize)> = fixtures
@@ -1036,9 +1045,9 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        "schema_version = 1\n\n[md.lints.banned_chars]\n",
+        "schema_version = 2\n\n[md.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n",
     );
-    let settings = BannedChars::default();
+    let settings = most_chars();
     let paths = place_real(&repo, fixtures);
     let config = Config::load(repo.root(), None).expect("a config");
     let fixes = fix::fix(repo.root(), &config, &[], false).expect("fix runs");
@@ -1159,11 +1168,11 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
     );
 }
 
-/// The default groups are meant to catch the characters agents write and people do not.
+/// The groups but `emoji` are meant to catch the characters agents write and people do not.
 #[test]
-fn the_default_groups_flag_llm_text_far_more_than_human_text() {
+fn the_groups_but_emoji_flag_llm_text_far_more_than_human_text() {
     let fixtures = corpus();
-    let settings = BannedChars::default();
+    let settings = most_chars();
     let flagged = |category: &str| {
         fixtures
             .iter()
@@ -1223,14 +1232,23 @@ fn not_at_all_flags_llm_text_more_than_human_text() {
     assert!(llm > human, "human {human}, llm {llm}");
 }
 
-/// The number of `llm/` fixtures each phrase group must match, so that no group is dead weight.
-const LIVE_GROUP_FILES: usize = 5;
+/// The number of `llm/` fixtures the catalogue must match, so that it is not dead weight.
+const LIVE_CATALOGUE_FILES: usize = 5;
 
 #[test]
-fn the_phrase_groups_match_no_human_fixture_and_each_matches_llm_fixtures() {
+fn the_catalogue_matches_no_human_fixture_and_matches_llm_fixtures() {
     let fixtures = corpus();
-    let settings = BannedPhrases::default();
-    let mut live: BTreeMap<&str, usize> = BTreeMap::new();
+    let settings = BannedPhrases {
+        ban: Some(
+            CATALOGUE
+                .entries
+                .iter()
+                .map(|entry| (entry.phrase.clone(), entry.advice.clone()))
+                .collect(),
+        ),
+        ..BannedPhrases::default()
+    };
+    let mut live = 0;
     for fixture in fixtures {
         let text = String::from_utf8_lossy(&fixture.bytes);
         let document = Document::markdown(&text);
@@ -1245,27 +1263,11 @@ fn the_phrase_groups_match_no_human_fixture_and_each_matches_llm_fixtures() {
             over.matches
         );
         if fixture.category == "llm" {
-            let mut groups: Vec<&str> = over
-                .matches
-                .iter()
-                .filter_map(|found| found.group)
-                .collect();
-            groups.sort_unstable();
-            groups.dedup();
-            for group in groups {
-                *live.entry(group).or_default() += 1;
-            }
+            live += 1;
         }
     }
-    eprintln!("llm fixtures each phrase group matches: {live:?}");
-    for group in banned_phrases::GROUPS {
-        let files = live.get(group.name).copied().unwrap_or(0);
-        assert!(
-            files >= LIVE_GROUP_FILES,
-            "{} matches {files} llm fixtures",
-            group.name
-        );
-    }
+    eprintln!("llm fixtures the catalogue matches: {live}");
+    assert!(live >= LIVE_CATALOGUE_FILES, "the catalogue matches {live}");
 }
 
 #[test]
@@ -1315,7 +1317,7 @@ fn reported_dense(stderr: &str) -> Vec<(String, usize, usize)> {
 fn the_corpus_density_reports_agree_with_the_library() {
     let fixtures = corpus();
     let repo = Repo::new();
-    repo.write("deslag.toml", "schema_version = 1\n\n[md.lints.density]\n");
+    repo.write("deslag.toml", "schema_version = 2\n\n[md.lints.density]\n");
     let settings = Density::default();
 
     let paths = place_real(&repo, fixtures);

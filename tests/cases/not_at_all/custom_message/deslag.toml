@@ -1,4 +1,4 @@
-schema_version = 1
+schema_version = 2
 
 [md.lints.not_at_all]
 message = "Delete \"at all\" in {path}."

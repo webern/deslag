@@ -327,7 +327,7 @@ fn corpus() -> TempDir {
     write(
         root,
         "config.toml",
-        b"schema_version = 1\n\n[md]\nglobs = [\"**/*.md\"]\n\n\
+        b"schema_version = 2\n\n[md]\nglobs = [\"**/*.md\"]\n\n\
           [md.lints.banned_phrases]\nban = { \"needs no\" = \"say what it needs\" }\n\n\
           [md.lints.density]\nmax_paragraph_chars = 120\n\n\
           [[md.overrides]]\nglobs = [\"/README.md\"]\nlints.max_size_bytes.value = 200\n",

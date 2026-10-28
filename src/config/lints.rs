@@ -361,9 +361,9 @@ impl Merge for RepoLayout {
 /// as an em dash. Most have a plain character to write instead; an arrow that only a range rule
 /// covers has none, so the report leaves the choice to the writer.
 ///
-/// Like `repo_layout`, the table itself turns the check on: an empty one bans the groups that are
-/// on by default. A character in `allow` is never banned; one in `ban` is banned whatever the
-/// groups say.
+/// The table turns the check on, and bans the groups it switches on and the characters in `ban`:
+/// an empty table bans nothing. A character in `allow` is never banned; one in `ban` is banned
+/// whatever the groups say.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BannedChars {
@@ -437,63 +437,63 @@ impl Merge for BannedChars {
 }
 
 /// `lints.banned_chars.groups`: each group of characters switched on or off. A group left unset
-/// is on or off as its default says.
+/// is off.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CharGroups {
     /// The em dash, en dash, minus sign and other dashes, for `-`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub dashes: Option<bool>,
     /// Arrows, for `->`, `<-` and the like.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub arrows: Option<bool>,
     /// The ellipsis, for `...`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub ellipsis: Option<bool>,
     /// Bullets, the middle dot and geometric shapes, for a Markdown list's `-`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub bullets: Option<bool>,
     /// The multiplication sign and comparison signs, for `x`, `>=`, `<=`, `!=` and `~`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub math: Option<bool>,
     /// Check marks and crosses, for yes and no.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub checks: Option<bool>,
     /// The section sign, for the word section.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub section: Option<bool>,
     /// Box-drawing characters and block elements, for `-`, `|` and `+`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub box_drawing: Option<bool>,
     /// The no-break space and other unusual spaces, for a plain space.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub spaces: Option<bool>,
     /// Characters that do not take space, such as the zero-width space, to be deleted.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub invisible: Option<bool>,
     /// Curly quotes and apostrophes, for `"` and `'`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
+    #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub quotes: Option<bool>,
     /// Emoji, to be deleted.
@@ -542,25 +542,22 @@ impl Merge for CharGroups {
     }
 }
 
-/// `lints.banned_phrases`: a file fails when its prose holds a phrase of a group that is on, or a
-/// phrase in `ban`.
+/// `lints.banned_phrases`: a file fails when its prose holds a phrase in `ban`.
 ///
-/// Like `banned_chars`, the table itself turns the check on: an empty one bans the groups that are
-/// on by default. A phrase matches whatever its case and its style of apostrophe, and a match
-/// inside a match of a phrase in `allow` is not reported.
+/// The table turns the check on, and `ban` is the whole list: an empty table bans nothing. A
+/// phrase matches whatever its case and its style of apostrophe, and a match inside a match of a
+/// phrase in `allow` is not reported.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BannedPhrases {
-    /// Turns groups of phrases on or off.
-    #[serde(default)]
-    #[schemars(extend("since" = "0.0.1"))]
-    pub groups: PhraseGroups,
-    /// Phrases that are never reported, such as a longer phrase that holds a banned one.
+    /// Phrases that are never reported: a longer phrase that holds a banned one, such as
+    /// `load-bearing wall`, or, in an override, a phrase the section bans, so that its files may
+    /// hold it without the override restating `ban`.
     #[serde(default)]
     #[schemars(extend("since" = "0.0.1"))]
     pub allow: Option<Vec<String>>,
-    /// Banned phrases, each mapped to the advice the report shows with it. An empty string means
-    /// delete it.
+    /// Banned phrases, each mapped to the advice the report shows with it. An empty string is no
+    /// advice: the report says the phrase is banned in this repo and to reword the sentence.
     #[serde(default)]
     #[schemars(extend("since" = "0.0.1"))]
     pub ban: Option<BTreeMap<String, String>>,
@@ -568,6 +565,31 @@ pub struct BannedPhrases {
     #[serde(default)]
     #[schemars(extend("since" = "0.0.1"))]
     pub message: Option<String>,
+    /// Read by the unit tests' removals of `groups.signposts`, which need a table of keys the
+    /// schema does not have.
+    #[cfg(test)]
+    #[serde(default, skip_serializing)]
+    #[schemars(skip)]
+    pub groups: TestGroups,
+}
+
+/// The table the unit tests' removals read, with a key each removes and keys beside it.
+#[cfg(test)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TestGroups {
+    /// The key the removals take out.
+    #[serde(default)]
+    pub signposts: Option<bool>,
+    /// A key that stays.
+    #[serde(default)]
+    pub insistence: Option<bool>,
+    /// A key that stays.
+    #[serde(default)]
+    pub metaphors: Option<bool>,
+    /// A key that stays.
+    #[serde(default)]
+    pub precision: Option<bool>,
 }
 
 impl BannedPhrases {
@@ -628,7 +650,6 @@ impl BannedPhrases {
 
 impl Merge for BannedPhrases {
     fn merge(&mut self, over: &Self) {
-        self.groups.merge(&over.groups);
         if over.allow.is_some() {
             self.allow.clone_from(&over.allow);
         }
@@ -637,56 +658,6 @@ impl Merge for BannedPhrases {
         }
         if over.message.is_some() {
             self.message.clone_from(&over.message);
-        }
-    }
-}
-
-/// `lints.banned_phrases.groups`: each group of phrases switched on or off. A group left unset is
-/// on or off as its default says.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
-#[serde(deny_unknown_fields)]
-pub struct PhraseGroups {
-    /// The `signposts` group, which no longer exists. A config may still set it, so it is read;
-    /// the redirect for it warns and clears it, and the setting does nothing.
-    #[serde(default, skip_serializing)]
-    #[schemars(skip)]
-    pub signposts: Option<bool>,
-    /// Phrases that insist on what a thing does not do, such as `not silently`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
-    #[schemars(extend("since" = "0.0.1"))]
-    pub insistence: Option<bool>,
-    /// Metaphors that stand in for a plain verb or claim, such as `load-bearing`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
-    #[schemars(extend("since" = "0.0.1"))]
-    pub metaphors: Option<bool>,
-    /// Words that claim a precision nobody measured, such as `byte-identical`.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("default" = true))]
-    #[schemars(extend("since" = "0.0.1"))]
-    pub precision: Option<bool>,
-}
-
-impl Merge for PhraseGroups {
-    fn merge(&mut self, over: &Self) {
-        // Naming every field makes a new group a compile error until it is merged here too.
-        let PhraseGroups {
-            // Removed, and ignored.
-            signposts: _,
-            insistence,
-            metaphors,
-            precision,
-        } = over;
-        let pairs = [
-            (&mut self.insistence, insistence),
-            (&mut self.metaphors, metaphors),
-            (&mut self.precision, precision),
-        ];
-        for (under, over) in pairs {
-            if over.is_some() {
-                *under = *over;
-            }
         }
     }
 }

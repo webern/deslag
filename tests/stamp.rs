@@ -97,7 +97,7 @@ fn quoted(version: &str) -> String {
 #[test]
 fn a_missing_stamp_loads_as_the_baseline() {
     for language in LANGUAGES {
-        let text = config(language, 1, None, false);
+        let text = config(language, 2, None, false);
         let config = parse(language, &text).expect(language);
         assert_eq!(config.stamp(), None, "{language}");
         assert_eq!(
@@ -115,7 +115,7 @@ fn a_missing_stamp_loads_as_the_baseline() {
 #[test]
 fn a_null_stamp_in_yaml_and_json_is_a_missing_one() {
     for language in ["yaml", "json"] {
-        let config = parse(language, &config(language, 1, Some("null"), false)).expect(language);
+        let config = parse(language, &config(language, 2, Some("null"), false)).expect(language);
         assert_eq!(config.stamp(), None, "{language}");
     }
 }
@@ -124,7 +124,7 @@ fn a_null_stamp_in_yaml_and_json_is_a_missing_one() {
 fn an_equal_stamp_loads() {
     let current = env!("CARGO_PKG_VERSION");
     for language in LANGUAGES {
-        let text = config(language, 1, Some(&quoted(current)), false);
+        let text = config(language, 2, Some(&quoted(current)), false);
         let config = parse(language, &text).expect(language);
         assert_eq!(
             config.stamp().map(ToString::to_string).as_deref(),
@@ -145,7 +145,7 @@ fn an_equal_stamp_loads() {
 #[test]
 fn an_older_stamp_loads_and_the_commands_print_the_notice() {
     for language in LANGUAGES {
-        let text = config(language, 1, Some(&quoted(OLDER)), false);
+        let text = config(language, 2, Some(&quoted(OLDER)), false);
         let config = parse(language, &text).expect(language);
         assert_eq!(
             config.stamp().map(ToString::to_string).as_deref(),
@@ -178,7 +178,7 @@ fn the_notice_is_printed_once_by_every_command_and_format_and_changes_nothing_el
         repo.write(
             "deslag.toml",
             &format!(
-                "schema_version = 1\ndeslag_version = \"{stamp}\"\n\n\
+                "schema_version = 2\ndeslag_version = \"{stamp}\"\n\n\
                  [md.lints.max_size_bytes]\nvalue = 3\n"
             ),
         );
@@ -225,7 +225,7 @@ fn the_update_topic_does_not_print_the_notice() {
     let repo = Repo::new();
     repo.write(
         "deslag.toml",
-        &config("toml", 1, Some(&quoted(OLDER)), false),
+        &config("toml", 2, Some(&quoted(OLDER)), false),
     );
     for args in [
         &["instructions", "update"][..],
@@ -235,57 +235,6 @@ fn the_update_topic_does_not_print_the_notice() {
         let output = repo.run(args);
         assert_eq!(code(&output), 0, "{args:?}");
         assert_eq!(raw_stderr(&output), "", "{args:?}");
-    }
-}
-
-/// A warning about the config and the note about its stamp are two things to say, and both are
-/// said, once each, the warning first.
-#[test]
-fn a_warning_and_the_notice_both_print_once_the_warning_first() {
-    let text = format!(
-        "schema_version = 1\ndeslag_version = \"{OLDER}\"\n\n\
-         [md.lints.banned_phrases.groups]\nsignposts = false\n"
-    );
-    // The warning names the file it is about, which the binary finds in a temp directory.
-    let config = parse("toml", &text).expect("a config");
-    let [warning] = config.warnings() else {
-        panic!("expected one warning: {:?}", config.warnings());
-    };
-    let warning = warning
-        .strip_prefix("deslag.toml: ")
-        .expect("the file's name");
-    assert!(
-        warning.contains("banned_phrases.groups.signposts"),
-        "{warning}"
-    );
-
-    let repo = Repo::new();
-    repo.write("deslag.toml", &text);
-    repo.write("AGENTS.md", "# A\n");
-    let runs: [&[&str]; 4] = [
-        &["check"],
-        &["check", "--format", "json"],
-        &["fix"],
-        &["explain", "AGENTS.md"],
-    ];
-    for args in runs {
-        let output = repo.run(args);
-        assert_eq!(code(&output), 0, "{args:?}");
-        let said = raw_stderr(&output);
-        let first = said.lines().next().expect("a first line");
-        assert!(
-            first.starts_with("deslag: warning: ") && first.ends_with(warning),
-            "{args:?}: {said}"
-        );
-        // The notice follows the warning, when the running deslag has news for the stamp.
-        let rest = &said[first.len() + 1..];
-        assert!(rest.starts_with(&notice_for(OLDER)), "{args:?}: {said}");
-        assert_eq!(said.matches("signposts").count(), 1, "{args:?}: {said}");
-        assert_eq!(
-            said.matches("last updated by").count(),
-            notice_for(OLDER).matches("last updated by").count(),
-            "{args:?}: {said}"
-        );
     }
 }
 
@@ -314,7 +263,7 @@ fn a_missing_stamp_gets_what_the_baseline_stamp_gets_from_every_command() {
         let repo = Repo::new();
         repo.write(
             &format!("deslag.{language}"),
-            &config(language, 1, stamp.map(quoted).as_deref(), false),
+            &config(language, 2, stamp.map(quoted).as_deref(), false),
         );
         repo.write("AGENTS.md", "# A\n");
         repo.run(args)
@@ -348,7 +297,7 @@ fn a_missing_stamp_gets_what_the_baseline_stamp_gets_from_every_command() {
 /// `stderr` holds nothing. And `stderr` removes the notice and no other note.
 #[test]
 fn stderr_drops_the_notice_the_binary_prints_and_raw_stderr_keeps_it() {
-    let output = check_output("toml", &config("toml", 1, Some(&quoted(OLDER)), false));
+    let output = check_output("toml", &config("toml", 2, Some(&quoted(OLDER)), false));
     assert_eq!(code(&output), 0);
     assert_eq!(raw_stderr(&output), notice_for(OLDER));
     assert_eq!(stderr(&output), "");
@@ -397,7 +346,7 @@ fn a_newer_stamp_is_an_error() {
         env!("CARGO_PKG_VERSION")
     );
     for language in LANGUAGES {
-        let text = config(language, 1, Some(&quoted(&newer)), false);
+        let text = config(language, 2, Some(&quoted(&newer)), false);
         let (code, stderr) = check(language, &text);
         assert_eq!(code, 2, "{language}, stderr: {stderr}");
         assert!(
@@ -411,7 +360,7 @@ fn a_newer_stamp_is_an_error() {
 fn a_newer_stamp_beside_an_unknown_lint_reports_the_version() {
     let newer = newer();
     for language in LANGUAGES {
-        let text = config(language, 1, Some(&quoted(&newer)), true);
+        let text = config(language, 2, Some(&quoted(&newer)), true);
         let (code, stderr) = check(language, &text);
         assert_eq!(code, 2, "{language}, stderr: {stderr}");
         assert!(
@@ -424,11 +373,11 @@ fn a_newer_stamp_beside_an_unknown_lint_reports_the_version() {
 #[test]
 fn a_later_schema_beside_an_unknown_lint_reports_the_schema() {
     for language in LANGUAGES {
-        let text = config(language, 2, None, true);
+        let text = config(language, 3, None, true);
         let (code, stderr) = check(language, &text);
         assert_eq!(code, 2, "{language}, stderr: {stderr}");
         assert!(
-            stderr.contains("declares schema_version 2, but this deslag reads schema_version 1")
+            stderr.contains("declares schema_version 3, but this deslag reads schema_version 2")
                 && !stderr.contains("not_a_lint"),
             "{language}, stderr: {stderr}"
         );
@@ -438,10 +387,10 @@ fn a_later_schema_beside_an_unknown_lint_reports_the_schema() {
 #[test]
 fn a_later_schema_is_reported_before_a_newer_stamp() {
     for language in LANGUAGES {
-        let text = config(language, 2, Some(&quoted(&newer())), false);
+        let text = config(language, 3, Some(&quoted(&newer())), false);
         let (code, stderr) = check(language, &text);
         assert_eq!(code, 2, "{language}, stderr: {stderr}");
-        assert!(stderr.contains("declares schema_version 2"), "{stderr}");
+        assert!(stderr.contains("declares schema_version 3"), "{stderr}");
     }
 }
 
@@ -449,7 +398,7 @@ fn a_later_schema_is_reported_before_a_newer_stamp() {
 fn a_stamp_that_is_not_a_release_is_an_error_naming_the_key() {
     for stamp in ["4", "\"next\"", "\"0.0.1+x\"", "\"0.0.1-rc.1\"", "\"one\""] {
         for language in LANGUAGES {
-            let text = config(language, 1, Some(stamp), false);
+            let text = config(language, 2, Some(stamp), false);
             let (code, stderr) = check(language, &text);
             assert_eq!(code, 2, "{language} {stamp}, stderr: {stderr}");
             assert!(
@@ -463,7 +412,7 @@ fn a_stamp_that_is_not_a_release_is_an_error_naming_the_key() {
 /// The words are those the stamp had before `--since` shared its parser.
 #[test]
 fn a_stamp_that_is_not_a_release_keeps_its_message() {
-    let (code, stderr) = check("toml", "schema_version = 1\ndeslag_version = \"0.0.1+x\"\n");
+    let (code, stderr) = check("toml", "schema_version = 2\ndeslag_version = \"0.0.1+x\"\n");
     assert_eq!(code, 2, "stderr: {stderr}");
     assert!(
         stderr.starts_with("deslag: invalid setting in "),
@@ -500,11 +449,11 @@ fn a_syntax_error_beside_a_stamp_is_a_parse_error() {
 fn a_json_trailing_comma_inside_md_keeps_its_message() {
     for (text, expected) in [
         (
-            "{\"schema_version\": 1, \"md\": {\"globs\": [\"*.md\"],}}",
+            "{\"schema_version\": 2, \"md\": {\"globs\": [\"*.md\"],}}",
             "trailing comma at line 1 column 48",
         ),
         (
-            "{\"schema_version\": 1, \"md\": {\"globs\": [\"*.md\",]}}",
+            "{\"schema_version\": 2, \"md\": {\"globs\": [\"*.md\",]}}",
             "trailing comma at line 1 column 47",
         ),
     ] {
@@ -533,17 +482,17 @@ fn a_yaml_syntax_error_inside_md_keeps_its_message() {
     for (language, text, expected) in [
         (
             "yaml",
-            "schema_version: 1\nmd: {a: 1\n",
+            "schema_version: 2\nmd: {a: 1\n",
             "unknown field `a`",
         ),
         (
             "yaml",
-            "schema_version: 1\nmd:\n  foo: 1\nmd:\n  globs: [\"*.md\"]\n",
+            "schema_version: 2\nmd:\n  foo: 1\nmd:\n  globs: [\"*.md\"]\n",
             "unknown field `foo`",
         ),
         (
             "json",
-            "{\"schema_version\": 1, \"md\": {\"foo\": 1}, \"md\": {}}",
+            "{\"schema_version\": 2, \"md\": {\"foo\": 1}, \"md\": {}}",
             "unknown field `foo`",
         ),
     ] {
@@ -568,15 +517,15 @@ fn a_stamp_under_md_is_an_unknown_field() {
     for (language, text) in [
         (
             "toml",
-            "schema_version = 1\n[md]\ndeslag_version = \"0.0.1\"\n",
+            "schema_version = 2\n[md]\ndeslag_version = \"0.0.1\"\n",
         ),
         (
             "yaml",
-            "schema_version: 1\nmd:\n  deslag_version: \"0.0.1\"\n",
+            "schema_version: 2\nmd:\n  deslag_version: \"0.0.1\"\n",
         ),
         (
             "json",
-            "{\"schema_version\": 1, \"md\": {\"deslag_version\": \"0.0.1\"}}",
+            "{\"schema_version\": 2, \"md\": {\"deslag_version\": \"0.0.1\"}}",
         ),
     ] {
         let (code, stderr) = check(language, text);
@@ -592,7 +541,7 @@ fn a_stamp_under_md_is_an_unknown_field() {
 fn a_config_written_as_a_json_array_still_loads() {
     let (code, stderr) = check(
         "json",
-        "[1, {\"globs\":[\"*.md\"],\"lints\":{\"max_size_bytes\":{\"value\":1}}}]",
+        "[2, {\"globs\":[\"*.md\"],\"lints\":{\"max_size_bytes\":{\"value\":1}}}]",
     );
     assert_eq!(code, 1, "stderr: {stderr}");
     assert!(stderr.contains("max_size_bytes"), "stderr: {stderr}");

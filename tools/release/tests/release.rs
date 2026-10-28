@@ -89,7 +89,7 @@ fn full(extra: bool) -> Value {
         section
     };
     let mut value = json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "deslag_version": "0.0.1",
         "md": section("*.md"),
         "rust": section("*.rs"),
@@ -107,7 +107,7 @@ fn without(mut value: Value, path: &str) -> Value {
 /// A config that has `md` and little else.
 fn base() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "md": { "globs": ["*.md"], "overrides": [{ "globs": ["a.md"] }] },
     })
 }
@@ -135,7 +135,7 @@ fn a_missing_setting_takes_its_default_else_its_fill_and_the_release_is_stamped(
     assert_eq!(
         value,
         json!({
-            "schema_version": 1,
+            "schema_version": 2,
             "deslag_version": "0.0.2",
             "md": {
                 "globs": ["*.md"],
@@ -268,7 +268,7 @@ fn a_retired_setting_is_dropped_or_moved_in_the_section_and_in_its_overrides() {
 fn the_languages_round_trip_to_the_same_value() {
     let value = json!({
         "deslag_version": "0.0.2",
-        "schema_version": 1,
+        "schema_version": 2,
         "md": {
             "globs": ["*.md", "/a b/**"],
             "overrides": [{ "globs": ["x"], "lints": { "density": { "max": 2 } } }, { "globs": ["y"] }],
@@ -361,7 +361,7 @@ fn freeze_first(root: &Path) {
         "rust": { "globs": ["a"], "surfaces": ["b"], "overrides": [{ "globs": ["c"] }] },
     });
     let first = freeze::freeze(
-        &json!({ "schema_version": 1, "md": { "globs": ["*.md"] } }),
+        &json!({ "schema_version": 2, "md": { "globs": ["*.md"] } }),
         &version("0.0.1"),
         &rules(false, Vec::new()),
         &fill,

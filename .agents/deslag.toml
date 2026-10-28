@@ -2,7 +2,7 @@
 # it.
 
 schema_version = 2
-deslag_version = "0.0.3"
+deslag_version = "0.0.4"
 
 # ACKNOWLEDGEMENTS.md does not require a byte budget.
 [md]

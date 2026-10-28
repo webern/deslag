@@ -41,6 +41,7 @@ pub mod cpp;
 pub mod edit;
 pub mod lints;
 pub mod md;
+pub mod migrate;
 pub mod paths;
 pub mod redirect;
 pub mod rust;
@@ -48,8 +49,6 @@ pub mod search;
 pub mod section;
 pub mod toml;
 pub mod update;
-// TODO: remove the dead_code guard when the migration reads the frozen reader.
-#[allow(dead_code)]
 mod v1;
 
 use std::num::NonZeroU32;
@@ -192,6 +191,12 @@ struct Head {
     #[serde(default)]
     #[expect(dead_code, reason = "holds a position, never read")]
     toml: Option<IgnoredAny>,
+}
+
+/// The `schema_version` of `text`, a config written in `format`; or `None` when it has none or its
+/// head does not read.
+pub(crate) fn schema_of(text: &str, format: ConfigFormat) -> Option<NonZeroU32> {
+    deserialize::<Head>(text, format).ok()?.schema_version
 }
 
 /// The `deslag_version` key as text, with an error that names the key whatever the language.

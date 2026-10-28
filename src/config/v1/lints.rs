@@ -301,6 +301,15 @@ pub(crate) struct PhraseGroups {
     precision: Option<bool>,
 }
 
+impl PhraseGroups {
+    /// Whether the table switches a group on or off. `signposts` switched nothing.
+    pub(crate) fn switches_any(&self) -> bool {
+        [self.insistence, self.metaphors, self.precision]
+            .iter()
+            .any(Option::is_some)
+    }
+}
+
 impl Merge for PhraseGroups {
     fn merge(&mut self, over: &Self) {
         lay(&mut self.insistence, &over.insistence);

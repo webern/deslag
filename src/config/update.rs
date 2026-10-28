@@ -1,5 +1,8 @@
 //! `deslag update`: the one command that writes the config.
 //!
+//! A config of an older schema, which nothing else reads, is first rewritten as one of this schema
+//! by [`migrate`], which holds the new text to what the old meant.
+//!
 //! It loads the config as `check` would, but says nothing of what it loads: the warnings it would
 //! print are the edits it is about to make. It then asks [`edit::edit`] for the text with every
 //! redirect the file uses made and the stamp moved, and replaces the file with that text through
@@ -19,8 +22,8 @@ use std::path::Path;
 use semver::Version;
 
 use crate::Error;
-use crate::config::Config;
-use crate::config::edit::{self, Checked, Edit};
+use crate::config::edit::{self, Checked, Edit, Edited};
+use crate::config::{Config, migrate, search};
 use crate::news::Known;
 use crate::{version, write};
 
@@ -140,8 +143,20 @@ pub fn update(
     running: &Version,
     known: Known<'_>,
 ) -> Result<Update, Error> {
-    let (config, text) = Config::load_text_at(root, explicit, running)?;
-    let path = shown(root, config.path());
+    let (found, source) = search::find(root, explicit)?;
+    let path = shown(root, &found);
+    let read = fs::read_to_string(&found).map_err(|source| Error::Read {
+        path: found.display().to_string(),
+        source,
+    })?;
+    // A config of an older schema is rewritten first, and the rest is done to the rewritten text.
+    let migrated = migrate::migrate(&read, &path)
+        .map_err(|refusal| refusal.into_error(&path, &rerun(explicit, to)))?;
+    let (text, mut edits) = match migrated {
+        Some(migrated) => (migrated.text.as_str().to_string(), migrated.edits),
+        None => (read, Vec::new()),
+    };
+    let config = Config::parse_at(&text, found, source, running)?;
     let seen = config.deslag_version();
     let now = version::Version::Release(running.clone());
     let news = known.news(&seen, &now);
@@ -159,6 +174,11 @@ pub fn update(
     };
     let edited = edit::edit(&text, &config, &path, stamp.as_ref())
         .map_err(|refusal| refusal.into_error(&path, &rerun(explicit, to)))?;
+    edits.extend(edited.edits);
+    let edited = Edited {
+        text: edited.text,
+        edits,
+    };
     if !edited.edits.is_empty() {
         let read_only = fs::metadata(config.path())
             .map(|metadata| is_read_only(&metadata))
@@ -318,6 +338,25 @@ mod tests {
                 running()
             ))),
             "{lines:?}"
+        );
+    }
+
+    #[test]
+    fn a_bare_update_migrates_an_older_schema_and_still_holds_the_stamp() {
+        let (dir, path) = repo(
+            "schema_version = 1\ndeslag_version = \"0.0.1\"\n\
+             [md.lints.banned_phrases]\nallow = [\"load-bearing\"]\n",
+        );
+        let done = run(&dir, false, None, &news()).expect("an update");
+        assert!(done.held.is_some(), "{done:?}");
+        let text = fs::read_to_string(path).expect("a config");
+        assert!(
+            text.starts_with("schema_version = 2\ndeslag_version = \"0.0.1\"\n"),
+            "{text}"
+        );
+        assert!(
+            text.contains("\"never silently\" =") && !text.contains("load-bearing"),
+            "{text}"
         );
     }
 

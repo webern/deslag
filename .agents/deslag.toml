@@ -152,8 +152,19 @@ globs = [
   "/tools/corpus/*.toml",
 ]
 
-[toml.lints.banned_chars]
-groups = { emoji = true, dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
+[toml.lints.banned_chars.groups]
+emoji = true
+dashes = true
+arrows = true
+ellipsis = true
+bullets = true
+math = true
+checks = true
+section = true
+box_drawing = true
+spaces = true
+invisible = true
+quotes = true
 
 [toml.lints.banned_phrases]
 

@@ -3,15 +3,19 @@
 //! the rest of the file, in every language the config may be written in. A stamp older than the
 //! running deslag, with something released since, makes `check`, `fix` and `explain` say so. Only
 //! the tests here and in `tests/instructions.rs` see that note, through `raw_stderr`: `stderr`
-//! leaves it out, so a release does not change what any other test sees. The last test reads
-//! deslag's own config, which every release stamps with its version.
+//! leaves it out, so a release does not change what any other test sees. The last two tests read
+//! deslag's own config, which every release stamps with its version, and which bans what deslag
+//! recommends.
 
 mod common;
 
+use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::process::Output;
 
 use common::{Repo, code, notice, notice_for, raw_stderr, stderr, without_notice};
+use deslag::lint::banned_chars::GROUPS;
+use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::version::{BASELINE, Version};
 use deslag::{Config, ConfigSource};
 
@@ -568,4 +572,44 @@ fn the_repos_own_config_is_stamped_with_the_crate_version() {
          repo root, as `cargo run -- update --to {version}`",
         path.display(),
     );
+}
+
+/// deslag's own config holds itself to the list `deslag init` writes and `deslag instructions
+/// update` offers: every file of every section gets a `ban` that holds every phrase of the
+/// catalogue and `groups` that name every group of characters. So a phrase or group that is added
+/// reaches this repo in the change that adds it, whatever the stamp.
+#[test]
+fn the_repos_own_config_bans_what_deslag_recommends() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let config = Config::load(root, None).expect("the repo's own config loads");
+    let groups: BTreeSet<String> = GROUPS.iter().map(|group| group.name.to_string()).collect();
+    for section in config.sections() {
+        let name = section.name();
+        for lints in section.possible_lints() {
+            let ban = lints.banned_phrases.and_then(|phrases| phrases.ban);
+            let ban = ban.unwrap_or_else(|| panic!("[{name}] bans no phrase"));
+            for entry in &CATALOGUE.entries {
+                assert!(
+                    ban.contains_key(&entry.phrase),
+                    "[{name}] does not ban {:?}, which deslag recommends: add it to the `ban` of \
+                     .agents/deslag.toml",
+                    entry.phrase
+                );
+            }
+            let chars = lints
+                .banned_chars
+                .unwrap_or_else(|| panic!("[{name}] bans no character"));
+            let named = serde_json::to_value(&chars.groups).expect("the groups serialize");
+            let named: BTreeSet<String> = named
+                .as_object()
+                .expect("a table of groups")
+                .keys()
+                .cloned()
+                .collect();
+            assert_eq!(
+                named, groups,
+                "[{name}] must name every group of characters"
+            );
+        }
+    }
 }

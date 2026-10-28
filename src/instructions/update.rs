@@ -3,16 +3,17 @@
 //!
 //! The range is [`News`]. The text and the JSON print the settings renamed or removed, then the new
 //! lints, each as the page `deslag instructions lints` prints for it, then the new settings, each
-//! as its doc comment in the schema, and last the catalogue phrases. Settings with the same doc
-//! comment share a heading. When a config was read, a lint the config already has a table for says
-//! so. The notice asks whether the range holds anything. The fixed words of the text are in
+//! as its doc comment in the schema, and last the catalogue phrases, each offered with the `ban`
+//! line that bans it. Settings with the same doc comment share a heading. When a config was read,
+//! a lint the config already has a table for says so, and so does a phrase some `ban` of it names.
+//! The notice asks whether the range holds anything. The fixed words of the text are in
 //! `src/instructions/update.md`.
 
 use serde::Serialize;
 
 use crate::Lint;
 use crate::config::Config;
-use crate::lint::banned_phrases::Entry as Phrase;
+use crate::lint::banned_phrases::{Entry as Phrase, folded};
 use crate::news::{News, Setting};
 use crate::version::Version;
 
@@ -39,6 +40,8 @@ pub enum Start<'a> {
 pub struct Reading {
     /// The lints of the range that some table of the config already turns on.
     pub set: Vec<Lint>,
+    /// The phrases of the range that some `ban` of the config already names.
+    pub banned: Vec<String>,
 }
 
 impl Reading {
@@ -55,7 +58,23 @@ impl Reading {
             .map(|(lint, _)| *lint)
             .filter(|lint| tables.iter().any(|lints| lints.is_on(*lint)))
             .collect();
-        Reading { set }
+        let named: Vec<Vec<String>> = config
+            .sections()
+            .iter()
+            .flat_map(|section| {
+                std::iter::once(&section.lints)
+                    .chain(section.overrides.iter().map(|over| &over.lints))
+            })
+            .filter_map(|lints| lints.banned_phrases.as_ref()?.ban.as_ref())
+            .flat_map(|ban| ban.keys().map(|phrase| folded(phrase)))
+            .collect();
+        let banned = news
+            .phrases()
+            .iter()
+            .filter(|entry| named.contains(&folded(&entry.phrase)))
+            .map(|entry| entry.phrase.clone())
+            .collect();
+        Reading { set, banned }
     }
 }
 
@@ -86,6 +105,7 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
             kind: ItemKind::Redirect,
             id: redirect.old,
             text: redirect.message(),
+            advice: None,
             already_set: None,
             new: Some(redirect.new),
         });
@@ -96,6 +116,7 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
             kind: ItemKind::Lint,
             id: lint.id(),
             text: section(*lint).trim().to_string(),
+            advice: None,
             already_set: reading_of(start)
                 .is_some_and(|reading| reading.set.contains(lint))
                 .then_some(true),
@@ -108,6 +129,7 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
             kind: ItemKind::Setting,
             id: setting.path,
             text: setting.description.to_string(),
+            advice: None,
             already_set: None,
             new: None,
         });
@@ -117,8 +139,11 @@ fn items<'a>(news: &'a News<'a>, start: Start<'_>) -> Vec<Item<'a>> {
             version: &phrase.since,
             kind: ItemKind::Phrase,
             id: &phrase.phrase,
-            text: format!("{}\n\n{}", phrase.advice, keep_off(phrase)),
-            already_set: None,
+            text: format!("{}\n\n{}", phrase.advice, offer(phrase)),
+            advice: Some(&phrase.advice),
+            already_set: reading_of(start)
+                .is_some_and(|reading| reading.banned.contains(&phrase.phrase))
+                .then_some(true),
             new: None,
         });
     }
@@ -212,10 +237,11 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
     if !news.phrases().is_empty() {
         text.push_str("\n## New phrases\n");
         for item in of(ItemKind::Phrase) {
-            text.push_str(&format!(
-                "\n### `{}` ({})\n\n{}\n",
-                item.id, item.version, item.text
-            ));
+            text.push_str(&format!("\n### `{}` ({})\n\n", item.id, item.version));
+            if item.already_set == Some(true) {
+                text.push_str(&format!("This config already bans `{}`.\n\n", item.id));
+            }
+            text.push_str(&format!("{}\n", item.text));
         }
     }
     text.push_str(&format!("\n## Finish\n\n{}\n", words("Closing")));
@@ -277,9 +303,13 @@ struct Item<'a> {
     /// A lint's id, a setting's path, a redirect's old path or a phrase.
     id: &'a str,
     /// The Markdown under its heading: a lint's page, a setting's doc comment, what happened to a
-    /// redirect's old path, or a phrase's advice and how to keep it off.
+    /// redirect's old path, or a phrase's advice and the `ban` line that bans it.
     text: String,
-    /// Whether the config already has a table for the lint; given only for a lint it has.
+    /// A phrase's advice; given only for a phrase.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    advice: Option<&'a str>,
+    /// Whether the config already has a table for the lint, or a `ban` that names the phrase;
+    /// given only for a lint or a phrase it has.
     #[serde(skip_serializing_if = "Option::is_none")]
     already_set: Option<bool>,
     /// The path that replaced a redirect's old one, `null` for a removal; given only for a
@@ -288,9 +318,16 @@ struct Item<'a> {
     new: Option<Option<&'a str>>,
 }
 
-/// Where `phrase` reports.
-fn keep_off(_phrase: &Phrase) -> String {
-    "A file fails on it only where a `ban` lists it.".to_string()
+/// That deslag recommends `phrase`, and the line of a `ban` table, in TOML, that bans it.
+fn offer(phrase: &Phrase) -> String {
+    let key = toml_edit::Key::new(phrase.phrase.as_str());
+    let advice = toml_edit::Value::from(phrase.advice.as_str());
+    format!(
+        "deslag recommends it; a file fails on it only where a `ban` lists it. The line to add \
+         to a `ban`:\n\n```toml\n{} = {}\n```",
+        key.display_repr(),
+        advice.to_string().trim()
+    )
 }
 
 /// The text of the section of `src/instructions/update.md` headed `name`, placeholders and all.
@@ -472,10 +509,9 @@ What rust leaves out.
 
 Nothing `check` finds depends on `deslag_version`.
 
-Offer each new lint to the person, with what it fails, and add the table of each they choose. Name
-each new phrase, which is on already, and keep off each they want off, as its section says. A new
-setting keeps its default until the config sets it; name it to the person, and set it only if they
-ask.
+Offer each new lint to the person, with what it fails, and add the table of each they choose.
+Offer each new phrase too, and add its `ban` line to each table they choose. A new setting keeps
+its default until the config sets it; name it to the person, and set it only if they ask.
 
 Once they have chosen, run `deslag update --to next`, adding your `--config-path` if any. It sets
 `deslag_version` to "next", ending this list, and edits renamed or removed settings. If the person
@@ -688,12 +724,14 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         let new_phrases = text.find("## New phrases").expect("a phrases section");
         let finish = text.find("## Finish").expect("a closing");
         assert!(settings < new_phrases && new_phrases < finish, "{text}");
-        assert!(text.contains(
-            "### `never silently` (0.3.0)\n\nsay what it does instead\n\nEvery file whose \
-             `banned_phrases` table has the group `insistence` on fails on it now, whatever \
-             `deslag_version` says. To keep it, add `\"never silently\"` to `allow` in the \
-             table, or switch the group off with `groups.insistence = false`.\n"
-        ));
+        assert!(
+            text.contains(
+                "### `never silently` (0.3.0)\n\nsay what it does instead\n\ndeslag recommends \
+                 it; a file fails on it only where a `ban` lists it. The line to add to a \
+                 `ban`:\n\n```toml\n\"never silently\" = \"say what it does instead\"\n```\n"
+            ),
+            "{text}"
+        );
         // 0.2.0 is the stamp, so its phrase has been seen.
         assert!(!text.contains("load-bearing"), "{text}");
 
@@ -708,19 +746,20 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         let last = items.last().expect("an item");
         assert_eq!(last["kind"], "phrase");
         assert_eq!(last["id"], "never silently");
-        assert_eq!(last["group"], "insistence");
+        assert_eq!(last["advice"], "say what it does instead");
         assert_eq!(last["version"], "0.3.0");
         assert!(
             last["text"]
                 .as_str()
-                .is_some_and(|text| text.starts_with("say what it does instead\n\nEvery file")),
+                .is_some_and(|text| text.starts_with("say what it does instead\n\ndeslag")),
             "{last}"
         );
         assert!(
             items
                 .iter()
-                .all(|i| (i["kind"] == "phrase") == i.get("group").is_some())
+                .all(|i| (i["kind"] == "phrase") == i.get("advice").is_some())
         );
+        assert!(items.iter().all(|i| i.get("group").is_none()));
         let _ = paths;
     }
 
@@ -801,6 +840,39 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
             assert!(!update_text(&news, &from, &to, start).contains("already has"));
             assert!(!update_json(&news, &from, &to, start).contains("already_set"));
         }
+    }
+
+    /// A phrase some `ban` of the config names, in the section or an override, says so in the
+    /// text and in the JSON, and one no `ban` names does not.
+    #[test]
+    fn a_phrase_the_config_already_bans_says_so() {
+        let tables = "[md.lints.banned_phrases]\n[[md.overrides]]\nglobs = [\"/A.md\"]\n\
+                      lints.banned_phrases.ban = { \"Never  Silently\" = \"\" }\n";
+        let (reading, text) = read_with(tables);
+        assert_eq!(reading.banned, ["never silently"]);
+        assert!(
+            text.contains(
+                "### `never silently` (0.3.0)\n\nThis config already bans `never silently`.\n\n\
+                 say what it does instead\n"
+            ),
+            "{text}"
+        );
+        assert!(!text.contains("already bans `load-bearing`"), "{text}");
+
+        let (paths, catalogue) = (paths(), phrases());
+        let (from, to) = (version("0.0.0"), version("0.3.0"));
+        let news = News::between(&paths, &[], &catalogue, &from, &to);
+        let json: Value =
+            serde_json::from_str(&update_json(&news, &from, &to, Start::Config(&reading)))
+                .expect("JSON");
+        let marked: Vec<&str> = json["entries"]
+            .as_array()
+            .expect("entries")
+            .iter()
+            .filter(|item| item["kind"] == "phrase" && item.get("already_set").is_some())
+            .map(|item| item["id"].as_str().expect("an id"))
+            .collect();
+        assert_eq!(marked, ["never silently"]);
     }
 
     #[test]

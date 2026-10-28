@@ -11,13 +11,15 @@ use common::config_toml::{assert_runs_clean, lints_turned_on, toml_blocks, toml_
 use common::schema::resolve;
 use common::{Repo, code, raw_stderr, stderr, stdout};
 use deslag::Lint;
+use deslag::config::init::everything;
 use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
 use deslag::instructions::{ALLOW, Reading, Start, guide, lints, update_json, update_text};
+use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::{banned_chars, check_file};
 use deslag::news::News;
-use deslag::version::{BASELINE, Version};
+use deslag::version::{BASELINE, Version, current_release};
 use deslag::{Config, ConfigSource};
 use serde_json::Value;
 
@@ -239,6 +241,107 @@ fn the_lints_tables_together_are_valid() {
     assert_eq!(lints_turned_on(&config), lint_names());
     assert_eq!(toml_misfit(&config), None);
     assert_runs_clean(&config);
+}
+
+/// `deslag init` writes the lints' tables and the catalogue, so the pages and `init` cannot drift
+/// apart. Each page's table goes under every section that accepts it, as the lints topic says.
+/// Its `message` is a sample, which `init` leaves out, and its `ban` too: `init` bans the
+/// catalogue. A setting `init` writes at the schema's default reads as the page's empty one.
+#[test]
+fn init_writes_the_lints_tables_in_every_section_and_bans_the_catalogue() {
+    let running = current_release();
+    let written = Config::parse(
+        &everything(&running),
+        "deslag.toml".into(),
+        ConfigSource::Explicit,
+    )
+    .expect("init's config loads");
+    let accepts = |table: &str| {
+        let text = format!("schema_version = {SCHEMA_VERSION}\n{table}");
+        match Config::parse(&text, "deslag.toml".into(), ConfigSource::Explicit) {
+            Ok(_) => true,
+            Err(error) if error.to_string().contains("is on, but it needs") => false,
+            Err(error) => panic!("{table}: {error}"),
+        }
+    };
+
+    let text = lints();
+    let mut pages = format!("schema_version = {SCHEMA_VERSION}\n");
+    for section in written.sections() {
+        for (_, page) in lint_sections(&text) {
+            for block in toml_blocks(page) {
+                let block = block
+                    .replace("[md.", &format!("[{}.", section.name()))
+                    .replace("[[md.", &format!("[[{}.", section.name()));
+                if accepts(&block) {
+                    pages.push('\n');
+                    pages.push_str(&block);
+                }
+            }
+        }
+    }
+    let mut pages: toml::Table = toml::from_str(&pages).expect("the pages' tables are TOML");
+    let catalogue: toml::Table = CATALOGUE
+        .entries
+        .iter()
+        .map(|entry| (entry.phrase.clone(), entry.advice.clone().into()))
+        .collect();
+    let as_init_writes = |lints: &mut toml::Value| {
+        for (id, table) in lints.as_table_mut().expect("a lints table") {
+            let table = table.as_table_mut().expect("a lint's table");
+            table.remove("message");
+            if id == Lint::BannedPhrases.id() {
+                table.insert("ban".to_string(), catalogue.clone().into());
+            }
+        }
+    };
+    for (_, section) in pages.iter_mut() {
+        let Some(section) = section.as_table_mut() else {
+            continue;
+        };
+        if let Some(lints) = section.get_mut("lints") {
+            as_init_writes(lints);
+        }
+        let overrides = section
+            .get_mut("overrides")
+            .and_then(toml::Value::as_array_mut);
+        let override_lints = overrides
+            .into_iter()
+            .flatten()
+            .filter_map(|entry| entry.get_mut("lints"));
+        override_lints.for_each(as_init_writes);
+    }
+    let pages = Config::parse(
+        &toml::to_string(&pages).expect("TOML"),
+        "deslag.toml".into(),
+        ConfigSource::Explicit,
+    )
+    .expect("the pages' tables load");
+
+    let names = |config: &Config| -> Vec<&str> {
+        config
+            .sections()
+            .iter()
+            .map(|section| section.name())
+            .collect()
+    };
+    assert_eq!(names(&written), names(&pages));
+    for (init, page) in written.sections().iter().zip(pages.sections()) {
+        assert_eq!(
+            init.override_count(),
+            page.override_count(),
+            "[{}]",
+            init.name()
+        );
+        for path in ["AGENTS.md", "docs/a.md"] {
+            assert_eq!(
+                init.lints_for(path).toml_tables().expect("tables"),
+                page.lints_for(path).toml_tables().expect("tables"),
+                "[{}] for {path}",
+                init.name()
+            );
+        }
+    }
 }
 
 /// The `allow` section ends the lints topic, tells an agent that only a human writes an entry,

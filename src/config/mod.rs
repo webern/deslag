@@ -33,13 +33,15 @@
 //!
 //! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`], [`cpp`] and
 //! [`toml`] hold the sections of those names, and [`lints`] the settings of each lint. [`allow`]
-//! holds the entries that exempt one sentence from a lint. [`update`] is the one thing that writes
-//! a config, [`migrate`] rewrites one of an older schema, and [`edit`] makes the edits to its
-//! text. [`paths`] walks the schema for the path of every setting.
+//! holds the entries that exempt one sentence from a lint. [`init`] writes a config where there is
+//! none, and [`update`] is the one thing that edits one: [`migrate`] rewrites one of an older
+//! schema, and [`edit`] makes the edits to its text. [`paths`] walks the schema for the path of
+//! every setting.
 
 pub mod allow;
 pub mod cpp;
 pub mod edit;
+pub mod init;
 pub mod lints;
 pub mod md;
 pub mod migrate;

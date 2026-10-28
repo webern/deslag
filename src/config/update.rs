@@ -1,4 +1,4 @@
-//! `deslag update`: the one command that writes the config.
+//! `deslag update`: the one command that edits the config. `deslag init` writes a new one.
 //!
 //! A config of an older schema, which nothing else reads, is first rewritten as one of this schema
 //! by [`migrate`], which holds the new text to what the old meant. Where the rewritten config does
@@ -101,7 +101,7 @@ fn rerun(explicit: Option<&Path>, to: Option<&Version>) -> String {
 
 /// The path of `config` as a message names it: where the file really is, with links followed and
 /// `..` resolved, from the root of the repo when it is inside it.
-fn shown(root: &Path, config: &Path) -> String {
+pub(super) fn shown(root: &Path, config: &Path) -> String {
     let real = fs::canonicalize(config).unwrap_or_else(|_| config.to_path_buf());
     let root = fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
     real.strip_prefix(&root)
@@ -110,7 +110,7 @@ fn shown(root: &Path, config: &Path) -> String {
         .to_string()
 }
 
-/// Replaces the config at `path` with `text`. Every write of a config goes through here, so that
+/// Replaces the config at `path` with `text`. Every edit of a config goes through here, so that
 /// only text the check passed is written.
 fn write_checked(path: &Path, text: &Checked) -> Result<(), Error> {
     write::replace(path, text.as_str().as_bytes())

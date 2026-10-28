@@ -219,6 +219,24 @@ pub enum Error {
         problem: String,
     },
 
+    /// `deslag init` found a config, or more than one at one location, and wrote nothing.
+    #[error(
+        "found the config {found}, and deslag init writes one only where there is none; run \
+         `deslag instructions lints` for the lints it can turn on, `deslag explain <PATH>` for \
+         what a file gets, and `deslag update` to bring it to this deslag"
+    )]
+    ConfigExists {
+        /// The config found, or the configs at one location.
+        found: String,
+    },
+
+    /// `deslag init` was asked for a config in a language other than TOML, the one it writes.
+    #[error("deslag init writes TOML, so the config it writes ends .toml, and {path} does not")]
+    InitFormat {
+        /// The `--config-path` given.
+        path: String,
+    },
+
     /// A file could not be written.
     #[error("cannot write {path}")]
     Write {

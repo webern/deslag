@@ -31,6 +31,9 @@ pub enum Command {
     Explain(ExplainArgs),
     /// Print how to set deslag up in a repo, written for an agent to follow
     Instructions(InstructionsArgs),
+    /// Write a config where there is none, turning on every lint, phrase and group of characters
+    /// deslag has, for the person to tune
+    Init(InitArgs),
     /// Edit the config for this deslag: rename or delete the settings it renamed or removed, and
     /// record the version once nothing is new
     Update(ConfigUpdateArgs),
@@ -143,6 +146,14 @@ pub struct UpdateArgs {
     /// What to print on standard output
     #[arg(long, value_enum, default_value_t = UpdateFormat::Text)]
     pub format: UpdateFormat,
+}
+
+/// Arguments to `deslag init`.
+#[derive(Debug, Args)]
+pub struct InitArgs {
+    /// Write the config to this file, which must end .toml, instead of deslag.toml at the repo root
+    #[arg(long, value_name = "PATH")]
+    pub config_path: Option<PathBuf>,
 }
 
 /// Arguments to `deslag update`.

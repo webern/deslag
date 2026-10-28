@@ -4,6 +4,8 @@
 //! symlink is followed, so the file it points at is the one replaced and the link stays a link.
 //! The permissions of the file it replaces carry over. The caller does not name a temp file and
 //! leaves none behind: when any step fails the temp file is removed and the original stands.
+//!
+//! [`create`] makes a file that is not there, and never writes over one that is.
 
 use std::fs;
 use std::io::Write;
@@ -38,6 +40,26 @@ pub fn replace(path: &Path, bytes: &[u8]) -> Result<(), Error> {
     if written.is_err() {
         // The temp file may never have been made; either way the original stands.
         let _ = fs::remove_file(&temp);
+    }
+    written.map_err(failed)
+}
+
+/// Makes the file at `path`, holding `bytes`, or returns the error. A file already at `path` is an
+/// error and stays as it was; when the write fails part way, the part written is removed.
+pub fn create(path: &Path, bytes: &[u8]) -> Result<(), Error> {
+    let failed = |source| Error::Write {
+        path: path.display().to_string(),
+        source,
+    };
+    let mut out = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(path)
+        .map_err(failed)?;
+    let written = out.write_all(bytes).and_then(|()| out.sync_all());
+    if written.is_err() {
+        drop(out);
+        let _ = fs::remove_file(path);
     }
     written.map_err(failed)
 }
@@ -122,6 +144,17 @@ mod tests {
         let error = replace(&dir.path().join("a.toml"), b"new").expect_err("no file");
         assert!(matches!(error, Error::Write { .. }), "{error:?}");
         assert!(names(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn create_makes_a_new_file_and_never_writes_over_one() {
+        let dir = tempfile::tempdir().expect("a directory");
+        let path = dir.path().join("a.toml");
+        create(&path, b"new").expect("a write");
+        assert_eq!(fs::read(&path).expect("a file"), b"new");
+        let error = create(&path, b"other").expect_err("the file is there");
+        assert!(matches!(error, Error::Write { .. }), "{error:?}");
+        assert_eq!(fs::read(&path).expect("a file"), b"new");
     }
 
     #[cfg(unix)]

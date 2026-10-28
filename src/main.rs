@@ -87,6 +87,18 @@ fn run() -> anyhow::Result<ExitCode> {
             write_stdout(&deslag::explain(&root, &config, &args.paths)?)?;
             Ok(ExitCode::SUCCESS)
         }
+        Command::Init(args) => {
+            let root = std::env::current_dir().context("cannot read the current directory")?;
+            let done = deslag::config::init::init(
+                &root,
+                args.config_path.as_deref(),
+                &deslag::version::current_release(),
+            )?;
+            for line in done.lines() {
+                eprintln!("deslag: {line}");
+            }
+            Ok(ExitCode::SUCCESS)
+        }
         Command::Update(args) => {
             let root = std::env::current_dir().context("cannot read the current directory")?;
             let done = deslag::config::update::update(

@@ -1,4 +1,4 @@
-//! `deslag update`: the one command that writes the config. It rewrites a config of an older schema
+//! `deslag update`: the one command that edits the config. It rewrites a config of an older schema
 //! as one of this schema, makes the edit for each setting that was renamed or removed, keeps what
 //! else the file holds byte for byte, and moves the stamp only when nothing is new, or when told to
 //! with `--to`. Anything it cannot do safely it refuses, with the edits spelled out, and writes

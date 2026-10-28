@@ -16,6 +16,11 @@ pub const EXTENSIONS: [&str; 3] = ["toml", "yaml", "json"];
 /// The file of a release's schema dump.
 pub const SCHEMA: &str = "schema.json";
 
+/// The file of a release's directory whose config is of a schema older than the build's: its TOML
+/// config as `deslag update` rewrote it at the next schema. The bump of the schema writes it once,
+/// with its line in `hashes`, and it is frozen from then on.
+pub const MIGRATED: &str = "config.migrated.toml";
+
 /// The files of a release's directory, in the order of their lines in `hashes`: the config in
 /// each language, then the schema dump.
 pub fn files() -> Vec<String> {

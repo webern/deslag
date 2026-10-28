@@ -244,8 +244,9 @@ impl Merge for CharGroups {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct BannedPhrases {
-    #[serde(default)]
-    pub(crate) groups: PhraseGroups,
+    /// `None` where the table has no `groups` key, which had every group on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) groups: Option<PhraseGroups>,
     #[serde(default)]
     pub(crate) allow: Option<Vec<String>>,
     /// `""` meant delete it.
@@ -266,7 +267,7 @@ impl BannedPhrases {
         let allowed: Vec<Vec<String>> = self.allow.iter().flatten().map(|p| folded(p)).collect();
         let catalogue = CATALOGUE.iter().filter(|entry| {
             let tokens = folded(entry.phrase);
-            entry.group.on(&self.groups)
+            entry.group.on(self.groups.as_ref())
                 && entry.since <= *stamp
                 && !banned.contains(&tokens)
                 && !allowed.contains(&tokens)
@@ -328,7 +329,10 @@ pub(crate) enum Group {
 
 impl Group {
     /// Whether `groups` has it on.
-    fn on(self, groups: &PhraseGroups) -> bool {
+    fn on(self, groups: Option<&PhraseGroups>) -> bool {
+        let Some(groups) = groups else {
+            return true;
+        };
         let switch = match self {
             Group::Insistence => groups.insistence,
             Group::Metaphors => groups.metaphors,

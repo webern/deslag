@@ -1,4 +1,9 @@
-schema_version = 1
+schema_version = 2
 
 [md.lints.banned_phrases]
-groups = { metaphors = false }
+
+[md.lints.banned_phrases.ban]
+byte-identical = 'say "identical", or name the check that shows it'
+"deliberately not" = "say what it does; what it does not do rarely needs saying"
+"never silently" = "say what it does instead, such as the error it reports"
+"not silently" = "say what it does instead, such as the error it reports"

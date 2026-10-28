@@ -193,6 +193,73 @@ struct Head {
     toml: Option<IgnoredAny>,
 }
 
+/// The schema version and the stamp at the head of `text`, the config at `path_string` written in
+/// `format`; or the error that a config of a later schema, or stamped by a later release than
+/// `running`, is.
+fn versions(
+    text: &str,
+    format: ConfigFormat,
+    path_string: &str,
+    running: &semver::Version,
+) -> Result<(Option<NonZeroU32>, Option<semver::Version>), Error> {
+    let parse_error = |source| Error::Parse {
+        path: path_string.to_string(),
+        source,
+    };
+    // The versions come first, so a config from a later deslag says so, whatever else in it
+    // this deslag does not know. When the head cannot be read, the error is the whole file's,
+    // which words it best; the head's own stands only if the file reads.
+    let head: Head = match deserialize(text, format) {
+        Ok(head) => head,
+        Err(head_error) => {
+            let error = deserialize::<ConfigFile>(text, format)
+                .err()
+                .unwrap_or(head_error);
+            return Err(parse_error(error));
+        }
+    };
+    match head.schema_version {
+        Some(found) if found > SCHEMA_VERSION => {
+            return Err(Error::SchemaVersion {
+                path: path_string.to_string(),
+                found,
+                supported: SCHEMA_VERSION,
+            });
+        }
+        _ => {}
+    }
+    let stamp = head
+        .deslag_version
+        .map(|text| parse_stamp(&text, path_string))
+        .transpose()?;
+    match &stamp {
+        Some(stamp) if stamp > running => {
+            return Err(Error::NewerStamp {
+                path: path_string.to_string(),
+                stamp: stamp.clone(),
+                current: running.clone(),
+            });
+        }
+        _ => {}
+    }
+    Ok((head.schema_version, stamp))
+}
+
+/// Refuses `text`, the config at `path`, as [`Config::parse_at`] does when it is of a later schema
+/// or stamped by a later release than `running`. `deslag update` asks this before it rewrites a
+/// config of an older schema.
+pub(crate) fn refuse_later(
+    text: &str,
+    path: &Path,
+    running: &semver::Version,
+) -> Result<(), Error> {
+    let path_string = path.display().to_string();
+    let format = ConfigFormat::of(path).ok_or_else(|| Error::ConfigFormat {
+        path: path_string.clone(),
+    })?;
+    versions(text, format, &path_string, running).map(drop)
+}
+
 /// The `schema_version` of `text`, a config written in `format`; or `None` when it has none or its
 /// head does not read.
 pub(crate) fn schema_of(text: &str, format: ConfigFormat) -> Option<NonZeroU32> {
@@ -295,44 +362,9 @@ impl Config {
             source,
         };
 
-        // The versions come first, so a config from a later deslag says so, whatever else in it
-        // this deslag does not know. When the head cannot be read, the error is the whole file's,
-        // which words it best; the head's own stands only if the file reads.
-        let head: Head = match deserialize(text, format) {
-            Ok(head) => head,
-            Err(head_error) => {
-                let error = deserialize::<ConfigFile>(text, format)
-                    .err()
-                    .unwrap_or(head_error);
-                return Err(parse_error(error));
-            }
-        };
-        match head.schema_version {
-            Some(found) if found > SCHEMA_VERSION => {
-                return Err(Error::SchemaVersion {
-                    path: path_string,
-                    found,
-                    supported: SCHEMA_VERSION,
-                });
-            }
-            _ => {}
-        }
-        let old_schema = head.schema_version.filter(|found| *found < SCHEMA_VERSION);
-        let stamp = head
-            .deslag_version
-            .map(|text| parse_stamp(&text, &path_string))
-            .transpose()?;
-        match &stamp {
-            Some(stamp) if stamp > running => {
-                return Err(Error::NewerStamp {
-                    path: path_string,
-                    stamp: stamp.clone(),
-                    current: running.clone(),
-                });
-            }
-            _ => {}
-        }
-        // An older schema means something else by text this one reads, so it is not read at all.
+        let (schema_version, stamp) = versions(text, format, &path_string, running)?;
+        let old_schema = schema_version.filter(|found| *found < SCHEMA_VERSION);
+        // An older schema means something else by text this one reads, so it is not read.
         if let Some(found) = old_schema {
             return Err(Error::OldSchema {
                 path: path_string,

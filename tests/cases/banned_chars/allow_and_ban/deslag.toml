@@ -1,5 +1,18 @@
-schema_version = 1
+schema_version = 2
 
 [md.lints.banned_chars]
 allow = ["\u2192"]
 ban = { "\u00ae" = "(R)", "\u2122" = "", "\u2014" = ", " }
+
+[md.lints.banned_chars.groups]
+dashes = true
+arrows = true
+ellipsis = true
+bullets = true
+math = true
+checks = true
+section = true
+box_drawing = true
+spaces = true
+invisible = true
+quotes = true

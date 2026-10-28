@@ -16,13 +16,13 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::num::NonZeroU32;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use serde_json::Value;
 
 use crate::config::edit::{self, Edited, Refusal, Scalar, TableEdit, TablePath};
 use crate::config::lints::{BannedChars, BannedPhrases, CharGroups, Lints};
-use crate::config::{Config, ConfigFormat, ConfigSource, Merge, SCHEMA_VERSION, schema_of, v1};
+use crate::config::{ConfigFormat, Merge, SCHEMA_VERSION, deserialize, schema_of, v1};
 use crate::lint::banned_phrases::{NO_ADVICE, folded};
 
 /// A step from one schema to the next.
@@ -32,10 +32,10 @@ pub struct Migration {
     /// The edits that rewrite a config of `from`, given its text and language, in the words of
     /// the next schema; or why it cannot be rewritten without changing what some file is banned.
     pub step: fn(&str, ConfigFormat) -> Result<Vec<TableEdit>, String>,
-    /// Whether the new text, read at the next schema, means what the old text, of `from` in the
-    /// language given, meant; and why not, when it does not. It is called with the old text, the
-    /// language, then the new text.
-    pub verify: fn(&str, ConfigFormat, &str) -> Result<(), String>,
+    /// Whether the new text, read at the next schema, means what the old text, of `from`, meant;
+    /// and why not, when it does not. It is called with the old text and its language, then the
+    /// new text and its language, which in a migration are the same.
+    pub verify: fn(&str, ConfigFormat, &str, ConfigFormat) -> Result<(), String>,
 }
 
 /// Every step, in the order they run.
@@ -70,7 +70,7 @@ pub fn migrate(text: &str, path: &str) -> Result<Option<Edited>, Refusal> {
         let edits = (migration.step)(&current, format).map_err(refuse)?;
         let old = current.clone();
         let edited = edit::migrate(&current, path, edits, |new| {
-            (migration.verify)(&old, format, new)
+            (migration.verify)(&old, format, new, format)
         })?;
         current = edited.text.as_str().to_string();
         made = Some(match made {
@@ -98,7 +98,8 @@ pub fn migrate(text: &str, path: &str) -> Result<Option<Edited>, Refusal> {
 /// - `groups` is deleted, and so is an `allow` entry naming a catalogue phrase that no `ban` of the
 ///   section now holds or lies inside.
 /// - `banned_chars` in the section names `true` each group it left unset that was on; the
-///   overrides inherit those. Where the section has no table, each override that has one does so.
+///   overrides inherit those. Where the section does not have a table, each override that has one
+///   does so.
 fn one_to_two(text: &str, format: ConfigFormat) -> Result<Vec<TableEdit>, String> {
     let reading = v1::Reading::of(text, format)
         .map_err(|error| format!("it does not read as schema 1: {error}"))?;
@@ -117,29 +118,41 @@ fn one_to_two(text: &str, format: ConfigFormat) -> Result<Vec<TableEdit>, String
 }
 
 /// Whether `new` reads at schema 2 as `old`, of schema 1, meant.
-fn means_what_one_meant(old: &str, format: ConfigFormat, new: &str) -> Result<(), String> {
-    let reading = v1::Reading::of(old, format)
+///
+/// It reads the `lints` tables of `new` and nothing else, so a config that was wrong at schema 1
+/// in some other key, or in a value that a lint refuses, passes when its tables mean what they
+/// meant, and loading it then says what is wrong.
+fn means_what_one_meant(
+    old: &str,
+    old_format: ConfigFormat,
+    new: &str,
+    format: ConfigFormat,
+) -> Result<(), String> {
+    let reading = v1::Reading::of(old, old_format)
         .map_err(|error| format!("the old text does not read as schema 1: {error}"))?;
-    let extension = match format {
-        ConfigFormat::Toml => "toml",
-        ConfigFormat::Yaml => "yaml",
-        ConfigFormat::Json => "json",
-    };
-    let path = PathBuf::from(format!("deslag.{extension}"));
-    // The stamp is the running release here: whether it is newer than the deslag that runs is for
-    // the caller to say, and the migration does not move it.
-    let config = Config::parse_at(new, path, ConfigSource::Explicit, &reading.stamp)
-        .map_err(|error| format!("it does not load at schema 2: {error}"))?;
+    if schema_of(new, format) != NonZeroU32::new(2) {
+        return Err("its schema_version is not 2".to_string());
+    }
+    let file: Value =
+        deserialize(new, format).map_err(|error| format!("it does not read: {error}"))?;
     for section in &reading.sections {
-        let Some(read) = config.sections().iter().find(|s| s.name() == section.name) else {
-            return Err(format!("it has no [{}] section", section.name));
+        let table = file.get(section.name);
+        let lints = |table: Option<&Value>| -> Result<Lints, String> {
+            match table.and_then(|table| table.get("lints")) {
+                None => Ok(Lints::default()),
+                Some(lints) => serde_json::from_value(lints.clone())
+                    .map_err(|error| format!("[{}] lints do not read: {error}", section.name)),
+            }
         };
-        let overrides: Vec<Lints> = read
-            .overrides
+        let empty = Vec::new();
+        let overrides = table
+            .and_then(|table| table.get("overrides"))
+            .and_then(Value::as_array)
+            .unwrap_or(&empty)
             .iter()
-            .map(|over| over.lints.clone())
-            .collect();
-        compare(section, &reading.stamp, &read.lints, &overrides)?;
+            .map(|over| lints(Some(over)))
+            .collect::<Result<Vec<Lints>, String>>()?;
+        compare(section, &reading.stamp, &lints(table)?, &overrides)?;
     }
     Ok(())
 }
@@ -189,7 +202,10 @@ impl Plan {
                 // An override that only sets `allow` keeps it, and inherits the section's `ban`:
                 // its `allow` takes out of that what it took out of the catalogue.
                 Some(_) => (phrases.ban.is_some()
-                    || phrases.groups.switches_any()
+                    || phrases
+                        .groups
+                        .as_ref()
+                        .is_some_and(v1::lints::PhraseGroups::switches_any)
                     || own.is_none())
                 .then(|| {
                     let mut merged = own.cloned().unwrap_or_default();
@@ -198,10 +214,12 @@ impl Plan {
                 }),
             };
             let path = table(over, "banned_phrases");
-            edits.push(TableEdit::Delete {
-                table: path.clone(),
-                key: "groups".to_string(),
-            });
+            if phrases.groups.is_some() {
+                edits.push(TableEdit::Delete {
+                    table: path.clone(),
+                    key: "groups".to_string(),
+                });
+            }
             if let Some(ban) = &ban {
                 let map = path.key("ban");
                 edits.push(TableEdit::Create { table: map.clone() });
@@ -382,7 +400,7 @@ struct Phrases {
 
 impl Phrases {
     /// The meaning of `ban` and `allow`: a phrase that `allow` names is never reported, and an
-    /// `allow` phrase that holds no banned one does nothing.
+    /// `allow` phrase that does not hold a banned one does nothing.
     fn of(
         ban: Vec<(Vec<String>, String)>,
         allow: Vec<Vec<String>>,
@@ -566,7 +584,10 @@ fn compare(
 
 #[cfg(test)]
 mod tests {
+    use std::path::PathBuf;
+
     use super::*;
+    use crate::config::{Config, ConfigSource};
 
     /// The ban map `section` has at `text`'s schema-2 reading, its own table when `over` is
     /// `None`, else that override's.

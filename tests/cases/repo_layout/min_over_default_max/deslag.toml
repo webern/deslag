@@ -1,4 +1,4 @@
-schema_version = 1
+schema_version = 2
 
 [md.lints.repo_layout]
 min_entries = 20

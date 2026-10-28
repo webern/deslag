@@ -1,7 +1,9 @@
 //! `deslag update`: the one command that writes the config.
 //!
 //! A config of an older schema, which nothing else reads, is first rewritten as one of this schema
-//! by [`migrate`], which holds the new text to what the old meant.
+//! by [`migrate`], which holds the new text to what the old meant. Where the rewritten config does
+//! not load, for a fault it had at the old schema too, the rewrite is written and the fault is the
+//! error.
 //!
 //! It loads the config as `check` would, but says nothing of what it loads: the warnings it would
 //! print are the edits it is about to make. It then asks [`edit::edit`] for the text with every
@@ -23,7 +25,7 @@ use semver::Version;
 
 use crate::Error;
 use crate::config::edit::{self, Checked, Edit, Edited};
-use crate::config::{Config, migrate, search};
+use crate::config::{self, Config, SCHEMA_VERSION, migrate, search};
 use crate::news::Known;
 use crate::{version, write};
 
@@ -129,6 +131,14 @@ fn is_read_only(metadata: &fs::Metadata) -> bool {
     }
 }
 
+/// Whether the file at `path` is read-only, as [`is_read_only`] says; a file that cannot be read
+/// is not.
+fn is_read_only_at(path: &Path) -> bool {
+    fs::metadata(path)
+        .map(|metadata| is_read_only(&metadata))
+        .unwrap_or(false)
+}
+
 /// Updates the config of the repo rooted at `root`, found as `check` finds it: the redirects it
 /// uses are made, and the stamp moves as the module says. `running` is the release of deslag that
 /// is updating it, and `to`, when given, is that release. `known` says whether anything arrived
@@ -149,14 +159,31 @@ pub fn update(
         path: found.display().to_string(),
         source,
     })?;
-    // A config of an older schema is rewritten first, and the rest is done to the rewritten text.
+    // A config of an older schema is rewritten first, and the rest is done to the rewritten text;
+    // one from a later deslag is refused before anything is rewritten.
+    config::refuse_later(&read, &found, running)?;
     let migrated = migrate::migrate(&read, &path)
         .map_err(|refusal| refusal.into_error(&path, &rerun(explicit, to)))?;
-    let (text, mut edits) = match migrated {
-        Some(migrated) => (migrated.text.as_str().to_string(), migrated.edits),
+    let (text, mut edits) = match &migrated {
+        Some(migrated) => (migrated.text.as_str().to_string(), migrated.edits.clone()),
         None => (read, Vec::new()),
     };
-    let config = Config::parse_at(&text, found, source, running)?;
+    let config = match Config::parse_at(&text, found.clone(), source, running) {
+        Ok(config) => config,
+        // The rewrite means what the old text meant, so it is written even when the config is
+        // wrong in some other way, which it says in the words of the new schema.
+        Err(error) => match migrated {
+            Some(migrated) if !dry_run && !is_read_only_at(&found) => {
+                write_checked(&found, &migrated.text)?;
+                return Err(Error::Migrated {
+                    path,
+                    schema: SCHEMA_VERSION,
+                    source: Box::new(error),
+                });
+            }
+            _ => return Err(error),
+        },
+    };
     let seen = config.deslag_version();
     let now = version::Version::Release(running.clone());
     let news = known.news(&seen, &now);
@@ -180,10 +207,7 @@ pub fn update(
         edits,
     };
     if !edited.edits.is_empty() {
-        let read_only = fs::metadata(config.path())
-            .map(|metadata| is_read_only(&metadata))
-            .unwrap_or(false);
-        if read_only {
+        if is_read_only_at(config.path()) {
             let refusal = edited.refusal(
                 &path,
                 format!("{path} is read-only, so deslag will not replace it"),
@@ -358,6 +382,27 @@ mod tests {
             text.contains("\"never silently\" =") && !text.contains("load-bearing"),
             "{text}"
         );
+    }
+
+    #[test]
+    fn an_older_config_that_does_not_load_is_rewritten_and_says_why() {
+        let (dir, path) = repo(
+            "schema_version = 1\n[md.lints.density]\nmax_paragraph_chars = 0\n\
+             [[md.overrides]]\nglobs = [\"a/**\"]\nfences = {}\n",
+        );
+        let error = run(&dir, false, None, &nothing_new()).expect_err("it does not load");
+        assert!(matches!(error, Error::Migrated { .. }), "{error}");
+        let text = fs::read_to_string(path).expect("a config");
+        assert!(text.starts_with("schema_version = 2\n"), "{text}");
+    }
+
+    #[test]
+    fn an_older_config_stamped_by_a_later_deslag_is_refused_and_not_rewritten() {
+        let text = "schema_version = 1\ndeslag_version = \"9.0.0\"\n[md.lints.banned_phrases]\n";
+        let (dir, path) = repo(text);
+        let error = run(&dir, false, None, &nothing_new()).expect_err("a later stamp");
+        assert!(matches!(error, Error::NewerStamp { .. }), "{error}");
+        assert_eq!(fs::read_to_string(path).expect("a config"), text);
     }
 
     #[test]

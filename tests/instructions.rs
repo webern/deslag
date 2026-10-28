@@ -644,9 +644,9 @@ fn the_json_holds_the_entries_of_the_text() {
             "the text of {entry}"
         );
         assert!(entry["version"].as_str().is_some(), "{entry}");
-        // Only a redirect names its new path, and only a phrase its group.
+        // Only a redirect names its new path, and only a phrase its advice.
         assert_eq!(entry.get("new").is_some(), kind == "redirect", "{entry}");
-        assert_eq!(entry.get("group").is_some(), kind == "phrase", "{entry}");
+        assert_eq!(entry.get("advice").is_some(), kind == "phrase", "{entry}");
     }
 }
 

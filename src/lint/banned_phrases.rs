@@ -75,7 +75,7 @@ impl Match {
     }
 }
 
-/// What the report says of a phrase whose `ban` entry gives no advice.
+/// What the report says of a phrase whose `ban` entry does not give advice.
 pub const NO_ADVICE: &str = "banned in this repo; reword the sentence";
 
 /// A file that holds banned phrases.

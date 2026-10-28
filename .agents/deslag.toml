@@ -1,7 +1,7 @@
 # deslag's config for its own repository. `make check-deslag` runs it, and `make check` gates CI on
 # it.
 
-schema_version = 1
+schema_version = 2
 deslag_version = "0.0.3"
 
 # ACKNOWLEDGEMENTS.md does not require a byte budget.
@@ -22,10 +22,19 @@ max_percent = 1
 
 # Emoji too, which are off by default.
 [md.lints.banned_chars]
-groups = { emoji = true }
+groups = { emoji = true, dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 # The phrase groups, on by default.
 [md.lints.banned_phrases]
+
+[md.lints.banned_phrases.ban]
+byte-identical = 'say "identical", or name the check that shows it'
+"deliberately not" = "say what it does; what it does not do rarely needs saying"
+"it lands" = 'say what happens, such as "it is merged" or "it ships"'
+"lands on" = 'say what happens, such as "is merged into" or "reaches"'
+load-bearing = "say what depends on it"
+"never silently" = "say what it does instead, such as the error it reports"
+"not silently" = "say what it does instead, such as the error it reports"
 
 [md.lints.density]
 max_paragraph_chars = 500
@@ -88,9 +97,18 @@ lints.max_size_bytes.value = 8192
 globs = ["/src/**/*.rs"]
 
 [rust.lints.banned_chars]
-groups = { emoji = true }
+groups = { emoji = true, dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 [rust.lints.banned_phrases]
+
+[rust.lints.banned_phrases.ban]
+byte-identical = 'say "identical", or name the check that shows it'
+"deliberately not" = "say what it does; what it does not do rarely needs saying"
+"it lands" = 'say what happens, such as "it is merged" or "it ships"'
+"lands on" = 'say what happens, such as "is merged into" or "reaches"'
+load-bearing = "say what depends on it"
+"never silently" = "say what it does instead, such as the error it reports"
+"not silently" = "say what it does instead, such as the error it reports"
 
 [rust.lints.verbs_no_nouns]
 
@@ -109,9 +127,18 @@ globs = [
 ]
 
 [toml.lints.banned_chars]
-groups = { emoji = true }
+groups = { emoji = true, dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
 
 [toml.lints.banned_phrases]
+
+[toml.lints.banned_phrases.ban]
+byte-identical = 'say "identical", or name the check that shows it'
+"deliberately not" = "say what it does; what it does not do rarely needs saying"
+"it lands" = 'say what happens, such as "it is merged" or "it ships"'
+"lands on" = 'say what happens, such as "is merged into" or "reaches"'
+load-bearing = "say what depends on it"
+"never silently" = "say what it does instead, such as the error it reports"
+"not silently" = "say what it does instead, such as the error it reports"
 
 [toml.lints.verbs_no_nouns]
 

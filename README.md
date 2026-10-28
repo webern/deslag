@@ -54,7 +54,7 @@ section's `lints`, such as `[md.lints]`, and an `[[md.overrides]]` entry changes
 files its globs match:
 
 ```toml
-schema_version = 1
+schema_version = 2
 deslag_version = "0.0.1"
 
 [md.lints.max_size_bytes]

@@ -1,3 +1,16 @@
-schema_version = 1
+schema_version = 2
 
 [cpp.lints.banned_chars]
+
+[cpp.lints.banned_chars.groups]
+dashes = true
+arrows = true
+ellipsis = true
+bullets = true
+math = true
+checks = true
+section = true
+box_drawing = true
+spaces = true
+invisible = true
+quotes = true

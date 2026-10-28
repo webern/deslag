@@ -48,7 +48,7 @@ Find generated files with `grep -rlE '@generated|DO NOT EDIT' .`. Files that git
 `.ignore` file lists, are never read.
 
 deslag does not skip a generated file: it reads every comment but licence text, banners and tool
-directives, such as the `@generated` line. No marker suppresses a lint.
+directives. No marker suppresses a lint.
 
 ## 3. Write the config
 
@@ -106,4 +106,4 @@ you push, and fix what it reports."
 
 When a command notes that an older deslag last updated the config, run
 `deslag instructions update`, offer the human each new lint, and do what it says. When it warns
-that a setting was renamed or removed, run `deslag update`.
+that a setting was renamed or removed, or refuses an older schema, run `deslag update`.

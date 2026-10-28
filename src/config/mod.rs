@@ -28,13 +28,14 @@
 //!
 //! `schema_version` is the format of the file. `deslag_version` is the release of deslag that last
 //! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
-//! baseline release. A stamp newer than the running deslag is refused, as a later schema is.
+//! baseline release. A stamp newer than the running deslag is refused, as a later schema is. An
+//! older schema is refused too, with the advice to run `deslag update`, which rewrites it.
 //!
 //! [`search`] finds the file, [`section`] compiles a section, [`md`], [`rust`], [`cpp`] and
 //! [`toml`] hold the sections of those names, and [`lints`] the settings of each lint. [`allow`]
 //! holds the entries that exempt one sentence from a lint. [`update`] is the one thing that writes
-//! a config, and [`edit`] makes the edits to its text. [`paths`] walks the schema for the path of
-//! every setting.
+//! a config, [`migrate`] rewrites one of an older schema, and [`edit`] makes the edits to its
+//! text. [`paths`] walks the schema for the path of every setting.
 
 pub mod allow;
 pub mod cpp;
@@ -115,7 +116,8 @@ fn reading_section(rel_path: &str) -> Option<(&'static str, &str)> {
 /// - `Config::parse` refuses a config of an older schema, saying to run `deslag update`, which
 ///   runs the steps;
 /// - each frozen config under `tests/configs/` of an older schema has its migrated text beside it,
-///   `config.migrated.toml`.
+///   `config.migrated.toml`, written by `deslag update` and given its line in `hashes`, and
+///   `tests/frozen.rs` holds the step to it in each language.
 ///
 /// A config written for a later schema than this is refused rather than half understood.
 pub const SCHEMA_VERSION: NonZeroU32 = NonZeroU32::new(2).expect("2 is not zero");

@@ -31,6 +31,9 @@ renamed or removed since. It selects them by the release each arrived in, its `s
   `REDIRECTS`, `src/config/redirect.rs`, with `since: "next"`, and keeps the schema. The new field
   of a rename carries the `since` attribute too; the agent sees it under the redirect only.
 - A new catalogue phrase gets `since = "next"` in `src/lint/banned_phrases.toml`.
+- `deslag init` writes each lint, default, phrase and group from the schema and the catalogue. A
+  setting without a default that a lint needs to check anything gets its value on the lint's page
+  and in `NEEDED`, `src/config/init.rs`; `tests/instructions.rs` fails until the two agree.
 
 Write nothing else for the upgrading agent. When something is missing, `cargo test` names it:
 `tests/since.rs` fails on a schema field without a `since`, and a lint without a page or a `Lints`

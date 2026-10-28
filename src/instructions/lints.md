@@ -6,5 +6,5 @@ covers the files its globs match. The same tables go under `[rust.lints]`, `[cpp
 `[toml.lints]`, where deslag refuses a lint that needs the whole file. Put the tables you choose in
 the config.
 
-`verbs_no_nouns` and `repo_layout` are house style: offer them to the human, and never assume
-them.
+`verbs_no_nouns` and `repo_layout` are house style: `deslag init` turns them on, and the human
+decides whether they stay.

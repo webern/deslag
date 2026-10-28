@@ -4,9 +4,9 @@ These instructions are for an agent setting up deslag {version} in a repository,
 that uses it. To set it up, follow the steps in order. With a config, you need steps 4 and 5.
 
 deslag lints LLM-written prose. A lint fails a file that breaks one rule of the config, and its
-report says how to fix it. Every lint is off until the config turns it on. The human who owns the
-repository owns the limits: propose them, show what each would fail, and never raise one, or add an
-override or an exclude, only to make a check pass.
+report says how to fix it. The human who owns the repository owns the limits: propose them, show
+what each would fail, and never raise one, or add an override or an exclude, only to make a check
+pass.
 
 ## 1. Find the config
 
@@ -17,8 +17,8 @@ with one of the extensions {config_extensions}:
 {config_stems}
 ```
 
-If a config exists, read it. If not, ask the human where it should go, and in
-which language. With no preference, write `deslag.toml` at the root.
+If a config exists, read it. If not, run `deslag init`, which writes `deslag.toml` at the root, or
+the file `--config-path` names, with every lint on.
 
 ## 2. Choose the files
 
@@ -28,7 +28,7 @@ writes, such as README.md. It also reads the comments of Rust, C, C++ and TOML c
 `fences.languages = []` turns that off.
 
 `[rust]`, `[cpp]` and `[toml]` lint the comments of those source files; a config without the
-section does not read them. Offer one only where comments should meet the standard of prose. Rust
+section does not read them. Keep one only where comments should meet the standard of prose. Rust
 doc comments are read as Markdown, other comments as plain text.
 
 Keep generated and vendored code out. A pattern with a `/` matches the path from the root, one
@@ -70,9 +70,6 @@ globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 8000
 ```
 
-In `[rust]`, `[cpp]` and `[toml]`, `max_size_bytes` and `repo_layout` are an error, since they need
-the whole file. The rest read comments.
-
 ## 4. See what each file reads
 
 Run `deslag explain <PATH>...` on a hand-written file and on each generated or vendored file near
@@ -85,8 +82,10 @@ reads as you mean.
 
 Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
 no remote. A failing file gets a report on standard error and exit code 1; exit 2 means deslag could
-not run. Tell the human what each lint fails and propose a limit above the file's size: add 10%, at
-least 500 bytes. A file needing more gets an override.
+not run. A config fresh from `init` fails most files, mostly on `density`, `verbs_no_nouns` and
+`max_emphasis`: the first run is a tuning session, not a failure. Tell the human what each lint
+fails and propose a limit above the file's size: add 10%, at least 500 bytes. A file needing more
+gets an override.
 
 Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a
 file, rephrase around a lint or write an `allow` entry: only a human exempts a sentence, so give

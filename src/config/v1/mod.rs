@@ -8,9 +8,8 @@
 //! section and of each override, with the stamp that gated the catalogue's phrases. Every other
 //! key is read for its place and left for the reader of the new schema, where it means what it
 //! meant: the shapes keep their order, so a config written as a JSON array reads by position as
-//! it did. A key schema 1 did not have is left too, for that reader to refuse, so a config that
-//! was wrong at schema 1 is rewritten and then says what is wrong in the words of schema 2. The
-//! struct and field names are schema 1's, and so are the defaults, in [`lints`].
+//! it did. A key schema 1 did not have is left too, for that reader to refuse. The struct and field
+//! names are schema 1's, and so are the defaults, in [`lints`].
 
 pub(crate) mod lints;
 

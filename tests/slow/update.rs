@@ -278,27 +278,27 @@ fn a_config_that_will_not_load_exits_2_and_writes_nothing() {
     assert!(raw_stderr(&output).contains("no deslag config found"));
 }
 
-/// A config of an older schema that was wrong in a way the rewrite does not touch is rewritten,
-/// and then says what is wrong, as `check` says it.
+/// A config of an older schema that is wrong in a way the rewrite does not touch is refused with
+/// that fault, and left as it was, bare, dry or with `--to`.
 #[test]
-fn an_older_config_that_is_wrong_elsewhere_is_rewritten_and_says_why() {
-    let repo = repo_with(
-        "toml",
-        "schema_version = 1\n[md.lints.density]\nmax_paragraph_chars = 0\n",
-    );
-    let output = repo.run(&["update"]);
-    assert_eq!(code(&output), 2, "{}", raw_stderr(&output));
-    let said = raw_stderr(&output);
-    assert!(
-        said.contains("rewrote deslag.toml as schema 2, and it does not load")
-            && said.contains("max_paragraph_chars is 0"),
-        "{said}"
-    );
-    assert_eq!(
-        read(&repo, "toml"),
-        "schema_version = 2\n[md.lints.density]\nmax_paragraph_chars = 0\n"
-    );
-    assert!(raw_stderr(&repo.check()).contains("max_paragraph_chars is 0"));
+fn an_older_config_that_is_wrong_elsewhere_is_refused_and_not_touched() {
+    let text = "schema_version = 1\n[md.lints.density]\nmax_paragraph_chars = 0\n";
+    let repo = repo_with("toml", text);
+    for args in [
+        &["update"][..],
+        &["update", "--dry-run"],
+        &["update", "--to", CURRENT],
+    ] {
+        let output = repo.run(args);
+        let said = raw_stderr(&output);
+        assert_eq!(code(&output), 2, "{args:?}: {said}");
+        assert!(
+            said.contains("max_paragraph_chars is 0")
+                && said.contains("nothing was written; edit it by hand"),
+            "{args:?}: {said}"
+        );
+        assert_eq!(read(&repo, "toml"), text, "{args:?}");
+    }
 }
 
 #[test]

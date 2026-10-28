@@ -2,8 +2,8 @@
 //!
 //! A config of an older schema, which nothing else reads, is first rewritten as one of this schema
 //! by [`migrate`], which holds the new text to what the old meant. Where the rewritten config does
-//! not load, for a fault it had at the old schema too, the rewrite is written and the fault is the
-//! error.
+//! not load, for a fault it had at the old schema too, nothing is written: the fault is the error,
+//! to fix by hand before `update` can rewrite the config.
 //!
 //! It loads the config as `check` would, but says nothing of what it loads: the warnings it would
 //! print are the edits it is about to make. It then asks [`edit::edit`] for the text with every
@@ -24,8 +24,8 @@ use std::path::Path;
 use semver::Version;
 
 use crate::Error;
-use crate::config::edit::{self, Checked, Edit, Edited};
-use crate::config::{self, Config, SCHEMA_VERSION, migrate, search};
+use crate::config::edit::{self, Checked, Edit, Edited, Refusal};
+use crate::config::{self, Config, migrate, search};
 use crate::news::Known;
 use crate::{version, write};
 
@@ -131,12 +131,15 @@ fn is_read_only(metadata: &fs::Metadata) -> bool {
     }
 }
 
-/// Whether the file at `path` is read-only, as [`is_read_only`] says; a file that cannot be read
-/// is not.
-fn is_read_only_at(path: &Path) -> bool {
-    fs::metadata(path)
-        .map(|metadata| is_read_only(&metadata))
-        .unwrap_or(false)
+/// `error` and each error under it, joined as the binary prints them.
+fn chain(error: &Error) -> String {
+    let mut text = error.to_string();
+    let mut under = std::error::Error::source(error);
+    while let Some(cause) = under {
+        text.push_str(&format!(": {cause}"));
+        under = cause.source();
+    }
+    text
 }
 
 /// Updates the config of the repo rooted at `root`, found as `check` finds it: the redirects it
@@ -170,19 +173,16 @@ pub fn update(
     };
     let config = match Config::parse_at(&text, found.clone(), source, running) {
         Ok(config) => config,
-        // The rewrite means what the old text meant, so it is written even when the config is
-        // wrong in some other way, which it says in the words of the new schema.
-        Err(error) => match migrated {
-            Some(migrated) if !dry_run && !is_read_only_at(&found) => {
-                write_checked(&found, &migrated.text)?;
-                return Err(Error::Migrated {
-                    path,
-                    schema: SCHEMA_VERSION,
-                    source: Box::new(error),
-                });
-            }
-            _ => return Err(error),
-        },
+        // Text that does not load is not checked, so the rewrite is not written. The fault is the
+        // error, with what to do about it.
+        Err(error) if migrated.is_some() => {
+            let refusal = Refusal {
+                reason: chain(&error),
+                todo: Vec::new(),
+            };
+            return Err(refusal.into_error(&path, &rerun(explicit, to)));
+        }
+        Err(error) => return Err(error),
     };
     let seen = config.deslag_version();
     let now = version::Version::Release(running.clone());
@@ -207,7 +207,10 @@ pub fn update(
         edits,
     };
     if !edited.edits.is_empty() {
-        if is_read_only_at(config.path()) {
+        let read_only = fs::metadata(config.path())
+            .map(|metadata| is_read_only(&metadata))
+            .unwrap_or(false);
+        if read_only {
             let refusal = edited.refusal(
                 &path,
                 format!("{path} is read-only, so deslag will not replace it"),
@@ -385,15 +388,17 @@ mod tests {
     }
 
     #[test]
-    fn an_older_config_that_does_not_load_is_rewritten_and_says_why() {
-        let (dir, path) = repo(
-            "schema_version = 1\n[md.lints.density]\nmax_paragraph_chars = 0\n\
-             [[md.overrides]]\nglobs = [\"a/**\"]\nfences = {}\n",
-        );
+    fn an_older_config_that_does_not_load_once_rewritten_is_refused_and_not_touched() {
+        let text = "schema_version = 1\n[md.lints.density]\nmax_paragraph_chars = 0\n\
+                    [md.lints.banned_phrases]\n";
+        let (dir, path) = repo(text);
         let error = run(&dir, false, None, &nothing_new()).expect_err("it does not load");
-        assert!(matches!(error, Error::Migrated { .. }), "{error}");
-        let text = fs::read_to_string(path).expect("a config");
-        assert!(text.starts_with("schema_version = 2\n"), "{text}");
+        let said = error.to_string();
+        assert!(
+            said.contains("max_paragraph_chars is 0") && said.contains("edit it by hand"),
+            "{said}"
+        );
+        assert_eq!(fs::read_to_string(path).expect("a config"), text);
     }
 
     #[test]

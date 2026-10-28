@@ -147,17 +147,6 @@ pub enum Error {
         supported: NonZeroU32,
     },
 
-    /// `deslag update` rewrote a config of an older schema, and the rewritten config does not load.
-    #[error("rewrote {path} as schema {schema}, and it does not load")]
-    Migrated {
-        /// The config file.
-        path: String,
-        /// The schema it was rewritten as.
-        schema: NonZeroU32,
-        /// Why it does not load, which is what `check` says of it.
-        source: Box<Error>,
-    },
-
     /// The config was last updated by a later deslag than this one.
     #[error(
         "{path} was last updated by deslag {stamp}, and this is deslag {current}; upgrade deslag"

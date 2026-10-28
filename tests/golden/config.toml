@@ -38,8 +38,9 @@ spaces = true
 invisible = true
 quotes = true
 
-# The default groups run too. These run each part of the matcher: one word, a row of words, an
-# apostrophe, a hyphen, and a match dropped inside an allowed phrase. They are not advice.
+# Only a phrase in ban fails a file: the first five, then the catalogue's. The first five run each
+# part of the matcher: one word, a row of words, an apostrophe, a hyphen, and a match dropped
+# inside an allowed phrase. They are not advice.
 [md.lints.banned_phrases]
 allow = ["please note that"]
 

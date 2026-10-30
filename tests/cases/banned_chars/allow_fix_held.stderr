@@ -3,7 +3,7 @@ deslag fixed README.md:
 
 deslag cannot fix these in README.md:
   line 3: U+2014 em dash "—"; write `-`
-    md.allow[0], which a human wrote, exempts this sentence from `banned_phrases`, and an edit would stop it matching; fix the other findings and leave this one to the human
+    deslag.toml's md.allow[0] quotes this sentence, so an edit would stop the quote matching; do not edit it by hand either: the human changes the sentence and the entry together
 
 ERROR: deslag detected banned characters!
 

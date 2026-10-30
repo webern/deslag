@@ -29,7 +29,7 @@ use crate::Error;
 use crate::config::{Allow, Config, Section};
 use crate::document::{Document, Edit, Refusal};
 use crate::glob::{self, RepoFile};
-use crate::lint::{self, Lint, Mark, allow, on_lines};
+use crate::lint::{self, Mark, allow, on_lines};
 
 /// What fix did, or would do, to one file.
 #[derive(Debug, Clone, PartialEq)]
@@ -58,7 +58,7 @@ pub enum Outcome {
 }
 
 /// Why a place a finding points at was left for the agent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Unfixed {
     /// The lint does not name an edit there, for the reason it gives.
     Lint(&'static str),
@@ -66,12 +66,12 @@ pub enum Unfixed {
     Refused(Refusal),
     /// The place is in a sentence that an `allow` entry quotes, which an edit would stop matching.
     Held {
+        /// The config's path, as a report names it.
+        config: String,
         /// The entry's section, as `md`.
         section: &'static str,
         /// The entry's place in the section's `allow`.
         index: usize,
-        /// The lint the entry exempts the sentence from.
-        lint: Lint,
     },
 }
 
@@ -81,14 +81,14 @@ impl fmt::Display for Unfixed {
             Unfixed::Lint(why) => f.write_str(why),
             Unfixed::Refused(refusal) => refusal.fmt(f),
             Unfixed::Held {
+                config,
                 section,
                 index,
-                lint,
             } => write!(
                 f,
-                "{section}.allow[{index}], which a human wrote, exempts this sentence from \
-                 `{lint}`, and an edit would stop it matching; fix the other findings and leave \
-                 this one to the human"
+                "{config}'s {section}.allow[{index}] quotes this sentence, so an edit would stop \
+                 the quote matching; do not edit it by hand either: the human changes the \
+                 sentence and the entry together"
             ),
         }
     }
@@ -105,12 +105,13 @@ pub fn fix(
     paths: &[PathBuf],
     dry_run: bool,
 ) -> Result<Vec<FileFix>, Error> {
+    let label = allow::label(root, config);
     let mut fixes = Vec::new();
     for (file, section) in chosen(root, config, paths)? {
         let outcome = match String::from_utf8(lint::read(&file)?) {
             Ok(text) => {
                 let dir = file.absolute.parent().unwrap_or(root);
-                passes(config, section, &file.relative, text, dir)?
+                passes(config, &label, section, &file.relative, text, dir)?
             }
             Err(_) => Outcome::NotUtf8,
         };
@@ -239,9 +240,10 @@ fn chosen<'c>(
 }
 
 /// Fixes `text`, the contents of the file at `relative` in `dir`, in passes until one does not make
-/// an edit.
+/// an edit. `label` is the config's path, as a report names it.
 fn passes(
     config: &Config,
+    label: &str,
     section: &Section,
     relative: &str,
     mut text: String,
@@ -266,9 +268,9 @@ fn passes(
                     Err(why) => Err(Unfixed::Lint(why)),
                     Ok(edit) => match holder(&held, &edit.range) {
                         Some(allow) => Err(Unfixed::Held {
+                            config: label.to_string(),
                             section: allow.section,
                             index: allow.index,
-                            lint: allow.lint,
                         }),
                         None => Ok(edit),
                     },
@@ -362,7 +364,6 @@ mod tests {
 
     use super::{Outcome, Unfixed, passes};
     use crate::config::{Config, ConfigSource};
-    use crate::lint::Lint;
 
     /// An edit of another lint inside a sentence an entry quotes is left, naming the entry, and the
     /// rest of the file is fixed. A second run finds the sentence as it was, and edits nothing.
@@ -383,9 +384,9 @@ mod tests {
         .expect("a config deslag reads");
         let section = config.section_to_read("a.md").expect("a section");
         let held = Unfixed::Held {
+            config: "deslag.toml".to_string(),
             section: "md",
             index: 0,
-            lint: Lint::BannedPhrases,
         };
 
         let text = format!("{quoted}\n\nOther \u{2014} text.\n");
@@ -394,7 +395,15 @@ mod tests {
             text: after,
             fixed: made,
             left,
-        } = passes(&config, section, "a.md", text, Path::new(".")).expect("fix runs")
+        } = passes(
+            &config,
+            "deslag.toml",
+            section,
+            "a.md",
+            text,
+            Path::new("."),
+        )
+        .expect("fix runs")
         else {
             panic!("a UTF-8 text is read");
         };
@@ -402,18 +411,26 @@ mod tests {
         assert_eq!(made.len(), 1);
         assert_eq!(left.len(), 1);
         assert_eq!(left[0].1, held);
-        assert!(held.to_string().contains("md.allow[0]"), "{held}");
 
         let Outcome::Read {
             text: again,
             fixed: made,
             left,
-        } = passes(&config, section, "a.md", after, Path::new(".")).expect("fix runs")
+        } = passes(
+            &config,
+            "deslag.toml",
+            section,
+            "a.md",
+            after,
+            Path::new("."),
+        )
+        .expect("fix runs")
         else {
             panic!("a UTF-8 text is read");
         };
         assert_eq!(again, fixed);
         assert!(made.is_empty());
         assert_eq!(left.len(), 1);
+        assert_eq!(left[0].1, held);
     }
 }

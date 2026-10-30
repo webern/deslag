@@ -42,14 +42,16 @@ pub(super) fn read<'a>(stack: &Stack, fences: &Fences, source: &'a str) -> Docum
             Some((language, Fence::new(source, block)?))
         })
         .collect();
+    let mut layers = Vec::new();
     for (language, fence) in found {
         let regions = language.comments(&fence.text, &fences.surfaces);
         for region in regions {
             let region = fence.through(source, region);
-            document.merge(lift(source, &region, region.markup));
+            layers.push(lift(source, &region, region.markup));
             document.regions.push(region);
         }
     }
+    document.merge(layers);
     document
 }
 

@@ -200,62 +200,117 @@ impl<'a> Document<'a> {
             Vec::new(),
             Vec::new(),
         );
-        for region in regions {
-            document.merge(lift(source, &region, region.markup));
-            document.regions.push(region);
-        }
+        let layers = regions
+            .iter()
+            .map(|region| lift(source, region, region.markup))
+            .collect();
+        document.merge(layers);
+        document.regions = regions;
         document
     }
 
-    /// Adds the layers of one region at their place in the file. The rows of pieces, spans and
-    /// points take them in at the offset the region starts at, and the blocks of prose after it
-    /// move down the pieces row. Tokens and sentences are not made yet, so there is nothing of
-    /// theirs to move.
+    /// Adds the layers of regions, each at its place in the file. The rows of pieces, spans and
+    /// points take each region's in at the offset the region starts at, and the blocks of prose
+    /// after it move down the pieces row. Tokens and sentences are not made yet, so there is
+    /// nothing of theirs to move. Each row is walked once, however many regions there are.
     ///
     /// A region in the text of a fenced code block goes into that block, at any depth, and replaces
     /// the lines of code it held as its body, which a lint that reads code never sees again. The
     /// document's code still holds those lines. Any other region goes in among the top-level
     /// blocks, which are not nested in one another.
-    pub(super) fn merge(&mut self, layers: Layers<'a>) {
-        let Layers {
-            mut block,
-            pieces,
-            spans,
-            points,
-            code,
-        } = layers;
-        let start = block.range.start;
-        let first = self
-            .pieces
-            .partition_point(|piece| piece.range.start < start);
-        shift(std::slice::from_mut(&mut block), 0, first);
-        let at = self
-            .blocks
-            .partition_point(|block| block.range.start < start);
-        // The block before `at` may hold the region, and have blocks of prose after it.
-        let held = at.saturating_sub(1);
-        shift(&mut self.blocks[held..], start, pieces.len());
-        let fence = at
-            .checked_sub(1)
-            .and_then(|before| fence_in(&mut self.blocks[before], start));
-        match fence {
-            Some(Block {
-                body: Body::Blocks(inside),
-                ..
-            }) => inside.push(block),
-            Some(fence) => fence.body = Body::Blocks(vec![block]),
-            None => self.blocks.insert(at, block),
+    pub(super) fn merge(&mut self, mut layers: Vec<Layers<'a>>) {
+        if layers.is_empty() {
+            return;
         }
-        self.pieces.splice(first..first, pieces);
-        let at = self.spans.partition_point(|span| span.range.start < start);
-        self.spans.splice(at..at, spans);
-        let at = self
-            .points
-            .partition_point(|point| point.range.start < start);
-        self.points.splice(at..at, points);
-        // A region of a fence holds code inside the fence's lines, which stay where they are.
-        self.code.extend(code);
+        layers.sort_by_key(|layers| layers.block.range.start);
+        let starts: Vec<usize> = layers
+            .iter()
+            .map(|layers| layers.block.range.start)
+            .collect();
+        // The pieces the regions bring, up to and including each.
+        let brought: Vec<usize> = (layers.iter())
+            .scan(0, |sum, layers| {
+                *sum += layers.pieces.len();
+                Some(*sum)
+            })
+            .collect();
+        shift(&mut self.blocks, &starts, &brought);
+
+        let mut pieces = Row::new(std::mem::take(&mut self.pieces), |piece| piece.range.start);
+        let mut spans = Row::new(std::mem::take(&mut self.spans), |span| span.range.start);
+        let mut points = Row::new(std::mem::take(&mut self.points), |point| point.range.start);
+        for layers in layers {
+            let Layers {
+                mut block,
+                pieces: region_pieces,
+                spans: region_spans,
+                points: region_points,
+                code,
+            } = layers;
+            let start = block.range.start;
+            let first = pieces.insert(start, region_pieces);
+            spans.insert(start, region_spans);
+            points.insert(start, region_points);
+            shift(std::slice::from_mut(&mut block), &[0], &[first]);
+            let at = self
+                .blocks
+                .partition_point(|block| block.range.start < start);
+            let fence = at
+                .checked_sub(1)
+                .and_then(|before| fence_in(&mut self.blocks[before], start));
+            match fence {
+                Some(Block {
+                    body: Body::Blocks(inside),
+                    ..
+                }) => inside.push(block),
+                Some(fence) => fence.body = Body::Blocks(vec![block]),
+                None => self.blocks.insert(at, block),
+            }
+            // A region of a fence holds code inside the fence's lines, which stay where they are.
+            self.code.extend(code);
+        }
+        self.pieces = pieces.finish();
+        self.spans = spans.finish();
+        self.points = points.finish();
         self.code.sort_by_key(|range| range.start);
+    }
+}
+
+/// A row of the document, in the order of the file, being rebuilt with the rows of regions put in.
+struct Row<T> {
+    /// What the row held that is not yet in `into`.
+    held: std::iter::Peekable<std::vec::IntoIter<T>>,
+    /// The row so far.
+    into: Vec<T>,
+    /// Where an item starts.
+    start_of: fn(&T) -> usize,
+}
+
+impl<T> Row<T> {
+    fn new(held: Vec<T>, start_of: fn(&T) -> usize) -> Row<T> {
+        Row {
+            into: Vec::with_capacity(held.len()),
+            held: held.into_iter().peekable(),
+            start_of,
+        }
+    }
+
+    /// Puts `items` in after what the row held that starts before `start`, and gives where they
+    /// start in the row. Regions are put in in the order of the file.
+    fn insert(&mut self, start: usize, items: Vec<T>) -> usize {
+        let start_of = self.start_of;
+        while let Some(item) = self.held.next_if(|item| start_of(item) < start) {
+            self.into.push(item);
+        }
+        let at = self.into.len();
+        self.into.extend(items);
+        at
+    }
+
+    /// The row, with what it held after the last region.
+    fn finish(mut self) -> Vec<T> {
+        self.into.extend(self.held);
+        self.into
     }
 }
 
@@ -274,17 +329,22 @@ fn fence_in<'b, 'a>(block: &'b mut Block<'a>, at: usize) -> Option<&'b mut Block
     fence_in(&mut children[inside.checked_sub(1)?], at)
 }
 
-/// Moves the pieces row ranges of the blocks of prose in `blocks` and in the blocks they hold up
-/// by `by`, if they start at `from` or after. A block is placed by where it starts in the file,
-/// not by its pieces: an empty cell before the region has the pieces `first..first` too.
-fn shift(blocks: &mut [Block<'_>], from: usize, by: usize) {
+/// Moves the pieces row ranges of the blocks of prose in `blocks` and in the blocks they hold down
+/// the row by the pieces that regions bring before them: `brought[i]` is what the regions that
+/// start at `starts[i]` and before it bring, and `starts` is in order. A block is placed by where
+/// it starts in the file, not by its pieces: an empty cell before a region has the pieces
+/// `first..first` too.
+fn shift(blocks: &mut [Block<'_>], starts: &[usize], brought: &[usize]) {
     for block in blocks {
         match &mut block.body {
-            Body::Blocks(children) => shift(children, from, by),
-            Body::Text { pieces, .. } if block.range.start >= from => {
-                *pieces = pieces.start + by..pieces.end + by;
+            Body::Blocks(children) => shift(children, starts, brought),
+            Body::Text { pieces, .. } => {
+                let before = starts.partition_point(|start| *start <= block.range.start);
+                if let Some(by) = before.checked_sub(1).map(|last| brought[last]) {
+                    *pieces = pieces.start + by..pieces.end + by;
+                }
             }
-            Body::Text { .. } | Body::Raw(_) | Body::Empty => {}
+            Body::Raw(_) | Body::Empty => {}
         }
     }
 }
@@ -381,7 +441,7 @@ mod tests {
             Vec::new(),
         );
         for at in [0, 2, 1] {
-            inserted.merge(lift(source, &whole.regions[at], Markup::Markdown));
+            inserted.merge(vec![lift(source, &whole.regions[at], Markup::Markdown)]);
         }
 
         assert_eq!(inserted.blocks, whole.blocks);

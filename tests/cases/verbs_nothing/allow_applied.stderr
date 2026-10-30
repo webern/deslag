@@ -1,0 +1,14 @@
+ERROR: deslag detected verbs with nothing!
+
+README.md has 1 verb with nothing.
+
+This repo names what a verb did not find: write "does not find a provider", not "finds nothing". "nothing" and "none" hide the noun, so name it and negate the verb, or drop the claim if it is not true. Swapping in "zero", "nil" or "an empty result" is the same sentence and does not fix it.
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 5: "found none"
+
+deslag: 1 of 1 files with verbs whose object is nothing.
+deslag: only a human writes or changes an exemption; leave the sentence as it is, and give the human its text and a reason.
+deslag: 1 exemption applied; deslag explain <PATH> lists a file's.

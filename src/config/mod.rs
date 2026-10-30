@@ -27,7 +27,7 @@
 //! The same shape may be written in YAML or JSON instead; the file's extension says which.
 //!
 //! `schema_version` is the format of the file. `deslag_version` is the release of deslag that last
-//! onboarded or updated the config, its stamp. A config with no stamp has seen nothing since the
+//! onboarded or updated the config, its stamp. A config with no stamp is taken to be from the
 //! baseline release. A stamp newer than the running deslag is refused, as a later schema is. An
 //! older schema is refused too, with the advice to run `deslag update`, which rewrites it.
 //!
@@ -69,7 +69,7 @@ use crate::version::{BASELINE, Version, current_release, parse_release};
 pub use allow::Allow;
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, Lints, MaxEmphasis, MaxSizeBytes, Merge,
-    NotAtAll, RepoLayout, VerbsNoNouns,
+    NotAtAll, RepoLayout, VerbsNoNouns, VerbsNothing,
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{
@@ -101,10 +101,10 @@ fn reading_section(rel_path: &str) -> Option<(&'static str, &str)> {
 /// | In schema 1                                          | In schema 2                               |
 /// | ---------------------------------------------------- | ----------------------------------------- |
 /// | `banned_phrases.groups.<g> = bool`, default true     | no `groups` key; unknown fields refused   |
-/// | an empty `banned_phrases` table bans the catalogue   | bans nothing; `ban` is the whole list     |
+/// | an empty `banned_phrases` table bans the catalogue   | does not ban a phrase; `ban` is the list  |
 /// | a `ban` value `""` means "delete it"                 | means no advice: the standard message     |
 /// | `banned_chars.groups.<g>`, default true but `emoji`  | the same keys, every default `false`      |
-/// | an empty `banned_chars` table bans 11 groups         | bans nothing                              |
+/// | an empty `banned_chars` table bans 11 groups         | does not ban a group                      |
 /// | `allow` turns one catalogue phrase off               | `allow` keeps its other two uses          |
 ///
 /// A key being added does not change the schema, and neither does a rename, or a removal whose old
@@ -264,8 +264,8 @@ pub(crate) fn refuse_later(
     versions(text, format, &path_string, running).map(drop)
 }
 
-/// The `schema_version` of `text`, a config written in `format`; or `None` when it has none or its
-/// head does not read.
+/// The `schema_version` of `text`, a config written in `format`; or `None` when it does not have
+/// one or its head does not read.
 pub(crate) fn schema_of(text: &str, format: ConfigFormat) -> Option<NonZeroU32> {
     deserialize::<Head>(text, format).ok()?.schema_version
 }
@@ -428,7 +428,7 @@ impl Config {
     }
 
     /// The release of deslag this config was last updated by: its stamp, or the baseline release
-    /// when it has none. Never [`Version::Next`].
+    /// when it does not have one. Never [`Version::Next`].
     pub fn deslag_version(&self) -> Version {
         Version::Release(self.stamp.clone().unwrap_or(BASELINE))
     }

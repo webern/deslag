@@ -34,6 +34,10 @@ pub(crate) struct Lints {
     pub(crate) verbs_no_nouns: Option<VerbsNoNouns>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) not_at_all: Option<NotAtAll>,
+    /// Read by the unit tests of the migration, which need a lint that schema 2 does not have.
+    #[cfg(test)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) dropped: Option<NotAtAll>,
 }
 
 impl Merge for Lints {
@@ -46,6 +50,8 @@ impl Merge for Lints {
         self.density.merge(&over.density);
         self.verbs_no_nouns.merge(&over.verbs_no_nouns);
         self.not_at_all.merge(&over.not_at_all);
+        #[cfg(test)]
+        self.dropped.merge(&over.dropped);
     }
 }
 

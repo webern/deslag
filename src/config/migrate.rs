@@ -169,6 +169,10 @@ impl Plan {
     /// Fails when a key of schema 1 that the section sets does not read at schema 2.
     fn of(section: &v1::SectionReading, stamp: &semver::Version) -> Result<Plan, String> {
         let name = section.name;
+        let place = |over: Option<usize>| match over {
+            None => format!("{name}.lints"),
+            Some(index) => format!("{name}.overrides[{index}].lints"),
+        };
         let table = |over: Option<usize>, lint: &str| {
             let lints = match over {
                 None => TablePath::root().key(name).key("lints"),
@@ -300,7 +304,11 @@ impl Plan {
                 }
                 chars_of(chars, &added)
             });
-            written.push(lints_of(lints, phrases, chars.transpose()?)?);
+            let read = chars
+                .transpose()
+                .and_then(|chars| lints_of(lints, phrases, chars))
+                .map_err(|why| format!("{}: {why}", place(over)))?;
+            written.push(read);
         }
         let lints = written.remove(0);
         Ok(Plan {
@@ -344,7 +352,7 @@ fn chars_of(chars: &v1::lints::BannedChars, added: &[&str]) -> Result<BannedChar
         })
         .collect();
     let groups: CharGroups = serde_json::from_value(Value::Object(switches))
-        .map_err(|error| format!("its banned_chars groups do not read at schema 2: {error}"))?;
+        .map_err(|error| format!("banned_chars.groups does not read at schema 2: {error}"))?;
     Ok(BannedChars {
         groups,
         allow: chars.allow.clone(),
@@ -361,7 +369,7 @@ fn lints_of(
     chars: Option<BannedChars>,
 ) -> Result<Lints, String> {
     let mut lints: Lints = serde_json::from_value(others(lints))
-        .map_err(|error| format!("its lints do not read at schema 2: {error}"))?;
+        .map_err(|error| format!("a lint does not read at schema 2: {error}"))?;
     lints.banned_phrases = phrases;
     lints.banned_chars = chars;
     Ok(lints)
@@ -759,6 +767,7 @@ mod tests {
             density: Some(Default::default()),
             verbs_no_nouns: Some(Default::default()),
             not_at_all: Some(Default::default()),
+            dropped: None,
         };
         lints_of(&lints, None, None).expect("every other lint of schema 1 reads at schema 2");
         let groups = v1::lints::CHAR_GROUPS
@@ -769,6 +778,23 @@ mod tests {
             serde_json::from_value(serde_json::json!({ "groups": Value::Object(groups) }))
                 .expect("every group of schema 1 reads at schema 1");
         chars_of(&chars, &[]).expect("every group of schema 1 reads at schema 2");
+    }
+
+    #[test]
+    fn a_lint_that_does_not_read_at_schema_2_is_refused_naming_its_table() {
+        let refusal = migrate(
+            "schema_version = 1\n[[md.overrides]]\nglobs = [\"a/**\"]\n\
+             [md.overrides.lints.dropped]\n",
+            "deslag.toml",
+        )
+        .expect_err("it is refused");
+        assert!(
+            refusal
+                .reason
+                .starts_with("md.overrides[0].lints: a lint does not read at schema 2: "),
+            "{}",
+            refusal.reason
+        );
     }
 
     #[test]

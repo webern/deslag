@@ -213,14 +213,19 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedPhrases>) -> Optio
             })
             .collect();
 
+        // The allowed phrases that start at or before `at`, and the furthest any of them reaches: a
+        // match from `at` lies inside one of them if it ends at or before that.
+        let mut started = 0;
+        let mut reach = 0;
         let mut at = 0;
         while at < row.len() {
-            let found = ban.starting(&row[at..]).find(|phrase| {
-                let end = at + phrase.tokens.len();
-                !allowed
-                    .iter()
-                    .any(|allowed| allowed.start <= at && end <= allowed.end)
-            });
+            while let Some(allowed) = allowed.get(started).filter(|allowed| allowed.start <= at) {
+                reach = reach.max(allowed.end);
+                started += 1;
+            }
+            let found = ban
+                .starting(&row[at..])
+                .find(|phrase| at + phrase.tokens.len() > reach);
             let Some(phrase) = found else {
                 at += 1;
                 continue;

@@ -314,9 +314,11 @@ impl Keep for change::File {
 }
 
 /// `line 3`, or `lines 3, 5` for more than one, as a report names the lines a character or the like
-/// is on.
+/// is on. `lines` is in order, and a line in it twice is named once.
 pub(crate) fn on_lines(lines: &[usize]) -> String {
-    match lines {
+    let mut lines = lines.to_vec();
+    lines.dedup();
+    match lines.as_slice() {
         [line] => format!("line {line}"),
         _ => format!(
             "lines {}",

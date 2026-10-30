@@ -357,7 +357,6 @@ fn grouped<'m, K: PartialEq>(items: impl Iterator<Item = (&'m Mark, K)>) -> Vec<
         .into_iter()
         .map(|(key, mut lines)| {
             lines.sort_unstable();
-            lines.dedup();
             (key, on_lines(&lines))
         })
         .collect()

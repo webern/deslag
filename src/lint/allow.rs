@@ -97,6 +97,9 @@ pub struct Exemption {
     /// Whether the change under judgment added the entry, or changed its reason. A run with no
     /// base does not say.
     pub added: bool,
+    /// The pattern of its section's `exclude` that drops its file, when that is why the section
+    /// does not select it.
+    pub excluded_by: Option<String>,
 }
 
 impl Exemption {
@@ -114,6 +117,7 @@ impl Exemption {
             lines,
             holding: Vec::new(),
             added: false,
+            excluded_by: None,
         }
     }
 
@@ -127,11 +131,19 @@ impl Exemption {
                 "{path} is not a file deslag reads: it does not exist, git ignores it, or it is \
                  not a regular file, such as a directory or a link."
             ),
-            Status::NotSelected => format!(
-                "[{}] does not select {path}, and an entry applies only to the files of its own \
-                 section.",
-                self.allow.section
-            ),
+            Status::NotSelected => match &self.excluded_by {
+                Some(pattern) => format!(
+                    "[{}] excludes {path} by {pattern:?}, and an entry applies only to the files \
+                     its own section selects. The entry or that pattern is wrong; a human decides \
+                     which.",
+                    self.allow.section
+                ),
+                None => format!(
+                    "[{}] does not select {path}, and an entry applies only to the files of its \
+                     own section.",
+                    self.allow.section
+                ),
+            },
             Status::NoSuchSentence => format!(
                 "{path} does not hold a sentence equal to the quote, spaces and line breaks aside. \
                  The sentence was reworded, or moved out of the text deslag reads."
@@ -549,12 +561,15 @@ pub(crate) fn settle(
             let exemption = done
                 .remove(&(allow.section, allow.index))
                 .unwrap_or_else(|| {
-                    let status = if walked.contains(&allow.path) {
-                        Status::NotSelected
-                    } else {
-                        Status::NoSuchFile
-                    };
-                    Exemption::new(allow, status, Vec::new())
+                    if !walked.contains(&allow.path) {
+                        return Exemption::new(allow, Status::NoSuchFile, Vec::new());
+                    }
+                    Exemption {
+                        excluded_by: section
+                            .excluded_by(&allow.path)
+                            .map(|pattern| pattern.as_str().to_string()),
+                        ..Exemption::new(allow, Status::NotSelected, Vec::new())
+                    }
                 });
             settled.push(exemption);
         }

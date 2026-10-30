@@ -18,7 +18,7 @@ pub const MAX_SIZE_BYTES: &str = "max_size_bytes";
 pub fn value<'a>(contents: &'a str, key: &str) -> Option<&'a str> {
     let block = block(contents)?;
 
-    for line in block.lines() {
+    for line in block.split(['\n', '\r']) {
         // Only a top-level key counts; an indented one belongs to something else.
         if line.starts_with(char::is_whitespace) {
             continue;
@@ -52,13 +52,15 @@ pub fn max_size_bytes(contents: &str, path: &str) -> Result<Option<u64>, Error> 
 fn block(contents: &str) -> Option<&str> {
     let contents = contents.strip_prefix('\u{feff}').unwrap_or(contents);
     let rest = contents.strip_prefix("---")?;
-    // A fence line is exactly `---`, so the character after it must end the line.
+    // A fence line is exactly `---`, so the character after it must end the line: an LF, a CRLF
+    // or a lone CR.
     let rest = rest
         .strip_prefix("\r\n")
-        .or_else(|| rest.strip_prefix('\n'))?;
+        .or_else(|| rest.strip_prefix(['\n', '\r']))?;
 
     let mut offset = 0;
-    for line in rest.split_inclusive('\n') {
+    // A CRLF splits in two, and its LF alone is an empty line that is never a fence.
+    for line in rest.split_inclusive(['\n', '\r']) {
         let trimmed = line.trim_end_matches(['\n', '\r']);
         if trimmed == "---" || trimmed == "..." {
             return Some(&rest[..offset]);

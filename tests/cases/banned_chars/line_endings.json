@@ -1,0 +1,118 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 3,
+  "findings": [
+    {
+      "path": "cr.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\ncr.md has 3 banned characters.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 1, 5, 8: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 10,
+          "line": 1,
+          "column": 8,
+          "end_line": 1,
+          "end_column": 9,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 49,
+          "end": 52,
+          "line": 5,
+          "column": 7,
+          "end_line": 5,
+          "end_column": 8,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 80,
+          "end": 83,
+          "line": 8,
+          "column": 14,
+          "end_line": 8,
+          "end_column": 15,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    },
+    {
+      "path": "crlf.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\ncrlf.md has 3 banned characters.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 1, 5, 8: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 10,
+          "line": 1,
+          "column": 8,
+          "end_line": 1,
+          "end_column": 9,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 53,
+          "end": 56,
+          "line": 5,
+          "column": 7,
+          "end_line": 5,
+          "end_column": 8,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 87,
+          "end": 90,
+          "line": 8,
+          "column": 14,
+          "end_line": 8,
+          "end_column": 15,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    },
+    {
+      "path": "lf.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nlf.md has 3 banned characters.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 1, 5, 8: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 10,
+          "line": 1,
+          "column": 8,
+          "end_line": 1,
+          "end_column": 9,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 49,
+          "end": 52,
+          "line": 5,
+          "column": 7,
+          "end_line": 5,
+          "end_column": 8,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 80,
+          "end": 83,
+          "line": 8,
+          "column": 14,
+          "end_line": 8,
+          "end_column": 15,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ]
+}

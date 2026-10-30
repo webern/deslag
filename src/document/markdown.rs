@@ -43,8 +43,18 @@ fn read_with<'a>(stack: &Stack, source: &'a str, options: Options) -> Document<'
         spans: Vec::new(),
         points: Vec::new(),
     };
-    for (event, range) in Parser::new_ext(source, options).into_offset_iter() {
-        reader.read(event, range);
+    match lone_returns_as_newlines(source) {
+        None => {
+            for (event, range) in Parser::new_ext(source, options).into_offset_iter() {
+                reader.read(event, range);
+            }
+        }
+        // The text the parser finds is in the copy, so the reader is given it owned.
+        Some(copy) => {
+            for (event, range) in Parser::new_ext(&copy, options).into_offset_iter() {
+                reader.read(event.into_static(), range);
+            }
+        }
     }
     reader.end_implicit();
 
@@ -58,6 +68,23 @@ fn read_with<'a>(stack: &Stack, source: &'a str, options: Options) -> Document<'
     // A gap is recorded when the block after it ends, after the breaks inside that block.
     points.sort_by_key(|point| point.range.start);
     Document::new(stack.clone(), source, top, pieces, spans, points)
+}
+
+/// A copy of `source` with each lone CR, one that no LF follows, made an LF, or `None` when it
+/// has none. pulldown-cmark ends a fence's line at an LF alone, so a fence in a file whose lines
+/// end in a lone CR never closes and the rest of the file is read as its code. A CR and an LF are a
+/// byte each, so every offset into the copy is the same offset into the source.
+fn lone_returns_as_newlines(source: &str) -> Option<String> {
+    let lone = |at: usize| !source[at + 1..].starts_with('\n');
+    source.match_indices('\r').any(|(at, _)| lone(at)).then(|| {
+        source
+            .char_indices()
+            .map(|(at, ch)| match ch {
+                '\r' if lone(at) => '\n',
+                ch => ch,
+            })
+            .collect()
+    })
 }
 
 /// A block whose end has not been read yet.

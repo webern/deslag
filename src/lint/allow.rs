@@ -939,7 +939,7 @@ mod tests {
     }
 
     #[test]
-    fn a_quote_folds_a_lone_cr_by_how_each_sentence_of_a_markdown_file_is_read() {
+    fn a_lone_cr_ends_a_line_of_a_paragraph_and_of_a_comment_in_a_markdown_fence() {
         let reader = || Reader::Markdown {
             fences: Fences::all(),
         };
@@ -947,8 +947,8 @@ mod tests {
         let source = "A \u{2014} b\nc d.\n\n```rust\n// A \u{2014} b\rc d.\n```\n";
         let with_cr = "A \u{2014} b\rc d.";
         let spaced = "A \u{2014} b c d.";
-        // A lone CR in the quote is a line break to the paragraph. Markdown ends a line of a fence
-        // at one too, so the comment ends there and `c d.` is code.
+        // A lone CR in the quote is a line break, as it is in the paragraph. In the fence it ends
+        // the line too, so the comment is its first line alone and `c d.` is code.
         assert_eq!(count_in(reader(), source, with_cr), 1);
         assert_eq!(count_in(reader(), source, spaced), 1);
         assert_eq!(count_in(reader(), source, "A \u{2014} b\nc d."), 1);

@@ -75,16 +75,18 @@ fn read_with<'a>(stack: &Stack, source: &'a str, options: Options) -> Document<'
 /// end in a lone CR never closes and the rest of the file is read as its code. A CR and an LF are a
 /// byte each, so every offset into the copy is the same offset into the source.
 fn lone_returns_as_newlines(source: &str) -> Option<String> {
-    let lone = |at: usize| !source[at + 1..].starts_with('\n');
-    source.match_indices('\r').any(|(at, _)| lone(at)).then(|| {
-        source
-            .char_indices()
-            .map(|(at, ch)| match ch {
-                '\r' if lone(at) => '\n',
-                ch => ch,
-            })
-            .collect()
-    })
+    let lone: Vec<usize> = (source.match_indices('\r'))
+        .map(|(at, _)| at)
+        .filter(|at| !source[at + 1..].starts_with('\n'))
+        .collect();
+    if lone.is_empty() {
+        return None;
+    }
+    let mut copy = source.as_bytes().to_vec();
+    for at in lone {
+        copy[at] = b'\n';
+    }
+    Some(String::from_utf8(copy).expect("an ASCII byte for another keeps the text UTF-8"))
 }
 
 /// A block whose end has not been read yet.

@@ -16,7 +16,7 @@
 use std::collections::BTreeMap;
 
 use super::lift::lift;
-use super::map::{SegmentKind, SourceMap};
+use super::map::{SegmentKind, SourceMap, reads_as};
 use super::region::{Carrier, CarrierLine, Frame, Region, Template};
 use super::region_build::line_start;
 use super::skip::List;
@@ -118,13 +118,7 @@ impl Fence {
             return None;
         };
         // The code block has an LF where the file ends a line in a lone CR.
-        let holds = |piece: &Piece<'_>| {
-            let file = source[piece.range.clone()].bytes();
-            file.len() == piece.text.len()
-                && file
-                    .zip(piece.text.bytes())
-                    .all(|(f, t)| f == t || (f, t) == (b'\r', b'\n'))
-        };
+        let holds = |piece: &Piece<'_>| reads_as(&source[piece.range.clone()], &piece.text);
         if !pieces.iter().all(holds) {
             return None;
         }
@@ -135,21 +129,11 @@ impl Fence {
             let last = at + 1 == pieces.len();
             let kept = piece.text.strip_suffix('\n').filter(|_| last);
             let kept = kept.unwrap_or(&piece.text);
-            let mut start = piece.range.start;
-            for line in kept.split_inclusive('\n') {
-                let end = start + line.len();
-                match line
-                    .strip_suffix('\n')
-                    .filter(|_| source[..end].ends_with('\r'))
-                {
-                    Some(bare) => {
-                        map.push_text(source, start..end - 1, bare);
-                        map.push_text(source, end - 1..end, "\n");
-                    }
-                    None => map.push_text(source, start..end, line),
-                }
-                start = end;
-            }
+            map.push_text(
+                source,
+                piece.range.start..piece.range.start + kept.len(),
+                kept,
+            );
             text.push_str(kept);
         }
         if map.is_empty() {

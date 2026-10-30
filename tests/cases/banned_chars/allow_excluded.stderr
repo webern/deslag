@@ -1,6 +1,6 @@
 ERROR: deslag detected an exemption that does not hold!
 
-deslag.toml has md.allow[0], which exempts a sentence of docs/adr/0001.md from `banned_chars`. It fails: [md] excludes docs/adr/0001.md by "/docs/adr/**", and an entry applies only to the files its own section selects. The entry or that pattern is wrong; a human decides which.
+deslag.toml has md.allow[0], which exempts a sentence of docs/adr/0001.md from `banned_chars`. It fails: [md] excludes docs/adr/0001.md by "/docs/adr/**", and an entry applies only to the files its own section selects. Tell the human that this pattern drops the file; whether the entry or the pattern changes is theirs to choose.
 
 The quote: "We chose the parser — a dated record."
 The reason: "A decision record keeps its words."

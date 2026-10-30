@@ -1,0 +1,23 @@
+schema_version = 2
+
+[md]
+globs = ["**"]
+exclude = ["*.rs", "*.toml"]
+
+[md.lints.banned_chars]
+
+[md.lints.banned_chars.groups]
+dashes = true
+
+[rust]
+
+[rust.lints.banned_chars]
+
+[rust.lints.banned_chars.groups]
+dashes = true
+
+[[md.allow]]
+path = "src/lib.rs"
+lint = "banned_chars"
+quote = "The parser — a dated record."
+reason = "A record keeps its words."

@@ -105,7 +105,7 @@ fn one_to_two(text: &str, format: ConfigFormat) -> Result<Vec<TableEdit>, String
         .map_err(|error| format!("it does not read as schema 1: {error}"))?;
     let mut edits = Vec::new();
     for section in &reading.sections {
-        let plan = Plan::of(section, &reading.stamp);
+        let plan = Plan::of(section, &reading.stamp)?;
         compare(section, &reading.stamp, &plan.lints, &plan.overrides)?;
         edits.extend(plan.edits);
     }
@@ -166,7 +166,8 @@ struct Plan {
 }
 
 impl Plan {
-    fn of(section: &v1::SectionReading, stamp: &semver::Version) -> Plan {
+    /// Fails when a key of schema 1 that the section sets does not read at schema 2.
+    fn of(section: &v1::SectionReading, stamp: &semver::Version) -> Result<Plan, String> {
         let name = section.name;
         let table = |over: Option<usize>, lint: &str| {
             let lints = match over {
@@ -299,14 +300,14 @@ impl Plan {
                 }
                 chars_of(chars, &added)
             });
-            written.push(lints_of(lints, phrases, chars));
+            written.push(lints_of(lints, phrases, chars.transpose()?)?);
         }
         let lints = written.remove(0);
-        Plan {
+        Ok(Plan {
             edits,
             lints,
             overrides: written,
-        }
+        })
     }
 }
 
@@ -330,8 +331,9 @@ fn banned(
     Some(written.collect())
 }
 
-/// The `banned_chars` table `chars` with `added` switched on, at schema 2.
-fn chars_of(chars: &v1::lints::BannedChars, added: &[&str]) -> BannedChars {
+/// The `banned_chars` table `chars` with `added` switched on, at schema 2; or why it does not read
+/// there.
+fn chars_of(chars: &v1::lints::BannedChars, added: &[&str]) -> Result<BannedChars, String> {
     let switches = chars
         .groups
         .switches()
@@ -342,27 +344,27 @@ fn chars_of(chars: &v1::lints::BannedChars, added: &[&str]) -> BannedChars {
         })
         .collect();
     let groups: CharGroups = serde_json::from_value(Value::Object(switches))
-        .expect("a group of schema 1 is a group of schema 2");
-    BannedChars {
+        .map_err(|error| format!("its banned_chars groups do not read at schema 2: {error}"))?;
+    Ok(BannedChars {
         groups,
         allow: chars.allow.clone(),
         ban: chars.ban.clone(),
         message: chars.message.clone(),
-    }
+    })
 }
 
 /// `lints` at schema 2, with `phrases` and `chars` for its two banning lints. Every other lint
-/// means what it meant.
+/// means what it meant; or, when one does not read at schema 2, why.
 fn lints_of(
     lints: &v1::Lints,
     phrases: Option<BannedPhrases>,
     chars: Option<BannedChars>,
-) -> Lints {
+) -> Result<Lints, String> {
     let mut lints: Lints = serde_json::from_value(others(lints))
-        .expect("every other lint of schema 1 reads the same at schema 2");
+        .map_err(|error| format!("its lints do not read at schema 2: {error}"))?;
     lints.banned_phrases = phrases;
     lints.banned_chars = chars;
-    lints
+    Ok(lints)
 }
 
 /// The tables of `lints` but `banned_phrases` and `banned_chars`, as data.
@@ -743,6 +745,30 @@ mod tests {
                 .any(|line| line.contains("schema_version")),
             "{refusal:?}"
         );
+    }
+
+    #[test]
+    fn every_lint_key_and_char_group_of_schema_1_reads_at_schema_2() {
+        // Each table's unset keys are written as null, so every key of every lint is read.
+        let lints = v1::Lints {
+            max_size_bytes: Some(Default::default()),
+            max_emphasis: Some(Default::default()),
+            repo_layout: Some(Default::default()),
+            banned_chars: None,
+            banned_phrases: None,
+            density: Some(Default::default()),
+            verbs_no_nouns: Some(Default::default()),
+            not_at_all: Some(Default::default()),
+        };
+        lints_of(&lints, None, None).expect("every other lint of schema 1 reads at schema 2");
+        let groups = v1::lints::CHAR_GROUPS
+            .iter()
+            .map(|(group, _)| (group.to_string(), Value::Bool(true)))
+            .collect();
+        let chars: v1::lints::BannedChars =
+            serde_json::from_value(serde_json::json!({ "groups": Value::Object(groups) }))
+                .expect("every group of schema 1 reads at schema 1");
+        chars_of(&chars, &[]).expect("every group of schema 1 reads at schema 2");
     }
 
     #[test]

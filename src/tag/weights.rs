@@ -3,8 +3,8 @@
 //! `weights.txt` is written by `scripts/train/weights.py` from a trained model and checked in; its
 //! datasheet, `weights.md`, says what it was trained on and under what licence. The header of the
 //! file is documented in the script. When the crate builds, `build.rs` parses the file once into
-//! flat tables (see `build_tables.rs`) and writes them as bytes, so a run parses nothing, and this
-//! module answers one question of them: the totals a feature holds.
+//! flat tables (see `build_tables.rs`) and writes them as bytes, so a run does not parse the file,
+//! and this module answers one question of them: the totals a feature holds.
 //!
 //! A feature is a template and its fields. Where the model had a feature string, a row here has a
 //! template id, up to two small integers (a previous tag, a tag, a confidence, a set of tags) and a

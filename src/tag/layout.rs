@@ -4,9 +4,9 @@
 //! stage's weights, and the word table of both lexicons. `build.rs` makes each when the crate
 //! builds, with [`super::build_tables`], and writes it as bytes to `OUT_DIR`; the crate holds the
 //! bytes with `include_bytes!` (see [`super::built`]) and reads them where they lie, so a run
-//! parses nothing. This module is what the two sides share: the sizes and places of a record, the
-//! hashes that choose its slot, and the reads. Every number is little-endian, whatever the machine
-//! that builds or runs.
+//! does not parse them. This module is what the two sides share: the sizes and places of a record,
+//! the hashes that choose its slot, and the reads. Every number is little-endian, whatever the
+//! machine that builds or runs.
 //!
 //! The reads are `#[inline(always)]` and index the bytes by hand: the tests run in debug, where a
 //! call to `u32::from_le_bytes` and a `try_into` cost more than the probe that wanted the number.

@@ -11,9 +11,9 @@
 //!
 //! A file is fixed in memory, in passes: it is read and linted as `check` would, the edits are
 //! applied, and the result is read again, until a pass does not make an edit. Each fixable lint's
-//! edit removes a place it objects to and adds none, so the passes end; if they do not, a lint
-//! breaks that promise, which is an error. Every file is worked out before any is written, and one
-//! that changed is written once, by [`write::replace`](crate::write::replace).
+//! edit removes a place it objects to and does not add one, so the passes end; if they do not, a
+//! lint breaks that promise, which is an error. Every file is worked out before any is written,
+//! and one that changed is written once, by [`write::replace`](crate::write::replace).
 //!
 //! A run with nothing to report about any file says so in one line, [`nothing_fixed`], so that
 //! silence is not all an agent has to read.
@@ -95,8 +95,8 @@ impl fmt::Display for Unfixed {
 }
 
 /// Fixes the files of the repo rooted at `root` that the config selects: those `paths` names, each
-/// relative to the root, or every one when it names none. With `dry_run`, writes nothing. The
-/// files are read as `check` reads them.
+/// relative to the root, or every one when it does not name a path. With `dry_run`, the files
+/// are not written. The files are read as `check` reads them.
 ///
 /// Returns what became of each file there is anything to say about, in the order of their paths.
 pub fn fix(
@@ -146,8 +146,8 @@ pub fn fix(
 }
 
 /// What `deslag fix` prints when it reports on no file, with no trailing newline. Fix edits only
-/// the characters `banned_chars` names, and says so, so that a run that changed nothing is not
-/// taken for one that failed to look. `dry_run` says nothing would have been written.
+/// the characters `banned_chars` names, and says so, so that a run that did not change a file is
+/// not taken for one that failed to look. `dry_run` says nothing would have been written.
 pub fn nothing_fixed(dry_run: bool) -> String {
     let did = if dry_run { "would fix" } else { "fixed" };
     format!(
@@ -200,8 +200,8 @@ impl FileFix {
 }
 
 /// The files to fix, each with the section that selects it: each that `paths` names, or, when it
-/// names none, every file the config selects. A path to a file that `deslag check` would not check
-/// is an error.
+/// does not name a path, every file the config selects. A path to a file that `deslag check` would
+/// not check is an error.
 fn chosen<'c>(
     root: &Path,
     config: &'c Config,
@@ -288,7 +288,7 @@ fn passes(
             .filter_map(|(_, edit)| edit.as_ref().ok().cloned())
             .collect();
         // Each pass that makes an edit leaves fewer for the next, so the first pass's edits, and
-        // one pass more that makes none, are as many passes as there can be.
+        // one pass more that does not make an edit, are as many passes as there can be.
         let bound = *bound.get_or_insert(edits.len() + 1);
         if pass == bound {
             return Err(unsettled(format!(

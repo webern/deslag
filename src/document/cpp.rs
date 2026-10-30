@@ -414,7 +414,7 @@ impl Scanner<'_> {
 
     /// Records the raw string whose prefix starts at `start` and whose `"` is at `quote`, and
     /// returns where to go on. A raw string is read as written, with no splices. If its delimiter
-    /// is not valid it is no raw string, and this returns `None` and records nothing.
+    /// is not valid it is no raw string, and this returns `None` and does not record a lexeme.
     fn raw_string(&mut self, start: usize, quote: usize) -> Option<usize> {
         let delimiter = quote + 1;
         let mut open = delimiter;

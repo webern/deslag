@@ -1,5 +1,5 @@
-# The phrases deslag recommends for `banned_phrases.ban`. The catalogue bans nothing by itself: a
-# file fails on a phrase only where a `ban` lists it.
+# The phrases deslag recommends for `banned_phrases.ban`. The catalogue does not ban a phrase by
+# itself: a file fails on a phrase only where a `ban` lists it.
 #
 # An entry has no `human` file on the corpus's big tier and `llm` files in at least 40
 # repositories. Its counts are for the image `measured_on` names, and `make test-blobs` fails when

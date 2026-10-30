@@ -337,7 +337,7 @@ mod tests {
             Pronoun,
             which,
         );
-        // A next word that may be a noun decides nothing, and neither does a noun-only word.
+        // A next word that may be a noun does not decide, and neither does a noun-only word.
         assert_eq!(after("see this can", "this", this, next), this);
         assert_eq!(after("see this work", "this", this, next), this);
         assert_eq!(

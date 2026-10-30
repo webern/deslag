@@ -61,7 +61,7 @@ pub struct Setting<'a> {
     pub path: &'a str,
     /// The release it arrived in.
     pub since: &'a Version,
-    /// Its doc comment, as the schema holds it, or empty when it has none.
+    /// Its doc comment, as the schema holds it, or empty when it does not have one.
     pub description: &'a str,
 }
 

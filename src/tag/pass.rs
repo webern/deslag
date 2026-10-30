@@ -305,7 +305,7 @@ mod tests {
         assert_eq!(reading.confidence, Confidence::Likely);
         // A noun's number stays true of a proper noun.
         assert_eq!(reading.features, Features::PLURAL);
-        // Doing it again changes nothing.
+        // Doing it again does not change the reading.
         assert!(!view.narrow(0, keep, ProperNoun));
     }
 

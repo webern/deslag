@@ -88,8 +88,8 @@ pub struct Exemption {
     /// The part of the lint's finding it dropped: the occurrences inside the sentence. `Some`
     /// when [`Status::Applied`].
     pub dropped: Option<Violation>,
-    /// The line of each sentence the quote equals: one when applied, or when the lint finds
-    /// nothing in it, and every one when there are two or more.
+    /// The line of each sentence the quote equals: one when applied, or when the lint does not
+    /// find a match in it, and every one when there are two or more.
     pub lines: Vec<usize>,
     /// The sentences of the file that hold a finding of the entry's lint, for a failed entry whose
     /// file was read.
@@ -597,7 +597,7 @@ pub(crate) fn settle(
 
 /// Marks each of `exemptions` that `change` adds, or whose reason it changes: the config at the
 /// base of the change is read, and entries compared by section, file, lint and quote. A config the
-/// base does not have, or that this deslag cannot read, has none, so every entry is added.
+/// base does not have, or that this deslag cannot read, counts as empty, so every entry is added.
 pub(crate) fn mark_added(
     root: &Path,
     config: &Config,

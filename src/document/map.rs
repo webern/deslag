@@ -17,8 +17,8 @@ pub(crate) enum SegmentKind {
     Verbatim,
     /// The outer text holds other bytes that read as these, such as the entity `&amp;` for `&`.
     Escaped,
-    /// The outer text holds nothing for it, as for a line break read as a space. Its outer range is
-    /// the empty range at the point it stands at.
+    /// The outer text does not hold a character for it, as for a line break read as a space. Its
+    /// outer range is the empty range at the point it stands at.
     Synthetic,
 }
 
@@ -115,7 +115,7 @@ impl SourceMap {
     /// make: verbatim if they are `text`, synthetic if `outer` is empty, escaped otherwise. Where
     /// they differ only in that `text` has an LF for each lone CR of the file, as Markdown reads a
     /// file with such line ends, each CR is an escaped segment of its own and the rest verbatim.
-    /// Empty `text` adds nothing.
+    /// Empty `text` does not add a segment.
     ///
     /// # Panics
     ///

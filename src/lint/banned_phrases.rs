@@ -3,10 +3,11 @@
 //! The phrases are the config's `ban`, each with the advice its report gives, or with none, when the
 //! report says the phrase is banned in this repo and to reword the sentence. The catalogue in
 //! `banned_phrases.toml` is the list deslag recommends, which `deslag instructions update` offers;
-//! it bans nothing by itself. Each of its phrases does not match any `human` file of the corpus and
-//! matches `llm` files of at least 40 repositories, counts that `make test-blobs` checks. A phrase
-//! is split into tokens by the code that splits the document's prose, and matches the same row of
-//! tokens in one block of prose, whatever the case, the style of apostrophe, and the whitespace,
+//! it does not ban a phrase by itself. Each of its phrases does not match any `human` file of the
+//! corpus and matches `llm` files of at least 40 repositories, counts that `make test-blobs`
+//! checks. A phrase is split into tokens by the code that splits the document's prose, and matches
+//! the same row of tokens in one block of prose, whatever the case, the style of apostrophe, and
+//! the whitespace,
 //! line breaks and formatting between them. A code span, HTML, an image, a URL or a footnote
 //! reference is a token no phrase holds, so no match crosses one. Code blocks, HTML blocks and
 //! frontmatter hold no tokens, but the comments of a code block in a language that `[md]` reads
@@ -38,7 +39,7 @@ pub struct Match {
     /// Its tokens as the source writes them, with a space where whitespace parts two of them and
     /// the markup between them left out.
     pub quote: String,
-    /// The advice the config gives for it; empty means it gives none.
+    /// The advice the config gives for it; empty when the config does not give one.
     pub advice: String,
 }
 
@@ -324,7 +325,7 @@ mod tests {
             .unwrap_or_default()
     }
 
-    /// The catalogue bans nothing: an empty table finds none of its phrases.
+    /// The catalogue does not ban a phrase: an empty table finds none of its phrases.
     #[test]
     fn an_empty_table_bans_no_phrase_of_the_catalogue() {
         let text = format!("{}.\n", CATALOGUE.entries[0].phrase);

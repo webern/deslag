@@ -90,7 +90,7 @@ gets an override.
 Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a
 file, rephrase around a lint or write an `allow` entry: only a human exempts a sentence, so give
 them its text and a reason. `deslag fix [PATH]...` replaces banned characters where it can prove
-the text reads as before; `--dry-run` writes nothing. Ask before fixing a human's file.
+the text reads as before; `--dry-run` does not write a file. Ask before fixing a human's file.
 
 ## 6. CI, and the next agent
 

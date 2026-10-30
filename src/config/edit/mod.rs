@@ -78,7 +78,7 @@ pub enum Edit {
     },
     /// The stamp is set.
     Stamp {
-        /// What it was, or `None` when the file had none.
+        /// What it was, or `None` when the file did not have one.
         from: Option<Version>,
         /// What it becomes.
         to: Version,
@@ -100,7 +100,7 @@ pub enum Edit {
 pub enum StampAt {
     /// The line of the `deslag_version` key the file has.
     Key(usize),
-    /// The file has none; it goes after the line of `schema_version`.
+    /// The file does not have one; it goes after the line of `schema_version`.
     After(usize),
     /// Not found.
     Unknown,
@@ -133,8 +133,8 @@ impl Edit {
         }
     }
 
-    /// The line of the file the edit is at, if it is at one. The stamp has none here, because
-    /// where it goes is part of what it says.
+    /// The line of the file the edit is at, if it is at one. The stamp does not have one here,
+    /// because where it goes is part of what it says.
     fn line(&self) -> Option<usize> {
         match self {
             Edit::Delete { line, .. } | Edit::Rename { line, .. } | Edit::Table { line, .. } => {
@@ -481,7 +481,7 @@ pub(crate) type Damage = fn(&str) -> String;
 #[cfg(test)]
 thread_local! {
     /// A function that damages the text of every plan before the check reads it, so that a test
-    /// can see the check refuse a wrong edit and the command write nothing.
+    /// can see the check refuse a wrong edit and the command leave the file as it was.
     static WRONG_EDIT: std::cell::Cell<Option<Damage>> =
         const { std::cell::Cell::new(None) };
 }

@@ -43,7 +43,7 @@ impl FenceLanguage {
 struct FencesFile {
     /// The languages whose fenced code is read: `rust`, `cpp` and `toml`. A fence is of the
     /// language its info string names by its first word, whatever the case: `rust`, `rs`, `cpp`,
-    /// `c++`, `c`, `h`, the C and C++ extensions and `toml`. `[]` reads none.
+    /// `c++`, `c`, `h`, the C and C++ extensions and `toml`. `[]` does not read a fence.
     #[serde(default)]
     #[schemars(extend("default" = ["rust", "cpp", "toml"]))]
     #[schemars(extend("since" = "0.0.1"))]

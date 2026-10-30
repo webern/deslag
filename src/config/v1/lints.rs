@@ -303,7 +303,7 @@ pub(crate) struct PhraseGroups {
 }
 
 impl PhraseGroups {
-    /// Whether the table switches a group on or off. `signposts` switched nothing.
+    /// Whether the table switches a group on or off. `signposts` did not switch a group.
     pub(crate) fn switches_any(&self) -> bool {
         [self.insistence, self.metaphors, self.precision]
             .iter()

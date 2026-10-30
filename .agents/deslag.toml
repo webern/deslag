@@ -58,6 +58,9 @@ max_paragraph_chars = 500
 # This repo writes the plain negation, `does not parse`.
 [md.lints.not_at_all]
 
+# A taste lint, off by default: this repo names what a verb did not find.
+[md.lints.verbs_nothing]
+
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000
@@ -140,6 +143,8 @@ load-bearing = "say what depends on it"
 
 [rust.lints.not_at_all]
 
+[rust.lints.verbs_nothing]
+
 # The comments of deslag's own TOML outside tests/, and not the golden files of tools/sweep, which
 # the sweep prints. They are held to the same characters and phrases as the Rust comments.
 [toml]
@@ -180,3 +185,5 @@ load-bearing = "say what depends on it"
 [toml.lints.verbs_no_nouns]
 
 [toml.lints.not_at_all]
+
+[toml.lints.verbs_nothing]

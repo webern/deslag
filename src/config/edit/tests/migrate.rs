@@ -38,7 +38,7 @@ fn reads(text: &str) -> Result<(), String> {
         .map_err(|error| error.to_string())
 }
 
-/// The text of a successful migration of `text`, which made `edits` a second time changes nothing.
+/// The text of a successful migration of `text`, which a second pass of `edits` leaves as it is.
 fn migrated(text: &str, edits: &[TableEdit]) -> String {
     let once = migrate(text, "deslag.toml", edits.to_vec(), reads)
         .unwrap_or_else(|refusal| panic!("refused: {refusal:#?}\n{text}"));

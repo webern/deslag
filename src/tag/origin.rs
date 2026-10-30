@@ -574,7 +574,8 @@ fn origin_of(tokens: &[Token<'_>], at: usize, plain: bool) -> Origin {
             origin
         };
     }
-    // A dash or a colon beside the word is where a flag or a `::` starts, and a word has none.
+    // A dash or a colon beside the word is where a flag or a `::` starts, and a word does not have
+    // one.
     let before = if at > 0 {
         first_byte(&tokens[at - 1])
     } else {
@@ -603,7 +604,7 @@ fn origin_of(tokens: &[Token<'_>], at: usize, plain: bool) -> Origin {
     }
 }
 
-/// The first byte of the token's text, or 0 if it has none.
+/// The first byte of the token's text, or 0 when the text is empty.
 #[inline(always)]
 fn first_byte(token: &Token<'_>) -> u8 {
     match token.text.as_bytes().first() {

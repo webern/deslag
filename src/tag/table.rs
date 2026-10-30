@@ -5,7 +5,7 @@
 //! the lexicon, whose line was parsed into a reading on each lookup, and a word the prior pass
 //! asked about was folded and looked up in the lexicon again. Here each word of either table is
 //! held once, with its [`Reading`] already made and the lexicon's dominance mark beside it, so one
-//! probe answers both questions and allocates nothing.
+//! probe answers both questions and does not allocate.
 //!
 //! The answers are those of the tables themselves. The closed-class reading wins where both have a
 //! word, and a word in neither is read as a possessive of a stem the lexicon has, or by its shape.

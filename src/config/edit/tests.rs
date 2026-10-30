@@ -552,7 +552,7 @@ fn an_edit_that_does_not_load_is_refused_with_the_parsers_reason() {
         .expect_err("a refusal");
     let reason = refusal
         .reason
-        .strip_prefix("the edited config does not load: cannot parse deslag.yaml: ")
+        .strip_prefix("the edited text does not load: cannot parse deslag.yaml: ")
         .unwrap_or_else(|| panic!("{refusal:?}"));
     assert!(!reason.is_empty(), "{refusal:?}");
 }

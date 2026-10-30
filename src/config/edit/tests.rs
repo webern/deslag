@@ -535,6 +535,17 @@ fn a_stamp_that_cannot_be_placed_is_refused_and_not_guessed() {
     );
 }
 
+#[test]
+fn an_edit_that_does_not_load_is_refused_with_the_parsers_reason() {
+    let refusal = line_check("yaml", "schema_version: 2\n", "schema_version: [2\n", None)
+        .expect_err("a refusal");
+    let reason = refusal
+        .reason
+        .strip_prefix("the edited config does not load: cannot parse deslag.yaml: ")
+        .unwrap_or_else(|| panic!("{refusal:?}"));
+    assert!(!reason.is_empty(), "{refusal:?}");
+}
+
 // A redirect in YAML or JSON that cannot be deleted is refused, with the edits spelled out.
 
 #[test]

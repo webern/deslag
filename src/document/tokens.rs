@@ -309,11 +309,17 @@ fn urls(text: &str) -> Vec<Range<usize>> {
 /// `url` without the punctuation after it, keeping a closing parenthesis that one in the URL
 /// opens.
 fn trim_url(mut url: &str) -> &str {
+    // Trimming takes no `(` off, so only the count of `)` changes.
+    let opens = url.matches('(').count();
+    let mut closes = url.matches(')').count();
     loop {
         let trimmed =
             url.trim_end_matches(['.', ',', ':', ';', '!', '?', '\'', '"', '*', '_', '~']);
         let trimmed = match trimmed.strip_suffix(')') {
-            Some(shorter) if trimmed.matches(')').count() > trimmed.matches('(').count() => shorter,
+            Some(shorter) if closes > opens => {
+                closes -= 1;
+                shorter
+            }
             _ => trimmed,
         };
         if trimmed.len() == url.len() {

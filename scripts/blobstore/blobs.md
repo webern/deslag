@@ -29,7 +29,7 @@ image, so every target that reads the corpus pulls anything added, as does CI on
 
 The big tier of the corpus: quoted Markdown in batches, each fixture with its JSON sidecar.
 `docs/design/corpus.md` says what it is for and its rules; `docs/design/corpus.asbuilt.md` gives
-the layout. `tests/blobs.rs` reads it.
+the layout. `tools/corpus/tests/blobs.rs` reads it.
 
 - `2026-09-27-01`: the 1200 collected fixtures of `tests/corpus/`, 400 each of `human/`, `llm/`
   and `mixed/`, byte for byte with their sidecars, packed by `collect.py pack`; 12,034,975 bytes.

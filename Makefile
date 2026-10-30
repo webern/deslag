@@ -486,7 +486,7 @@ test-ticlist-percept: generate-percept
 # The tests that read the unpacked big tier and are ignored by a plain cargo test, then the gold sets'
 # seen sidecars against their fixtures.
 test-tier: preflight fetch-blobs
-	cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored
+	cargo test $(CARGO_FLAGS) -p deslag-corpus --test blobs -- --ignored
 	cargo test $(CARGO_FLAGS) -p deslag-exam --test seen -- --ignored
 
 # Builds the deslag binary and the timer in release, prints how long reading and tagging the big tier
@@ -629,7 +629,7 @@ fix-golden: preflight
 # blobstore/remeasure.sh, after it publishes, so a new image leaves the branch green; remeasure.sh
 # lists the files it writes.
 fix-catalog: preflight fetch-blobs
-	DESLAG_FIX_CATALOG=1 cargo test $(CARGO_FLAGS) --all-features --test blobs -- --ignored the_catalogue_counts
+	DESLAG_FIX_CATALOG=1 cargo test $(CARGO_FLAGS) -p deslag-corpus --test blobs -- --ignored the_catalogue_counts
 
 # Accepts whatever deslag prints now, so read the diff before committing it.
 fix-test-output: preflight

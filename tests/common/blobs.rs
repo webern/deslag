@@ -8,8 +8,6 @@ use std::path::Path;
 
 use super::fixture::Fixture;
 
-pub use deslag_corpus::sidecar::{Entry, Exclusion, Tried};
-
 /// Reads the big tier under `root` and returns the fixtures its batches leave in it, each
 /// checked against its sidecar and its manifest line, in the order they were added.
 pub fn load_blobs(root: &Path) -> Vec<Fixture> {

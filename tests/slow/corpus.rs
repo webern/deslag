@@ -1209,8 +1209,9 @@ fn verbs_no_nouns_flags_llm_text_far_more_than_human_text() {
     assert!(llm >= 3 * human, "human {human}, llm {llm}");
 }
 
-/// The tree is too small for the lint's 3 times claim, which `tests/blobs.rs` checks on the big
-/// tier, so the tree asks only that `llm` files hold the padding more often than `human` files.
+/// The tree is too small for the lint's 3 times claim, which `tools/corpus/tests/blobs.rs` checks
+/// on the big tier, so the tree asks only that `llm` files hold the padding more often than `human`
+/// files.
 #[test]
 fn not_at_all_flags_llm_text_more_than_human_text() {
     let fixtures = corpus();

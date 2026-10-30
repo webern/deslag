@@ -93,7 +93,7 @@ jobs:
 
       - name: Install typos
         if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
-        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
+        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.29, 2026-10-16
         with:
           tool: typos
 
@@ -148,7 +148,7 @@ jobs:
 
       # make preflight asks for it, though nothing here spell checks. A prebuilt binary.
       - name: Install typos
-        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29, 2026-10-16
+        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.29, 2026-10-16
         with:
           tool: typos
 

@@ -68,6 +68,9 @@ pub struct Document<'a> {
     pub sentences: Vec<Sentence>,
     /// Where each line of the source starts.
     lines: Vec<usize>,
+    /// The characters of the source before every [`STRIDE`]th byte, which a column far from the
+    /// start of its line is counted from.
+    chars_before: Vec<usize>,
     /// The comments of a code file that were read as prose, in the order of the file: their text,
     /// where it is in the file, and how the file holds it. A Markdown file has those of its fences.
     pub(crate) regions: Vec<Region>,
@@ -359,6 +362,12 @@ impl<'a> Document<'a> {
         let lines = std::iter::once(0)
             .chain(source.match_indices('\n').map(|(at, _)| at + 1))
             .collect();
+        let chars_before = std::iter::once(0)
+            .chain(source.as_bytes().chunks(STRIDE).scan(0, |chars, chunk| {
+                *chars += chars_in(chunk);
+                Some(*chars)
+            }))
+            .collect();
         let code = code_in(&blocks, &pieces);
         Document {
             source,
@@ -369,6 +378,7 @@ impl<'a> Document<'a> {
             tokens: Vec::new(),
             sentences: Vec::new(),
             lines,
+            chars_before,
             regions: Vec::new(),
             code,
             stack,
@@ -455,7 +465,19 @@ impl<'a> Document<'a> {
         if start == 0 && offset > 0 && self.source.starts_with(BYTE_ORDER_MARK) {
             start = BYTE_ORDER_MARK.len_utf8();
         }
-        self.source[start..offset].chars().count() + 1
+        let chars = if offset - start <= STRIDE {
+            chars_in(&self.source.as_bytes()[start..offset])
+        } else {
+            self.chars_to(offset) - self.chars_to(start)
+        };
+        chars + 1
+    }
+
+    /// The characters of the source before byte `offset`, counted from the nearest
+    /// [`Document::chars_before`] at or before it.
+    fn chars_to(&self, offset: usize) -> usize {
+        let at = offset / STRIDE;
+        self.chars_before[at] + chars_in(&self.source.as_bytes()[at * STRIDE..offset])
     }
 
     /// Every block, each before the blocks it holds, in the order of the file.
@@ -555,6 +577,14 @@ fn code_in(blocks: &[Block<'_>], pieces: &[Piece<'_>]) -> Vec<Range<usize>> {
 
 /// The byte order mark, which opens some files and is not part of their text.
 const BYTE_ORDER_MARK: char = '\u{FEFF}';
+
+/// How many bytes apart the counts of [`Document::chars_before`] are.
+const STRIDE: usize = 256;
+
+/// The characters that start in `bytes`, which is every byte but those that go on with one.
+fn chars_in(bytes: &[u8]) -> usize {
+    bytes.iter().filter(|byte| **byte & 0xC0 != 0x80).count()
+}
 
 /// The items of `items`, which are in the order of the file and do not overlap, that lie wholly
 /// inside `range`.

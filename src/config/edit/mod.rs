@@ -792,10 +792,20 @@ impl Scan {
     ) -> Result<Splice, String> {
         let quoted = format!("\"{to}\"");
         if let Some(member) = self.top("deslag_version") {
-            let range = member
+            let mut range = member
                 .value
                 .clone()
                 .ok_or("its value is not a plain or quoted string")?;
+            if member.empty {
+                // The parser puts the empty value at the key, and the stamp goes after the colon.
+                let at = member.value_end(text);
+                if !text[..at].ends_with(':') {
+                    return Err(
+                        "its key does not have a colon to write the value after".to_string()
+                    );
+                }
+                range = at..at;
+            }
             let mut with = String::new();
             if range.is_empty() && !text[..range.start].ends_with([' ', '\t']) {
                 with.push(' ');

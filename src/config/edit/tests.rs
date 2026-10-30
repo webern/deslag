@@ -447,6 +447,25 @@ fn the_stamp_in_yaml_is_replaced_in_place_or_added_on_the_line_after_schema_vers
         edited("yaml", "{\"schema_version\": 2, \"md\": {}}", Some("0.0.1")),
         "{\"schema_version\": 2, \"deslag_version\": \"0.0.1\", \"md\": {}}"
     );
+    // A key written without a value: the stamp goes after its colon.
+    for (old, new) in [
+        ("deslag_version:\n", "deslag_version: \"0.0.1\"\n"),
+        ("deslag_version: # c\n", "deslag_version: \"0.0.1\" # c\n"),
+        ("deslag_version:", "deslag_version: \"0.0.1\""),
+    ] {
+        assert_eq!(
+            edited("yaml", &format!("schema_version: 2\n{old}"), Some("0.0.1")),
+            format!("schema_version: 2\n{new}")
+        );
+    }
+    assert_eq!(
+        edited(
+            "yaml",
+            "{schema_version: 2, deslag_version:}",
+            Some("0.0.1")
+        ),
+        "{schema_version: 2, deslag_version: \"0.0.1\"}"
+    );
 }
 
 #[test]
@@ -499,14 +518,17 @@ fn a_json_config_written_as_a_list_is_read_by_position_and_refused() {
 
 #[test]
 fn a_stamp_that_cannot_be_placed_is_refused_and_not_guessed() {
-    // The value is empty, so the edit would not read back as a stamp.
+    // The key does not have a colon, so there is nowhere to put a value.
     let refusal = run(
         "yaml",
-        "schema_version: 2\ndeslag_version:\n",
+        "{schema_version: 2,\n deslag_version}\n",
         Some("0.0.1"),
     )
     .expect_err("a refusal");
-    assert!(refusal.reason.contains("does not load"), "{refusal:?}");
+    assert!(
+        refusal.reason.contains("does not have a colon"),
+        "{refusal:?}"
+    );
     assert_eq!(
         refusal.todo,
         ["deslag.yaml:2: set `deslag_version` to \"0.0.1\" at the top level"]

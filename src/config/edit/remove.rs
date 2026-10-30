@@ -40,7 +40,7 @@ impl Member {
 
     /// Where its value ends in `text`, with the colon of a key that does not have a value: `key:` is the
     /// parser's empty value, placed at the key.
-    fn value_end(&self, text: &str) -> usize {
+    pub(super) fn value_end(&self, text: &str) -> usize {
         if !self.empty {
             return self.end;
         }

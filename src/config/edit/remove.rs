@@ -323,7 +323,7 @@ fn seal(text: &str, parent: &Member) -> Result<Splice, String> {
 /// Whether the last thing before the key at `at`, past blanks and comments, is a `?`: the key is
 /// written after an explicit `?`, on its line or on one below it. This is the one place a `?` is
 /// looked for, for a block key and a flow member alike.
-fn follows_question_mark(text: &str, at: usize) -> bool {
+pub(super) fn follows_question_mark(text: &str, at: usize) -> bool {
     for line in text[..at].lines().rev() {
         // A comment starts at a `#` that begins the line or follows a blank.
         let code = line

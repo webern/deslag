@@ -798,6 +798,9 @@ impl Scan {
                 .ok_or("its value is not a plain or quoted string")?;
             if member.empty {
                 // The parser puts the empty value at the key, and the stamp goes after the colon.
+                if remove::follows_question_mark(text, member.key.start) {
+                    return Err("its key is an explicit `?` key".to_string());
+                }
                 let at = member.value_end(text);
                 if !text[..at].ends_with(':') {
                     return Err(

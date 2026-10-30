@@ -533,6 +533,17 @@ fn a_stamp_that_cannot_be_placed_is_refused_and_not_guessed() {
         refusal.todo,
         ["deslag.yaml:2: set `deslag_version` to \"0.0.1\" at the top level"]
     );
+    // An explicit key, with its colon on the next line.
+    let refusal = run(
+        "yaml",
+        "schema_version: 2\n? deslag_version\n:\n",
+        Some("0.0.1"),
+    )
+    .expect_err("a refusal");
+    assert!(
+        refusal.reason.contains("an explicit `?` key"),
+        "{refusal:?}"
+    );
 }
 
 #[test]

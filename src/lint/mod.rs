@@ -246,7 +246,7 @@ impl Violation {
     }
 
     /// The places it points at, in the order its report lists them. A verdict on the whole file
-    /// with nothing to point at, such as a file over its byte budget, does not have one.
+    /// with nothing to point at, such as a file over its byte budget, does not have a mark.
     pub fn marks(&self) -> Vec<Mark> {
         match self {
             Violation::MaxSizeBytes(_) => Vec::new(),
@@ -262,8 +262,8 @@ impl Violation {
     }
 
     /// The places a fix could change, each with the edit the lint names there, or why it does not
-    /// name one. A lint whose module does not say what makes its edits safe does not have one:
-    /// its findings are for a writer to resolve.
+    /// name an edit. A lint whose module does not say what makes its edits safe does not have
+    /// edits: its findings are for a writer to resolve.
     pub fn edits(&self) -> Vec<(Mark, Result<Edit, &'static str>)> {
         match self {
             Violation::MaxSizeBytes(_) => Vec::new(),
@@ -448,7 +448,7 @@ impl Report {
     }
 
     /// The notice line for each entry that the change adds or changes, for a reviewer. A run with
-    /// no base does not have one.
+    /// no base does not have a notice.
     pub fn notices(&self) -> Vec<String> {
         self.exemptions
             .iter()

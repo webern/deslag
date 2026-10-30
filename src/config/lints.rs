@@ -213,7 +213,7 @@ impl Merge for MaxSizeBytes {
 /// they cover more than `max_percent` of its prose.
 ///
 /// Setting only `free_spans` caps the number of spans; setting only `max_percent` caps their
-/// share of the prose. A table that sets neither does not check a file.
+/// share of the prose. A table that sets neither does not run a check.
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MaxEmphasis {
@@ -365,7 +365,7 @@ impl Merge for RepoLayout {
 
 /// `lints.banned_chars`: a file fails when its text outside code holds a banned character, such
 /// as an em dash. Most have a plain character to write instead; an arrow that only a range rule
-/// covers does not have one, so the report leaves the choice to the writer.
+/// covers does not have a plain character, so the report leaves the choice to the writer.
 ///
 /// The table turns the check on, and bans the groups it switches on and the characters in `ban`:
 /// an empty table does not ban a character. A character in `allow` is never banned; one in `ban`

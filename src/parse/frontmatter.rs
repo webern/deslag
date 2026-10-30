@@ -36,7 +36,7 @@ pub fn value<'a>(contents: &'a str, key: &str) -> Option<&'a str> {
     None
 }
 
-/// The budget declared in `contents`'s frontmatter, or `None` when it does not declare one.
+/// The budget declared in `contents`'s frontmatter, or `None` when it does not declare a budget.
 pub fn max_size_bytes(contents: &str, path: &str) -> Result<Option<u64>, Error> {
     let Some(value) = value(contents, MAX_SIZE_BYTES) else {
         return Ok(None);

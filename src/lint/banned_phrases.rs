@@ -39,7 +39,7 @@ pub struct Match {
     /// Its tokens as the source writes them, with a space where whitespace parts two of them and
     /// the markup between them left out.
     pub quote: String,
-    /// The advice the config gives for it; empty when the config does not give one.
+    /// The advice the config gives for it; empty when the config does not give advice.
     pub advice: String,
 }
 

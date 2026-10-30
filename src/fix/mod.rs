@@ -11,9 +11,9 @@
 //!
 //! A file is fixed in memory, in passes: it is read and linted as `check` would, the edits are
 //! applied, and the result is read again, until a pass does not make an edit. Each fixable lint's
-//! edit removes a place it objects to and does not add one, so the passes end; if they do not, a
-//! lint breaks that promise, which is an error. Every file is worked out before any is written,
-//! and one that changed is written once, by [`write::replace`](crate::write::replace).
+//! edit removes a place it objects to and does not add a place, so the passes end; if they do
+//! not, a lint breaks that promise, which is an error. Every file is worked out before any is
+//! written, and one that changed is written once, by [`write::replace`](crate::write::replace).
 //!
 //! A run with nothing to report about any file says so in one line, [`nothing_fixed`], so that
 //! silence is not all an agent has to read.

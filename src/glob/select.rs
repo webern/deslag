@@ -149,7 +149,7 @@ mod tests {
         };
         assert_eq!(best, pattern("/docs/**/*.md").specificity());
 
-        // A long, anchored exclude that does not match the path does not add to the specificity.
+        // A long, anchored exclude that does not match `docs/a.md` leaves the specificity as it is.
         let with = globs(
             &["*.md", "/docs/**/*.md"],
             &["/a/very/long/anchored/pattern/**"],

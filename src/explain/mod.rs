@@ -138,7 +138,8 @@ fn block(
 
 /// The `allow` entries of the file, as comments after the lint tables: a count, then a row per
 /// entry with its place in the config, its lint, the line of its sentence in `document` or "no such
-/// sentence", its quote and its reason. For a file with none, this is empty.
+/// sentence", its quote and its reason. A file with no entries gets an empty
+/// string here.
 fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
     if entries.is_empty() {
         return String::new();

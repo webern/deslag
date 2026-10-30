@@ -26,12 +26,12 @@ pub struct Run {
     /// other than `applied`, and it fails the run all the same, so a run that exits 1 can have no
     /// findings.
     pub findings: Vec<Finding>,
-    /// With `--base` or `--diff`, the base the run read a change from; a run with no base does
-    /// not have one.
+    /// With `--base` or `--diff`, the base the run read a change from; a run with no base has
+    /// none.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub base: Option<Base>,
     /// With `--diff`, the change the findings were narrowed to; a run of the whole tree does not
-    /// have one.
+    /// narrow them.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub change: Option<Narrowed>,
     /// The `allow` entries of the config, in its order; a config with none leaves this out.

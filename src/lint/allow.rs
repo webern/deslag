@@ -597,7 +597,8 @@ pub(crate) fn settle(
 
 /// Marks each of `exemptions` that `change` adds, or whose reason it changes: the config at the
 /// base of the change is read, and entries compared by section, file, lint and quote. A config the
-/// base does not have, or that this deslag cannot read, counts as empty, so every entry is added.
+/// base does not have, or that this deslag cannot read, does not have entries, so every entry is
+/// added.
 pub(crate) fn mark_added(
     root: &Path,
     config: &Config,

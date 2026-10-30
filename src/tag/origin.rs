@@ -574,8 +574,7 @@ fn origin_of(tokens: &[Token<'_>], at: usize, plain: bool) -> Origin {
             origin
         };
     }
-    // A dash or a colon beside the word is where a flag or a `::` starts, and a word does not have
-    // one.
+    // A dash or a colon beside the word is where a flag or a `::` starts, and a word holds neither.
     let before = if at > 0 {
         first_byte(&tokens[at - 1])
     } else {

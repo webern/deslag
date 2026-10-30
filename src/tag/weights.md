@@ -108,7 +108,7 @@ fails a change to it until `RULES_VERSION` is raised and `make fix-golden` run. 
    moves on a retrain's say-so.
 
 While the weights lag a `RULES_VERSION` bump the learned stage is off, so a `make fix-golden` run
-then, such as the one before step 1, records what the rules alone find in those two golden files.
+then, such as the one before step 1, records what the rules alone find in those three golden files.
 Restore them with `git restore` and fix them only after step 3.
 
 A build whose weights name another rules version than its own does not run the learned stage: its

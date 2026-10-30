@@ -29,8 +29,9 @@ pub(crate) const SCHEMA: NonZeroU32 = NonZeroU32::MIN;
 /// What a config of schema 1 said: the stamp, and the `lints` tables of each section.
 #[derive(Debug, Clone)]
 pub(crate) struct Reading {
-    /// The config's `deslag_version`, or the baseline release when it does not have one. A phrase
-    /// of the catalogue was banned from the release it shipped in, once the stamp reached it.
+    /// The config's `deslag_version`, or the baseline release when it does not have a stamp. A
+    /// phrase of the catalogue was banned from the release it shipped in, once the stamp reached
+    /// it.
     pub(crate) stamp: semver::Version,
     /// Every section the file has, in the order of the schema.
     pub(crate) sections: Vec<SectionReading>,

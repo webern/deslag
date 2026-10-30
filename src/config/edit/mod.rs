@@ -78,7 +78,7 @@ pub enum Edit {
     },
     /// The stamp is set.
     Stamp {
-        /// What it was, or `None` when the file did not have one.
+        /// What it was, or `None` when the file did not have a stamp.
         from: Option<Version>,
         /// What it becomes.
         to: Version,
@@ -100,7 +100,7 @@ pub enum Edit {
 pub enum StampAt {
     /// The line of the `deslag_version` key the file has.
     Key(usize),
-    /// The file does not have one; it goes after the line of `schema_version`.
+    /// The file does not have a stamp; it goes after the line of `schema_version`.
     After(usize),
     /// Not found.
     Unknown,
@@ -133,7 +133,7 @@ impl Edit {
         }
     }
 
-    /// The line of the file the edit is at, if it is at one. The stamp does not have one here,
+    /// The line of the file the edit is at, if it is at one. The stamp does not have a line here,
     /// because where it goes is part of what it says.
     fn line(&self) -> Option<usize> {
         match self {

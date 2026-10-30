@@ -45,8 +45,8 @@ pub struct Update {
 /// A stamp that stays, because the person has not read what is new.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Held {
-    /// The stamp, or `None` when the config does not have one and is taken to be from the baseline
-    /// release.
+    /// The stamp, or `None` when the config does not have a stamp and is taken to be from the
+    /// baseline release.
     pub stamp: Option<Version>,
     /// The release the config is taken to be from: its stamp, or the baseline.
     pub taken: Version,

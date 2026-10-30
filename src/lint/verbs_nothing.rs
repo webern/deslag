@@ -21,8 +21,8 @@
 //! config grows is an allow-list an agent grows until the check passes.
 //!
 //! This is a taste lint, off until a config turns it on. Its claim, which `tests/slow/corpus.rs`
-//! and `make test-blobs` check on English fixtures: `llm` files hold it more often than `human`
-//! files on the tree; on the big tier, at least 3 times as often, and at most 3.5% of its `human`
+//! and `make test-blobs` check on English fixtures: `llm` files hold it at least 3 times as often
+//! as `human` files, on the tree and on the big tier, and at most 3.5% of the big tier's `human`
 //! files hold it. Human writers use the construction too, so the advice owns the rule as the
 //! repo's style and never says who wrote the sentence. A retrained tagger can move the lint's
 //! findings; `src/tag/weights.md` says what to do then.
@@ -47,8 +47,11 @@ pub const OBJECTS: &[&str] = &["nothing", "none"];
 pub const HAVE: &[&str] = &["have", "had"];
 
 /// Words after the object that make it an idiom or name what follows, as in `nothing to do
-/// with`, `nothing but X`, `none of them`, `nothing about X` and `nothing like X`.
-pub const STOP_WORDS: &[&str] = &["to", "but", "of", "about", "like", "else", "more", "less"];
+/// with`, `nothing but X`, `none of them`, `nothing about X`, `nothing like X`, `none too soon`
+/// and `none the wiser`.
+pub const STOP_WORDS: &[&str] = &[
+    "to", "but", "of", "about", "like", "else", "more", "less", "too", "the",
+];
 
 /// The object: `nothing` or `none`.
 const OBJECT: Item = Item::In(OBJECTS);
@@ -372,6 +375,8 @@ mod tests {
             "It expects nothing less.",
             "The agent knows nothing about the peer.",
             "It looks nothing like the original.",
+            "It arrived none too soon.",
+            "They left none the wiser.",
         ] {
             assert!(found(text).is_empty(), "{text}");
         }

@@ -122,7 +122,7 @@ pub(crate) struct CarrierLine {
     /// of text.
     pub prefix: Range<usize>,
     /// The line break after the text. Between two doc lines it also holds the attributes there,
-    /// which are gaps in the text. The last line does not have one.
+    /// which are gaps in the text. The last line does not have a line break.
     pub ending: Range<usize>,
 }
 

@@ -264,8 +264,8 @@ pub(crate) fn refuse_later(
     versions(text, format, &path_string, running).map(drop)
 }
 
-/// The `schema_version` of `text`, a config written in `format`; or `None` when it does not have
-/// one or its head does not read.
+/// The `schema_version` of `text`, a config written in `format`; or `None` when the text does not
+/// hold a `schema_version` or its head does not read.
 pub(crate) fn schema_of(text: &str, format: ConfigFormat) -> Option<NonZeroU32> {
     deserialize::<Head>(text, format).ok()?.schema_version
 }
@@ -428,7 +428,7 @@ impl Config {
     }
 
     /// The release of deslag this config was last updated by: its stamp, or the baseline release
-    /// when it does not have one. Never [`Version::Next`].
+    /// when it does not have a stamp. Never [`Version::Next`].
     pub fn deslag_version(&self) -> Version {
         Version::Release(self.stamp.clone().unwrap_or(BASELINE))
     }

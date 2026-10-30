@@ -72,8 +72,8 @@ pub enum Item {
     Run(usize, &'static Item),
     /// No width: the token after this place is none, or this item does not match it.
     NotFollowedBy(&'static Item),
-    /// No width: the token before this place is none, or this item does not match it. There is no
-    /// token before the first of a sentence.
+    /// No width: the token before this place is none, or this item does not match it. The first
+    /// token of a sentence does not have a token before it.
     NotPrecededBy(&'static Item),
 }
 
@@ -425,8 +425,8 @@ mod tests {
             Vec::<String>::new()
         );
         assert_eq!(found(&P, "It is not whole."), ["not"]);
-        // There is no token before the first of a sentence, and the last of the one before is not
-        // it.
+        // The first token of a sentence does not have a token before it, and the last of the one
+        // before is not it.
         assert_eq!(found(&P, "Or. Not so."), ["Not"]);
         assert_eq!(found(&P, "Not so."), ["Not"]);
     }

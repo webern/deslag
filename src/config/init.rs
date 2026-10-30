@@ -1,4 +1,4 @@
-//! `deslag init`: the config for a repo that does not have one, with everything on.
+//! `deslag init`: the config for a repo that does not have a config, with everything on.
 //!
 //! The config names everything deslag fails on, so a repo starts from one that names it all. `init`
 //! reads nothing of the repo. It writes `deslag.toml` at the root, or the file `--config-path`
@@ -34,7 +34,7 @@ pub const DEFAULT_PATH: &str = "deslag.toml";
 
 /// The settings that decide whether a lint checks anything and have no default, each at the value
 /// the lint's page in `src/instructions/lints/` gives it. An empty `max_size_bytes` table checks
-/// only the budgets of frontmatter, and an empty `max_emphasis` table does not check a file.
+/// only the budgets of frontmatter, and an empty `max_emphasis` table does not run a check.
 const NEEDED: &str = "\
 [max_size_bytes]
 value = 16000

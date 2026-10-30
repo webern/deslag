@@ -1048,7 +1048,12 @@ fn on_every_core<T: Sync, R: Send>(items: &[T], f: impl Fn(&[T]) -> Vec<R> + Syn
             .collect();
         workers
             .into_iter()
-            .flat_map(|worker| worker.join().expect("a worker"))
+            .flat_map(|worker| {
+                // A failed check fails the test with its own message.
+                worker
+                    .join()
+                    .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+            })
             .collect()
     })
 }

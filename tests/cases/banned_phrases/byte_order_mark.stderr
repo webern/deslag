@@ -1,0 +1,170 @@
+ERROR: deslag detected banned phrases!
+
+frontmatter.md has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 5: "load-bearing"; say what depends on it
+
+ERROR: deslag detected banned phrases!
+
+frontmatter_mark.md has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 5: "load-bearing"; say what depends on it
+
+ERROR: deslag detected banned phrases!
+
+frontmatter_mark_cr.md has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 5: "load-bearing"; say what depends on it
+
+ERROR: deslag detected a broken repository layout!
+
+heading/lf/AGENTS.md has 1 problem in its "Repository layout" section.
+
+The "Repository layout" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory heading/lf/AGENTS.md is in, like this:
+
+## Repository layout
+
+```
+repo/
+  Makefile   <- every build, test and check
+  src/       <- the source
+  docs/      <- the design docs
+```
+
+The first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.
+
+Do not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The problems:
+  line 7: gone.md does not exist
+
+ERROR: deslag detected banned phrases!
+
+heading/lf/AGENTS.md has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 3: "load-bearing"; say what depends on it
+
+ERROR: deslag detected a broken repository layout!
+
+heading/mark/AGENTS.md has 1 problem in its "Repository layout" section.
+
+The "Repository layout" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory heading/mark/AGENTS.md is in, like this:
+
+## Repository layout
+
+```
+repo/
+  Makefile   <- every build, test and check
+  src/       <- the source
+  docs/      <- the design docs
+```
+
+The first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.
+
+Do not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The problems:
+  line 7: gone.md does not exist
+
+ERROR: deslag detected banned phrases!
+
+heading/mark/AGENTS.md has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 3: "load-bearing"; say what depends on it
+
+ERROR: deslag detected a broken repository layout!
+
+heading/mark_cr/AGENTS.md has 1 problem in its "Repository layout" section.
+
+The "Repository layout" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory heading/mark_cr/AGENTS.md is in, like this:
+
+## Repository layout
+
+```
+repo/
+  Makefile   <- every build, test and check
+  src/       <- the source
+  docs/      <- the design docs
+```
+
+The first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.
+
+Do not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The problems:
+  line 7: gone.md does not exist
+
+ERROR: deslag detected banned phrases!
+
+heading/mark_cr/AGENTS.md has 1 banned phrase.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 3: "load-bearing"; say what depends on it
+
+ERROR: deslag detected banned phrases!
+
+prose.md has 2 banned phrases.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 1: "load-bearing"; say what depends on it
+  line 3: "load-bearing"; say what depends on it
+
+ERROR: deslag detected banned phrases!
+
+prose_mark.md has 2 banned phrases.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 1: "load-bearing"; say what depends on it
+  line 3: "load-bearing"; say what depends on it
+
+ERROR: deslag detected banned phrases!
+
+prose_mark_cr.md has 2 banned phrases.
+
+This repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.
+
+Do not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The phrases, and what to do about each:
+  line 1: "load-bearing"; say what depends on it
+  line 3: "load-bearing"; say what depends on it
+
+deslag: 3 of 9 files with a broken repository layout.
+deslag: 9 of 9 files with banned phrases.

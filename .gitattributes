@@ -5,6 +5,7 @@ src/tag/*.txt text eol=lf
 # The holdout set and its sidecar are read by tools only: a plain diff names the change and prints
 # none of it, and GitHub folds them in a pull request's files.
 tests/gold/holdout* -diff linguist-generated=true
-# The cases of files in other line endings keep their bytes as written.
+# The cases of files in other line endings, or with a byte order mark, keep their bytes as written.
 tests/cases/banned_chars/line_endings/** -text
 tests/cases/repo_layout/lone_cr/** -text
+tests/cases/banned_phrases/byte_order_mark/** -text

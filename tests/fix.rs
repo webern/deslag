@@ -224,6 +224,21 @@ fn fix_writes_each_replacement_and_nothing_else() {
 }
 
 #[test]
+fn fix_keeps_a_byte_order_mark_and_the_frontmatter_after_it() {
+    for end in ["\n", "\r"] {
+        let from = "\u{FEFF}---\ntitle: A \u{2014} b\n---\n\nC \u{2014} d.\n".replace('\n', end);
+        let repo = repo_with(&from);
+        let output = repo.run(&["fix"]);
+        // Frontmatter is not prose, so its dash is left in place and reported.
+        assert_eq!(code(&output), 1, "{}", stderr(&output));
+        assert_eq!(
+            String::from_utf8(read(&repo, "README.md")).expect("UTF-8"),
+            from.replace("C \u{2014}", "C -")
+        );
+    }
+}
+
+#[test]
 fn fix_edits_the_comments_of_a_fence_in_a_quote_and_in_a_list_item_and_leaves_the_code() {
     let from = "> ```rust\r\n> // A \u{201C}one\u{201D}.\r\n> //\r\n> let s = \"\u{201C}\";\r\n> ```\r\n\
                 \n- Item\r\n\r\n  ```c\r\n  /* A \u{2014} b */\r\n  ```\r\n";

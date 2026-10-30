@@ -7,6 +7,7 @@ use pulldown_cmark::{CodeBlockKind, CowStr, Event, LinkType, Options, Parser, Ta
 
 use super::{
     Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind, Span, SpanKind, Stack,
+    text_start,
 };
 
 /// The extensions deslag reads Markdown with, but for frontmatter.
@@ -17,24 +18,26 @@ fn options() -> Options {
         | Options::ENABLE_TASKLISTS
 }
 
-/// Reads `source` into blocks, pieces, spans and points. Frontmatter is read as a metadata block,
-/// so its closing `---` never turns the line above it into a heading.
+/// Reads `source`, a file, into blocks, pieces, spans and points. Frontmatter is read as a metadata
+/// block, so its closing `---` never turns the line above it into a heading. The parser is given
+/// the text after a byte order mark, which it would read as a character of the first line, so that
+/// frontmatter or a heading after the mark is what it is without one.
 pub(super) fn read<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
-    read_with(
-        stack,
-        source,
-        options() | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS,
-    )
+    let options = options() | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS;
+    read_with(stack, source, text_start(source), options)
 }
 
 /// Reads `source` as the text of a doc comment: as [`read`], but a pair of `---` lines is not
 /// metadata. The pulldown-cmark option takes any such pair for a block, not only one at the start,
-/// and rustdoc does not read it, so a rule and a heading are what the pair makes.
+/// and rustdoc does not read it, so a rule and a heading are what the pair makes. The text is not a
+/// file, so a byte order mark that opens it is a character.
 pub(super) fn read_doc<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
-    read_with(stack, source, options())
+    read_with(stack, source, 0, options())
 }
 
-fn read_with<'a>(stack: &Stack, source: &'a str, options: Options) -> Document<'a> {
+/// Reads `source` from `start` on, each range the parser gives moved on by `start` to be a range
+/// of `source`.
+fn read_with<'a>(stack: &Stack, source: &'a str, start: usize, options: Options) -> Document<'a> {
     let mut reader = Reader {
         source,
         top: Vec::new(),
@@ -43,16 +46,18 @@ fn read_with<'a>(stack: &Stack, source: &'a str, options: Options) -> Document<'
         spans: Vec::new(),
         points: Vec::new(),
     };
-    match lone_returns_as_newlines(source) {
+    let text = &source[start..];
+    let in_source = |range: Range<usize>| range.start + start..range.end + start;
+    match lone_returns_as_newlines(text) {
         None => {
-            for (event, range) in Parser::new_ext(source, options).into_offset_iter() {
-                reader.read(event, range);
+            for (event, range) in Parser::new_ext(text, options).into_offset_iter() {
+                reader.read(event, in_source(range));
             }
         }
         // The text the parser finds is in the copy, so the reader is given it owned.
         Some(copy) => {
             for (event, range) in Parser::new_ext(&copy, options).into_offset_iter() {
-                reader.read(event.into_static(), range);
+                reader.read(event.into_static(), in_source(range));
             }
         }
     }

@@ -25,6 +25,7 @@ use std::ops::Range;
 use super::map::{SegmentKind, SourceMap};
 use super::region::{Carrier, CarrierLine, Frame, Region, Surface, Template};
 use super::skip::{List, Mask};
+use super::text_start;
 
 /// The offset where the line holding `at` starts, after a byte order mark. A line ends at an LF
 /// and at a CR that no LF follows.
@@ -32,8 +33,7 @@ pub(super) fn line_start(source: &str, at: usize) -> usize {
     let mut ends = source[..at].rmatch_indices(['\n', '\r']);
     match ends.find(|(end, ch)| *ch == "\n" || !source[end + 1..].starts_with('\n')) {
         Some((end, _)) => end + 1,
-        None if source.starts_with('\u{feff}') => '\u{feff}'.len_utf8(),
-        None => 0,
+        None => text_start(source),
     }
 }
 

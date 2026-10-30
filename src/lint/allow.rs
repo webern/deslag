@@ -352,13 +352,12 @@ impl Keep for Within {
 }
 
 /// The text of `sentence`, as an entry quotes it, before it is folded: what [`Document::text`]
-/// reads, less the byte order mark that opens the file and the markers that a block quote and a
-/// list item put at the start of the lines after the first. Those hold no text of the sentence, and
-/// they come with its wrapping. Any other character stays, such as a no-break space beside a
-/// marker, a `>` inside a code span that wraps across the lines of a block quote, and every `>` of
-/// a comment read as plain text, where a `>` does not start a block quote. Each CR of Markdown,
-/// which ends a line there, becomes a line feed; a lone CR that a comment's reader keeps as a
-/// character of the line stays.
+/// reads, less the markers that a block quote and a list item put at the start of the lines after
+/// the first. Those hold no text of the sentence, and they come with its wrapping. Any other
+/// character stays, such as a no-break space beside a marker, a `>` inside a code span that wraps
+/// across the lines of a block quote, and every `>` of a comment read as plain text, where a `>`
+/// does not start a block quote. Each CR of Markdown, which ends a line there, becomes a line feed;
+/// a lone CR that a comment's reader keeps as a character of the line stays.
 fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
     let range = &sentence.range;
     let tokens = &document.tokens[sentence.tokens.clone()];
@@ -381,7 +380,6 @@ fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
     document
         .chars(range.clone())
         .filter_map(|(at, ch)| {
-            let opens_file = ch == '\u{FEFF}' && at.start == 0;
             // Of the stretches that end at or after the character, the first starts earliest, so
             // it holds the character if any does.
             let marker = matches!(ch, '>' | ' ' | '\t') && {
@@ -391,7 +389,7 @@ fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
                     .is_some_and(|start| start.start <= at.start)
             };
             match ch {
-                _ if opens_file || marker => None,
+                _ if marker => None,
                 '\r' if !comment => Some('\n'),
                 _ => Some(ch),
             }

@@ -1,0 +1,47 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 2 banned characters.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 23,
+          "end": 26,
+          "line": 3,
+          "column": 17,
+          "end_line": 3,
+          "end_column": 18,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 52,
+          "end": 55,
+          "line": 3,
+          "column": 44,
+          "end_line": 3,
+          "end_column": 45,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "quote": "The run is done — for now.",
+      "reason": "A quoted line.",
+      "status": "two_sentences",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: README.md holds the quote as 2 sentences, on line 3. An entry names one sentence, since exempting every copy would let a sentence be pasted elsewhere.\n\nThe quote: \"The run is done — for now.\"\nThe reason: \"A quoted line.\"\n\nThe sentences of README.md that hold a finding of `banned_chars`:\n  line 3: \"The run is done — for now.\"\n  line 3: \"The run is done — for now.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    }
+  ]
+}

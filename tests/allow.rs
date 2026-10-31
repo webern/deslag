@@ -334,6 +334,42 @@ fn explain_lists_the_entries_of_a_file_with_their_sentence_lines() {
 }
 
 #[test]
+fn explain_lists_the_entries_that_name_a_file_no_section_selects() {
+    let lints = LINTS.replacen(
+        "schema_version = 2\n",
+        "schema_version = 2\n\n[md]\nexclude = [\"/docs/adr/**\"]\n",
+        1,
+    );
+    let entries = [
+        entry("docs/adr/0001.md", "banned_chars", TITLE, "A record."),
+        entry("a.md", "banned_chars", TITLE, "Another file."),
+        format!(
+            "\n[rust.lints.banned_chars]\n\n[[rust.allow]]\npath = \"docs/adr/0001.md\"\n\
+             lint = \"banned_chars\"\nquote = \"{TITLE}\"\nreason = \"The wrong section.\"\n"
+        ),
+    ];
+    let repo = repo(
+        &format!("{lints}{}", entries.concat()),
+        &[
+            ("docs/adr/0001.md", &format!("{TITLE}\n")),
+            ("a.md", &format!("{TITLE}\n")),
+        ],
+    );
+    let output = deslag(repo.root(), &["explain", "docs/adr/0001.md"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        format!(
+            "# docs/adr/0001.md\n# config: deslag.toml\n\
+             # selected by: no section; [md] excludes it by \"/docs/adr/**\"\n\
+             \n# allow: 2, and each fails the check, since no section selects the file\n\
+             #   md.allow[0]: banned_chars, excluded by \"/docs/adr/**\": \"{TITLE}\", because \"A record.\"\n\
+             #   rust.allow[0]: banned_chars, not selected: \"{TITLE}\", because \"The wrong section.\"\n"
+        )
+    );
+}
+
+#[test]
 fn explain_prints_no_allow_row_for_a_file_with_no_entry() {
     let repo = repo(
         &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),

@@ -186,16 +186,19 @@ fn frontmatter_beats_every_config_rule() {
 fn frontmatter_can_be_the_thing_that_fails() {
     let repo = Repo::new();
     repo.write(".deslag/config.toml", &global_config(100000));
-    repo.write(
-        "AGENTS.md",
-        "---\nmax_size_bytes: 5\n---\n# A\nway over five bytes\n",
-    );
+    let endings = [("lf.md", "\n"), ("crlf.md", "\r\n"), ("cr.md", "\r")];
+    let text = "---\nmax_size_bytes: 5\n---\n# A\nway over five bytes\n";
+    for (path, end) in endings {
+        repo.write(path, &text.replace('\n', end));
+    }
 
     let output = repo.check();
     let stderr = stderr(&output);
 
     assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
+    for (path, _) in endings {
+        assert!(over_budget(&stderr, path, 5), "{path}: {stderr}");
+    }
 }
 
 #[test]

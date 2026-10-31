@@ -1,6 +1,6 @@
 ERROR: deslag detected an exemption that does not hold!
 
-deslag.toml has rust.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: [rust] does not select README.md, and an entry applies only to the files of its own section.
+deslag.toml has rust.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: [md] selects README.md, and an entry applies only to the files of its own section, so this one belongs in [[md.allow]]. Tell the human, who moves it.
 
 The quote: "Anything."
 The reason: "The wrong section."

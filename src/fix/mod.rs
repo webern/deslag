@@ -5,6 +5,10 @@
 //! the edits it can prove leave the file reading as it did. Every other place is left as it is, and
 //! reported with the reason, for the agent to fix.
 //!
+//! A sentence that an `allow` entry for the file quotes is held: fix does not edit it for any lint,
+//! since an edit would stop the quote matching and fail the entry, which only a human may change.
+//! Each place there is left and reported, naming the entry.
+//!
 //! A file is fixed in memory, in passes: it is read and linted as `check` would, the edits are
 //! applied, and the result is read again, until a pass does not make an edit. Each fixable lint's
 //! edit removes a place it objects to and adds none, so the passes end; if they do not, a lint
@@ -18,13 +22,14 @@
 //! [`Document::apply`]: crate::Document::apply
 
 use std::fmt;
+use std::ops::Range;
 use std::path::{Path, PathBuf};
 
 use crate::Error;
-use crate::config::{Config, Section};
-use crate::document::{Edit, Refusal};
+use crate::config::{Allow, Config, Section};
+use crate::document::{Document, Edit, Refusal};
 use crate::glob::{self, RepoFile};
-use crate::lint::{self, Mark, on_lines};
+use crate::lint::{self, Mark, allow, on_lines};
 
 /// What fix did, or would do, to one file.
 #[derive(Debug, Clone, PartialEq)]
@@ -38,8 +43,8 @@ pub struct FileFix {
 /// What became of a file.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Outcome {
-    /// It is not valid UTF-8, so it was left as it is: an edit could not be written back without
-    /// changing bytes deslag does not understand.
+    /// It is not valid UTF-8, and fix would edit it, so it was left as it is: an edit could not be
+    /// written back without changing bytes deslag does not understand.
     NotUtf8,
     /// It was read, and edited where the edits could be proven safe.
     Read {
@@ -53,12 +58,21 @@ pub enum Outcome {
 }
 
 /// Why a place a finding points at was left for the agent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Unfixed {
     /// The lint does not name an edit there, for the reason it gives.
     Lint(&'static str),
     /// The document refused the lint's edit.
     Refused(Refusal),
+    /// The place is in a sentence that an `allow` entry quotes, which an edit would stop matching.
+    Held {
+        /// The config's path, as a report names it.
+        config: String,
+        /// The entry's section, as `md`.
+        section: &'static str,
+        /// The entry's place in the section's `allow`.
+        index: usize,
+    },
 }
 
 impl fmt::Display for Unfixed {
@@ -66,6 +80,16 @@ impl fmt::Display for Unfixed {
         match self {
             Unfixed::Lint(why) => f.write_str(why),
             Unfixed::Refused(refusal) => refusal.fmt(f),
+            Unfixed::Held {
+                config,
+                section,
+                index,
+            } => write!(
+                f,
+                "{config}'s {section}.allow[{index}] quotes this sentence, so an edit would stop \
+                 the quote matching; do not edit it by hand either: the human changes the \
+                 sentence and the entry together"
+            ),
         }
     }
 }
@@ -81,14 +105,20 @@ pub fn fix(
     paths: &[PathBuf],
     dry_run: bool,
 ) -> Result<Vec<FileFix>, Error> {
+    let label = allow::label(root, config);
     let mut fixes = Vec::new();
     for (file, section) in chosen(root, config, paths)? {
+        let dir = file.absolute.parent().unwrap_or(root);
         let outcome = match String::from_utf8(lint::read(&file)?) {
-            Ok(text) => {
-                let dir = file.absolute.parent().unwrap_or(root);
-                passes(config, section, &file.relative, text, dir)?
+            Ok(text) => passes(config, &label, section, &file.relative, text, dir)?,
+            // Read as `check` reads it, the file is reported only when fix would edit it.
+            Err(error) => {
+                let text = lint::decode(error.as_bytes()).into_owned();
+                match passes(config, &label, section, &file.relative, text, dir)? {
+                    Outcome::Read { fixed, .. } if fixed.is_empty() => continue,
+                    _ => Outcome::NotUtf8,
+                }
             }
-            Err(_) => Outcome::NotUtf8,
         };
         if let Outcome::Read { fixed, left, .. } = &outcome {
             if fixed.is_empty() && left.is_empty() {
@@ -215,9 +245,10 @@ fn chosen<'c>(
 }
 
 /// Fixes `text`, the contents of the file at `relative` in `dir`, in passes until one does not make
-/// an edit.
+/// an edit. `label` is the config's path, as a report names it.
 fn passes(
     config: &Config,
+    label: &str,
     section: &Section,
     relative: &str,
     mut text: String,
@@ -233,9 +264,24 @@ fn passes(
         let lint::Checked {
             document, findings, ..
         } = lint::check_text(config, section, relative, text.as_bytes(), &text, dir)?;
-        let places: Vec<(Mark, Result<Edit, &'static str>)> = findings
+        let held = held(&document, section.allow_for(relative));
+        let places: Vec<(Mark, Result<Edit, Unfixed>)> = findings
             .iter()
             .flat_map(|finding| finding.violation.edits())
+            .map(|(mark, edit)| {
+                let edit = match edit {
+                    Err(why) => Err(Unfixed::Lint(why)),
+                    Ok(edit) => match holder(&held, &edit.range) {
+                        Some(allow) => Err(Unfixed::Held {
+                            config: label.to_string(),
+                            section: allow.section,
+                            index: allow.index,
+                        }),
+                        None => Ok(edit),
+                    },
+                };
+                (mark, edit)
+            })
             .collect();
         let edits: Vec<Edit> = places
             .iter()
@@ -257,7 +303,7 @@ fn passes(
         let mut left = Vec::new();
         for (mark, edit) in places {
             match edit {
-                Err(why) => left.push((mark, Unfixed::Lint(why))),
+                Err(why) => left.push((mark, why)),
                 Ok(edit) => match refused.next().flatten() {
                     Some(refusal) => left.push((mark, Unfixed::Refused(refusal))),
                     None => made.push((mark, edit)),
@@ -272,6 +318,28 @@ fn passes(
         text = applied.text;
     }
     unreachable!("a pass past the bound returns an error")
+}
+
+/// The range of each sentence of `document` that one of `entries` quotes, with the entry. A quote
+/// two sentences equal is held in both, since an edit to either changes how the entry comes out.
+fn held<'a>(
+    document: &Document<'_>,
+    entries: impl Iterator<Item = &'a Allow>,
+) -> Vec<(Range<usize>, &'a Allow)> {
+    entries
+        .flat_map(|entry| {
+            allow::matching(document, &entry.quote)
+                .into_iter()
+                .map(move |range| (range, entry))
+        })
+        .collect()
+}
+
+/// The entry of `held` whose sentence an edit of `range` reaches into, if one does.
+fn holder<'a>(held: &[(Range<usize>, &'a Allow)], range: &Range<usize>) -> Option<&'a Allow> {
+    held.iter()
+        .find(|(sentence, _)| range.start < sentence.end && sentence.start < range.end)
+        .map(|(_, entry)| *entry)
 }
 
 /// Each key of `items` in the order it first appears, with the lines of its marks as a report
@@ -289,8 +357,84 @@ fn grouped<'m, K: PartialEq>(items: impl Iterator<Item = (&'m Mark, K)>) -> Vec<
         .into_iter()
         .map(|(key, mut lines)| {
             lines.sort_unstable();
-            lines.dedup();
             (key, on_lines(&lines))
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::{Path, PathBuf};
+
+    use super::{Outcome, Unfixed, passes};
+    use crate::config::{Config, ConfigSource};
+
+    /// An edit of another lint inside a sentence an entry quotes is left, naming the entry, and the
+    /// rest of the file is fixed. A second run finds the sentence as it was, and edits nothing.
+    #[test]
+    fn an_edit_inside_a_sentence_an_entry_quotes_is_left_for_the_human() {
+        let quoted = "We did it in order to win \u{2014} fast.";
+        let config = Config::parse(
+            &format!(
+                "schema_version = 2\n\
+                 [md.lints.banned_chars.groups]\ndashes = true\n\
+                 [md.lints.banned_phrases]\nban = {{ \"in order to\" = 'write \"to\"' }}\n\
+                 [[md.allow]]\npath = \"a.md\"\nlint = \"banned_phrases\"\n\
+                 quote = \"{quoted}\"\nreason = \"A quoted line.\"\n"
+            ),
+            PathBuf::from("deslag.toml"),
+            ConfigSource::Explicit,
+        )
+        .expect("a config deslag reads");
+        let section = config.section_to_read("a.md").expect("a section");
+        let held = Unfixed::Held {
+            config: "deslag.toml".to_string(),
+            section: "md",
+            index: 0,
+        };
+
+        let text = format!("{quoted}\n\nOther \u{2014} text.\n");
+        let fixed = format!("{quoted}\n\nOther - text.\n");
+        let Outcome::Read {
+            text: after,
+            fixed: made,
+            left,
+        } = passes(
+            &config,
+            "deslag.toml",
+            section,
+            "a.md",
+            text,
+            Path::new("."),
+        )
+        .expect("fix runs")
+        else {
+            panic!("a UTF-8 text is read");
+        };
+        assert_eq!(after, fixed);
+        assert_eq!(made.len(), 1);
+        assert_eq!(left.len(), 1);
+        assert_eq!(left[0].1, held);
+
+        let Outcome::Read {
+            text: again,
+            fixed: made,
+            left,
+        } = passes(
+            &config,
+            "deslag.toml",
+            section,
+            "a.md",
+            after,
+            Path::new("."),
+        )
+        .expect("fix runs")
+        else {
+            panic!("a UTF-8 text is read");
+        };
+        assert_eq!(again, fixed);
+        assert!(made.is_empty());
+        assert_eq!(left.len(), 1);
+        assert_eq!(left[0].1, held);
+    }
 }

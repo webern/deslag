@@ -453,6 +453,9 @@ fn columns_count_characters_not_bytes() {
     assert_eq!(located("\u{e9}\u{2014}x", "\u{2014}"), (2, 5, 1, 2, 1, 3));
     // A character outside the Basic Multilingual Plane is one column, not two.
     assert_eq!(located("\u{1f600}ab", "b"), (5, 6, 1, 3, 1, 4));
+    // Far along a long line, where the count starts from one kept for every so many bytes.
+    let long = format!("ab\n{}x", "\u{e9}".repeat(1000));
+    assert_eq!(located(&long, "x"), (2003, 2004, 2, 1001, 2, 1002));
 }
 
 #[test]
@@ -472,6 +475,8 @@ fn a_cr_is_the_last_character_of_its_line() {
 fn a_byte_order_mark_takes_no_column() {
     assert_eq!(located("\u{feff}ab\ncd", "a"), (3, 4, 1, 1, 1, 2));
     assert_eq!(located("\u{feff}ab\ncd", "c"), (6, 7, 2, 1, 2, 2));
+    let long = format!("\u{feff}{}x", "\u{e9}".repeat(1000));
+    assert_eq!(located(&long, "x"), (2003, 2004, 1, 1001, 1, 1002));
 }
 
 #[test]

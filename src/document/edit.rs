@@ -314,6 +314,7 @@ impl<'a> Document<'a> {
             tokens: _,
             sentences: _,
             lines: _,
+            chars_before: _,
             regions,
             code: _,
             stack: _,

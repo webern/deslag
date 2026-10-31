@@ -149,9 +149,12 @@ pub fn measure(document: &Document<'_>) -> Measure {
             };
             let chars = text.chars().count();
             measure.prose_chars += chars;
+            // The outermost spans do not overlap, so they are in order of where they end too, and
+            // the first that ends at or after the piece is the one that can hold it.
+            let holder = emphasis.partition_point(|(span, _)| span.range.end < range.end);
             if let Some((_, open_chars)) = emphasis
-                .iter_mut()
-                .find(|(span, _)| within(&range, &span.range))
+                .get_mut(holder)
+                .filter(|(span, _)| within(&range, &span.range))
             {
                 *open_chars += chars;
                 continue;

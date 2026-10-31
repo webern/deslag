@@ -34,7 +34,7 @@ pub enum Item {
     In(&'static [&'static str]),
     /// A word whose folded text is in none of these sets.
     NotIn(&'static [&'static [&'static str]]),
-    /// A word whose folded text holds none of these characters.
+    /// A word whose folded text does not hold any of these characters.
     Without(&'static [char]),
     /// A word that does not start a listed pair: the pair's first word is this one, and its second
     /// is the word two tokens on, with one token between that the pattern names itself.

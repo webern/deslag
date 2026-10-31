@@ -50,7 +50,7 @@ pub(super) struct Row {
     pub(super) lead: usize,
     /// The line after its marker or gutter, up to the end of its text.
     pub(super) rest: Range<usize>,
-    /// The line break after it, which the last line has none of.
+    /// The line break after it, which the last line does not have.
     pub(super) ending: Range<usize>,
 }
 

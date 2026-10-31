@@ -56,8 +56,9 @@ path = "tests/slow/main.rs"
 test = false
 
 # tools/corpus measures the test corpus, tools/exam grades taggers and tools/release makes the
-# release change. None is published, and deslag depends on none, so `cargo publish` sees deslag
-# alone. (tools/corpus and tools/release are path-only dev-dependencies, which the package drops.)
+# release change. None is published, and deslag does not depend on one, so `cargo publish` sees
+# deslag alone. (tools/corpus and tools/release are path-only dev-dependencies, which the package
+# drops.)
 # tools/sweep is excluded: it needs a newer Rust and a C compiler, and keeps its own lockfile.
 [workspace]
 members = ["tools/corpus", "tools/exam", "tools/release"]

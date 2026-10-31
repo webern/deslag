@@ -325,7 +325,7 @@ mod tests {
             .unwrap_or_default()
     }
 
-    /// The catalogue does not ban a phrase: an empty table finds none of its phrases.
+    /// The catalogue does not ban a phrase: an empty table does not find any of its phrases.
     #[test]
     fn an_empty_table_bans_no_phrase_of_the_catalogue() {
         let text = format!("{}.\n", CATALOGUE.entries[0].phrase);

@@ -198,7 +198,7 @@ impl Stack {
         match &self.outer {
             Reader::Markdown { fences } => {
                 // Surfaces that the same languages read are named together. A language that
-                // reads nothing of a surface, such as the doc comment of TOML, is left out.
+                // does not read a surface, such as the doc comment of TOML, is left out.
                 let mut groups: Vec<(Vec<&str>, Vec<&str>)> = Vec::new();
                 for surface in &fences.surfaces {
                     let languages: Vec<&str> = fences

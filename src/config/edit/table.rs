@@ -2,10 +2,10 @@
 //! was done, and as a line to make it by hand.
 //!
 //! A [`TableEdit`] names its table by a [`TablePath`] from the top level, such as
-//! `md.overrides[1].lints.banned_phrases.ban`, and does nothing where the file already says what it
-//! asks: a table that is there is not made again, a key set to the value it has is not written, and
-//! a key or an item that is not there is not deleted. So a list of edits made twice gives the text
-//! it gave once.
+//! `md.overrides[1].lints.banned_phrases.ban`, and does not do anything where the file already says
+//! what it asks: a table that is there is not made again, a key set to the value it has is not
+//! written, and a key or an item that is not there is not deleted. So a list of edits made twice
+//! gives the text it gave once.
 
 use std::fmt;
 

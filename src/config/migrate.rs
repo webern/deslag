@@ -410,7 +410,7 @@ struct Phrases {
 
 impl Phrases {
     /// The meaning of `ban` and `allow`: a phrase that `allow` names is never reported, and an
-    /// `allow` phrase that does not hold a banned one does nothing.
+    /// `allow` phrase that does not hold a banned one does not do anything.
     fn of(
         ban: Vec<(Vec<String>, String)>,
         allow: Vec<Vec<String>>,

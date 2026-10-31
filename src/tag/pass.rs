@@ -18,11 +18,11 @@
 //! - A word is `Sure` when one tag remains, `Likely` when the rule chose its best guess and others
 //!   remain. A pass never lowers a confidence, and never sets `Unsure` or `Unknown`.
 //! - A rule that needs a neighbour's tag asks [`View::settled`], which answers only when nothing
-//!   else is possible there. When it does not, the rule does nothing. A rule that holds for every
-//!   tag the neighbour may have asks [`View::within`] instead, and a rule that leans on a
-//!   neighbour's best guess asks [`View::decided`], which answers only if that guess is `Likely`
-//!   or `Sure`, as step 4 allows. Reading a neighbour's text or kind is not leaning on its
-//!   reading, and does not need such care.
+//!   else is possible there. When it does not, the rule does not do anything. A rule that holds for
+//!   every tag the neighbour may have asks [`View::within`] instead, and a rule that leans on a
+//!   neighbour's best guess asks [`View::decided`], which answers only if that guess is `Likely` or
+//!   `Sure`, as step 4 allows. Reading a neighbour's text or kind is not leaning on its reading,
+//!   and does not need such care.
 //!
 //! A pass lives in its own module with its rule in the module's docs and before-and-after cases in
 //! its tests, which run each case through the whole tagger.

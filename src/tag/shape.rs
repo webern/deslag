@@ -402,7 +402,7 @@ fn ending_of(text: &str) -> Option<Shape> {
         at += 1;
     }
     // Every ending is ASCII, so a word whose last byte is not an ending's last letter, whatever
-    // its case, has none of them.
+    // its case, does not have any of them.
     let last = bytes.last()?.to_ascii_lowercase();
     let mut at = 0;
     while at < ENDINGS.len() {

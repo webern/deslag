@@ -1,7 +1,7 @@
 //! `deslag init`: the config for a repo that does not have a config, with everything on.
 //!
 //! The config names everything deslag fails on, so a repo starts from one that names it all. `init`
-//! reads nothing of the repo. It writes `deslag.toml` at the root, or the file `--config-path`
+//! does not read the repo. It writes `deslag.toml` at the root, or the file `--config-path`
 //! names, in TOML: `schema_version`, the running release as the stamp, and in every section every
 //! lint the section can run, each setting the schema gives a default written out, each switch
 //! `true`, and every phrase of the catalogue in `banned_phrases.ban` with its advice.

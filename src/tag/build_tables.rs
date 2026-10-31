@@ -312,7 +312,7 @@ fn range_bytes(ranges: &[(u32, u32)]) -> Vec<u8> {
 /// Whether the weights fold the rows of `template` into score rows rather than keep them in the
 /// table of rows: the features that have no text to read, and so have few values. They are the
 /// bias, the previous tags and the rules' own reading. A word adds one row of each sort whole, so
-/// the table holds none of them and a run does not probe for them.
+/// the table does not hold them and a run does not probe for them.
 pub fn folded(template: u8) -> bool {
     matches!(
         template,

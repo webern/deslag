@@ -57,7 +57,7 @@ check, which the golden set does for each lint and its golden file.
   [ce81d46b](https://github.com/remarkjs/remark-lint/tree/ce81d46b649884aae040562c670c588dd32d706d)
 
 Code was not ported. Each rule's examples are its tests and its docs at once, but nothing fails a
-rule that has none; the golden set fails a lint with no golden file.
+rule that does not have examples; the golden set fails a lint with no golden file.
 
 ## unicode-safety-check
 
@@ -80,9 +80,9 @@ reason, which deslag requires of each `allow` entry of its config.
 - Studied at: commit
   [91df971a](https://github.com/shbernal/charcheck/tree/91df971a23e4fc2ba79bf362275185bf6660fc62)
 
-Code was not ported, but we took the idea of fixing in passes until one changes nothing, with a
-bound, and of keeping a file's byte order mark and line endings. It asks you to read the diff, as a
-fix is a guess about prose; deslag instead fixes only where no guess is needed.
+Code was not ported, but we took the idea of fixing in passes until a pass does not change the
+file, with a bound, and of keeping a file's byte order mark and line endings. It asks you to read
+the diff, as a fix is a guess about prose; deslag instead fixes only where no guess is needed.
 
 We also took its visible count of suppressions in every run, which deslag prints as the number of
 `allow` entries applied. Its ratchet, which fails a run past a frozen count, is not taken: it is one

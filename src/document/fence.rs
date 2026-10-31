@@ -725,8 +725,9 @@ mod tests {
         let source =
             "```TOML\ntitle = \"a # b\"\nraw = 'c # d'\nmulti = \"\"\"\n# e\n\"\"\"\n# kept\n```\n";
 
-        // The comment after the strings is the one region. With the reader off, a TOML fence has
-        // none, so this fails if TOML leaves `Fences::all()`: "no regions" alone would not.
+        // The comment after the strings is the one region. With the reader off, a TOML fence does
+        // not have a region, so this fails if TOML leaves `Fences::all()`: "no regions" alone
+        // would not.
         assert_eq!(regions(source), [("# kept", "kept".to_string())]);
         assert_eq!(
             kinds(&all(), source)[..2],
@@ -759,8 +760,9 @@ mod tests {
             "```rust\n/// ```toml\n/// # inner\n/// ```\nfn f() {}\n```\n\n```toml\n# outer\n```\n";
 
         // Two regions: the doc comment, and the comment of the TOML fence at the top level. The
-        // fence inside the doc comment adds none, which is the depth bound. With the reader off
-        // the top-level fence yields nothing either, so the count shows the reader is on.
+        // fence inside the doc comment does not add a region, which is the depth bound. With the
+        // reader off the top-level fence does not yield a region either, so the count shows the
+        // reader is on.
         assert_eq!(regions(source).len(), 2);
         assert_eq!(
             kinds(&all(), source),

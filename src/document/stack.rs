@@ -36,8 +36,9 @@ impl Language {
 }
 
 /// The fenced code in Markdown that is read for its comments, as a [`Reader::Rust`], a
-/// [`Reader::Cpp`] or a [`Reader::Toml`] reads a file. The default reads none. The Markdown of a
-/// doc comment does not read fences, so the comments in a fence hold no fence of their own.
+/// [`Reader::Cpp`] or a [`Reader::Toml`] reads a file. The default does not read a fence. The
+/// Markdown of a doc comment does not read fences, so the comments in a fence hold no fence of
+/// their own.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Fences {
     /// The languages read. A fence is of the language its info string names.
@@ -49,7 +50,7 @@ pub struct Fences {
 impl Fences {
     /// Every language whose fenced code deslag reads, and both kinds of comment in each: what
     /// `[md]` reads when its config names no `fences`. TOML has the comment surface only, and the
-    /// doc comment surface reads nothing in a fence of it.
+    /// doc comment surface does not read a fence of it.
     pub fn all() -> Fences {
         Fences {
             languages: vec![Language::Rust, Language::Cpp, Language::Toml],
@@ -197,7 +198,7 @@ impl Stack {
         match &self.outer {
             Reader::Markdown { fences } => {
                 // Surfaces that the same languages read are named together. A language that
-                // reads nothing of a surface, such as the doc comment of TOML, is left out.
+                // does not read a surface, such as the doc comment of TOML, is left out.
                 let mut groups: Vec<(Vec<&str>, Vec<&str>)> = Vec::new();
                 for surface in &fences.surfaces {
                     let languages: Vec<&str> = fences

@@ -75,7 +75,7 @@ pub struct FixArgs {
     /// How to read the config and what to print after fixing, as for `deslag check`
     #[command(flatten)]
     pub report: ReportArgs,
-    /// Say what would be fixed and write nothing
+    /// Say what would be fixed and leave the files as they are
     #[arg(long)]
     pub dry_run: bool,
     /// The files to fix, relative to the repo root; every file `deslag check` reads when none
@@ -162,7 +162,7 @@ pub struct ConfigUpdateArgs {
     /// Edit this config file instead of the one in the canonical locations
     #[arg(long, value_name = "PATH")]
     pub config_path: Option<PathBuf>,
-    /// Say what would be edited and write nothing
+    /// Say what would be edited and leave the config as it is
     #[arg(long)]
     pub dry_run: bool,
     /// Set `deslag_version` to this release, which must be the one running, even though it has

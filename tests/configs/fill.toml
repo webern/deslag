@@ -8,6 +8,9 @@ reason = "A frozen config sets every setting."
 [md.lints.not_at_all]
 message = "{path} pads a negation"
 
+[md.lints.verbs_nothing]
+message = "{path} hides the noun"
+
 [[rust.allow]]
 path = "src/lib.rs"
 lint = "not_at_all"
@@ -15,6 +18,9 @@ quote = "It does not parse at all."
 reason = "A frozen config sets every setting."
 
 [rust.lints.not_at_all]
+
+[rust.lints.verbs_nothing]
+message = "{path} hides the noun"
 
 [[cpp.allow]]
 path = "src/a.c"
@@ -24,6 +30,9 @@ reason = "A frozen config sets every setting."
 
 [cpp.lints.not_at_all]
 
+[cpp.lints.verbs_nothing]
+message = "{path} hides the noun"
+
 [[toml.allow]]
 path = "Cargo.toml"
 lint = "not_at_all"
@@ -31,3 +40,6 @@ quote = "It does not parse at all."
 reason = "A frozen config sets every setting."
 
 [toml.lints.not_at_all]
+
+[toml.lints.verbs_nothing]
+message = "{path} hides the noun"

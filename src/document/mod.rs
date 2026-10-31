@@ -117,7 +117,7 @@ pub enum BlockKind<'a> {
     },
     /// An item of a list.
     Item {
-        /// Its task box: checked, unchecked, or `None` when it has none.
+        /// Its task box: checked, unchecked, or `None` when it does not have a task box.
         task: Option<bool>,
     },
     /// A table.
@@ -493,7 +493,7 @@ impl<'a> Document<'a> {
         }
     }
 
-    /// The pieces of `block`, which has none unless it is prose.
+    /// The pieces of `block`, which has pieces only when it is prose.
     pub fn pieces_of(&self, block: &Block<'a>) -> &[Piece<'a>] {
         match &block.body {
             Body::Text { pieces, .. } => &self.pieces[pieces.clone()],
@@ -501,7 +501,7 @@ impl<'a> Document<'a> {
         }
     }
 
-    /// The tokens of `block`, which has none unless it is prose.
+    /// The tokens of `block`, which has tokens only when it is prose.
     pub fn tokens_of(&self, block: &Block<'a>) -> &[Token<'a>] {
         match &block.body {
             Body::Text { tokens, .. } => &self.tokens[tokens.clone()],
@@ -509,7 +509,7 @@ impl<'a> Document<'a> {
         }
     }
 
-    /// The sentences of `block`, which has none unless it is prose.
+    /// The sentences of `block`, which has sentences only when it is prose.
     pub fn sentences_of(&self, block: &Block<'a>) -> &[Sentence] {
         match &block.body {
             Body::Text { sentences, .. } => &self.sentences[sentences.clone()],
@@ -621,7 +621,7 @@ pub struct Walk<'d, 'a> {
 
 impl<'d, 'a> Iterator for Walk<'d, 'a> {
     /// A block, and every block that holds it, outermost first. The last of them is its parent,
-    /// and how many there are is its depth; a top-level block has none.
+    /// and how many there are is its depth; a top-level block does not have a parent.
     type Item = (&'d Block<'a>, Vec<&'d Block<'a>>);
 
     fn next(&mut self) -> Option<Self::Item> {

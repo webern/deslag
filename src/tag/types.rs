@@ -125,7 +125,7 @@ impl TagSet {
         self.0.count_ones() as usize
     }
 
-    /// Whether it holds none.
+    /// Whether it is empty.
     #[inline(always)]
     pub fn is_empty(self) -> bool {
         self.0 == 0

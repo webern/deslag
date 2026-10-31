@@ -15,6 +15,7 @@ pub mod not_at_all;
 pub mod pattern;
 pub mod repo_layout;
 pub mod verbs_no_nouns;
+pub mod verbs_nothing;
 
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -57,11 +58,13 @@ pub enum Lint {
     VerbsNoNouns,
     /// `not_at_all`: a negation padded with "at all", as in `does not parse at all`.
     NotAtAll,
+    /// `verbs_nothing`: a verb whose object is `nothing` or `none`, as in `finds nothing`.
+    VerbsNothing,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 8] = [
+    pub const ALL: [Lint; 9] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -70,6 +73,7 @@ impl Lint {
         Lint::Density,
         Lint::VerbsNoNouns,
         Lint::NotAtAll,
+        Lint::VerbsNothing,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -83,6 +87,7 @@ impl Lint {
             Lint::Density => "density",
             Lint::VerbsNoNouns => "verbs_no_nouns",
             Lint::NotAtAll => "not_at_all",
+            Lint::VerbsNothing => "verbs_nothing",
         }
     }
 
@@ -113,7 +118,7 @@ impl Lint {
     pub(crate) fn needs(self) -> Need {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
-            Lint::VerbsNoNouns | Lint::NotAtAll => Need::Sentences,
+            Lint::VerbsNoNouns | Lint::NotAtAll | Lint::VerbsNothing => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
             }
@@ -138,6 +143,10 @@ impl Lint {
             Lint::NotAtAll => {
                 "A negation must not be padded with \"at all\", as in \"does not parse at all\"."
             }
+            Lint::VerbsNothing => {
+                "A sentence must name what its verb did not find, as in \"does not find a \
+                 provider\", not \"finds nothing\"."
+            }
         }
     }
 
@@ -153,6 +162,7 @@ impl Lint {
             Lint::Density => "with dense text",
             Lint::VerbsNoNouns => "with verbs negated through their objects",
             Lint::NotAtAll => "with negations padded with \"at all\"",
+            Lint::VerbsNothing => "with verbs whose object is nothing",
         }
     }
 }
@@ -215,6 +225,8 @@ pub enum Violation {
     VerbsNoNouns(verbs_no_nouns::Over),
     /// The file pads a negation with "at all".
     NotAtAll(not_at_all::Over),
+    /// The file makes `nothing` or `none` the object of a verb.
+    VerbsNothing(verbs_nothing::Over),
 }
 
 impl Violation {
@@ -229,11 +241,12 @@ impl Violation {
             Violation::Density(_) => Lint::Density,
             Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
             Violation::NotAtAll(_) => Lint::NotAtAll,
+            Violation::VerbsNothing(_) => Lint::VerbsNothing,
         }
     }
 
     /// The places it points at, in the order its report lists them. A verdict on the whole file
-    /// with nothing to point at, such as a file over its byte budget, has none.
+    /// with nothing to point at, such as a file over its byte budget, does not have a mark.
     pub fn marks(&self) -> Vec<Mark> {
         match self {
             Violation::MaxSizeBytes(_) => Vec::new(),
@@ -244,12 +257,13 @@ impl Violation {
             Violation::Density(over) => density::marks(over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
             Violation::NotAtAll(over) => not_at_all::marks(over),
+            Violation::VerbsNothing(over) => verbs_nothing::marks(over),
         }
     }
 
-    /// The places a fix could change, each with the edit the lint names there, or why it names
-    /// none. A lint whose module does not say what makes its edits safe has none: its findings
-    /// are for a writer to resolve.
+    /// The places a fix could change, each with the edit the lint names there, or why it does not
+    /// name an edit. A lint whose module does not say what makes its edits safe does not have
+    /// edits: its findings are for a writer to resolve.
     pub fn edits(&self) -> Vec<(Mark, Result<Edit, &'static str>)> {
         match self {
             Violation::MaxSizeBytes(_) => Vec::new(),
@@ -261,6 +275,7 @@ impl Violation {
             Violation::Density(_) => Vec::new(),
             Violation::VerbsNoNouns(_) => Vec::new(),
             Violation::NotAtAll(_) => Vec::new(),
+            Violation::VerbsNothing(_) => Vec::new(),
         }
     }
 
@@ -287,6 +302,9 @@ impl Violation {
                 verbs_no_nouns::retain(over, keep).map(Violation::VerbsNoNouns)
             }
             Violation::NotAtAll(over) => not_at_all::retain(over, keep).map(Violation::NotAtAll),
+            Violation::VerbsNothing(over) => {
+                verbs_nothing::retain(over, keep).map(Violation::VerbsNothing)
+            }
         }
     }
 }
@@ -356,6 +374,7 @@ impl Finding {
             Violation::Density(over) => density::render(&self.path, over),
             Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
             Violation::NotAtAll(over) => not_at_all::render(&self.path, over),
+            Violation::VerbsNothing(over) => verbs_nothing::render(&self.path, over),
         }
     }
 
@@ -429,7 +448,7 @@ impl Report {
     }
 
     /// The notice line for each entry that the change adds or changes, for a reviewer. A run with
-    /// no base has none.
+    /// no base does not have a notice.
     pub fn notices(&self) -> Vec<String> {
         self.exemptions
             .iter()
@@ -606,7 +625,7 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
 /// each invalid byte replaced by one `$`, so an offset into the text is an offset into the file,
 /// and `$` is inert in every reader. A lossy decode would turn an invalid byte into three.
 /// [`check_repo`], [`check_file`] and `deslag explain` all read through this. `fix` reads a file
-/// that is not UTF-8 through it only to learn whether it would edit the file, and edits none.
+/// that is not UTF-8 through it only to learn whether it would edit the file, and does not edit it.
 pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
     if let Ok(text) = std::str::from_utf8(bytes) {
         return Cow::Borrowed(text);
@@ -700,6 +719,8 @@ pub(crate) fn check_text<'a>(
             Lint::NotAtAll => {
                 not_at_all::check(&document, lints.not_at_all.as_ref()).map(Violation::NotAtAll)
             }
+            Lint::VerbsNothing => verbs_nothing::check(&document, lints.verbs_nothing.as_ref())
+                .map(Violation::VerbsNothing),
         };
         findings.extend(violation.map(|violation| Finding {
             path: relative.to_string(),

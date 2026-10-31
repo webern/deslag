@@ -320,7 +320,7 @@ impl Plan {
 }
 
 /// The phrases `phrases`, read at `stamp`, banned, each with the advice to write for it; or `None`
-/// when it banned none and `keep` is not set, so that no `ban` is written.
+/// when it did not ban a phrase and `keep` is not set, so that no `ban` is written.
 fn banned(
     phrases: &v1::lints::BannedPhrases,
     keep: bool,
@@ -390,8 +390,8 @@ fn inside(phrase: &[String], around: &[String]) -> bool {
     !phrase.is_empty() && around.windows(phrase.len()).any(|window| window == phrase)
 }
 
-/// What a resolved `lints` table makes deslag do, whatever schema said it. A banning lint that bans
-/// nothing is no lint.
+/// What a resolved `lints` table makes deslag do, whatever schema said it. A banning lint that
+/// does not ban a phrase or a character is no lint.
 #[derive(Debug, PartialEq)]
 struct Meaning {
     others: Value,
@@ -410,7 +410,7 @@ struct Phrases {
 
 impl Phrases {
     /// The meaning of `ban` and `allow`: a phrase that `allow` names is never reported, and an
-    /// `allow` phrase that does not hold a banned one does nothing.
+    /// `allow` phrase that does not hold a banned one does not do anything.
     fn of(
         ban: Vec<(Vec<String>, String)>,
         allow: Vec<Vec<String>>,
@@ -432,7 +432,7 @@ impl Phrases {
         }
     }
 
-    /// The lint, or `None` when it bans nothing.
+    /// The lint, or `None` when it does not ban a phrase.
     fn banning(self) -> Option<Phrases> {
         (!self.ban.is_empty()).then_some(self)
     }
@@ -448,7 +448,7 @@ struct Chars {
 }
 
 impl Chars {
-    /// The lint, or `None` when it bans nothing.
+    /// The lint, or `None` when it does not ban a character.
     fn banning(self) -> Option<Chars> {
         (!self.groups.is_empty() || !self.ban.is_empty()).then_some(self)
     }

@@ -45,7 +45,8 @@ pub struct Update {
 /// A stamp that stays, because the person has not read what is new.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Held {
-    /// The stamp, or `None` when the config has none and is taken to be from the baseline release.
+    /// The stamp, or `None` when the config does not have a stamp and is taken to be from the
+    /// baseline release.
     pub stamp: Option<Version>,
     /// The release the config is taken to be from: its stamp, or the baseline.
     pub taken: Version,
@@ -473,7 +474,7 @@ mod tests {
 
     #[test]
     fn a_phrase_alone_holds_a_bare_update_and_to_prints_the_stamp_edit_alone() {
-        // The schema holds nothing, so the phrases are all that is new.
+        // Nothing in the schema is new, so the phrases are all that is new.
         let text = "schema_version = 2\ndeslag_version = \"0.0.1\"\n[md.lints.banned_phrases]\n";
         let (dir, path) = repo(text);
         let (paths, phrases) = (nothing_new(), new_phrases());

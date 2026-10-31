@@ -29,8 +29,8 @@
 //!
 //! A cue that leans on the next word's tags asks for them only when nothing else is possible there
 //! (`settled`), or when each tag it may have gives the same answer (`within`). Otherwise the rule
-//! does nothing: a next word with a noun reading among others (`this work`, `have work`) decides
-//! none of them.
+//! does not do anything: a next word with a noun reading among others (`this work`, `have work`)
+//! does not decide any of them.
 
 use super::pass::View;
 use super::{Tag, TagSet, is_one_of, same_word};
@@ -337,7 +337,8 @@ mod tests {
             Pronoun,
             which,
         );
-        // A next word that may be a noun decides nothing, and neither does a noun-only word.
+        // A next word that may be a noun does not decide the reading, and neither does a noun-only
+        // word.
         assert_eq!(after("see this can", "this", this, next), this);
         assert_eq!(after("see this work", "this", this, next), this);
         assert_eq!(

@@ -12,7 +12,7 @@
 //!   left empty is written `{}`, so that it is still there;
 //! - a deleted value goes as [`delete_value`] says; a deleted table goes with its header and the
 //!   comment lines directly above it, and a table left empty by it is still written, as `{}` when it
-//!   is dotted and under its own header when the file had none for it;
+//!   is dotted and under its own header when the file did not have a header for it;
 //! - an item taken out of a list takes the rest of its line and the comment lines above it.
 //!
 //! The lines of the old text that each edit may take away are its [`Touch`]es; the check by lines

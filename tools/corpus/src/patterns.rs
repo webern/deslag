@@ -13,7 +13,7 @@ use std::ops::Range;
 
 use deslag::document::{Document, TokenKind};
 use deslag::lint::pattern::{Item, Pattern};
-use deslag::lint::{not_at_all, verbs_no_nouns};
+use deslag::lint::{not_at_all, verbs_no_nouns, verbs_nothing};
 use serde::Serialize;
 
 use crate::candidates::{COMMON_WORDS, masked};
@@ -72,11 +72,16 @@ pub const CANDIDATES: &[(&str, Pattern)] = &[
 
 /// The patterns shipped lints use, each with its name. A lint with two patterns has a name per
 /// pattern: `verbs_no_nouns_s` is the verbs ending in `s` and `verbs_no_nouns_forms` the other
-/// forms, which together are the lint `verbs_no_nouns`. `lints` measures a whole lint under its id.
+/// forms, which together are the lint `verbs_no_nouns`, and `verbs_nothing` has the same two.
+/// The `verbs_nothing` patterns here are the raw patterns, counted before the lint's sentence-end
+/// and code-name checks, so they count a little more than the lint. `lints` measures a whole lint
+/// under its id.
 pub const SHIPPED: &[(&str, Pattern)] = &[
     ("verbs_no_nouns_s", verbs_no_nouns::PATTERN),
     ("verbs_no_nouns_forms", verbs_no_nouns::FORMS),
     ("not_at_all", not_at_all::PATTERN),
+    ("verbs_nothing_s", verbs_nothing::PATTERN),
+    ("verbs_nothing_forms", verbs_nothing::FORMS),
 ];
 
 /// How many examples a label shows for a pattern, each from a different repository.

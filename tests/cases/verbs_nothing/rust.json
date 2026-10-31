@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "verbs_nothing",
+      "report": "ERROR: deslag detected verbs with nothing!\n\nsrc/lib.rs has 3 verbs with nothing.\n\nThis repo names what a verb did not find: write \"does not find a provider\", not \"finds nothing\". \"nothing\" and \"none\" hide the noun, so name it and negate the verb. Where the sentence has just named it, write \"does not have one\". Where there is no noun to name, as in \"does nothing\" or \"prints nothing\", write \"does not do anything\" or \"does not print anything\". Or drop the claim if it is not true. Swapping in \"zero\", \"nil\" or \"an empty result\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"finds nothing\"\n  line 3: \"has none\"\n  line 6: \"matches nothing\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 17,
+          "end": 30,
+          "line": 1,
+          "column": 18,
+          "end_line": 1,
+          "end_column": 31,
+          "note": "\"finds nothing\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 87,
+          "end": 95,
+          "line": 3,
+          "column": 36,
+          "end_line": 3,
+          "end_column": 44,
+          "note": "\"has none\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 142,
+          "end": 157,
+          "line": 6,
+          "column": 27,
+          "end_line": 6,
+          "end_column": 42,
+          "note": "\"matches nothing\""
+        }
+      ]
+    }
+  ]
+}

@@ -107,7 +107,7 @@ format, each tar's listing checked against the tree before anything is pushed. T
 machine-written; `fetch` reads only its first line.
 
 `scripts/blobstore/blobs.sh plan` says which layers a publish would leave the same, change, add or
-drop, and which files moved since the fetch, and pushes nothing.
+drop, and which files moved since the fetch, and does not push a layer.
 
 ## Changing the image
 

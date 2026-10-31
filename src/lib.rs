@@ -210,7 +210,7 @@ pub enum Error {
         problem: String,
     },
 
-    /// `deslag update` cannot make the change to the config, and has written nothing.
+    /// `deslag update` cannot make the change to the config, and has not written the file.
     #[error("cannot update {path}: {problem}")]
     Update {
         /// The config file.
@@ -219,7 +219,7 @@ pub enum Error {
         problem: String,
     },
 
-    /// `deslag init` found a config, or more than one at one location, and wrote nothing.
+    /// `deslag init` found a config, or more than one at one location, and did not write a file.
     #[error(
         "found the config {found}, and deslag init writes one only where there is none; run \
          `deslag instructions lints` for the lints it can turn on, `deslag explain <PATH>` for \

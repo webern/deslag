@@ -35,8 +35,8 @@
 //! 93% on EWT dev: a verb after a verb, a verb before an adposition, a verb after an adverb.
 //!
 //! What it leaves alone. A word that starts with a capital: whether it is a name is for the
-//! proper-noun pass. A word with several tags, or one that is not `Unsure`: `confirm` does
-//! nothing for it. A word whose guess is not a noun, verb, adjective or adverb: no cue reads it.
+//! proper-noun pass. A word with several tags, or one that is not `Unsure`: `confirm` does not do
+//! anything for it. A word whose guess is not a noun, verb, adjective or adverb: no cue reads it.
 
 use super::pass::View;
 use crate::document::TokenKind;

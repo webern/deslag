@@ -63,8 +63,8 @@ fn rename<T>(old: &mut Option<T>, new: &mut Option<T>) -> Result<bool, BothSet> 
 /// Every redirect, in the order they are applied. Each applies in the section its `old` path names.
 pub const REDIRECTS: &[Redirect] = &[];
 
-/// A redirect that moves nothing, for the unit tests of what reads the table rather than of the
-/// move, such as what is new to a config.
+/// A redirect that does not move a setting, for the unit tests of what reads the table rather
+/// than of the move, such as what is new to a config.
 #[cfg(test)]
 pub(crate) fn listed(
     old: &'static str,

@@ -138,7 +138,8 @@ fn block(
 
 /// The `allow` entries of the file, as comments after the lint tables: a count, then a row per
 /// entry with its place in the config, its lint, the line of its sentence in `document` or "no such
-/// sentence", its quote and its reason. A file with none gets nothing here.
+/// sentence", its quote and its reason. A file with no entries gets an empty
+/// string here.
 fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
     if entries.is_empty() {
         return String::new();
@@ -168,7 +169,7 @@ fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
 /// The `allow` entries of every section that name `relative`, a file no section selects: a count
 /// that says each fails the check, then a row per entry with its place in the config, its lint,
 /// the pattern of its section's `exclude` that drops the file or "not selected", its quote and
-/// its reason. A file no entry names gets nothing here.
+/// its reason. A file no entry names does not get a row here.
 fn unselected_exemptions(config: &Config, relative: &str) -> String {
     let entries: Vec<(&Allow, Option<&Pattern>)> = config
         .sections()

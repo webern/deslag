@@ -1,0 +1,47 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "verbs_nothing",
+      "report": "ERROR: deslag detected verbs with nothing!\n\nREADME.md has 1 verb with nothing.\n\nThis repo names what a verb did not find: write \"does not find a provider\", not \"finds nothing\". \"nothing\" and \"none\" hide the noun, so name it and negate the verb. Where the sentence has just named it, write \"does not have one\". Where there is no noun to name, as in \"does nothing\" or \"prints nothing\", write \"does not do anything\" or \"does not print anything\". Or drop the claim if it is not true. Swapping in \"zero\", \"nil\" or \"an empty result\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 5: \"found none\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 71,
+          "end": 81,
+          "line": 5,
+          "column": 10,
+          "end_line": 5,
+          "end_column": 20,
+          "note": "\"found none\""
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "verbs_nothing",
+      "quote": "The release notes say the resolver finds nothing.",
+      "reason": "A quotation from the notes.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 46,
+          "end": 59,
+          "line": 3,
+          "column": 36,
+          "end_line": 3,
+          "end_column": 49,
+          "note": "\"finds nothing\""
+        }
+      ],
+      "added": false
+    }
+  ]
+}

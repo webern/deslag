@@ -140,6 +140,8 @@ min_entries = 5
 
 # verbs_no_nouns: off
 
+# verbs_nothing: off
+
 # docs/intro.md
 # config: deslag.toml
 # selected by [md]: yes
@@ -172,6 +174,8 @@ min_entries = 5
 
 # verbs_no_nouns: off
 
+# verbs_nothing: off
+
 # README.md
 # config: deslag.toml
 # selected by [md]: yes
@@ -198,6 +202,8 @@ value = 20000
 # repo_layout: off
 
 # verbs_no_nouns: off
+
+# verbs_nothing: off
 
 # notes.txt
 # config: deslag.toml
@@ -415,7 +421,9 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          \n\
          # repo_layout: off\n\
          \n\
-         # verbs_no_nouns: off\n"
+         # verbs_no_nouns: off\n\
+         \n\
+         # verbs_nothing: off\n"
     );
 }
 

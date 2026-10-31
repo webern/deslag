@@ -20,7 +20,7 @@
 //! - **Capitals that are not names.** A word in capitals, which is as likely an acronym of a thing
 //!   (`HTML`) as a name (`NASA`), and a lone capital letter, which is an initial, a grade or a
 //!   label. Neither says which. So a word needs a lower-case letter after its capital, and the
-//!   plural of an acronym (`APIs`) has none that counts.
+//!   plural of an acronym (`APIs`) does not have a lower-case letter that counts.
 //! - **Words that are not nouns first.** A capitalised adjective is usually a nationality or a
 //!   title (`American`), and a capitalised verb is as often a word that opens a phrase as a name;
 //!   the lexicon ranked each first, and the capital alone is weak evidence against it.
@@ -114,7 +114,7 @@ fn is_long(text: &str) -> bool {
 
 /// Whether the word starts with a capital and has a lower-case letter too, which a lone capital
 /// and a word in capitals lack. The plural of an acronym (`APIs`) is a word in capitals with an `s`,
-/// so it has none either.
+/// so it does not have a lower-case letter either.
 fn is_capitalised(text: &str) -> bool {
     // The stem starts as the word does, so this settles most words without reading them.
     if !starts_upper(text) {

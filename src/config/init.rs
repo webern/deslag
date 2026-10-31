@@ -1,7 +1,7 @@
-//! `deslag init`: the config for a repo that has none, with everything on.
+//! `deslag init`: the config for a repo that does not have a config, with everything on.
 //!
 //! The config names everything deslag fails on, so a repo starts from one that names it all. `init`
-//! reads nothing of the repo. It writes `deslag.toml` at the root, or the file `--config-path`
+//! does not read the repo. It writes `deslag.toml` at the root, or the file `--config-path`
 //! names, in TOML: `schema_version`, the running release as the stamp, and in every section every
 //! lint the section can run, each setting the schema gives a default written out, each switch
 //! `true`, and every phrase of the catalogue in `banned_phrases.ban` with its advice.
@@ -12,7 +12,7 @@
 //! The text comes from the schema and the catalogue, so a lint, setting or phrase that is added
 //! reaches it with no edit here; `tests/instructions.rs` holds it to the lints pages. The text is
 //! loaded before it is written. Where the config search finds a config, or two at one location,
-//! `init` refuses and writes nothing.
+//! `init` refuses and does not write the file.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -34,7 +34,7 @@ pub const DEFAULT_PATH: &str = "deslag.toml";
 
 /// The settings that decide whether a lint checks anything and have no default, each at the value
 /// the lint's page in `src/instructions/lints/` gives it. An empty `max_size_bytes` table checks
-/// only the budgets of frontmatter, and an empty `max_emphasis` table checks nothing.
+/// only the budgets of frontmatter, and an empty `max_emphasis` table does not run a check.
 const NEEDED: &str = "\
 [max_size_bytes]
 value = 16000

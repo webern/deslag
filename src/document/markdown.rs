@@ -76,7 +76,7 @@ fn read_with<'a>(stack: &Stack, source: &'a str, start: usize, options: Options)
 }
 
 /// A copy of `source` with each lone CR, one that no LF follows, made an LF, or `None` when it
-/// has none. pulldown-cmark ends a fence's line at an LF alone, so a fence in a file whose lines
+/// does not have one. pulldown-cmark ends a fence's line at an LF alone, so a fence in a file whose lines
 /// end in a lone CR never closes and the rest of the file is read as its code. A CR and an LF are a
 /// byte each, so every offset into the copy is the same offset into the source.
 fn lone_returns_as_newlines(source: &str) -> Option<String> {

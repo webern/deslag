@@ -122,7 +122,7 @@ impl<'a> Document<'a> {
     /// Makes each of `edits` that it can prove leaves the document reading as it did, and refuses
     /// the rest; the module's documentation gives the proof. The edits may come in any order.
     ///
-    /// An edit that covers nothing, does not start and end on characters of the source, or
+    /// An edit that covers an empty range, does not start and end on characters of the source, or
     /// overlaps another is no edit a caller should make, and is an error.
     pub fn apply(&self, edits: &[Edit]) -> Result<Applied, String> {
         let mut order: Vec<usize> = (0..edits.len()).collect();

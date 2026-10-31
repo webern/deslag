@@ -122,7 +122,7 @@ pub(crate) struct CarrierLine {
     /// of text.
     pub prefix: Range<usize>,
     /// The line break after the text. Between two doc lines it also holds the attributes there,
-    /// which are gaps in the text. The last line has nothing.
+    /// which are gaps in the text. The last line does not have a line break.
     pub ending: Range<usize>,
 }
 
@@ -197,7 +197,7 @@ impl Carrier {
 
     /// Whether `fragment`, text written into the region, can be read as the region's text and not
     /// as the syntax of the comment. A Rust block comment nests, so it refuses `/*` as well as
-    /// `*/`. A C one does not, and refusing `/*` there costs nothing.
+    /// `*/`. A C one does not, and refusing `/*` there is harmless.
     ///
     /// This is necessary and not sufficient: a fragment next to `*` or `/` can make `*/` with it.
     /// Only reading the result again proves an edit.

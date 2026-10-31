@@ -395,7 +395,7 @@ fn scores_of(
 }
 
 /// The scores of the tags the rules kept, by place, for the word. The scores of the other places
-/// are not summed: [`decide`] reads none of them.
+/// are not summed: [`decide`] does not read them.
 fn score(weights: &Weights, word: &Word<'_>) -> [i64; 13] {
     let forms = word.forms;
     let this = &forms[word.at];

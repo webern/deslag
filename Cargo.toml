@@ -56,8 +56,9 @@ path = "tests/slow/main.rs"
 test = false
 
 # tools/corpus measures the test corpus, tools/exam grades taggers and tools/release makes the
-# release change. None is published, and deslag depends on none, so `cargo publish` sees deslag
-# alone. (tools/corpus and tools/release are path-only dev-dependencies, which the package drops.)
+# release change. None is published, and deslag does not depend on one, so `cargo publish` sees
+# deslag alone. (tools/corpus and tools/release are path-only dev-dependencies, which the package
+# drops.)
 # tools/sweep is excluded: it needs a newer Rust and a C compiler, and keeps its own lockfile.
 [workspace]
 members = ["tools/corpus", "tools/exam", "tools/release"]
@@ -78,6 +79,6 @@ opt-level = 1
 
 # sha2 checks each fixture of the corpus against its sidecar. In a debug build that was 9.4 s of
 # the 24 s that loading the big tier took. Only `deslag-corpus` and the tests use it: `deslag`
-# does not depend on it (`cargo tree -p deslag -i sha2 -e normal,build` prints nothing).
+# does not depend on it (`cargo tree -p deslag -i sha2 -e normal,build` does not print a path).
 [profile.dev.package.sha2]
 opt-level = 3

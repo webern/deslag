@@ -34,7 +34,7 @@ pub enum Item {
     In(&'static [&'static str]),
     /// A word whose folded text is in none of these sets.
     NotIn(&'static [&'static [&'static str]]),
-    /// A word whose folded text holds none of these characters.
+    /// A word whose folded text does not hold any of these characters.
     Without(&'static [char]),
     /// A word that does not start a listed pair: the pair's first word is this one, and its second
     /// is the word two tokens on, with one token between that the pattern names itself.
@@ -73,7 +73,7 @@ pub enum Item {
     /// No width: the token after this place is none, or this item does not match it.
     NotFollowedBy(&'static Item),
     /// No width: the token before this place is none, or this item does not match it. The first
-    /// token of a sentence has none before it.
+    /// token of a sentence does not have a token before it.
     NotPrecededBy(&'static Item),
 }
 
@@ -425,7 +425,8 @@ mod tests {
             Vec::<String>::new()
         );
         assert_eq!(found(&P, "It is not whole."), ["not"]);
-        // The first token of a sentence has none before it, and the last of the one before is not it.
+        // The first token of a sentence does not have a token before it, and the last of the one
+        // before is not it.
         assert_eq!(found(&P, "Or. Not so."), ["Not"]);
         assert_eq!(found(&P, "Not so."), ["Not"]);
     }

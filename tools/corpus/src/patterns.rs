@@ -73,7 +73,9 @@ pub const CANDIDATES: &[(&str, Pattern)] = &[
 /// The patterns shipped lints use, each with its name. A lint with two patterns has a name per
 /// pattern: `verbs_no_nouns_s` is the verbs ending in `s` and `verbs_no_nouns_forms` the other
 /// forms, which together are the lint `verbs_no_nouns`, and `verbs_nothing` has the same two.
-/// `lints` measures a whole lint under its id.
+/// The `verbs_nothing` patterns here are the raw patterns, counted before the lint's sentence-end
+/// and code-name checks, so they count a little more than the lint. `lints` measures a whole lint
+/// under its id.
 pub const SHIPPED: &[(&str, Pattern)] = &[
     ("verbs_no_nouns_s", verbs_no_nouns::PATTERN),
     ("verbs_no_nouns_forms", verbs_no_nouns::FORMS),

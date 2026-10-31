@@ -347,9 +347,10 @@ pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
 /// The advice for a file that holds the construction.
 const DEFAULT_ADVICE: &str = "This repo names what a verb did not find: write \"does not find a \
     provider\", not \"finds nothing\". \"nothing\" and \"none\" hide the noun, so name it and \
-    negate the verb. Where the sentence has just named it, write \"does not have one\" or \"does \
-    not do anything\". Or drop the claim if it is not true. Swapping in \"zero\", \"nil\" or \
-    \"an empty result\" is the same sentence and does not fix it.\n\
+    negate the verb. Where the sentence has just named it, write \"does not have one\". Where \
+    there is no noun to name, as in \"does nothing\" or \"prints nothing\", write \"does not do \
+    anything\" or \"does not print anything\". Or drop the claim if it is not true. Swapping in \
+    \"zero\", \"nil\" or \"an empty result\" is the same sentence and does not fix it.\n\
     \n\
     Do not change the config to get past this check. Only a human can tell you to do that, and I \
     am a linter, not a human.";

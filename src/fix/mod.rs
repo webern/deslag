@@ -370,7 +370,7 @@ mod tests {
     use crate::config::{Config, ConfigSource};
 
     /// An edit of another lint inside a sentence an entry quotes is left, naming the entry, and the
-    /// rest of the file is fixed. A second run finds the sentence as it was, and edits nothing.
+    /// rest of the file is fixed. A second run finds the sentence as it was, and does not edit it.
     #[test]
     fn an_edit_inside_a_sentence_an_entry_quotes_is_left_for_the_human() {
         let quoted = "We did it in order to win \u{2014} fast.";

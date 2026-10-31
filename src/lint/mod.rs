@@ -625,7 +625,7 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
 /// each invalid byte replaced by one `$`, so an offset into the text is an offset into the file,
 /// and `$` is inert in every reader. A lossy decode would turn an invalid byte into three.
 /// [`check_repo`], [`check_file`] and `deslag explain` all read through this. `fix` reads a file
-/// that is not UTF-8 through it only to learn whether it would edit the file, and edits none.
+/// that is not UTF-8 through it only to learn whether it would edit the file, and does not edit it.
 pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
     if let Ok(text) = std::str::from_utf8(bytes) {
         return Cow::Borrowed(text);

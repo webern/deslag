@@ -131,17 +131,6 @@ fn is_read_only(metadata: &fs::Metadata) -> bool {
     }
 }
 
-/// `error` and each error under it, joined as the binary prints them.
-fn chain(error: &Error) -> String {
-    let mut text = error.to_string();
-    let mut under = std::error::Error::source(error);
-    while let Some(cause) = under {
-        text.push_str(&format!(": {cause}"));
-        under = cause.source();
-    }
-    text
-}
-
 /// Updates the config of the repo rooted at `root`, found as `check` finds it: the redirects it
 /// uses are made, and the stamp moves as the module says. `running` is the release of deslag that
 /// is updating it, and `to`, when given, is that release. `known` says whether anything arrived
@@ -177,7 +166,7 @@ pub fn update(
         // error, with what to do about it.
         Err(error) if migrated.is_some() => {
             let refusal = Refusal {
-                reason: chain(&error),
+                reason: error.chain(),
                 todo: Vec::new(),
             };
             return Err(refusal.into_error(&path, &rerun(explicit, to)));

@@ -257,3 +257,16 @@ pub enum Error {
         problem: String,
     },
 }
+
+impl Error {
+    /// The error and each error under it, joined as the binary prints them.
+    pub(crate) fn chain(&self) -> String {
+        let mut text = self.to_string();
+        let mut under = std::error::Error::source(self);
+        while let Some(cause) = under {
+            text.push_str(&format!(": {cause}"));
+            under = cause.source();
+        }
+        text
+    }
+}

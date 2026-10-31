@@ -447,6 +447,25 @@ fn the_stamp_in_yaml_is_replaced_in_place_or_added_on_the_line_after_schema_vers
         edited("yaml", "{\"schema_version\": 2, \"md\": {}}", Some("0.0.1")),
         "{\"schema_version\": 2, \"deslag_version\": \"0.0.1\", \"md\": {}}"
     );
+    // A key written without a value: the stamp goes after its colon.
+    for (old, new) in [
+        ("deslag_version:\n", "deslag_version: \"0.0.1\"\n"),
+        ("deslag_version: # c\n", "deslag_version: \"0.0.1\" # c\n"),
+        ("deslag_version:", "deslag_version: \"0.0.1\""),
+    ] {
+        assert_eq!(
+            edited("yaml", &format!("schema_version: 2\n{old}"), Some("0.0.1")),
+            format!("schema_version: 2\n{new}")
+        );
+    }
+    assert_eq!(
+        edited(
+            "yaml",
+            "{schema_version: 2, deslag_version:}",
+            Some("0.0.1")
+        ),
+        "{schema_version: 2, deslag_version: \"0.0.1\"}"
+    );
 }
 
 #[test]
@@ -499,18 +518,43 @@ fn a_json_config_written_as_a_list_is_read_by_position_and_refused() {
 
 #[test]
 fn a_stamp_that_cannot_be_placed_is_refused_and_not_guessed() {
-    // The value is empty, so the edit would not read back as a stamp.
+    // The key does not have a colon, so there is nowhere to put a value.
     let refusal = run(
         "yaml",
-        "schema_version: 2\ndeslag_version:\n",
+        "{schema_version: 2,\n deslag_version}\n",
         Some("0.0.1"),
     )
     .expect_err("a refusal");
-    assert!(refusal.reason.contains("does not load"), "{refusal:?}");
+    assert!(
+        refusal.reason.contains("does not have a colon"),
+        "{refusal:?}"
+    );
     assert_eq!(
         refusal.todo,
         ["deslag.yaml:2: set `deslag_version` to \"0.0.1\" at the top level"]
     );
+    // An explicit key, with its colon on the next line.
+    let refusal = run(
+        "yaml",
+        "schema_version: 2\n? deslag_version\n:\n",
+        Some("0.0.1"),
+    )
+    .expect_err("a refusal");
+    assert!(
+        refusal.reason.contains("an explicit `?` key"),
+        "{refusal:?}"
+    );
+}
+
+#[test]
+fn an_edit_that_does_not_load_is_refused_with_the_parsers_reason() {
+    let refusal = line_check("yaml", "schema_version: 2\n", "schema_version: [2\n", None)
+        .expect_err("a refusal");
+    let reason = refusal
+        .reason
+        .strip_prefix("the edited text does not load: cannot parse deslag.yaml: ")
+        .unwrap_or_else(|| panic!("{refusal:?}"));
+    assert!(!reason.is_empty(), "{refusal:?}");
 }
 
 // A redirect in YAML or JSON that cannot be deleted is refused, with the edits spelled out.

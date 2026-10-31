@@ -294,10 +294,11 @@ pub enum TokenKind {
 /// Where a stretch of the source is: its bytes, and the lines and columns a report shows.
 ///
 /// The bytes run from `start` up to `end`, which is not included. Lines count from 1 and end at
-/// each LF, so the CR of a CRLF is the last character of its line. Columns count characters,
-/// Unicode scalar values, from 1; a byte order mark that opens the file does not take a column, as
-/// SARIF counts them. `end_line` is the line of the last byte, and `end_column` is one past the
-/// column of the last character. An empty stretch ends where it starts.
+/// each LF and at each CR that no LF follows, so the CR of a CRLF is the last character of its
+/// line. Columns count characters, Unicode scalar values, from 1; a byte order mark that opens the
+/// file does not take a column, as SARIF counts them. `end_line` is the line of the last byte, and
+/// `end_column` is one past the column of the last character. An empty stretch ends where it
+/// starts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct Location {
     /// The offset of the first byte, counted from 0.
@@ -357,7 +358,12 @@ impl<'a> Document<'a> {
         points: Vec<Point>,
     ) -> Document<'a> {
         let lines = std::iter::once(0)
-            .chain(source.match_indices('\n').map(|(at, _)| at + 1))
+            .chain(
+                source
+                    .match_indices(['\n', '\r'])
+                    .filter(|(at, end)| *end == "\n" || !source[at + 1..].starts_with('\n'))
+                    .map(|(at, _)| at + 1),
+            )
             .collect();
         let code = code_in(&blocks, &pieces);
         Document {

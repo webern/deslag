@@ -974,7 +974,7 @@ mod tests {
     }
 
     #[test]
-    fn a_quote_folds_a_lone_cr_by_how_each_sentence_of_a_markdown_file_is_read() {
+    fn a_lone_cr_ends_a_line_of_a_paragraph_and_of_a_comment_in_a_markdown_fence() {
         let reader = || Reader::Markdown {
             fences: Fences::all(),
         };
@@ -982,10 +982,12 @@ mod tests {
         let source = "A \u{2014} b\nc d.\n\n```rust\n// A \u{2014} b\rc d.\n```\n";
         let with_cr = "A \u{2014} b\rc d.";
         let spaced = "A \u{2014} b c d.";
-        // A lone CR in the quote is a line break to the paragraph and a character to the comment.
-        assert_eq!(count_in(reader(), source, with_cr), 2);
+        // A lone CR in the quote is a line break, as it is in the paragraph. In the fence it ends
+        // the line too, so the comment is its first line alone and `c d.` is code.
+        assert_eq!(count_in(reader(), source, with_cr), 1);
         assert_eq!(count_in(reader(), source, spaced), 1);
         assert_eq!(count_in(reader(), source, "A \u{2014} b\nc d."), 1);
+        assert_eq!(count_in(reader(), source, "A \u{2014} b"), 1);
     }
 
     #[test]
@@ -1080,7 +1082,8 @@ mod tests {
 
     #[test]
     fn a_report_marks_a_sentence_by_whether_it_is_read_as_a_comment() {
-        // The same words as a paragraph and as a comment in a fence, each with a lone CR.
+        // The same words as a paragraph and as a comment in a fence, each with a lone CR, which
+        // ends a line of each.
         let source = "A \u{2014} b\rc d.\n\n```rust\n// A \u{2014} b\rc d.\n```\n";
         let document = Stack::new(Reader::Markdown {
             fences: Fences::all(),
@@ -1094,8 +1097,8 @@ mod tests {
             comment: false,
         };
         let comment = Held {
-            line: 4,
-            start: "A \u{2014} b\rc d.".to_string(),
+            line: 5,
+            start: "A \u{2014} b".to_string(),
             cut: false,
             comment: true,
         };

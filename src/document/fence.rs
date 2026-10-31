@@ -3,10 +3,10 @@
 //! A fence is read when the language its info string names is one of the [`Fences`] the reader is
 //! given. The text of a fence is what pulldown-cmark gives as its code, the lines without the
 //! prefixes the blocks around it put on them: a quote's `> `, a list item's indent, the `\r` of a
-//! CRLF. The comments of that text are found as the comments of a file are, and each region is then
-//! moved into the file, its source map and its [`Carrier`] through the map of the fence. The fence
-//! is a step of the reading and not a region of its own, so the regions row holds the comments
-//! alone and stays sorted and disjoint.
+//! CRLF. A lone CR that ends a line is an LF in the text. The comments of that text are found as
+//! the comments of a file are, and each region is then moved into the file, its source map and its
+//! [`Carrier`] through the map of the fence. The fence is a step of the reading and not a region of
+//! its own, so the regions row holds the comments alone and stays sorted and disjoint.
 //!
 //! A fence is read only if the file holds each of its lines of text as the code block has it, and
 //! each line of it as one stretch of bytes. Otherwise it stays code, as it is for a language that
@@ -16,12 +16,12 @@
 use std::collections::BTreeMap;
 
 use super::lift::lift;
-use super::map::{SegmentKind, SourceMap};
+use super::map::{SegmentKind, SourceMap, reads_as};
 use super::region::{Carrier, CarrierLine, Frame, Region, Template};
 use super::region_build::line_start;
 use super::skip::List;
 use super::{
-    Block, BlockKind, Body, Document, Fences, Language, Reader, Stack, Surface, cpp_regions,
+    Block, BlockKind, Body, Document, Fences, Language, Piece, Reader, Stack, Surface, cpp_regions,
     markdown, rust_regions, toml_regions,
 };
 
@@ -117,10 +117,9 @@ impl Fence {
         let Body::Raw(pieces) = &block.body else {
             return None;
         };
-        if pieces
-            .iter()
-            .any(|piece| source[piece.range.clone()] != piece.text)
-        {
+        // The code block has an LF where the file ends a line in a lone CR.
+        let holds = |piece: &Piece<'_>| reads_as(&source[piece.range.clone()], &piece.text);
+        if !pieces.iter().all(holds) {
             return None;
         }
         let mut text = String::new();
@@ -154,7 +153,8 @@ impl Fence {
                     return None;
                 }
                 rest = mapped.range;
-            } else if !last && source[..start].ends_with('\r') {
+            } else if !last && source[..start].ends_with('\r') && source[start..].starts_with('\n')
+            {
                 rest = start - 1..start - 1;
             }
             if lines.is_empty() {

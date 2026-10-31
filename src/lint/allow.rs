@@ -97,6 +97,18 @@ pub struct Exemption {
     /// Whether the change under judgment added the entry, or changed its reason. A run with no
     /// base does not say.
     pub added: bool,
+    /// Why the entry's section does not select its file, when that is known: another section
+    /// selects it, or the section's `exclude` drops it and no section selects it.
+    pub unselected: Option<Unselected>,
+}
+
+/// Why the section of an entry does not select a file the run walked.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Unselected {
+    /// This other section selects the file, so the entry belongs there.
+    SelectedBy(&'static str),
+    /// No section selects the file, and the entry's section excludes it by this pattern.
+    ExcludedBy(String),
 }
 
 impl Exemption {
@@ -114,6 +126,7 @@ impl Exemption {
             lines,
             holding: Vec::new(),
             added: false,
+            unselected: None,
         }
     }
 
@@ -127,11 +140,24 @@ impl Exemption {
                 "{path} is not a file deslag reads: it does not exist, git ignores it, or it is \
                  not a regular file, such as a directory or a link."
             ),
-            Status::NotSelected => format!(
-                "[{}] does not select {path}, and an entry applies only to the files of its own \
-                 section.",
-                self.allow.section
-            ),
+            Status::NotSelected => match &self.unselected {
+                Some(Unselected::SelectedBy(other)) => format!(
+                    "[{other}] selects {path}, and an entry applies only to the files of its own \
+                     section, so this one belongs in [[{other}.allow]]. Tell the human, who moves \
+                     it."
+                ),
+                Some(Unselected::ExcludedBy(pattern)) => format!(
+                    "[{}] excludes {path} by {pattern:?}, and an entry applies only to the files \
+                     its own section selects. Tell the human that this pattern drops the file; \
+                     whether the entry or the pattern changes is theirs to choose.",
+                    self.allow.section
+                ),
+                None => format!(
+                    "[{}] does not select {path}, and an entry applies only to the files of its \
+                     own section.",
+                    self.allow.section
+                ),
+            },
             Status::NoSuchSentence => format!(
                 "{path} does not hold a sentence equal to the quote, spaces and line breaks aside. \
                  The sentence was reworded, or moved out of the text deslag reads."
@@ -549,12 +575,21 @@ pub(crate) fn settle(
             let exemption = done
                 .remove(&(allow.section, allow.index))
                 .unwrap_or_else(|| {
-                    let status = if walked.contains(&allow.path) {
-                        Status::NotSelected
-                    } else {
-                        Status::NoSuchFile
+                    if !walked.contains(&allow.path) {
+                        return Exemption::new(allow, Status::NoSuchFile, Vec::new());
+                    }
+                    // Two sections selecting the file is an error the run reports on its own.
+                    let unselected = match config.sole_section_for(&allow.path) {
+                        Ok(Some(other)) => Some(Unselected::SelectedBy(other.name())),
+                        Ok(None) => section
+                            .excluded_by(&allow.path)
+                            .map(|pattern| Unselected::ExcludedBy(pattern.as_str().to_string())),
+                        Err(_) => None,
                     };
-                    Exemption::new(allow, status, Vec::new())
+                    Exemption {
+                        unselected,
+                        ..Exemption::new(allow, Status::NotSelected, Vec::new())
+                    }
                 });
             settled.push(exemption);
         }

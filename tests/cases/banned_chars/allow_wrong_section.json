@@ -34,7 +34,7 @@
       "status": "not_selected",
       "marks": [],
       "added": false,
-      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has rust.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: [rust] does not select README.md, and an entry applies only to the files of its own section.\n\nThe quote: \"Anything.\"\nThe reason: \"The wrong section.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has rust.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: [md] selects README.md, and an entry applies only to the files of its own section, so this one belongs in [[md.allow]]. Tell the human, who moves it.\n\nThe quote: \"Anything.\"\nThe reason: \"The wrong section.\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
     }
   ]
 }

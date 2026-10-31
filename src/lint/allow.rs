@@ -97,6 +97,18 @@ pub struct Exemption {
     /// Whether the change under judgment added the entry, or changed its reason. A run with no
     /// base does not say.
     pub added: bool,
+    /// Why the entry's section does not select its file, when that is known: another section
+    /// selects it, or the section's `exclude` drops it and no section selects it.
+    pub unselected: Option<Unselected>,
+}
+
+/// Why the section of an entry does not select a file the run walked.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Unselected {
+    /// This other section selects the file, so the entry belongs there.
+    SelectedBy(&'static str),
+    /// No section selects the file, and the entry's section excludes it by this pattern.
+    ExcludedBy(String),
 }
 
 impl Exemption {
@@ -114,6 +126,7 @@ impl Exemption {
             lines,
             holding: Vec::new(),
             added: false,
+            unselected: None,
         }
     }
 
@@ -127,11 +140,24 @@ impl Exemption {
                 "{path} is not a file deslag reads: it does not exist, git ignores it, or it is \
                  not a regular file, such as a directory or a link."
             ),
-            Status::NotSelected => format!(
-                "[{}] does not select {path}, and an entry applies only to the files of its own \
-                 section.",
-                self.allow.section
-            ),
+            Status::NotSelected => match &self.unselected {
+                Some(Unselected::SelectedBy(other)) => format!(
+                    "[{other}] selects {path}, and an entry applies only to the files of its own \
+                     section, so this one belongs in [[{other}.allow]]. Tell the human, who moves \
+                     it."
+                ),
+                Some(Unselected::ExcludedBy(pattern)) => format!(
+                    "[{}] excludes {path} by {pattern:?}, and an entry applies only to the files \
+                     its own section selects. Tell the human that this pattern drops the file; \
+                     whether the entry or the pattern changes is theirs to choose.",
+                    self.allow.section
+                ),
+                None => format!(
+                    "[{}] does not select {path}, and an entry applies only to the files of its \
+                     own section.",
+                    self.allow.section
+                ),
+            },
             Status::NoSuchSentence => format!(
                 "{path} does not hold a sentence equal to the quote, spaces and line breaks aside. \
                  The sentence was reworded, or moved out of the text deslag reads."
@@ -352,13 +378,12 @@ impl Keep for Within {
 }
 
 /// The text of `sentence`, as an entry quotes it, before it is folded: what [`Document::text`]
-/// reads, less the byte order mark that opens the file and the markers that a block quote and a
-/// list item put at the start of the lines after the first. Those hold no text of the sentence, and
-/// they come with its wrapping. Any other character stays, such as a no-break space beside a
-/// marker, a `>` inside a code span that wraps across the lines of a block quote, and every `>` of
-/// a comment read as plain text, where a `>` does not start a block quote. Each CR of Markdown,
-/// which ends a line there, becomes a line feed; a lone CR that a comment's reader keeps as a
-/// character of the line stays.
+/// reads, less the markers that a block quote and a list item put at the start of the lines after
+/// the first. Those hold no text of the sentence, and they come with its wrapping. Any other
+/// character stays, such as a no-break space beside a marker, a `>` inside a code span that wraps
+/// across the lines of a block quote, and every `>` of a comment read as plain text, where a `>`
+/// does not start a block quote. Each CR of Markdown, which ends a line there, becomes a line feed;
+/// a lone CR that a comment's reader keeps as a character of the line stays.
 fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
     let range = &sentence.range;
     let tokens = &document.tokens[sentence.tokens.clone()];
@@ -381,7 +406,6 @@ fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
     document
         .chars(range.clone())
         .filter_map(|(at, ch)| {
-            let opens_file = ch == '\u{FEFF}' && at.start == 0;
             // Of the stretches that end at or after the character, the first starts earliest, so
             // it holds the character if any does.
             let marker = matches!(ch, '>' | ' ' | '\t') && {
@@ -391,7 +415,7 @@ fn sentence_text(document: &Document<'_>, sentence: &Sentence) -> String {
                     .is_some_and(|start| start.start <= at.start)
             };
             match ch {
-                _ if opens_file || marker => None,
+                _ if marker => None,
                 '\r' if !comment => Some('\n'),
                 _ => Some(ch),
             }
@@ -549,12 +573,21 @@ pub(crate) fn settle(
             let exemption = done
                 .remove(&(allow.section, allow.index))
                 .unwrap_or_else(|| {
-                    let status = if walked.contains(&allow.path) {
-                        Status::NotSelected
-                    } else {
-                        Status::NoSuchFile
+                    if !walked.contains(&allow.path) {
+                        return Exemption::new(allow, Status::NoSuchFile, Vec::new());
+                    }
+                    // Two sections selecting the file is an error the run reports on its own.
+                    let unselected = match config.sole_section_for(&allow.path) {
+                        Ok(Some(other)) => Some(Unselected::SelectedBy(other.name())),
+                        Ok(None) => section
+                            .excluded_by(&allow.path)
+                            .map(|pattern| Unselected::ExcludedBy(pattern.as_str().to_string())),
+                        Err(_) => None,
                     };
-                    Exemption::new(allow, status, Vec::new())
+                    Exemption {
+                        unselected,
+                        ..Exemption::new(allow, Status::NotSelected, Vec::new())
+                    }
                 });
             settled.push(exemption);
         }
@@ -939,7 +972,7 @@ mod tests {
     }
 
     #[test]
-    fn a_quote_folds_a_lone_cr_by_how_each_sentence_of_a_markdown_file_is_read() {
+    fn a_lone_cr_ends_a_line_of_a_paragraph_and_of_a_comment_in_a_markdown_fence() {
         let reader = || Reader::Markdown {
             fences: Fences::all(),
         };
@@ -947,10 +980,12 @@ mod tests {
         let source = "A \u{2014} b\nc d.\n\n```rust\n// A \u{2014} b\rc d.\n```\n";
         let with_cr = "A \u{2014} b\rc d.";
         let spaced = "A \u{2014} b c d.";
-        // A lone CR in the quote is a line break to the paragraph and a character to the comment.
-        assert_eq!(count_in(reader(), source, with_cr), 2);
+        // A lone CR in the quote is a line break, as it is in the paragraph. In the fence it ends
+        // the line too, so the comment is its first line alone and `c d.` is code.
+        assert_eq!(count_in(reader(), source, with_cr), 1);
         assert_eq!(count_in(reader(), source, spaced), 1);
         assert_eq!(count_in(reader(), source, "A \u{2014} b\nc d."), 1);
+        assert_eq!(count_in(reader(), source, "A \u{2014} b"), 1);
     }
 
     #[test]
@@ -1045,7 +1080,8 @@ mod tests {
 
     #[test]
     fn a_report_marks_a_sentence_by_whether_it_is_read_as_a_comment() {
-        // The same words as a paragraph and as a comment in a fence, each with a lone CR.
+        // The same words as a paragraph and as a comment in a fence, each with a lone CR, which
+        // ends a line of each.
         let source = "A \u{2014} b\rc d.\n\n```rust\n// A \u{2014} b\rc d.\n```\n";
         let document = Stack::new(Reader::Markdown {
             fences: Fences::all(),
@@ -1059,8 +1095,8 @@ mod tests {
             comment: false,
         };
         let comment = Held {
-            line: 4,
-            start: "A \u{2014} b\rc d.".to_string(),
+            line: 5,
+            start: "A \u{2014} b".to_string(),
             cut: false,
             comment: true,
         };

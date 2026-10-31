@@ -20,7 +20,9 @@
 use std::borrow::Cow;
 use std::ops::Range;
 
-use super::{Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind, Stack};
+use super::{
+    Block, BlockKind, Body, Document, Piece, PieceKind, Point, PointKind, Stack, text_start,
+};
 
 /// Tab stops are this many columns apart.
 const TAB: usize = 4;
@@ -78,7 +80,7 @@ struct Line {
 
 /// The lines of `source`, after a byte order mark.
 fn lines(source: &str) -> Vec<Line> {
-    let mut at = if source.starts_with('\u{FEFF}') { 3 } else { 0 };
+    let mut at = text_start(source);
     let mut lines = Vec::new();
     for raw in source[at..].split_inclusive('\n') {
         let body = raw.strip_suffix('\n').unwrap_or(raw);

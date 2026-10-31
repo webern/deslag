@@ -1,0 +1,1 @@
+﻿A load-bearing wall.Another load-bearing wall.

@@ -7,7 +7,9 @@
 //! file and whether a section selects it or excludes it, lists the overrides and the frontmatter
 //! budget, and shows every lint's settings as TOML, whatever language the config is written in,
 //! then lists the `allow` entries that name the file, each with the line of its sentence or "no
-//! such sentence", then the prose regions the file holds.
+//! such sentence", then the prose regions the file holds. For a file no section selects, it lists
+//! the entries that name the file anyway, each with the exclude pattern that drops it, since each
+//! fails the check.
 
 use std::path::{Path, PathBuf};
 
@@ -63,6 +65,7 @@ fn block(
     }
     let Some(section) = config.sole_section_for(relative)? else {
         out.push_str(&format!("# selected by: {}\n", config.unselected(relative)));
+        out.push_str(&unselected_exemptions(config, relative));
         return Ok(out);
     };
     out.push_str(&format!("# selected by [{}]: yes\n", section.name()));
@@ -157,6 +160,44 @@ fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
             "#   {}: {}, {at}: {quote}, because {reason}\n",
             entry.place(),
             entry.lint
+        ));
+    }
+    out
+}
+
+/// The `allow` entries of every section that name `relative`, a file no section selects: a count
+/// that says each fails the check, then a row per entry with its place in the config, its lint,
+/// the pattern of its section's `exclude` that drops the file or "not selected", its quote and
+/// its reason. A file no entry names gets nothing here.
+fn unselected_exemptions(config: &Config, relative: &str) -> String {
+    let entries: Vec<(&Allow, Option<&Pattern>)> = config
+        .sections()
+        .iter()
+        .flat_map(|section| {
+            let excluded_by = section.excluded_by(relative);
+            section
+                .allow_for(relative)
+                .map(move |entry| (entry, excluded_by))
+        })
+        .collect();
+    if entries.is_empty() {
+        return String::new();
+    }
+    let mut out = format!(
+        "\n# allow: {}, and each fails the check, since no section selects the file\n",
+        entries.len()
+    );
+    for (entry, excluded_by) in entries {
+        let why = match excluded_by {
+            Some(pattern) => format!("excluded by {:?}", pattern.as_str()),
+            None => "not selected".to_string(),
+        };
+        out.push_str(&format!(
+            "#   {}: {}, {why}: {}, because {}\n",
+            entry.place(),
+            entry.lint,
+            toml::Value::String(allow::shown(&entry.quote)),
+            toml::Value::String(allow::shown(&entry.reason)),
         ));
     }
     out

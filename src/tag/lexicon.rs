@@ -527,7 +527,7 @@ mod tests {
             women.features,
             Features::PLURAL.union(Features::CONTRACTION)
         );
-        // A stem that is no noun, or not there, gives nothing.
+        // A stem that is no noun, or not there, does not give a reading.
         assert_eq!(lookup("quickly's"), None);
         assert_eq!(lookup("frobnicator's"), None);
         assert_eq!(lookup("'s"), None);

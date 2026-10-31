@@ -99,15 +99,16 @@ fails a change to it until `RULES_VERSION` is raised and `make fix-golden` run. 
    tuning are the old one's.
 3. A change to the file is a change to the tagger: raise `deslag::tag::VERSION`, run
    `make fix-golden`, and update the counts and costs here.
-4. Read the diff of `tests/golden/verbs_no_nouns.txt` and `tests/golden/not_at_all.txt` after
-   `make fix-golden`. Both lints read the tagger, `not_at_all` its nouns at `Likely`, so a retrain
-   can move their findings, their unit tests in `src/lint/`,
-   `tests/cases/verbs_no_nouns/forms.stderr`, the tree tests in `tests/slow/corpus.rs` and the big
-   tier's ceilings and ratios in `tools/corpus/tests/blobs.rs`. If a ceiling or ratio test fails,
-   stop and ask a human: no limit moves on a retrain's say-so.
+4. Read the diff of `tests/golden/verbs_no_nouns.txt`, `tests/golden/not_at_all.txt` and
+   `tests/golden/verbs_nothing.txt` after `make fix-golden`. The three lints read the tagger,
+   `not_at_all` its nouns at `Likely`, so a retrain can move their findings, their unit tests in
+   `src/lint/`, the `forms.stderr` of `tests/cases/verbs_no_nouns` and `verbs_nothing`, the tree
+   tests in `tests/slow/corpus.rs` and the big tier's ceilings and ratios in
+   `tools/corpus/tests/blobs.rs`. If a ceiling or ratio test fails, stop and ask a human: no limit
+   moves on a retrain's say-so.
 
 While the weights lag a `RULES_VERSION` bump the learned stage is off, so a `make fix-golden` run
-then, such as the one before step 1, records what the rules alone find in those two golden files.
+then, such as the one before step 1, records what the rules alone find in those three golden files.
 Restore them with `git restore` and fix them only after step 3.
 
 A build whose weights name another rules version than its own does not run the learned stage: its

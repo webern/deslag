@@ -78,6 +78,6 @@ opt-level = 1
 
 # sha2 checks each fixture of the corpus against its sidecar. In a debug build that was 9.4 s of
 # the 24 s that loading the big tier took. Only `deslag-corpus` and the tests use it: `deslag`
-# does not depend on it (`cargo tree -p deslag -i sha2 -e normal,build` prints nothing).
+# does not depend on it (`cargo tree -p deslag -i sha2 -e normal,build` does not print a path).
 [profile.dev.package.sha2]
 opt-level = 3

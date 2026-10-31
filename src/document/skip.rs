@@ -410,7 +410,8 @@ mod tests {
         found
     }
 
-    /// A list that masks nothing, so that a reading with it is the reading without the skip list.
+    /// A list that does not mask a line, so that a reading with it is the reading without the skip
+    /// list.
     fn nothing_is_masked() -> List {
         static FILE: OnceLock<SkipFile> = OnceLock::new();
         let file = FILE.get_or_init(|| SkipFile {
@@ -434,9 +435,9 @@ mod tests {
         }
     }
 
-    /// Reads every file under `root` twice, with the skip list and with a list that masks nothing,
-    /// and checks that the masks did only what they are for. Returns the counts of lines kept, cut
-    /// at the start, and cut whole, and of regions that are gone.
+    /// Reads every file under `root` twice, with the skip list and with a list that does not mask
+    /// a line, and checks that the masks did only what they are for. Returns the counts of lines
+    /// kept, cut at the start, and cut whole, and of regions that are gone.
     fn read_twice(
         root: &str,
         extensions: &[&str],

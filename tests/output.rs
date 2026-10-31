@@ -38,6 +38,8 @@ max_paragraph_chars = 60
 [md.lints.verbs_no_nouns]
 
 [md.lints.not_at_all]
+
+[md.lints.verbs_nothing]
 ";
 
 /// A file every lint but `max_size_bytes` fails, whose name needs escaping in every format.
@@ -54,7 +56,7 @@ repo/
 
 A paragraph that runs on well past sixty characters, which is the limit here.
 
-It ships no binary. It does not build at all.
+It ships no binary. It does not build at all. It finds nothing.
 ";
 
 /// The name of the file holding [`EVERY_LINT`].

@@ -15,7 +15,7 @@
 //! so a `*` that opens a list item or sits inside code is never taken for it.
 //!
 //! A file fails when it has more than `free_spans` spans and they cover more than `max_percent`
-//! of its prose; an unset field counts as 0, and a table setting neither checks nothing. The
+//! of its prose; an unset field counts as 0, and a table setting neither does not run a check. The
 //! report lists every span with its line, so the author can find them.
 
 use std::ops::Range;

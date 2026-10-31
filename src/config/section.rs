@@ -26,7 +26,7 @@ pub(super) enum CommentSurface {
 }
 
 impl CommentSurface {
-    /// The surfaces a section reads when it names none.
+    /// The surfaces a section reads when it does not name a surface.
     pub(super) const ALL: [CommentSurface; 2] =
         [CommentSurface::DocComment, CommentSurface::Comment];
 
@@ -66,10 +66,10 @@ pub(super) struct Parts {
     pub(super) globs: Option<Vec<String>>,
     /// The patterns the file wrote for files to leave out, whether the globs are written or not.
     pub(super) exclude: Vec<String>,
-    /// The patterns the section selects when the file names none.
+    /// The patterns the section selects when the file does not name a pattern.
     pub(super) default_globs: &'static [&'static str],
-    /// The extensions every pattern the file writes must end in, or `None` for any. `[md]` has
-    /// none, as it never has: a config of an older release may select any file.
+    /// The extensions every pattern the file writes must end in, or `None` for any. `[md]` does
+    /// not require an extension, as it never has: a config of an older release may select any file.
     pub(super) extensions: Option<&'static [&'static str]>,
     /// What reads the files the section selects.
     pub(super) stack: Stack,
@@ -422,7 +422,8 @@ mod tests {
             .and_then(|lint| lint.value)
     }
 
-    /// The section's globs are `*.md` when it writes none, and its exclude takes from them.
+    /// The section's globs are `*.md` when it does not write a glob, and its exclude takes from
+    /// them.
     #[test]
     fn a_section_selects_its_default_globs_less_its_exclude() {
         let config = load_toml("[md]\nexclude = [\"/docs/adr/**\", \"DRAFT.md\"]\n");
@@ -513,7 +514,7 @@ mod tests {
         assert_eq!(excluding.len(), 1);
         assert_eq!(excluding[0].0, 0);
         assert_eq!(excluding[0].2.as_str(), "/docs/adr/**");
-        // The override's exclude spares nothing from the section itself.
+        // The override's exclude does not spare a file from the section itself.
         assert!(md.selects("docs/adr/0001.md"));
         // No override matches a file the globs miss, so none is excluding either.
         assert!(md.overrides_excluding("notes.txt").is_empty());

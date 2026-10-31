@@ -1,0 +1,9 @@
+schema_version = 2
+
+[md.lints.verbs_nothing]
+
+[[md.allow]]
+path = "README.md"
+lint = "verbs_nothing"
+quote = "The release notes say the resolver finds nothing."
+reason = "A quotation from the notes."

@@ -406,7 +406,7 @@ fn the_guide_keeps_what_step_5_says_about_where_to_fix_and_dry_runs() {
         .expect("the paragraph on fixing prose");
     let step = step.replace('\n', " ");
     assert!(step.contains("in the comment or fence it names"), "{step}");
-    assert!(step.contains("`--dry-run` writes nothing"), "{step}");
+    assert!(step.contains("`--dry-run` does not write a file"), "{step}");
 }
 
 #[test]

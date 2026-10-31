@@ -491,7 +491,7 @@ pub fn words() -> impl Iterator<Item = &'static str> {
 }
 
 /// What the table says of `word`, which must be folded as [`super::fold`] does: its entry's
-/// reading, or `None` when it has none.
+/// reading, or `None` when it does not have an entry.
 pub fn lookup(word: &str) -> Option<Reading> {
     index().get(word).map(|entry| Reading {
         tag: entry.tags[0],

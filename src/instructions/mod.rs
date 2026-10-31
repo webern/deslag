@@ -74,5 +74,6 @@ fn section(lint: Lint) -> &'static str {
         Lint::Density => include_str!("lints/density.md"),
         Lint::VerbsNoNouns => include_str!("lints/verbs_no_nouns.md"),
         Lint::NotAtAll => include_str!("lints/not_at_all.md"),
+        Lint::VerbsNothing => include_str!("lints/verbs_nothing.md"),
     }
 }

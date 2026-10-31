@@ -12,9 +12,9 @@
 //! - a negator right after `or`, the elliptic alternative, as in `whole or not at all`;
 //! - a sentence of nothing but `not at all`, an answer, with or without a short label such as `A:`.
 //!
-//! `hardly`, `scarcely` and `barely` are no negators, and a plain `if` clause has none, so neither
-//! matches; a negated condition does. The sets are Rust data, never config: a list a config grows
-//! is an allow-list an agent grows until the check passes.
+//! `hardly`, `scarcely` and `barely` are no negators, and a plain `if` clause does not have a
+//! negator, so neither matches; a negated condition does. The sets are Rust data, never config: a
+//! list a config grows is an allow-list an agent grows until the check passes.
 //!
 //! Its claim, which `tests/slow/corpus.rs` and `make test-blobs` check on English fixtures: `llm`
 //! files hold it more often than `human`

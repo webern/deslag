@@ -54,7 +54,8 @@ pub enum ConfigFormat {
 }
 
 impl ConfigFormat {
-    /// The language named by `path`'s extension, or `None` when it names none deslag reads.
+    /// The language named by `path`'s extension, or `None` when it does not name a language deslag
+    /// reads.
     pub fn of(path: &Path) -> Option<ConfigFormat> {
         match path.extension()?.to_str()? {
             "toml" => Some(ConfigFormat::Toml),

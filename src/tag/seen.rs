@@ -43,7 +43,7 @@ struct Slot<'a> {
 }
 
 impl<'a> CodeWords<'a> {
-    /// An empty set of words, which marks nothing `Seen`.
+    /// An empty set of words, which does not mark a word `Seen`.
     pub fn new() -> CodeWords<'a> {
         CodeWords::default()
     }

@@ -70,6 +70,10 @@ pub struct Lints {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("since" = "0.0.3"))]
     pub not_at_all: Option<NotAtAll>,
+    /// That a sentence names what its verb did not find, not `nothing` or `none`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "next"))]
+    pub verbs_nothing: Option<VerbsNothing>,
 }
 
 impl Lints {
@@ -84,6 +88,7 @@ impl Lints {
             Lint::Density => self.density.is_some(),
             Lint::VerbsNoNouns => self.verbs_no_nouns.is_some(),
             Lint::NotAtAll => self.not_at_all.is_some(),
+            Lint::VerbsNothing => self.verbs_nothing.is_some(),
         }
     }
 
@@ -174,6 +179,7 @@ impl Merge for Lints {
         self.density.merge(&over.density);
         self.verbs_no_nouns.merge(&over.verbs_no_nouns);
         self.not_at_all.merge(&over.not_at_all);
+        self.verbs_nothing.merge(&over.verbs_nothing);
     }
 }
 
@@ -207,7 +213,7 @@ impl Merge for MaxSizeBytes {
 /// they cover more than `max_percent` of its prose.
 ///
 /// Setting only `free_spans` caps the number of spans; setting only `max_percent` caps their
-/// share of the prose. A table that sets neither checks nothing.
+/// share of the prose. A table that sets neither does not run a check.
 #[derive(Debug, Clone, Default, PartialEq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct MaxEmphasis {
@@ -359,11 +365,11 @@ impl Merge for RepoLayout {
 
 /// `lints.banned_chars`: a file fails when its text outside code holds a banned character, such
 /// as an em dash. Most have a plain character to write instead; an arrow that only a range rule
-/// covers has none, so the report leaves the choice to the writer.
+/// covers does not have a plain character, so the report leaves the choice to the writer.
 ///
 /// The table turns the check on, and bans the groups it switches on and the characters in `ban`:
-/// an empty table bans nothing. A character in `allow` is never banned; one in `ban` is banned
-/// whatever the groups say.
+/// an empty table does not ban a character. A character in `allow` is never banned; one in `ban`
+/// is banned whatever the groups say.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BannedChars {
@@ -544,9 +550,9 @@ impl Merge for CharGroups {
 
 /// `lints.banned_phrases`: a file fails when its prose holds a phrase in `ban`.
 ///
-/// The table turns the check on, and `ban` is the whole list: an empty table bans nothing. A
-/// phrase matches whatever its case and its style of apostrophe, and a match inside a match of a
-/// phrase in `allow` is not reported.
+/// The table turns the check on, and `ban` is the whole list: an empty table does not ban a
+/// phrase. A phrase matches whatever its case and its style of apostrophe, and a match inside a
+/// match of a phrase in `allow` is not reported.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct BannedPhrases {
@@ -770,6 +776,27 @@ pub struct NotAtAll {
 }
 
 impl Merge for NotAtAll {
+    fn merge(&mut self, over: &Self) {
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.verbs_nothing`: a file fails when a sentence makes `nothing` or `none` the object of a
+/// verb, as in `finds nothing`.
+///
+/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct VerbsNothing {
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    #[schemars(extend("since" = "next"))]
+    pub message: Option<String>,
+}
+
+impl Merge for VerbsNothing {
     fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);

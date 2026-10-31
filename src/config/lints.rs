@@ -72,7 +72,7 @@ pub struct Lints {
     pub not_at_all: Option<NotAtAll>,
     /// That a sentence names what its verb did not find, not `nothing` or `none`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.5"))]
     pub verbs_nothing: Option<VerbsNothing>,
 }
 
@@ -792,7 +792,7 @@ impl Merge for NotAtAll {
 pub struct VerbsNothing {
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.5"))]
     pub message: Option<String>,
 }
 

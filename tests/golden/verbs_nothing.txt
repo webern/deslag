@@ -2,37 +2,48 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 41 of 1230: core 2, human 1, llm 23, mixed 15
+# fails 55 of 1230: core 2, human 2, llm 32, mixed 19
 
 [md.lints.verbs_nothing]
 
 core/den-accidental-style.md matches:1
 core/den-design-decisions.md matches:6
 human/gitlab--Mactroll--DEPNotify/CHANGELOG.md matches:1
+human/rust-itertools--itertools/CHANGELOG.md matches:1
 llm/AIQ-Kitware--aiq-dkps-formalization/dev__posthoc-prompt-analysis__findings__aivm-2404-jon__FINDINGS.md matches:1
 llm/BelimbingApp--belimbing/docs__plans__people__15_employees-event-decoupling.md matches:1
+llm/GladysAssistant--Gladys/github__CLAUDE_AUTOFIX.md matches:2
+llm/OpenAgentsInc--openagents/bench__terminal-bench__traces__tb4--coder-one-matched-v8--sound-change-cascade--matched-v8-9567-r3__sound-change-cascade__KUdjBfR.episode__artifacts__persist-1.brief.md matches:1
+llm/OpenNHP--opennhp/docs__protocol__messages.md matches:1
+llm/Sequel-Ace--Sequel-Ace/docs__development__keychain-secitem-migration-plan.md matches:1
 llm/WillEhrendreich--SageFs/docs__ecosystem-compatibility.md matches:1
+llm/amberframework--amber/github__contributing__DESIGN_DECISIONS.md matches:1
 llm/amberframework--amber/github__contributing__REVIEW_RUBRIC.md matches:1
 llm/brsloan--warewoolf/docs__windows-autoupdate-plan.md matches:2
-llm/danikf--tik4net/Docs__findings-cli-history.md matches:7
+llm/cdiggins--plato/tracker__issues__plato-295.md matches:1
+llm/coleam00--context-engineering-intro/use-cases__ai-coding-wisc-framework__claude__rules-example__testing.md matches:1
+llm/danikf--tik4net/Docs__findings-cli-history.md matches:8
 llm/danikf--tik4net/Docs__findings-routeros-6.md matches:3
 llm/dosco--graphjin/website__content__environment__worlds.md matches:1
 llm/getbintana--bintana/docs__llm__qr.md matches:2
 llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:1
-llm/gitlab--cznic--ql/AUDIT.md matches:1
+llm/jjjkkkjjj--Matft/claude__skills__test-design__SKILL.md matches:1
 llm/kbennett2000--lan-games/server__games__life__help.md matches:1
 llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:4
+llm/plasma-umass--coz/java__README.md matches:1
 llm/rebasepro--rebase/website__src__content__docs__docs__getting-started__headless.md matches:1
 llm/rmstdope--atlantis-hud/docs__releases__v0.14.0.md matches:4
+llm/sobolevbel--jdg/docs__zus_chorobowe.en.md matches:1
 llm/square--leakcanary/docs__shark-dive-reference__conflicting-verdicts.md matches:1
 llm/streetsidesoftware--inject-markdown/docs__ADRs__relative-links__0003-rebase-base-resolution.md matches:1
-llm/toa-io--toa/migrations__262.md matches:3
+llm/toa-io--toa/migrations__262.md matches:4
 llm/tokens-studio--figma-plugin/tools__figma-bridge__docs__BEST-PRACTICES.md matches:1
 llm/tractorjuice--arc-kit/plugins__arckit-fr__references__interview-pattern.md matches:1
 llm/twidi--twicc/src__twicc__agent__plugin__README.md matches:1
 llm/vokako--tmux-mobile/docs__todo.md matches:1
 llm/workglow-dev--libs/packages__triggers__README.md matches:2
-mixed/ColorlibHQ--gentelella/changelog.md matches:1
+mixed/ColorlibHQ--gentelella/changelog.md matches:3
+mixed/SciML--NeuralPDE.jl/docs__src__index.md matches:1
 mixed/Shekyl-Foundation--shekyl-core/docs__RELEASE_CHECKLIST.md matches:1
 mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md matches:1
 mixed/containers--tar-diff/file-format.md matches:1
@@ -40,10 +51,13 @@ mixed/dependabot--dependabot-core/README.md matches:1
 mixed/dotnet--msbuild/documentation__wiki__Binary-Log.md matches:1
 mixed/ncsa--NEAT/ChangeLog.md matches:2
 mixed/nicknisi--dotfiles/README.md matches:1
+mixed/open-telemetry--opentelemetry-java-instrumentation/docs__contributing__writing-instrumentation-module.md matches:1
 mixed/pnpm--pnpm/CONTRIBUTING.md matches:1
 mixed/rebasepro--rebase/README.md matches:2
 mixed/reidmorrison--semantic_logger/docs__api.md matches:1
-mixed/ruby-git--ruby-git/CONTRIBUTING.md matches:1
+mixed/ruby-git--ruby-git/CONTRIBUTING.md matches:2
+mixed/scalameta--scalafmt/docs__installation.md matches:2
 mixed/scalameta--scalameta/CONTRIBUTING.md matches:1
-mixed/ttop32--MouseTooltipTranslator/doc__description.md matches:1
+mixed/storybookjs--storybook/github__PULL_REQUEST_TEMPLATE.md matches:1
+mixed/ttop32--MouseTooltipTranslator/doc__description.md matches:2
 mixed/zcash--librustzcash/zcash_client_sqlite__CHANGELOG.md matches:2

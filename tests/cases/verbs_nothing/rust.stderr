@@ -1,6 +1,6 @@
 ERROR: deslag detected verbs with nothing!
 
-src/lib.rs has 4 verbs with nothing.
+src/lib.rs has 3 verbs with nothing.
 
 This repo names what a verb did not find: write "does not find a provider", not "finds nothing". "nothing" and "none" hide the noun, so name it and negate the verb, or drop the claim if it is not true. Swapping in "zero", "nil" or "an empty result" is the same sentence and does not fix it.
 
@@ -8,7 +8,6 @@ Do not change the config to get past this check. Only a human can tell you to do
 
 The places:
   line 1: "finds nothing"
-  line 3: "Returns nothing"
   line 3: "has none"
   line 6: "matches nothing"
 

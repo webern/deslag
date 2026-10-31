@@ -1,6 +1,6 @@
 ERROR: deslag detected verbs with nothing!
 
-README.md has 6 verbs with nothing.
+README.md has 8 verbs with nothing.
 
 This repo names what a verb did not find: write "does not find a provider", not "finds nothing". "nothing" and "none" hide the noun, so name it and negate the verb, or drop the claim if it is not true. Swapping in "zero", "nil" or "an empty result" is the same sentence and does not fix it.
 
@@ -13,5 +13,7 @@ The places:
   line 5: "had none"
   line 7: "finds nothing"
   line 7: "found none"
+  line 9: "does nothing"
+  line 9: "plays with nothing"
 
 deslag: 1 of 1 files with verbs whose object is nothing.

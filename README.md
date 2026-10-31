@@ -18,7 +18,7 @@ From crates.io: `cargo install deslag`.
 Tell your agent to run `deslag --help && deslag instructions`. It will explain everything the agent
 needs to know in order to onboard your repo.
 
-`deslag instructions output-schema` prints the config schema.
+`deslag instructions config-schema` prints the config schema.
 
 ## Usage
 
@@ -72,13 +72,13 @@ does not specify it. LLMs should read `deslag instructions update` when updating
 tell them to do so), and they should bring the new features to your attention.
 
 Run `deslag update --to <version>`, with the version running, to record the new version stamp and
-update the config. After this the new warning for out-of-date config will not longer print and the
+update the config. After this the new warning for out-of-date config will no longer print and the
 new features will no longer be offered by `deslag instructions update`.
 
 ## Cool Lints
 
 - `deslag bakes no cakes`: This is what I call the verbs no nouns tic that drives me crazy. The lint
-  instructions the LLM to rewrite it as `deslag does not bake cakes`.
+  instructs the LLM to rewrite it as `deslag does not bake cakes`.
 - `deslag does not parse whitespace at all`: In this sentence `at all` has no meaning or purpose and
   deslag tells the LLM to remove it.
 
@@ -89,7 +89,7 @@ lints to bear with neural nets or some sorts of training, it's a WIP.
 
 ### Build
 
-We use a `Makefile`, `make help` lists the targets.
+We use a `Makefile`. `make help` lists the targets.
 
 ### Design
 

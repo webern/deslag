@@ -6,7 +6,7 @@
     {
       "path": "README.md",
       "lint": "verbs_nothing",
-      "report": "ERROR: deslag detected verbs with nothing!\n\nREADME.md has 8 verbs with nothing.\n\nThis repo names what a verb did not find: write \"does not find a provider\", not \"finds nothing\". \"nothing\" and \"none\" hide the noun, so name it and negate the verb, or drop the claim if it is not true. Swapping in \"zero\", \"nil\" or \"an empty result\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"eat nothing\"\n  line 3: \"have none\"\n  line 5: \"found nothing\"\n  line 5: \"had none\"\n  line 7: \"finds nothing\"\n  line 7: \"found none\"\n  line 9: \"does nothing\"\n  line 9: \"plays with nothing\"",
+      "report": "ERROR: deslag detected verbs with nothing!\n\nREADME.md has 8 verbs with nothing.\n\nThis repo names what a verb did not find: write \"does not find a provider\", not \"finds nothing\". \"nothing\" and \"none\" hide the noun, so name it and negate the verb. Where the sentence has just named it, write \"does not have one\" or \"does not do anything\". Or drop the claim if it is not true. Swapping in \"zero\", \"nil\" or \"an empty result\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"eat nothing\"\n  line 3: \"have none\"\n  line 5: \"found nothing\"\n  line 5: \"had none\"\n  line 7: \"finds nothing\"\n  line 7: \"found none\"\n  line 9: \"does nothing\"\n  line 9: \"plays with nothing\"",
       "marks": [
         {
           "kind": "occurrence",

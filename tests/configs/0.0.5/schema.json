@@ -1,0 +1,1029 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "AllowFile": {
+      "additionalProperties": false,
+      "description": "An `allow` entry as it is written on disk. The keys are in this order for a config written as a\nJSON array, which serde reads by position.",
+      "properties": {
+        "lint": {
+          "description": "The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases`,\n`verbs_no_nouns`, `not_at_all` and `verbs_nothing`. One entry names one lint.",
+          "enum": [
+            "banned_chars",
+            "banned_phrases",
+            "verbs_no_nouns",
+            "not_at_all",
+            "verbs_nothing"
+          ],
+          "since": "0.0.3",
+          "type": "string"
+        },
+        "path": {
+          "description": "The file the sentence is in, written as a report prints it: relative to the repo root,\n`/`-separated, with no glob. One entry names one file. A `path` or `reason` may not hold a\ncharacter that shows as nothing or acts on the reader: a control or format character,\nanother default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a\ntab, CR or LF.",
+          "since": "0.0.3",
+          "type": "string"
+        },
+        "quote": {
+          "description": "The sentence, as the file holds it, without the `>` that a block quote starts its lines\nwith and the byte order mark that opens a file. A `>` inside a code span that wraps across\nthe lines of a block quote stays, and in a comment read as plain text, which is every C++\nand TOML comment and a Rust comment that is not a doc comment, a `>` is text. Spaces, tabs\nand line breaks fold to one space, so a sentence that is wrapped differently still matches;\na line break is LF or CR LF, or a lone CR in Markdown, while a lone CR ends a C++ `//` or\nTOML `#` comment and is a character of its line in any other comment. Any other character\nmust match exactly, a no-break space included. The file must hold the sentence once, and\nthe lint must find something in it, or the entry fails the run. A `quote` may hold any\ncharacter but a control character other than a tab, CR or LF, since it must equal the\nsentence, which the file holds anyway. Reports, notices and `deslag explain` write each\ncharacter that shows as nothing or acts on the reader as `<U+XXXX>`.",
+          "since": "0.0.3",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Why the sentence must stay as it is. Required. A `path` or `reason` may not hold a\ncharacter that shows as nothing or acts on the reader: a control or format character,\nanother default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a\ntab, CR or LF.",
+          "since": "0.0.3",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "lint",
+        "quote",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "BannedChars": {
+      "additionalProperties": false,
+      "description": "`lints.banned_chars`: a file fails when its text outside code holds a banned character, such\nas an em dash. Most have a plain character to write instead; an arrow that only a range rule\ncovers does not have a plain character, so the report leaves the choice to the writer.\n\nThe table turns the check on, and bans the groups it switches on and the characters in `ban`:\nan empty table does not ban a character. A character in `allow` is never banned; one in `ban`\nis banned whatever the groups say.",
+      "properties": {
+        "allow": {
+          "default": null,
+          "description": "Characters that are never banned, each written as a one-character string.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "ban": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": null,
+          "description": "Characters banned beyond the groups, each mapped to what to write instead. An empty\nstring means delete it.",
+          "since": "0.0.1",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "groups": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/CharGroups"
+            }
+          ],
+          "default": {},
+          "description": "Turns groups of characters on or off.",
+          "since": "0.0.1"
+        },
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}` in it is replaced with the file's path.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "BannedPhrases": {
+      "additionalProperties": false,
+      "description": "`lints.banned_phrases`: a file fails when its prose holds a phrase in `ban`.\n\nThe table turns the check on, and `ban` is the whole list: an empty table does not ban a\nphrase. A phrase matches whatever its case and its style of apostrophe, and a match inside a\nmatch of a phrase in `allow` is not reported.",
+      "properties": {
+        "allow": {
+          "default": null,
+          "description": "Phrases that are never reported: a longer phrase that holds a banned one, such as\n`load-bearing wall`, or, in an override, a phrase the section bans, so that its files may\nhold it without the override restating `ban`.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "ban": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": null,
+          "description": "Banned phrases, each mapped to the advice the report shows with it. An empty string is no\nadvice: the report says the phrase is banned in this repo and to reword the sentence.",
+          "since": "0.0.1",
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}` in it is replaced with the file's path.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "CharGroups": {
+      "additionalProperties": false,
+      "description": "`lints.banned_chars.groups`: each group of characters switched on or off. A group left unset\nis off.",
+      "properties": {
+        "arrows": {
+          "default": false,
+          "description": "Arrows, for `->`, `<-` and the like.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "box_drawing": {
+          "default": false,
+          "description": "Box-drawing characters and block elements, for `-`, `|` and `+`.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "bullets": {
+          "default": false,
+          "description": "Bullets, the middle dot and geometric shapes, for a Markdown list's `-`.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "checks": {
+          "default": false,
+          "description": "Check marks and crosses, for yes and no.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dashes": {
+          "default": false,
+          "description": "The em dash, en dash, minus sign and other dashes, for `-`.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ellipsis": {
+          "default": false,
+          "description": "The ellipsis, for `...`.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "emoji": {
+          "default": false,
+          "description": "Emoji, to be deleted.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "invisible": {
+          "default": false,
+          "description": "Characters that do not take space, such as the zero-width space, to be deleted.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "math": {
+          "default": false,
+          "description": "The multiplication sign and comparison signs, for `x`, `>=`, `<=`, `!=` and `~`.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "quotes": {
+          "default": false,
+          "description": "Curly quotes and apostrophes, for `\"` and `'`.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "section": {
+          "default": false,
+          "description": "The section sign, for the word section.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "spaces": {
+          "default": false,
+          "description": "The no-break space and other unusual spaces, for a plain space.",
+          "since": "0.0.1",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "CommentSurface": {
+      "description": "The kinds of comment a section can read.",
+      "enum": [
+        "doc_comment",
+        "comment"
+      ],
+      "type": "string"
+    },
+    "CppFile": {
+      "additionalProperties": false,
+      "description": "The `[cpp]` section as it is written on disk.",
+      "properties": {
+        "allow": {
+          "description": "The sentences of these files that stay as written, each exempted from one lint. Only a\nhuman writes an entry. `deslag instructions lints` says how to write one.",
+          "items": {
+            "$ref": "#/definitions/AllowFile"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "exclude": {
+          "default": [],
+          "description": "Files `globs` match that this section leaves out, such as generated code. A pattern is\nwritten as in `globs`, from the repo root with a `/`, else by file name, and not needing a C\nor C++ extension. A file the walk skips stays skipped, and nothing re-includes one. Only a\nhuman adds an exclude; never add one to make a check pass.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "globs": {
+          "default": [
+            "*.c",
+            "*.h",
+            "*.cc",
+            "*.cpp",
+            "*.cxx",
+            "*.hpp",
+            "*.hh",
+            "*.hxx"
+          ],
+          "description": "The files this section lints. Each pattern must end in `.c`, `.h`, `.cc`, `.cpp`, `.cxx`,\n`.hpp`, `.hh` or `.hxx`.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "lints": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Lints"
+            }
+          ],
+          "default": {},
+          "description": "The settings for every selected file that no override changes. A lint that needs the whole\nfile, such as `max_size_bytes`, is an error here.",
+          "since": "0.0.1"
+        },
+        "overrides": {
+          "description": "Settings for the selected files that match a pattern.",
+          "items": {
+            "$ref": "#/definitions/OverrideFile"
+          },
+          "since": "0.0.1",
+          "type": "array"
+        },
+        "surfaces": {
+          "default": [
+            "doc_comment",
+            "comment"
+          ],
+          "description": "The comments this section reads, the rest of a C or C++ file being left alone.\n`doc_comment` is the `///` and `//!` lines and the `/** */` and `/*! */` blocks, and the\ntrailing `///<` and `/**<` forms. `comment` is the other `//` lines and `/* */` blocks.\nBoth are read as plain text.",
+          "items": {
+            "$ref": "#/definitions/CommentSurface"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Density": {
+      "additionalProperties": false,
+      "description": "`lints.density`: a file fails when a paragraph is longer than `max_paragraph_chars`, or a list\nitem longer than `max_item_chars`.\n\nLike `repo_layout`, the table itself turns the check on, with the defaults.",
+      "properties": {
+        "max_item_chars": {
+          "default": 300,
+          "description": "The most characters a list item may hold.",
+          "format": "uint64",
+          "minimum": 1,
+          "since": "0.0.1",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_paragraph_chars": {
+          "default": 600,
+          "description": "The most characters a paragraph may hold.",
+          "format": "uint64",
+          "minimum": 1,
+          "since": "0.0.1",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}`, `{max_paragraph_chars}` and\n`{max_item_chars}` in it are replaced with the file's path and its limits.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "FenceLanguage": {
+      "description": "The languages whose fenced code `[md]` can read.",
+      "enum": [
+        "rust",
+        "cpp",
+        "toml"
+      ],
+      "type": "string"
+    },
+    "FencesFile": {
+      "additionalProperties": false,
+      "description": "The `fences` table of `[md]` as it is written on disk.",
+      "properties": {
+        "languages": {
+          "default": [
+            "rust",
+            "cpp",
+            "toml"
+          ],
+          "description": "The languages whose fenced code is read: `rust`, `cpp` and `toml`. A fence is of the\nlanguage its info string names by its first word, whatever the case: `rust`, `rs`, `cpp`,\n`c++`, `c`, `h`, the C and C++ extensions and `toml`. `[]` does not read a fence.",
+          "items": {
+            "$ref": "#/definitions/FenceLanguage"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "surfaces": {
+          "default": [
+            "doc_comment",
+            "comment"
+          ],
+          "description": "The comments to read in a fence, for every language: `doc_comment` is the `///` and `//!`\nlines and the `/** */` and `/*! */` blocks, `comment` the other `//` lines and `/* */`\nblocks or, in a `toml` fence, the `#` lines. Each is read as it is in a file of its\nlanguage. `[]` turns reading off, as `languages = []` does.",
+          "items": {
+            "$ref": "#/definitions/CommentSurface"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Lints": {
+      "additionalProperties": false,
+      "description": "The settings of each lint: the `lints` table of a section and of each of its overrides.",
+      "properties": {
+        "banned_chars": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BannedChars"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The characters the file must not hold, such as the em dash.",
+          "since": "0.0.1"
+        },
+        "banned_phrases": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/BannedPhrases"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The phrases the file must not hold, which the config lists.",
+          "since": "0.0.1"
+        },
+        "density": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Density"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The longest a paragraph or list item may be.",
+          "since": "0.0.1"
+        },
+        "max_emphasis": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MaxEmphasis"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The limit on bold, italics and ALL CAPS.",
+          "since": "0.0.1"
+        },
+        "max_size_bytes": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MaxSizeBytes"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The byte budget.",
+          "since": "0.0.1"
+        },
+        "not_at_all": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NotAtAll"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "That a negation drops `at all`.",
+          "since": "0.0.3"
+        },
+        "repo_layout": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RepoLayout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The index of the repo that the file must hold.",
+          "since": "0.0.1"
+        },
+        "verbs_no_nouns": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/VerbsNoNouns"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "That a sentence negates its verb, not its object.",
+          "since": "0.0.1"
+        },
+        "verbs_nothing": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/VerbsNothing"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "That a sentence names what its verb did not find, not `nothing` or `none`.",
+          "since": "0.0.5"
+        }
+      },
+      "type": "object"
+    },
+    "MaxEmphasis": {
+      "additionalProperties": false,
+      "description": "`lints.max_emphasis`: a file fails when it has more than `free_spans` emphasized spans and\nthey cover more than `max_percent` of its prose.\n\nSetting only `free_spans` caps the number of spans; setting only `max_percent` caps their\nshare of the prose. A table that sets neither does not run a check.",
+      "properties": {
+        "free_spans": {
+          "default": null,
+          "description": "How many spans a file may have whatever share of its prose they cover.",
+          "format": "uint64",
+          "minimum": 0,
+          "since": "0.0.1",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_percent": {
+          "default": null,
+          "description": "The share of the prose, in percent, that the spans may cover.",
+          "format": "double",
+          "maximum": 100,
+          "minimum": 0,
+          "since": "0.0.1",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}`, `{free_spans}` and `{max_percent}` in it are\nreplaced with the file's path and its limits.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "MaxSizeBytes": {
+      "additionalProperties": false,
+      "description": "`lints.max_size_bytes`: a file larger than `value` bytes fails.",
+      "properties": {
+        "message": {
+          "default": null,
+          "description": "Replaces the advice that follows the first two lines of the report. `{path}` and\n`{max_size_bytes}` in it are replaced with the file's path and budget.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "default": null,
+          "description": "The budget in bytes. A file with no budget from any source is not checked.",
+          "format": "uint64",
+          "minimum": 0,
+          "since": "0.0.1",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "MdFile": {
+      "additionalProperties": false,
+      "description": "The `[md]` section as it is written on disk.",
+      "properties": {
+        "allow": {
+          "description": "The sentences of these files that stay as written, each exempted from one lint. Only a\nhuman writes an entry. `deslag instructions lints` says how to write one.",
+          "items": {
+            "$ref": "#/definitions/AllowFile"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "exclude": {
+          "default": [],
+          "description": "Files `globs` match that this section leaves out, such as generated code. A pattern is\nwritten as in `globs`, from the repo root with a `/`, else by file name, and needing no\nextension. A file the walk skips stays skipped, and nothing re-includes one. Only a human\nadds an exclude; never add one to make a check pass.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "fences": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/FencesFile"
+            }
+          ],
+          "description": "Which fenced code in these files is read for its comments. Overrides cannot change it.",
+          "since": "0.0.1"
+        },
+        "globs": {
+          "default": [
+            "*.md"
+          ],
+          "description": "The files this section lints.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "lints": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Lints"
+            }
+          ],
+          "default": {},
+          "description": "The settings for every selected file that no override changes.",
+          "since": "0.0.1"
+        },
+        "overrides": {
+          "description": "Settings for the selected files that match a pattern.",
+          "items": {
+            "$ref": "#/definitions/OverrideFile"
+          },
+          "since": "0.0.1",
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "NotAtAll": {
+      "additionalProperties": false,
+      "description": "`lints.not_at_all`: a file fails when a sentence pads a negation with \"at all\", as in `does not\nparse at all`.\n\nThe table itself turns the check on. The negators it reads and the places it excuses are the\nlint's, not the config's.",
+      "properties": {
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}` in it is replaced with the file's path.",
+          "since": "0.0.3",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "OverrideFile": {
+      "additionalProperties": false,
+      "description": "One entry of a section's `overrides`, as it is written on disk.",
+      "properties": {
+        "exclude": {
+          "default": [],
+          "description": "Files `globs` match that this override leaves alone, so they get the section's settings.\nWritten as `globs` are, from the repo root with a `/`, else by file name, and needing no\nextension. Nothing re-includes a file. Only a human adds an exclude; never add one to make\na check pass.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "globs": {
+          "description": "The files this override applies to.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.1",
+          "type": "array"
+        },
+        "lints": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Lints"
+            }
+          ],
+          "default": {},
+          "description": "The settings it lays over the section's.",
+          "since": "0.0.1"
+        }
+      },
+      "required": [
+        "globs"
+      ],
+      "type": "object"
+    },
+    "RepoLayout": {
+      "additionalProperties": false,
+      "description": "`lints.repo_layout`: a file must have a section, under `heading`, whose first code block lists\nbetween `min_entries` and `max_entries` paths that exist, in lines up to `max_width` wide.\n\nUnlike the other lints, the table itself turns the check on: a file it applies to must have\nthe section even when the table does not set any field.",
+      "properties": {
+        "heading": {
+          "default": "Repository layout",
+          "description": "The section's heading, matched at any level and in any case.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max_entries": {
+          "default": 15,
+          "description": "The most entries the layout may list.",
+          "format": "uint64",
+          "minimum": 0,
+          "since": "0.0.1",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_width": {
+          "default": 100,
+          "description": "The widest a line of the layout may be, in characters.",
+          "format": "uint64",
+          "minimum": 0,
+          "since": "0.0.1",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}`, `{heading}`, `{min_entries}`,\n`{max_entries}` and `{max_width}` in it are replaced with the file's path and its settings.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "min_entries": {
+          "default": 5,
+          "description": "The fewest entries the layout may list.",
+          "format": "uint64",
+          "minimum": 0,
+          "since": "0.0.1",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "RustFile": {
+      "additionalProperties": false,
+      "description": "The `[rust]` section as it is written on disk.",
+      "properties": {
+        "allow": {
+          "description": "The sentences of these files that stay as written, each exempted from one lint. Only a\nhuman writes an entry. `deslag instructions lints` says how to write one.",
+          "items": {
+            "$ref": "#/definitions/AllowFile"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "exclude": {
+          "default": [],
+          "description": "Files `globs` match that this section leaves out, such as generated code. A pattern is\nwritten as in `globs`, from the repo root with a `/`, else by file name, and not needing to\nend in `.rs`. A file the walk skips stays skipped, and nothing re-includes one. Only a human\nadds an exclude; never add one to make a check pass.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "globs": {
+          "default": [
+            "*.rs"
+          ],
+          "description": "The files this section lints. Each pattern must end in `.rs`.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "lints": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Lints"
+            }
+          ],
+          "default": {},
+          "description": "The settings for every selected file that no override changes. A lint that needs the whole\nfile, such as `max_size_bytes`, is an error here.",
+          "since": "0.0.1"
+        },
+        "overrides": {
+          "description": "Settings for the selected files that match a pattern.",
+          "items": {
+            "$ref": "#/definitions/OverrideFile"
+          },
+          "since": "0.0.1",
+          "type": "array"
+        },
+        "surfaces": {
+          "default": [
+            "doc_comment",
+            "comment"
+          ],
+          "description": "The comments this section reads, the rest of a Rust file being left alone. `doc_comment` is\nthe `///` and `//!` lines and the `/** */` and `/*! */` blocks, read as Markdown. `comment`\nis the other `//` lines and `/* */` blocks, read as plain text.",
+          "items": {
+            "$ref": "#/definitions/CommentSurface"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "TomlFile": {
+      "additionalProperties": false,
+      "description": "The `[toml]` section as it is written on disk.",
+      "properties": {
+        "allow": {
+          "description": "The sentences of these files that stay as written, each exempted from one lint. Only a\nhuman writes an entry. `deslag instructions lints` says how to write one.",
+          "items": {
+            "$ref": "#/definitions/AllowFile"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "exclude": {
+          "default": [],
+          "description": "Files `globs` match that this section leaves out, such as generated code. A pattern is\nwritten as in `globs`, from the repo root with a `/`, else by file name, and not needing to\nend in `.toml`. A file the walk skips stays skipped, and nothing re-includes one. Only a\nhuman adds an exclude; never add one to make a check pass.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.3",
+          "type": "array"
+        },
+        "globs": {
+          "default": [
+            "*.toml"
+          ],
+          "description": "The files this section lints. Each pattern must end in `.toml`.",
+          "items": {
+            "type": "string"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "lints": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Lints"
+            }
+          ],
+          "default": {},
+          "description": "The settings for every selected file that no override changes. A lint that needs the whole\nfile, such as `max_size_bytes`, is an error here.",
+          "since": "0.0.1"
+        },
+        "overrides": {
+          "description": "Settings for the selected files that match a pattern.",
+          "items": {
+            "$ref": "#/definitions/OverrideFile"
+          },
+          "since": "0.0.1",
+          "type": "array"
+        },
+        "surfaces": {
+          "default": [
+            "comment"
+          ],
+          "description": "The comments this section reads, the rest of a TOML file being left alone. `comment` is\nthe `#` lines, whole-line or after a value, read as plain text. TOML does not have another\nkind of comment, so `comment` is the only value.",
+          "items": {
+            "$ref": "#/definitions/TomlSurface"
+          },
+          "since": "0.0.1",
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "TomlSurface": {
+      "description": "The kinds of comment `[toml]` can read. TOML does not have doc comments, so `doc_comment` is not\na value, and a config that writes it is told so.",
+      "enum": [
+        "comment"
+      ],
+      "type": "string"
+    },
+    "VerbsNoNouns": {
+      "additionalProperties": false,
+      "description": "`lints.verbs_no_nouns`: a file fails when a sentence negates a verb through its object, as in\n`bakes no cakes`.\n\nThe table itself turns the check on. The words it excuses are the lint's, not the config's.",
+      "properties": {
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}` in it is replaced with the file's path.",
+          "since": "0.0.1",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "VerbsNothing": {
+      "additionalProperties": false,
+      "description": "`lints.verbs_nothing`: a file fails when a sentence makes `nothing` or `none` the object of a\nverb, as in `finds nothing`.\n\nThe table itself turns the check on. The words it excuses are the lint's, not the config's.",
+      "properties": {
+        "message": {
+          "default": null,
+          "description": "Replaces the advice in the report. `{path}` in it is replaced with the file's path.",
+          "since": "0.0.5",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    }
+  },
+  "description": "The config file as it is written on disk.",
+  "properties": {
+    "cpp": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/CppFile"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The C and C++ section. A config without one does not read any C or C++ file.",
+      "since": "0.0.1"
+    },
+    "deslag_version": {
+      "default": null,
+      "description": "The deslag that last onboarded or updated this config, as a release such as \"0.0.1\". When\nit is missing the config is taken to be from 0.0.1. It may not be later than the deslag\nthat reads the file.",
+      "since": "0.0.1",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "md": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MdFile"
+        }
+      ],
+      "description": "The Markdown section.",
+      "since": "0.0.1"
+    },
+    "rust": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/RustFile"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The Rust section. A config without one does not read any Rust file.",
+      "since": "0.0.1"
+    },
+    "schema_version": {
+      "description": "The schema the file is written against, which is the one this build reads. `deslag update`\nrewrites a config of an older schema; a later one is refused.",
+      "format": "uint32",
+      "maximum": 2,
+      "minimum": 2,
+      "since": "0.0.1",
+      "type": "integer"
+    },
+    "toml": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/TomlFile"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "The TOML section. A config without one does not read any TOML file.",
+      "since": "0.0.1"
+    }
+  },
+  "required": [
+    "schema_version"
+  ],
+  "title": "deslag config",
+  "type": "object"
+}

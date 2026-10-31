@@ -12,7 +12,7 @@ use crate::common;
 
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
@@ -1036,9 +1036,158 @@ const LEFT_BY_REASON: &[(&str, usize)] = &[
     ),
 ];
 
+/// Runs `f` on each of `items`, the items split across the machine's cores, and returns what it
+/// returns, in the order of `items`.
+fn on_every_core<T: Sync, R: Send>(items: &[T], f: impl Fn(&[T]) -> Vec<R> + Sync) -> Vec<R> {
+    let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
+    let f = &f;
+    std::thread::scope(|scope| {
+        let workers: Vec<_> = items
+            .chunks(items.len().div_ceil(threads).max(1))
+            .map(|chunk| scope.spawn(move || f(chunk)))
+            .collect();
+        workers
+            .into_iter()
+            .flat_map(|worker| {
+                // A failed check fails the test with its own message.
+                worker
+                    .join()
+                    .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+            })
+            .collect()
+    })
+}
+
+/// `deslag fix` on the files at `paths` in the repo at `root`, each core fixing some of them, as
+/// the paths of what it reports on and what became of each.
+fn fix_on_every_core(root: &Path, config: &Config, paths: &[String]) -> HashMap<String, Outcome> {
+    on_every_core(paths, |chunk| {
+        let chunk: Vec<PathBuf> = chunk.iter().map(PathBuf::from).collect();
+        fix::fix(root, config, &chunk, false).expect("fix runs")
+    })
+    .into_iter()
+    .map(|file| (file.path, file.outcome))
+    .collect()
+}
+
+/// What fix did to one fixture, as [`the_corpus_is_fixed_only_where_the_report_says`] counts it.
+#[derive(Default)]
+struct Fixed {
+    /// The banned characters the library finds in it.
+    banned: usize,
+    /// How many of those fix replaced.
+    made: usize,
+    /// Whether fix replaced every one, and it had one.
+    whole: bool,
+    /// Whether it is not UTF-8, and fix said so.
+    not_utf8: bool,
+    /// Why fix left each it left.
+    left: Vec<String>,
+}
+
+/// Checks what fix did to `fixture`, placed at `path` in `root`, against the library's report of
+/// its banned characters: the bytes between the places are as they were, each place holds the
+/// character or the replacement the report names, `fixes` tells what was written, and what is left
+/// is what check still finds.
+fn check_fixed(
+    root: &Path,
+    settings: &BannedChars,
+    fixes: &HashMap<String, Outcome>,
+    fixture: &Fixture,
+    path: &str,
+) -> Fixed {
+    let after = fs::read(root.join(path)).expect("a readable file");
+    let Ok(text) = std::str::from_utf8(&fixture.bytes) else {
+        assert_eq!(
+            after, fixture.bytes,
+            "{path} is not UTF-8, and fix wrote it"
+        );
+        return Fixed {
+            not_utf8: fixes.get(path) == Some(&Outcome::NotUtf8),
+            ..Fixed::default()
+        };
+    };
+    let after = String::from_utf8(after).expect("fix writes UTF-8");
+    let over = banned_chars::check(&default_md(text), Some(settings));
+    let mut places = over.as_ref().map(banned_chars::edits).unwrap_or_default();
+    places.sort_by_key(|(mark, _)| mark.location.start);
+
+    // Walk the original and the fixed text side by side: they match between the places, and at
+    // each place the fixed text holds the character or, when the report names one, its
+    // replacement.
+    let (mut from, mut at, mut made) = (0, 0, 0);
+    for (mark, edit) in &places {
+        let between = &text[from..mark.location.start];
+        assert!(
+            after[at..].starts_with(between),
+            "{path}: fix changed bytes {from}..{} that hold no banned character",
+            mark.location.start
+        );
+        at += between.len();
+        let original = &text[mark.location.start..mark.location.end];
+        match edit {
+            Ok(edit) if !after[at..].starts_with(original) => {
+                assert!(
+                    after[at..].starts_with(&edit.replacement),
+                    "{path}: line {} holds neither {original:?} nor {:?}",
+                    mark.location.line,
+                    edit.replacement
+                );
+                at += edit.replacement.len();
+                made += 1;
+            }
+            _ => at += original.len(),
+        }
+        from = mark.location.end;
+    }
+    assert_eq!(&after[at..], &text[from..], "{path}: fix changed its tail");
+
+    let (fixed_here, left) = match fixes.get(path) {
+        Some(Outcome::Read { text, fixed, left }) => {
+            assert_eq!(*text, after, "{path}: fix wrote other than it returned");
+            (fixed.len(), left.as_slice())
+        }
+        Some(Outcome::NotUtf8) => panic!("{path} is UTF-8"),
+        None => (0, [].as_slice()),
+    };
+    assert_eq!(made, fixed_here, "{path}: fix reports {fixed_here} fixed");
+
+    // What is left is what check still finds, each place with a reason. A file fix did not change
+    // is read as it was, so what check finds in it is what it found before.
+    let remaining = if after == text {
+        over
+    } else {
+        banned_chars::check(&default_md(&after), Some(settings))
+    };
+    let mut remaining: Vec<usize> = remaining
+        .map(|over| {
+            banned_chars::marks(&over)
+                .into_iter()
+                .map(|mark| mark.location.start)
+                .collect()
+        })
+        .unwrap_or_default();
+    remaining.sort_unstable();
+    let reported: Vec<usize> = left.iter().map(|(mark, _)| mark.location.start).collect();
+    assert_eq!(
+        reported, remaining,
+        "{path}: fix leaves other places than check finds"
+    );
+    Fixed {
+        banned: places.len(),
+        made,
+        whole: !places.is_empty() && left.is_empty(),
+        not_utf8: false,
+        left: left.iter().map(|(_, why)| why.to_string()).collect(),
+    }
+}
+
 /// `deslag fix` over the corpus, with the default groups: every byte it changes is a banned
 /// character replaced as the report says, every banned character it leaves has a reason, and a
 /// second run changes nothing.
+///
+/// Fix reads every fixture as check does, and this test reads each again to compare, so both run
+/// on every core: one at a time, this was the slowest test of the corpus.
 #[test]
 fn the_corpus_is_fixed_only_where_the_report_says() {
     let fixtures = corpus();
@@ -1050,99 +1199,40 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
     let settings = most_chars();
     let paths = place_real(&repo, fixtures);
     let config = Config::load(repo.root(), None).expect("a config");
-    let fixes = fix::fix(repo.root(), &config, &[], false).expect("fix runs");
-    let fixes: HashMap<&str, &Outcome> = fixes
-        .iter()
-        .map(|file| (file.path.as_str(), &file.outcome))
-        .collect();
+    let fixes = fix_on_every_core(repo.root(), &config, &paths);
 
+    let placed: Vec<(&Fixture, &String)> = fixtures.iter().zip(&paths).collect();
+    let checked = on_every_core(&placed, |chunk| {
+        chunk
+            .iter()
+            .map(|(fixture, path)| check_fixed(repo.root(), &settings, &fixes, fixture, path))
+            .collect()
+    });
     let mut banned = 0;
     let mut fixed = 0;
     let mut whole = 0;
     let mut not_utf8 = 0;
     let mut left_by_reason: BTreeMap<String, usize> = BTreeMap::new();
-    for (fixture, path) in fixtures.iter().zip(&paths) {
-        let after = fs::read(repo.root().join(path)).expect("a readable file");
-        let Ok(text) = std::str::from_utf8(&fixture.bytes) else {
-            assert_eq!(
-                after, fixture.bytes,
-                "{path} is not UTF-8, and fix wrote it"
-            );
-            not_utf8 += usize::from(fixes.get(path.as_str()) == Some(&&Outcome::NotUtf8));
-            continue;
-        };
-        let after = String::from_utf8(after).expect("fix writes UTF-8");
-        let mut places = banned_chars::check(&default_md(text), Some(&settings))
-            .map(|over| banned_chars::edits(&over))
-            .unwrap_or_default();
-        places.sort_by_key(|(mark, _)| mark.location.start);
-        banned += places.len();
-
-        // Walk the original and the fixed text side by side: they match between the places, and
-        // at each place the fixed text holds the character or, when the report names one, its
-        // replacement.
-        let (mut from, mut at, mut made) = (0, 0, 0);
-        for (mark, edit) in &places {
-            let between = &text[from..mark.location.start];
-            assert!(
-                after[at..].starts_with(between),
-                "{path}: fix changed bytes {from}..{} that hold no banned character",
-                mark.location.start
-            );
-            at += between.len();
-            let original = &text[mark.location.start..mark.location.end];
-            match edit {
-                Ok(edit) if !after[at..].starts_with(original) => {
-                    assert!(
-                        after[at..].starts_with(&edit.replacement),
-                        "{path}: line {} holds neither {original:?} nor {:?}",
-                        mark.location.line,
-                        edit.replacement
-                    );
-                    at += edit.replacement.len();
-                    made += 1;
-                }
-                _ => at += original.len(),
-            }
-            from = mark.location.end;
+    for file in checked {
+        banned += file.banned;
+        fixed += file.made;
+        whole += usize::from(file.whole);
+        not_utf8 += usize::from(file.not_utf8);
+        for why in file.left {
+            *left_by_reason.entry(why).or_default() += 1;
         }
-        assert_eq!(&after[at..], &text[from..], "{path}: fix changed its tail");
-
-        let (fixed_here, left) = match fixes.get(path.as_str()) {
-            Some(Outcome::Read { text, fixed, left }) => {
-                assert_eq!(*text, after, "{path}: fix wrote other than it returned");
-                (fixed.len(), left.as_slice())
-            }
-            Some(Outcome::NotUtf8) => panic!("{path} is UTF-8"),
-            None => (0, [].as_slice()),
-        };
-        assert_eq!(made, fixed_here, "{path}: fix reports {fixed_here} fixed");
-        fixed += made;
-
-        // What is left is what check still finds, each place with a reason.
-        let mut remaining: Vec<usize> = banned_chars::check(&default_md(&after), Some(&settings))
-            .map(|over| {
-                banned_chars::marks(&over)
-                    .into_iter()
-                    .map(|mark| mark.location.start)
-                    .collect()
-            })
-            .unwrap_or_default();
-        remaining.sort_unstable();
-        let reported: Vec<usize> = left.iter().map(|(mark, _)| mark.location.start).collect();
-        assert_eq!(
-            reported, remaining,
-            "{path}: fix leaves other places than check finds"
-        );
-        for (_, why) in left {
-            *left_by_reason.entry(why.to_string()).or_default() += 1;
-        }
-        whole += usize::from(!places.is_empty() && left.is_empty());
     }
 
-    let again = fix::fix(repo.root(), &config, &[], false).expect("fix runs again");
+    // A file the first run made no edit to is read the same way again, so only the files it
+    // edited can change.
+    let edited: Vec<String> = fixes
+        .iter()
+        .filter(|(_, outcome)| matches!(outcome, Outcome::Read { fixed, .. } if !fixed.is_empty()))
+        .map(|(path, _)| path.clone())
+        .collect();
+    let again = fix_on_every_core(repo.root(), &config, &edited);
     assert!(
-        again.iter().all(|file| match &file.outcome {
+        again.values().all(|outcome| match outcome {
             Outcome::Read { fixed, .. } => fixed.is_empty(),
             Outcome::NotUtf8 => true,
         }),
@@ -1209,8 +1299,9 @@ fn verbs_no_nouns_flags_llm_text_far_more_than_human_text() {
     assert!(llm >= 3 * human, "human {human}, llm {llm}");
 }
 
-/// The tree is too small for the lint's 3 times claim, which `tests/blobs.rs` checks on the big
-/// tier, so the tree asks only that `llm` files hold the padding more often than `human` files.
+/// The tree is too small for the lint's 3 times claim, which `tools/corpus/tests/blobs.rs` checks
+/// on the big tier, so the tree asks only that `llm` files hold the padding more often than `human`
+/// files.
 #[test]
 fn not_at_all_flags_llm_text_more_than_human_text() {
     let fixtures = corpus();

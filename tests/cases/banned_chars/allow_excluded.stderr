@@ -1,0 +1,12 @@
+ERROR: deslag detected an exemption that does not hold!
+
+deslag.toml has md.allow[0], which exempts a sentence of docs/adr/0001.md from `banned_chars`. It fails: [md] excludes docs/adr/0001.md by "/docs/adr/**", and an entry applies only to the files its own section selects. Tell the human that this pattern drops the file; whether the entry or the pattern changes is theirs to choose.
+
+The quote: "We chose the parser — a dated record."
+The reason: "A decision record keeps its words."
+
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
+
+deslag: 1 of 1 exemption did not hold.
+deslag: only a human writes or changes an exemption; leave the sentence as it is, and give the human its text and a reason.
+deslag: 0 exemptions applied; deslag explain <PATH> lists a file's.

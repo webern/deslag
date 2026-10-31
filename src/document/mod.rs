@@ -297,10 +297,11 @@ pub enum TokenKind {
 /// Where a stretch of the source is: its bytes, and the lines and columns a report shows.
 ///
 /// The bytes run from `start` up to `end`, which is not included. Lines count from 1 and end at
-/// each LF, so the CR of a CRLF is the last character of its line. Columns count characters,
-/// Unicode scalar values, from 1; a byte order mark that opens the file does not take a column, as
-/// SARIF counts them. `end_line` is the line of the last byte, and `end_column` is one past the
-/// column of the last character. An empty stretch ends where it starts.
+/// each LF and at each CR that no LF follows, so the CR of a CRLF is the last character of its
+/// line. Columns count characters, Unicode scalar values, from 1; a byte order mark that opens the
+/// file does not take a column, as SARIF counts them. `end_line` is the line of the last byte, and
+/// `end_column` is one past the column of the last character. An empty stretch ends where it
+/// starts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
 pub struct Location {
     /// The offset of the first byte, counted from 0.
@@ -360,7 +361,12 @@ impl<'a> Document<'a> {
         points: Vec<Point>,
     ) -> Document<'a> {
         let lines = std::iter::once(0)
-            .chain(source.match_indices('\n').map(|(at, _)| at + 1))
+            .chain(
+                source
+                    .match_indices(['\n', '\r'])
+                    .filter(|(at, end)| *end == "\n" || !source[at + 1..].starts_with('\n'))
+                    .map(|(at, _)| at + 1),
+            )
             .collect();
         let chars_before = std::iter::once(0)
             .chain(source.as_bytes().chunks(STRIDE).scan(0, |chars, chunk| {
@@ -461,10 +467,9 @@ impl<'a> Document<'a> {
 
     /// The 1-based column of byte `offset`, counted in characters.
     fn column(&self, offset: usize) -> usize {
-        let mut start = self.lines[self.line(offset) - 1];
-        if start == 0 && offset > 0 && self.source.starts_with(BYTE_ORDER_MARK) {
-            start = BYTE_ORDER_MARK.len_utf8();
-        }
+        let start = self.lines[self.line(offset) - 1]
+            .max(text_start(self.source))
+            .min(offset);
         let chars = if offset - start <= STRIDE {
             chars_in(&self.source.as_bytes()[start..offset])
         } else {
@@ -584,6 +589,17 @@ const STRIDE: usize = 256;
 /// The characters that start in `bytes`, which is every byte but those that go on with one.
 fn chars_in(bytes: &[u8]) -> usize {
     bytes.iter().filter(|byte| **byte & 0xC0 != 0x80).count()
+}
+
+/// The offset where the text of `source`, a file, starts: past the byte order mark that opens it,
+/// if one does. A mark anywhere else, a second one too, is a character of the text. The Markdown
+/// reader and the frontmatter reader both start here, so they read the same text.
+pub(crate) fn text_start(source: &str) -> usize {
+    if source.starts_with(BYTE_ORDER_MARK) {
+        BYTE_ORDER_MARK.len_utf8()
+    } else {
+        0
+    }
 }
 
 /// The items of `items`, which are in the order of the file and do not overlap, that lie wholly

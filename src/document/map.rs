@@ -53,6 +53,13 @@ pub(crate) struct SourceMap {
     segments: Vec<Segment>,
 }
 
+/// Whether `text` is the bytes `held`, but for an LF where they hold a CR, as Markdown reads a
+/// file whose lines end in a lone CR.
+pub(crate) fn reads_as(held: &str, text: &str) -> bool {
+    held.len() == text.len()
+        && (held.bytes().zip(text.bytes())).all(|(f, t)| f == t || (f, t) == (b'\r', b'\n'))
+}
+
 impl SourceMap {
     /// Adds a segment of `kind` and `len` bytes at the end of the inner text, held by `outer`.
     ///
@@ -105,14 +112,34 @@ impl SourceMap {
     }
 
     /// Adds `text`, which is what the bytes of `source` at `outer` read as, as the segment they
-    /// make: verbatim if they are `text`, synthetic if `outer` is empty, escaped otherwise. Empty
-    /// `text` adds nothing.
+    /// make: verbatim if they are `text`, synthetic if `outer` is empty, escaped otherwise. Where
+    /// they differ only in that `text` has an LF for each lone CR of the file, as Markdown reads a
+    /// file with such line ends, each CR is an escaped segment of its own and the rest verbatim.
+    /// Empty `text` adds nothing.
     ///
     /// # Panics
     ///
     /// If `outer` is not on characters of `source`, and as [`SourceMap::push`] does.
     pub fn push_text(&mut self, source: &str, outer: Range<usize>, text: &str) {
         if text.is_empty() {
+            return;
+        }
+        let held = &source[outer.clone()];
+        if held != text && reads_as(held, text) {
+            let mut from = outer.start;
+            for (at, _) in text.match_indices('\n') {
+                let cr = outer.start + at;
+                if source.as_bytes()[cr] == b'\r' {
+                    if from < cr {
+                        self.push(SegmentKind::Verbatim, cr - from, from..cr);
+                    }
+                    self.push(SegmentKind::Escaped, 1, cr..cr + 1);
+                    from = cr + 1;
+                }
+            }
+            if from < outer.end {
+                self.push(SegmentKind::Verbatim, outer.end - from, from..outer.end);
+            }
             return;
         }
         let kind = if source[outer.clone()] == *text {

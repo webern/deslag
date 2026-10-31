@@ -307,7 +307,7 @@ impl Over {
 }
 
 /// Finds every character of `document` that is outside code and not ASCII. A byte order mark
-/// that opens the file is not counted.
+/// that opens the file is not text the document reads, so it is not found.
 pub fn scan(document: &Document<'_>) -> Vec<Found> {
     let mut found = Vec::new();
     for (block, _) in document.walk() {
@@ -323,7 +323,7 @@ pub fn scan(document: &Document<'_>) -> Vec<Found> {
             // The text of the file, not the piece's, so that an entity is read as it is written,
             // with the range of the file that holds each character.
             for (range, ch) in document.chars(piece.range.clone()) {
-                if !ch.is_ascii() && !(range.start == 0 && ch == '\u{FEFF}') {
+                if !ch.is_ascii() {
                     found.push(Found {
                         location: document.locate(range),
                         ch,
@@ -521,12 +521,11 @@ fn replacement(banned: &Banned) -> Result<&str, &'static str> {
 
 /// One line of the report: the character, the lines it is on, and what to write instead.
 fn describe(banned: &Banned) -> String {
-    let mut lines: Vec<usize> = banned
+    let lines: Vec<usize> = banned
         .locations
         .iter()
         .map(|location| location.line)
         .collect();
-    lines.dedup();
     format!("{}: {}", on_lines(&lines), note(banned))
 }
 

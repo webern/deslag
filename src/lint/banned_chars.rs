@@ -521,12 +521,11 @@ fn replacement(banned: &Banned) -> Result<&str, &'static str> {
 
 /// One line of the report: the character, the lines it is on, and what to write instead.
 fn describe(banned: &Banned) -> String {
-    let mut lines: Vec<usize> = banned
+    let lines: Vec<usize> = banned
         .locations
         .iter()
         .map(|location| location.line)
         .collect();
-    lines.dedup();
     format!("{}: {}", on_lines(&lines), note(banned))
 }
 

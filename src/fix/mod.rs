@@ -43,8 +43,8 @@ pub struct FileFix {
 /// What became of a file.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Outcome {
-    /// It is not valid UTF-8, so it was left as it is: an edit could not be written back without
-    /// changing bytes deslag does not understand.
+    /// It is not valid UTF-8, and fix would edit it, so it was left as it is: an edit could not be
+    /// written back without changing bytes deslag does not understand.
     NotUtf8,
     /// It was read, and edited where the edits could be proven safe.
     Read {
@@ -108,12 +108,17 @@ pub fn fix(
     let label = allow::label(root, config);
     let mut fixes = Vec::new();
     for (file, section) in chosen(root, config, paths)? {
+        let dir = file.absolute.parent().unwrap_or(root);
         let outcome = match String::from_utf8(lint::read(&file)?) {
-            Ok(text) => {
-                let dir = file.absolute.parent().unwrap_or(root);
-                passes(config, &label, section, &file.relative, text, dir)?
+            Ok(text) => passes(config, &label, section, &file.relative, text, dir)?,
+            // Read as `check` reads it, the file is reported only when fix would edit it.
+            Err(error) => {
+                let text = lint::decode(error.as_bytes()).into_owned();
+                match passes(config, &label, section, &file.relative, text, dir)? {
+                    Outcome::Read { fixed, .. } if fixed.is_empty() => continue,
+                    _ => Outcome::NotUtf8,
+                }
             }
-            Err(_) => Outcome::NotUtf8,
         };
         if let Outcome::Read { fixed, left, .. } = &outcome {
             if fixed.is_empty() && left.is_empty() {
@@ -352,7 +357,6 @@ fn grouped<'m, K: PartialEq>(items: impl Iterator<Item = (&'m Mark, K)>) -> Vec<
         .into_iter()
         .map(|(key, mut lines)| {
             lines.sort_unstable();
-            lines.dedup();
             (key, on_lines(&lines))
         })
         .collect()

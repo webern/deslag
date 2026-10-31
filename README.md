@@ -28,8 +28,8 @@ Run it from the root of the repository:
 deslag check
 ```
 
-A file that fails a lint gets a report on standard error with exit code 1. When deslag cannot
-run, as with a bad config, the exit code is 2. A clean run exits 0, so a CI job can gate on it.
+A file that fails a lint gets a report on standard error with exit code 1. When deslag cannot run,
+as with a bad config, the exit code is 2. A clean run exits 0, so a CI job can gate on it.
 
 `--format` also prints the findings on standard output for a machine to read. The report, the exit
 code and what fails stay the same.
@@ -77,13 +77,58 @@ new features will no longer be offered by `deslag instructions update`.
 
 ## Cool Lints
 
-- `deslag bakes no cakes`: This is what I call the verbs no nouns tic that drives me crazy. The lint
-  instructs the LLM to rewrite it as `deslag does not bake cakes`.
-- `deslag does not parse whitespace at all`: In this sentence `at all` has no meaning or purpose and
-  deslag tells the LLM to remove it.
+Some of what deslag has is simple: byte budgets, banned phrases, banned characters (em dash), a cap
+on bold and italics. The lints I think are cool are more grammatical. Here's what I mean:
 
-...and many more (TODO: sell it better in this section). I'm working on bringing more sophisticated
-lints to bear with neural nets or some sorts of training, it's a WIP.
+### verbs_no_nouns
+
+`deslag bakes no cakes`. This is what I call the verbs-no-nouns tic. The verb is affirmed and the
+object is negated. Deslag tells the LLM to negate the verb instead: `deslag does not bake cakes`. It
+also warns that swapping in `zero`, `without` or `lacks` is the same sentence, so don't bother.
+
+Here are some real examples and fixes from the deslag repo:
+
+```text
+before: A lone capital is no acronym and has no shape, but may be a name.
+after:  A lone capital is not an acronym and does not have a shape, but may be a name.
+
+before: A word with several tags is `confirm`'s no business.
+after:  A word with several tags is not `confirm`'s business.
+```
+
+### verbs_nothing
+
+The sibling tic: `the resolver finds nothing`, `the parser has none`. The pronoun is hiding a noun.
+Deslag tells the LLM to name what was not found and negate the verb:
+
+```text
+before: The last line has nothing.
+after:  The last line does not have a line break.
+
+before: a top-level block has none.
+after:  a top-level block does not have a parent.
+
+before: refusing `/*` there costs nothing.
+after:  refusing `/*` there is harmless.
+```
+
+### not_at_all
+
+`deslag does not parse whitespace at all`. That sentence was finished at `whitespace` and `at all`
+is inappropriate. LLMs do it all the time. Delete `at all`:
+
+```text
+before: A block that is never closed by a second `---` is not frontmatter at all, and is ignored.
+after:  A block that is never closed by a second `---` is not frontmatter, and is ignored.
+
+before: With no `banned_phrases` table at all, no group is on anywhere.
+after:  With no `banned_phrases` table, no group is on anywhere.
+
+before: ...and the section that allows it does not fire at all.
+after:  ...and the section that allows it does not fire.
+```
+
+I'm working on more. It's a WIP.
 
 ## Maintainer Stuff
 

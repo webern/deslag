@@ -314,9 +314,11 @@ impl Keep for change::File {
 }
 
 /// `line 3`, or `lines 3, 5` for more than one, as a report names the lines a character or the like
-/// is on.
+/// is on. `lines` is in order, and a line in it twice is named once.
 pub(crate) fn on_lines(lines: &[usize]) -> String {
-    match lines {
+    let mut lines = lines.to_vec();
+    lines.dedup();
+    match lines.as_slice() {
         [line] => format!("line {line}"),
         _ => format!(
             "lines {}",
@@ -603,8 +605,8 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
 /// `bytes` as the lints read them: the file's own text when it is valid UTF-8, else the text with
 /// each invalid byte replaced by one `$`, so an offset into the text is an offset into the file,
 /// and `$` is inert in every reader. A lossy decode would turn an invalid byte into three.
-/// [`check_repo`], [`check_file`] and `deslag explain` all read through this, and `fix` refuses a
-/// file that is not UTF-8.
+/// [`check_repo`], [`check_file`] and `deslag explain` all read through this. `fix` reads a file
+/// that is not UTF-8 through it only to learn whether it would edit the file, and edits none.
 pub(crate) fn decode(bytes: &[u8]) -> Cow<'_, str> {
     if let Ok(text) = std::str::from_utf8(bytes) {
         return Cow::Borrowed(text);

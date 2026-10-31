@@ -26,8 +26,8 @@ Do not push, create or move a tag, or run `cargo publish` yourself.
 
 ## A run's id
 
-`gh workflow run` does not print one. Take `T` just before the dispatch and keep its value. After
-it, list the workflow's runs, newest first, for the run title created after `T`:
+`gh workflow run` may print the run's URL. Either way, take `T` just before the dispatch and keep
+its value, and after it list the workflow's runs, newest first, for the run title created after `T`:
 
 ```bash
 T=$(date -u +%Y-%m-%dT%H:%M:%SZ)

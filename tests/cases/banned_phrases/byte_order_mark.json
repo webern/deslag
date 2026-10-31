@@ -1,0 +1,241 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 9,
+  "findings": [
+    {
+      "path": "frontmatter.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nfrontmatter.md has 1 banned phrase.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 5: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 39,
+          "end": 51,
+          "line": 5,
+          "column": 3,
+          "end_line": 5,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "frontmatter_mark.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nfrontmatter_mark.md has 1 banned phrase.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 5: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 42,
+          "end": 54,
+          "line": 5,
+          "column": 3,
+          "end_line": 5,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "frontmatter_mark_cr.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nfrontmatter_mark_cr.md has 1 banned phrase.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 5: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 42,
+          "end": 54,
+          "line": 5,
+          "column": 3,
+          "end_line": 5,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "heading/lf/AGENTS.md",
+      "lint": "repo_layout",
+      "report": "ERROR: deslag detected a broken repository layout!\n\nheading/lf/AGENTS.md has 1 problem in its \"Repository layout\" section.\n\nThe \"Repository layout\" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory heading/lf/AGENTS.md is in, like this:\n\n## Repository layout\n\n```\nrepo/\n  Makefile   <- every build, test and check\n  src/       <- the source\n  docs/      <- the design docs\n```\n\nThe first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.\n\nDo not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe problems:\n  line 7: gone.md does not exist",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 77,
+          "end": 99,
+          "line": 7,
+          "column": 1,
+          "end_line": 7,
+          "end_column": 23,
+          "note": "gone.md does not exist"
+        }
+      ]
+    },
+    {
+      "path": "heading/lf/AGENTS.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nheading/lf/AGENTS.md has 1 banned phrase.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 3: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 24,
+          "end": 36,
+          "line": 3,
+          "column": 3,
+          "end_line": 3,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "heading/mark/AGENTS.md",
+      "lint": "repo_layout",
+      "report": "ERROR: deslag detected a broken repository layout!\n\nheading/mark/AGENTS.md has 1 problem in its \"Repository layout\" section.\n\nThe \"Repository layout\" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory heading/mark/AGENTS.md is in, like this:\n\n## Repository layout\n\n```\nrepo/\n  Makefile   <- every build, test and check\n  src/       <- the source\n  docs/      <- the design docs\n```\n\nThe first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.\n\nDo not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe problems:\n  line 7: gone.md does not exist",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 80,
+          "end": 102,
+          "line": 7,
+          "column": 1,
+          "end_line": 7,
+          "end_column": 23,
+          "note": "gone.md does not exist"
+        }
+      ]
+    },
+    {
+      "path": "heading/mark/AGENTS.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nheading/mark/AGENTS.md has 1 banned phrase.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 3: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 27,
+          "end": 39,
+          "line": 3,
+          "column": 3,
+          "end_line": 3,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "heading/mark_cr/AGENTS.md",
+      "lint": "repo_layout",
+      "report": "ERROR: deslag detected a broken repository layout!\n\nheading/mark_cr/AGENTS.md has 1 problem in its \"Repository layout\" section.\n\nThe \"Repository layout\" section is where an agent new to this repo learns its way around, so it must be short and true. Under the heading, put one code block listing between 1 and 5 of the files and directories that matter most, with paths relative to the directory heading/mark_cr/AGENTS.md is in, like this:\n\n## Repository layout\n\n```\nrepo/\n  Makefile   <- every build, test and check\n  src/       <- the source\n  docs/      <- the design docs\n```\n\nThe first line naming the root is optional. Every path starts in one column, every `<-` sits in one column, every entry has a description, and every entry is one line, no wider than 80 characters; a description does not continue on the next line. Paths must exist, and one ending in `/` must be a directory.\n\nDo not change the limits or the heading to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe problems:\n  line 7: gone.md does not exist",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 80,
+          "end": 102,
+          "line": 7,
+          "column": 1,
+          "end_line": 7,
+          "end_column": 23,
+          "note": "gone.md does not exist"
+        }
+      ]
+    },
+    {
+      "path": "heading/mark_cr/AGENTS.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nheading/mark_cr/AGENTS.md has 1 banned phrase.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 3: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 27,
+          "end": 39,
+          "line": 3,
+          "column": 3,
+          "end_line": 3,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "prose.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nprose.md has 2 banned phrases.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 1: \"load-bearing\"; say what depends on it\n  line 3: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 2,
+          "end": 14,
+          "line": 1,
+          "column": 3,
+          "end_line": 1,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 30,
+          "end": 42,
+          "line": 3,
+          "column": 9,
+          "end_line": 3,
+          "end_column": 21,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "prose_mark.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nprose_mark.md has 2 banned phrases.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 1: \"load-bearing\"; say what depends on it\n  line 3: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 5,
+          "end": 17,
+          "line": 1,
+          "column": 3,
+          "end_line": 1,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 33,
+          "end": 45,
+          "line": 3,
+          "column": 9,
+          "end_line": 3,
+          "end_column": 21,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    },
+    {
+      "path": "prose_mark_cr.md",
+      "lint": "banned_phrases",
+      "report": "ERROR: deslag detected banned phrases!\n\nprose_mark_cr.md has 2 banned phrases.\n\nThis repo keeps these phrases out of its writing. Do what the advice with each one says, or reword the sentence; it often reads better with the phrase simply gone.\n\nDo not hide a phrase in code or markup, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe phrases, and what to do about each:\n  line 1: \"load-bearing\"; say what depends on it\n  line 3: \"load-bearing\"; say what depends on it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 5,
+          "end": 17,
+          "line": 1,
+          "column": 3,
+          "end_line": 1,
+          "end_column": 15,
+          "note": "\"load-bearing\"; say what depends on it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 33,
+          "end": 45,
+          "line": 3,
+          "column": 9,
+          "end_line": 3,
+          "end_column": 21,
+          "note": "\"load-bearing\"; say what depends on it"
+        }
+      ]
+    }
+  ]
+}

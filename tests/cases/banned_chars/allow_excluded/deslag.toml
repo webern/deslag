@@ -1,0 +1,15 @@
+schema_version = 2
+
+[md]
+exclude = ["/docs/adr/**"]
+
+[md.lints.banned_chars]
+
+[md.lints.banned_chars.groups]
+dashes = true
+
+[[md.allow]]
+path = "docs/adr/0001.md"
+lint = "banned_chars"
+quote = "We chose the parser — a dated record."
+reason = "A decision record keeps its words."

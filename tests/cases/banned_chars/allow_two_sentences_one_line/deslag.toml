@@ -1,0 +1,10 @@
+schema_version = 2
+
+[md.lints.banned_chars.groups]
+dashes = true
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+quote = "The run is done — for now."
+reason = "A quoted line."

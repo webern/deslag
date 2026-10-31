@@ -457,11 +457,8 @@ impl<'a> Document<'a> {
 
     /// The 1-based column of byte `offset`, counted in characters.
     fn column(&self, offset: usize) -> usize {
-        let mut start = self.lines[self.line(offset) - 1];
-        if start == 0 && offset > 0 && self.source.starts_with(BYTE_ORDER_MARK) {
-            start = BYTE_ORDER_MARK.len_utf8();
-        }
-        self.source[start..offset].chars().count() + 1
+        let start = self.lines[self.line(offset) - 1].max(text_start(self.source));
+        self.source[start.min(offset)..offset].chars().count() + 1
     }
 
     /// Every block, each before the blocks it holds, in the order of the file.
@@ -561,6 +558,17 @@ fn code_in(blocks: &[Block<'_>], pieces: &[Piece<'_>]) -> Vec<Range<usize>> {
 
 /// The byte order mark, which opens some files and is not part of their text.
 const BYTE_ORDER_MARK: char = '\u{FEFF}';
+
+/// The offset where the text of `source`, a file, starts: past the byte order mark that opens it,
+/// if one does. A mark anywhere else, a second one too, is a character of the text. The Markdown
+/// reader and the frontmatter reader both start here, so they read the same text.
+pub(crate) fn text_start(source: &str) -> usize {
+    if source.starts_with(BYTE_ORDER_MARK) {
+        BYTE_ORDER_MARK.len_utf8()
+    } else {
+        0
+    }
+}
 
 /// The items of `items`, which are in the order of the file and do not overlap, that lie wholly
 /// inside `range`.

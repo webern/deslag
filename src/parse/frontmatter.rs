@@ -9,6 +9,7 @@
 //! keeps a document that opens with a thematic break working.
 
 use crate::Error;
+use crate::document::text_start;
 
 /// The key a Markdown file uses to declare its own byte budget.
 pub const MAX_SIZE_BYTES: &str = "max_size_bytes";
@@ -50,7 +51,7 @@ pub fn max_size_bytes(contents: &str, path: &str) -> Result<Option<u64>, Error> 
 
 /// The text between the opening and closing `---` fences, fences excluded.
 fn block(contents: &str) -> Option<&str> {
-    let contents = contents.strip_prefix('\u{feff}').unwrap_or(contents);
+    let contents = &contents[text_start(contents)..];
     let rest = contents.strip_prefix("---")?;
     // A fence line is exactly `---`, so the character after it must end the line: an LF, a CRLF
     // or a lone CR.

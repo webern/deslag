@@ -583,6 +583,7 @@ mod tests {
             found("The path resolves to nothing!"),
             ["resolves to nothing"]
         );
+        assert_eq!(found("Does it resolve to nothing?"), ["resolve to nothing"]);
         assert_eq!(found("It points at nothing\u{2026}"), ["points at nothing"]);
         assert_eq!(found("# It points at nothing"), ["points at nothing"]);
         assert_eq!(found("- the link points at nothing"), ["points at nothing"]);
@@ -594,6 +595,18 @@ mod tests {
             found("It maps to nothing, and the threads stop."),
             ["maps to nothing"]
         );
+    }
+
+    #[test]
+    fn to_may_stand_before_the_object_whatever_the_tagger_reads() {
+        assert!(match_in(
+            &PATTERN,
+            "It resolves to nothing.",
+            "to",
+            Tag::Particle,
+            Confidence::Sure,
+            Features::NONE
+        ));
     }
 
     #[test]

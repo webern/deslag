@@ -3,7 +3,7 @@
 //! An [`Origin`] is not a tag. `grep` is a command in *grep the logs* and in *run grep*, and what it
 //! does in the sentence is for the tag. Origin is the tagger's input, set on each `Word` token by
 //! [`origins`] before the tables read it, so every tagger and every import shares it, and the exam
-//! finds it from a gold file's own text.
+//! finds it from a gold file's text.
 //!
 //! Origin is a fact about the word, whatever the tables hold of it and whatever the tagger commits
 //! to. The cues, in the order they are tried, and nothing else but the last, which the file gives:
@@ -27,7 +27,7 @@
 //!    on exact case. A table word is never `Seen`, since a code comment is English.
 //!
 //! A word with an apostrophe is English. The names are facts, not a work of anyone's, so no licence
-//! travels with the lists; they are written by hand from git's own command list, the GNU
+//! travels with the lists; they are written by hand from git's command list, the GNU
 //! coreutils manual and what tools are called in everyday use. They are Rust data, sorted and
 //! unique, and nothing reads them from a config or the environment. [`PROGRAMS`] does not hold a
 //! name that a table holds, and [`HELD`] and [`SHARED`] hold only such names (tests check both).

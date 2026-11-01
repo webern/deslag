@@ -19,7 +19,7 @@
 //! on the reader: a control or format character, another default-ignorable one, or a blank other
 //! than the ASCII space; a `reason` may hold a tab, CR or LF. Reports, notices and `deslag explain`
 //! write each character that shows as nothing or acts on the reader as `<U+XXXX>`. The checks read
-//! the text after parsing, so an escape in the config's own syntax, such as TOML's `\u200B`, is no
+//! the text after parsing, so an escape in the config's syntax, such as TOML's `\u200B`, is no
 //! way round them.
 
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};

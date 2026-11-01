@@ -175,7 +175,7 @@ impl Carrier {
 
     /// `inner`, the text of the region as it may have been changed, written as the file `source`
     /// holds it. A line the region had keeps its bytes around it and a new one is written from the
-    /// template, so the region's own text encodes to the bytes it was read from.
+    /// template, so the region's text encodes to the bytes it was read from.
     pub fn encode(&self, source: &str, inner: &str) -> String {
         let (open, frame, close) = self.parts();
         let mut out = String::with_capacity(inner.len() * 2);

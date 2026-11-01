@@ -708,7 +708,7 @@ mod tests {
                 "{text}"
             );
         }
-        // The table's own contractions are read from it.
+        // The table's contractions are read from it.
         assert_eq!(word("it's").tag, Tag::Pronoun);
         // A lone `s` or `'s` is no possessive.
         assert!(!word("s").features.contains(Features::CONTRACTION));

@@ -1,6 +1,6 @@
 //! The words a file writes in code: the cue behind [`Origin::Seen`](super::Origin::Seen).
 //!
-//! A repository's own lowercase names (`kubectl`, `tinytuya`) are missing from both tables, and the
+//! A repository's lowercase names (`kubectl`, `tinytuya`) are missing from both tables, and the
 //! file that uses them writes them in code a line away. [`CodeWords`] is the set of those words for
 //! one file: the text of every code span and of every code block, cut into runs of letters, digits
 //! and underscores, of at least two characters each. A word the tables do not hold that is one of

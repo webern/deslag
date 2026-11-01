@@ -780,7 +780,7 @@ fn no_comment_line_changes_unless_it_touches_the_deleted_key() {
 // The check by lines.
 
 /// The result of the check on `text`, standing in for what the editor made of `old`, a config of
-/// `extension`: the editor's own plan, with its text changed.
+/// `extension`: the editor's plan, with its text changed.
 fn line_check(
     extension: &str,
     old: &str,
@@ -1204,7 +1204,7 @@ fn a_yaml_block_key_that_is_alone_leaves_its_table_empty_and_not_null() {
         "schema_version: 2\nmd:\n  lints:\n    banned_phrases:\n      groups:\n        signposts: true\n    density:\n      max_item_chars: 5\n",
         "schema_version: 2\nmd:\n  lints:\n    banned_phrases:\n      groups: {}\n    density:\n      max_item_chars: 5\n",
     );
-    // The table's own line may hold an anchor or a tag and a comment, and the ` {}` goes before
+    // The table's line may hold an anchor or a tag and a comment, and the ` {}` goes before
     // the comment and after the rest.
     for (line, sealed) in [
         ("groups: # the groups", "groups: {} # the groups"),
@@ -1876,7 +1876,7 @@ fn a_stamp_and_a_delete_on_one_line_let_no_other_change_through() {
         }),
     ];
     for (extension, text, damage) in wrong {
-        let right = run(extension, text, Some("0.0.1")).expect("the editor's own text");
+        let right = run(extension, text, Some("0.0.1")).expect("the editor's text");
         assert!(right.text.as_str().contains("0.0.1"), "{text}");
         let refusal = with_wrong_edit(damage, || run(extension, text, Some("0.0.1")))
             .expect_err("a damaged edit");

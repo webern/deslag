@@ -236,7 +236,7 @@ enum Form {
 }
 
 impl Form {
-    /// How a new table in `parent` is written: as the parent's own tables are.
+    /// How a new table in `parent` is written: as the parent's other tables are.
     fn of(parent: &TableMut<'_>) -> Form {
         let table = match parent {
             TableMut::Inline(_) => return Form::Inline,

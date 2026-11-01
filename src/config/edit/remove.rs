@@ -4,7 +4,7 @@
 //!
 //! - **Block YAML**: the key's lines, from the start of its line to the end of its value's last
 //!   line. A comment on those lines goes with them; a comment line above stays. When the key was
-//!   the table's only one, the table's own line gains ` {}` after its colon and any anchor or tag,
+//!   the table's only one, the table's line gains ` {}` after its colon and any anchor or tag,
 //!   before a comment, so the table is left empty and not null. A null lint table turns the lint
 //!   off, and an empty one does not.
 //! - **Flow YAML and JSON**: the member and one comma, the one after it or, for the last member,

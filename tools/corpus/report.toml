@@ -1,5 +1,5 @@
 # The config `deslag-corpus report` runs the lints at unless given another. It selects every file,
-# where the repository's own config selects only the repository's files, and holds that config's
+# where the repository's config selects only the repository's files, and holds that config's
 # `[md.lints]` settings, so a lint fails a corpus file as it would fail one of deslag's own. It
 # leaves out the byte budget, which that config sets file by file in its overrides.
 
@@ -34,3 +34,5 @@ max_paragraph_chars = 500
 [md.lints.not_at_all]
 
 [md.lints.verbs_nothing]
+
+[md.lints.possessive_own]

@@ -102,7 +102,7 @@ impl View<'_, '_> {
 
     /// The best guess of the word at `at` when an earlier rule or a table committed to it: `Sure`
     /// or `Likely`. This is what a rule may lean on in a neighbour at `Likely`, as step 4 allows:
-    /// the neighbour's own rule chose, so its guess does not wait on a tag still open. `None` for a
+    /// the neighbour's rule chose, so its guess does not wait on a tag still open. `None` for a
     /// word at `Unsure` or `Unknown`, and for a token that is no word.
     #[inline(always)]
     pub(super) fn decided(&self, at: usize) -> Option<Tag> {

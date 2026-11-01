@@ -12,7 +12,7 @@
 //!    variation selector or combining mark behind.
 //! 3. Its replacement does not hold a control character, so no line starts or ends, and, in a block
 //!    comment, nothing that would read as `/*` or `*/`.
-//! 4. The document's own reader, reading the result, finds the same blocks, spans, line breaks and
+//! 4. The document's reader, reading the result, finds the same blocks, spans, line breaks and
 //!    pieces, and the same text in them but for the edits. Tokens and sentences are made from
 //!    these, so they need not be compared.
 //!

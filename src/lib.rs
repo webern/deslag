@@ -6,7 +6,7 @@
 //!
 //! The budget for a file comes from, most specific first:
 //!
-//! 1. the `max_size_bytes` key in the file's own YAML frontmatter;
+//! 1. the `max_size_bytes` key in the file's YAML frontmatter;
 //! 2. the most specific `[[md.overrides]]` entry in the [`config::Config`] that sets one;
 //! 3. the `[md.lints.max_size_bytes]` table of the config.
 //!

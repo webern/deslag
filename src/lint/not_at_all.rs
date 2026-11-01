@@ -362,7 +362,7 @@ mod tests {
         ] {
             assert!(found(text).is_empty(), "{text}");
         }
-        // The question mark has to be at the end of the match's own sentence.
+        // The question mark has to be at the end of the match's sentence.
         assert_eq!(found("Why? It is not used at all."), ["not used at all"]);
         assert_eq!(found("It is not used at all. Why?"), ["not used at all"]);
     }

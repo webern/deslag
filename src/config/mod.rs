@@ -212,7 +212,7 @@ fn versions(
     };
     // The versions come first, so a config from a later deslag says so, whatever else in it
     // this deslag does not know. When the head cannot be read, the error is the whole file's,
-    // which words it best; the head's own stands only if the file reads.
+    // which words it best; the head's error stands only if the file reads.
     let head: Head = match deserialize(text, format) {
         Ok(head) => head,
         Err(head_error) => {

@@ -1,0 +1,14 @@
+ERROR: deslag detected possessives padded with "own"!
+
+src/lib.rs has 3 possessives padded with "own".
+
+Delete "own": the possessive already says whose. Write "the crate's version", not "the crate's own version". Where the contrast is the point, name what it contrasts with instead, such as "deslag's config, not the user's".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 1: "project's own config"
+  line 5: "users' own docs"
+  line 9: "crate's own data"
+
+deslag: 1 of 1 files with possessives padded with "own".

@@ -132,6 +132,8 @@ value = 8000
 
 # not_at_all: off
 
+# possessive_own: off
+
 [repo_layout]
 heading = "Repository layout"
 max_entries = 15
@@ -166,6 +168,8 @@ value = 8000
 
 # not_at_all: off
 
+# possessive_own: off
+
 [repo_layout]
 heading = "Repository layout"
 max_entries = 15
@@ -198,6 +202,8 @@ max_percent = 1.0
 value = 20000
 
 # not_at_all: off
+
+# possessive_own: off
 
 # repo_layout: off
 
@@ -418,6 +424,8 @@ fn a_budget_in_the_frontmatter_is_the_last_layer() {
          value = 300\n\
          \n\
          # not_at_all: off\n\
+         \n\
+         # possessive_own: off\n\
          \n\
          # repo_layout: off\n\
          \n\

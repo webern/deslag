@@ -1,0 +1,154 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 14 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"tool's own reference\"\n  line 3: \"suite's own legs\"\n  line 6: \"corpus’s own vocabulary\"\n  line 6: \"rules' own reading\"\n  line 7: \"vendor's very own routes\"\n  line 9: \"user's own `API_KEY`\"\n  line 9: \"crate's own version\"\n  line 10: \"crate's own docs\"\n  line 10: \"engine's own CLI\"\n  line 14: \"issue's own proposal\"\n  line 14: \"maintainers' own plan\"\n  line 15: \"reviewer's own notes\"\n  line 17: \"Ruby's own parser\"\n  line 17: \"maintainer's own hooks\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 27,
+          "end": 47,
+          "line": 3,
+          "column": 18,
+          "end_line": 3,
+          "end_column": 38,
+          "note": "\"tool's own reference\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 53,
+          "end": 69,
+          "line": 3,
+          "column": 44,
+          "end_line": 3,
+          "end_column": 60,
+          "note": "\"suite's own legs\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 128,
+          "end": 153,
+          "line": 6,
+          "column": 29,
+          "end_line": 6,
+          "end_column": 52,
+          "note": "\"corpus’s own vocabulary\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 163,
+          "end": 181,
+          "line": 6,
+          "column": 62,
+          "end_line": 6,
+          "end_column": 80,
+          "note": "\"rules' own reading\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 221,
+          "end": 245,
+          "line": 7,
+          "column": 40,
+          "end_line": 7,
+          "end_column": 64,
+          "note": "\"vendor's very own routes\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 264,
+          "end": 284,
+          "line": 9,
+          "column": 17,
+          "end_line": 9,
+          "end_column": 37,
+          "note": "\"user's own `API_KEY`\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 294,
+          "end": 313,
+          "line": 9,
+          "column": 47,
+          "end_line": 9,
+          "end_column": 66,
+          "note": "\"crate's own version\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 341,
+          "end": 357,
+          "line": 10,
+          "column": 25,
+          "end_line": 10,
+          "end_column": 41,
+          "note": "\"crate's own docs\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 390,
+          "end": 406,
+          "line": 10,
+          "column": 74,
+          "end_line": 12,
+          "end_column": 4,
+          "note": "\"engine's own CLI\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 443,
+          "end": 463,
+          "line": 14,
+          "column": 16,
+          "end_line": 14,
+          "end_column": 36,
+          "note": "\"issue's own proposal\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 477,
+          "end": 498,
+          "line": 14,
+          "column": 50,
+          "end_line": 14,
+          "end_column": 71,
+          "note": "\"maintainers' own plan\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 516,
+          "end": 536,
+          "line": 15,
+          "column": 10,
+          "end_line": 15,
+          "end_column": 30,
+          "note": "\"reviewer's own notes\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 558,
+          "end": 575,
+          "line": 17,
+          "column": 20,
+          "end_line": 17,
+          "end_column": 37,
+          "note": "\"Ruby's own parser\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 587,
+          "end": 609,
+          "line": 17,
+          "column": 49,
+          "end_line": 17,
+          "end_column": 71,
+          "note": "\"maintainer's own hooks\""
+        }
+      ]
+    }
+  ]
+}

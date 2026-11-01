@@ -11,6 +11,9 @@ message = "{path} pads a negation"
 [md.lints.verbs_nothing]
 message = "{path} hides the noun"
 
+[md.lints.possessive_own]
+message = "{path} pads a possessive"
+
 [[rust.allow]]
 path = "src/lib.rs"
 lint = "not_at_all"
@@ -21,6 +24,9 @@ reason = "A frozen config sets every setting."
 
 [rust.lints.verbs_nothing]
 message = "{path} hides the noun"
+
+[rust.lints.possessive_own]
+message = "{path} pads a possessive"
 
 [[cpp.allow]]
 path = "src/a.c"
@@ -33,6 +39,9 @@ reason = "A frozen config sets every setting."
 [cpp.lints.verbs_nothing]
 message = "{path} hides the noun"
 
+[cpp.lints.possessive_own]
+message = "{path} pads a possessive"
+
 [[toml.allow]]
 path = "Cargo.toml"
 lint = "not_at_all"
@@ -43,3 +52,6 @@ reason = "A frozen config sets every setting."
 
 [toml.lints.verbs_nothing]
 message = "{path} hides the noun"
+
+[toml.lints.possessive_own]
+message = "{path} pads a possessive"

@@ -10,8 +10,8 @@ quote = "The sentence, as the file holds it."
 reason = "Why it stays."
 ```
 
-`lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all` or `verbs_nothing`. The
-file must hold the quote as one sentence, and the lint must find something in it. Whitespace folds
-to one space, and a block quote's `>` and a file's byte order mark are left out; the rest must
-match, an invisible character too. An entry that stops holding fails the run; an agent may delete
-it.
+`lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all`, `verbs_nothing` or
+`possessive_own`. The file must hold the quote as one sentence, and the lint must find something
+in it. Whitespace folds to one space, and a block quote's `>` and a byte order mark are left out;
+the rest must match, invisible characters too. An entry that stops holding fails the run; an agent
+may delete it.

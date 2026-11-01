@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nREADME.md has 1 possessive padded with \"own\".\n\nDelete \"own\" in README.md.\n\nThe places:\n  line 3: \"crate's own version\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 28,
+          "end": 47,
+          "line": 3,
+          "column": 19,
+          "end_line": 3,
+          "end_column": 38,
+          "note": "\"crate's own version\""
+        }
+      ]
+    }
+  ]
+}

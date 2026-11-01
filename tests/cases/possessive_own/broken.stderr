@@ -1,0 +1,25 @@
+ERROR: deslag detected possessives padded with "own"!
+
+README.md has 14 possessives padded with "own".
+
+Delete "own": the possessive already says whose. Write "the crate's version", not "the crate's own version". Where the contrast is the point, name what it contrasts with instead, such as "deslag's config, not the user's".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 3: "tool's own reference"
+  line 3: "suite's own legs"
+  line 6: "corpus’s own vocabulary"
+  line 6: "rules' own reading"
+  line 7: "vendor's very own routes"
+  line 9: "user's own `API_KEY`"
+  line 9: "crate's own version"
+  line 10: "crate's own docs"
+  line 10: "engine's own CLI"
+  line 14: "issue's own proposal"
+  line 14: "maintainers' own plan"
+  line 15: "reviewer's own notes"
+  line 17: "Ruby's own parser"
+  line 17: "maintainer's own hooks"
+
+deslag: 1 of 1 files with possessives padded with "own".

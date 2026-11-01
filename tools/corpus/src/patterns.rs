@@ -13,7 +13,7 @@ use std::ops::Range;
 
 use deslag::document::{Document, TokenKind};
 use deslag::lint::pattern::{Item, Pattern};
-use deslag::lint::{not_at_all, verbs_no_nouns, verbs_nothing};
+use deslag::lint::{not_at_all, possessive_own, verbs_no_nouns, verbs_nothing};
 use serde::Serialize;
 
 use crate::candidates::{COMMON_WORDS, masked};
@@ -75,13 +75,17 @@ pub const CANDIDATES: &[(&str, Pattern)] = &[
 /// forms, which together are the lint `verbs_no_nouns`, and `verbs_nothing` has the same two.
 /// The `verbs_nothing` patterns here are the raw patterns, counted before the lint's sentence-end
 /// and code-name checks, so they count a little more than the lint. `lints` measures a whole lint
-/// under its id.
+/// under its id. `possessive_own_single` is the possessive in `'s` and `possessive_own_plural` the
+/// one in `s'`, raw as well: they count the matches that the lint's coordinated-possessor and
+/// quote checks drop.
 pub const SHIPPED: &[(&str, Pattern)] = &[
     ("verbs_no_nouns_s", verbs_no_nouns::PATTERN),
     ("verbs_no_nouns_forms", verbs_no_nouns::FORMS),
     ("not_at_all", not_at_all::PATTERN),
     ("verbs_nothing_s", verbs_nothing::PATTERN),
     ("verbs_nothing_forms", verbs_nothing::FORMS),
+    ("possessive_own_single", possessive_own::SINGLE),
+    ("possessive_own_plural", possessive_own::PLURAL),
 ];
 
 /// How many examples a label shows for a pattern, each from a different repository.

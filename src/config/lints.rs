@@ -74,6 +74,10 @@ pub struct Lints {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("since" = "0.0.5"))]
     pub verbs_nothing: Option<VerbsNothing>,
+    /// That a possessive noun is not padded with `own`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "next"))]
+    pub possessive_own: Option<PossessiveOwn>,
 }
 
 impl Lints {
@@ -89,6 +93,7 @@ impl Lints {
             Lint::VerbsNoNouns => self.verbs_no_nouns.is_some(),
             Lint::NotAtAll => self.not_at_all.is_some(),
             Lint::VerbsNothing => self.verbs_nothing.is_some(),
+            Lint::PossessiveOwn => self.possessive_own.is_some(),
         }
     }
 
@@ -180,6 +185,7 @@ impl Merge for Lints {
         self.verbs_no_nouns.merge(&over.verbs_no_nouns);
         self.not_at_all.merge(&over.not_at_all);
         self.verbs_nothing.merge(&over.verbs_nothing);
+        self.possessive_own.merge(&over.possessive_own);
     }
 }
 
@@ -797,6 +803,27 @@ pub struct VerbsNothing {
 }
 
 impl Merge for VerbsNothing {
+    fn merge(&mut self, over: &Self) {
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
+/// `lints.possessive_own`: a file fails when a possessive noun is padded with `own`, as in `the
+/// crate's own version`.
+///
+/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PossessiveOwn {
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    #[schemars(extend("since" = "next"))]
+    pub message: Option<String>,
+}
+
+impl Merge for PossessiveOwn {
     fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);

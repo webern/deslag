@@ -11,9 +11,9 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use deslag::Document;
-use deslag::config::{BannedPhrases, NotAtAll, VerbsNoNouns, VerbsNothing};
+use deslag::config::{BannedPhrases, NotAtAll, PossessiveOwn, VerbsNoNouns, VerbsNothing};
 use deslag::lint::banned_phrases::{self, CATALOGUE};
-use deslag::lint::{not_at_all, verbs_no_nouns, verbs_nothing};
+use deslag::lint::{not_at_all, possessive_own, verbs_no_nouns, verbs_nothing};
 use deslag_corpus::load::Fixture;
 use deslag_corpus::sidecar::{Entry, Exclusion, Sidecar, Tried};
 use serde_json::{Value, json};
@@ -679,13 +679,15 @@ struct Found<'f> {
     pads: bool,
     /// Whether it holds the construction of `verbs_nothing`.
     hides: bool,
+    /// Whether it holds the construction of `possessive_own`.
+    owns: bool,
 }
 
 /// Asserts the claim of the taste lint `lint`, for which `holds` says whether a fixture holds its
 /// construction: over the English fixtures, `llm` files hold it at least 3 times as often as
 /// `human` files, and at most 3.5% of `human` files do.
 fn assert_taste_claim(lint: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> bool) {
-    // Their words are English; `no` and `at` are words of other languages too.
+    // Their words are English; `no`, `at` and `own` are words of other languages too.
     let flagged = |category: &str| {
         let english = held.iter().filter(|held| {
             held.fixture.category == category
@@ -720,8 +722,8 @@ fn assert_taste_claim(lint: &str, held: &[Found<'_>], holds: fn(&Found<'_>) -> b
 /// `llm`, as it does in every measure by default.
 ///
 /// The same pass, which reads each file once, checks the claim that `verbs_no_nouns`,
-/// `not_at_all` and `verbs_nothing` each make: `llm` files hold it at least 3 times as often as
-/// `human` files, and at most 3.5% of `human` files do.
+/// `not_at_all`, `verbs_nothing` and `possessive_own` each make: `llm` files hold it at least 3
+/// times as often as `human` files, and at most 3.5% of `human` files do.
 #[test]
 #[ignore = "needs make fetch-blobs"]
 fn the_catalogue_counts_are_the_big_tiers() {
@@ -741,6 +743,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
     let negating = VerbsNoNouns::default();
     let padding = NotAtAll::default();
     let hiding = VerbsNothing::default();
+    let owning = PossessiveOwn::default();
     // What each fixture holds, each fixture read once, over every core.
     let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
     let held: Vec<Found<'_>> = std::thread::scope(|scope| {
@@ -751,6 +754,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
                 let negating = &negating;
                 let padding = &padding;
                 let hiding = &hiding;
+                let owning = &owning;
                 scope.spawn(move || {
                     chunk
                         .iter()
@@ -768,6 +772,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
                                 negates: verbs_no_nouns::check(&document, Some(negating)).is_some(),
                                 pads: not_at_all::check(&document, Some(padding)).is_some(),
                                 hides: verbs_nothing::check(&document, Some(hiding)).is_some(),
+                                owns: possessive_own::check(&document, Some(owning)).is_some(),
                             }
                         })
                         .collect::<Vec<_>>()
@@ -799,6 +804,7 @@ fn the_catalogue_counts_are_the_big_tiers() {
     assert_taste_claim("verbs_no_nouns", &held, |held| held.negates);
     assert_taste_claim("not_at_all", &held, |held| held.pads);
     assert_taste_claim("verbs_nothing", &held, |held| held.hides);
+    assert_taste_claim("possessive_own", &held, |held| held.owns);
 
     let path = Path::new(ROOT).join("src/lint/banned_phrases.toml");
     if std::env::var_os("DESLAG_FIX_CATALOG").is_some() {

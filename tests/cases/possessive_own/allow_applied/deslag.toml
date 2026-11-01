@@ -1,0 +1,9 @@
+schema_version = 2
+
+[md.lints.possessive_own]
+
+[[md.allow]]
+path = "README.md"
+lint = "possessive_own"
+quote = "The issue says the tool lists the project's own docs."
+reason = "A quotation from the issue."

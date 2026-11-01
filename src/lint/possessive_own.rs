@@ -7,9 +7,11 @@
 //! is not a function word ([`PREPOSITIONS`], [`CONJUNCTIONS`], [`DETERMINERS`], [`AUXILIARIES`]).
 //! These are not matches, each pinned by a case:
 //!
-//! - pronoun contractions, which are not nouns ([`CONTRACTIONS`], such as `it's` and `one's`), and
-//!   the pronouns `its`, `their`, `your`, `my`, `our`, `his` and `her`, which do not end in `'s`:
-//!   `its own` and `your own` stand for a separate one, or the reader's against the default;
+//! - pronouns in `'s`, which are not nouns ([`PRONOUNS_IN_S`]): contractions such as `it's`, and
+//!   `one's` and the indefinite pronouns such as `everyone's`, where `one's own` and `everyone's
+//!   own` are the idiom for a person's; and the pronouns `its`, `their`, `your`, `my`, `our`, `his`
+//!   and `her`, which do not end in `'s`: `its own` and `your own` stand for a separate one, or the
+//!   reader's against the default;
 //! - coordinated possessors, as in `ccgo's and libc's own diagnostics`: another possessive precedes
 //!   the one before `own`, with only `and`, `or` or commas between, so the `own` contrasts;
 //! - `own` with nothing after it, or before a function word, as in `is selfie's own` and `a place
@@ -39,10 +41,28 @@ use crate::lint::{Keep, Mark, MarkKind, quote};
 pub const HEADING: &str = "ERROR: deslag detected possessives padded with \"own\"!";
 
 /// Pronouns and adverbs that end in `'s` and are not a noun's possessive: `it's own` is a typo or a
-/// verb, and `one's own` is the idiom for a person's.
-pub const CONTRACTIONS: &[&str] = &[
-    "it's", "that's", "there's", "what's", "who's", "let's", "here's", "where's", "how's", "he's",
-    "she's", "one's",
+/// verb, and `one's own` and `everyone's own` are the idiom for a person's. `no one's` is covered by
+/// `one's`, the token before `own`.
+pub const PRONOUNS_IN_S: &[&str] = &[
+    "it's",
+    "that's",
+    "there's",
+    "what's",
+    "who's",
+    "let's",
+    "here's",
+    "where's",
+    "how's",
+    "he's",
+    "she's",
+    "one's",
+    "everyone's",
+    "everybody's",
+    "someone's",
+    "somebody's",
+    "anyone's",
+    "anybody's",
+    "nobody's",
 ];
 
 /// Prepositions, among the words after `own` that begin a new phrase, as in `of its own in
@@ -82,7 +102,7 @@ const NEXT: Item = Item::Any(&[
 ]);
 
 /// A word that ends in `'s` and is not a pronoun contraction.
-const POSSESSIVE: Item = Item::All(&[Item::Suffix("'s"), Item::NotIn(&[CONTRACTIONS])]);
+const POSSESSIVE: Item = Item::All(&[Item::Suffix("'s"), Item::NotIn(&[PRONOUNS_IN_S])]);
 
 /// A possessive in `'s`, `very` or nothing, `own`, and the next word.
 pub const SINGLE: Pattern = Pattern {
@@ -207,7 +227,7 @@ fn ends_a_possessive(tokens: &[Token<'_>]) -> bool {
     };
     if last.kind == TokenKind::Word {
         let folded = last.folded();
-        return folded.ends_with("'s") && !CONTRACTIONS.contains(&folded.as_str());
+        return folded.ends_with("'s") && !PRONOUNS_IN_S.contains(&folded.as_str());
     }
     let before = tokens.len().checked_sub(2).map(|at| &tokens[at]);
     last.kind == TokenKind::Punctuation
@@ -368,8 +388,8 @@ mod tests {
     #[test]
     fn a_quote_that_stands_apart_from_its_word_is_no_possessive() {
         for text in [
-            "The users 'own' files are listed.",
-            "The users \u{2018}own\u{2019} files are listed.",
+            "The users 'own files' are listed.",
+            "The users \u{2018}own files\u{2019} are listed.",
         ] {
             assert!(found(text).is_empty(), "{text}");
         }
@@ -426,16 +446,33 @@ mod tests {
     }
 
     #[test]
-    fn a_pronoun_contraction_is_no_noun() {
-        for word in CONTRACTIONS {
-            for text in [
-                format!("{word} own file."),
-                format!("It says {word} own file."),
-                format!("It says {} own file.", word.replace('\'', "\u{2019}")),
-                format!("It says {} OWN file.", word.to_uppercase()),
-            ] {
-                assert!(found(&text).is_empty(), "{text}");
-            }
+    fn a_pronoun_in_s_is_no_noun() {
+        // A literal list, so that deleting a word from the constant fails its sentence.
+        for text in [
+            "It's own file.",
+            "That's own thing.",
+            "There's own sense.",
+            "What's own file.",
+            "Who's own file.",
+            "Let's own file.",
+            "Here's own file.",
+            "Where's own file.",
+            "How's own file.",
+            "He's own file.",
+            "She's own file.",
+            "One's own file.",
+            "Everyone's own file.",
+            "Everybody's own file.",
+            "Someone's own file.",
+            "Somebody's own file.",
+            "Anyone's own file.",
+            "Anybody's own file.",
+            "Nobody's own file.",
+            "No one's own file.",
+            "It says everyone\u{2019}s own file.",
+            "It says EVERYONE'S OWN file.",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
         }
         assert!(found("A room of one's own.").is_empty());
         assert!(found("Let's own it.").is_empty());
@@ -522,11 +559,34 @@ mod tests {
     }
 
     #[test]
+    fn a_lone_apostrophe_is_no_plural_possessive_to_coordinate_with() {
+        for text in [
+            "It swallowed users ' and clients' own diagnostics.",
+            "It swallowed users \u{2019} and clients' own diagnostics.",
+        ] {
+            assert_eq!(found(text), ["clients' own diagnostics"], "{text}");
+        }
+    }
+
+    #[test]
     fn a_sentence_does_not_coordinate_with_the_one_before() {
         assert_eq!(
             found("It swallowed ccgo's. And libc's own diagnostics."),
             ["libc's own diagnostics"]
         );
+    }
+
+    #[test]
+    fn a_block_does_not_coordinate_with_the_one_before() {
+        // No terminator ends the first block, so only the slice to the sentence keeps the
+        // possessives apart.
+        for text in [
+            "- ccgo's and\n\nlibc's own diagnostics.",
+            "# ccgo's and\n\nlibc's own diagnostics.",
+            "- ccgo's,\n\nlibc's own diagnostics.",
+        ] {
+            assert_eq!(found(text), ["libc's own diagnostics"], "{text}");
+        }
     }
 
     #[test]

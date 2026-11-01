@@ -91,16 +91,30 @@ pub const FORBIDDEN: [&str; 9] = [
 /// More of them, kept apart as they came later.
 pub const FORBIDDEN_MORE: [&str; 2] = ["like", "send"];
 
-/// Fails if `text`, which is `what`, names a word or a sentence of the done-when gold, or has a
-/// section of the full report. A path under the temp dir is skipped: its random name can hold a
-/// word, as `/tmp/.tmpjLYIs2` holds `s2`.
-pub fn assert_no_words(text: &str, what: &str) {
+/// `text` without the tokens that hold a path under the temp dir: its random name can hold a word,
+/// as `/tmp/.tmpjLYIs2` holds `s2`.
+fn without_temp_paths(text: &str) -> String {
     let temp = std::env::temp_dir();
     let temp = temp.to_string_lossy();
-    let words: String = text
-        .split_inclusive(char::is_whitespace)
+    text.split_inclusive(char::is_whitespace)
         .filter(|token| !token.contains(temp.as_ref()))
-        .collect();
+        .collect()
+}
+
+/// Fails if `saved`, a saved run, names a word of the done-when gold. A saved run holds the path of
+/// its gold, so a path under the temp dir is skipped as in `assert_no_words`. Its column names hold
+/// "likely", so this looks for the words but that one.
+pub fn assert_no_words_in_run(saved: &str) {
+    let words = without_temp_paths(saved);
+    for word in FORBIDDEN.iter().chain(&["send"]) {
+        assert!(!words.contains(word), "the saved run names `{word}`");
+    }
+}
+
+/// Fails if `text`, which is `what`, names a word or a sentence of the done-when gold, or has a
+/// section of the full report. A path under the temp dir is skipped.
+pub fn assert_no_words(text: &str, what: &str) {
+    let words = without_temp_paths(text);
     for word in FORBIDDEN.iter().chain(&FORBIDDEN_MORE) {
         assert!(!words.contains(word), "{what} names `{word}`:\n{text}");
     }

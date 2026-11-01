@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 use common::{
-    FORBIDDEN, IMPORT_FIELDS, assert_no_words, case_path, import_with_form_in, line_of_form,
+    IMPORT_FIELDS, assert_no_words, assert_no_words_in_run, case_path, import_with_form_in,
+    line_of_form,
 };
 
 fn exam(args: &[&str]) -> Output {
@@ -87,10 +88,7 @@ fn a_holdout_gold_prints_aggregates_only_and_cannot_be_made_to_print_more() {
     // The metrics are all still there.
     assert!(report.contains("7/15") && report.contains("Tier gaps"));
     let saved = std::fs::read_to_string(&run).unwrap();
-    // Its column names hold "likely", so look for the words but that one.
-    for word in FORBIDDEN.iter().chain(&["send"]) {
-        assert!(!saved.contains(word), "the saved run names `{word}`");
-    }
+    assert_no_words_in_run(&saved);
     assert!(saved.contains("\"sent_id\":\"1\"") && saved.contains("\"sent_id\":\"4\""));
 
     // An import run of the same gold, to compare against.
@@ -463,9 +461,7 @@ fn score_holdout_prints_aggregates_for_a_gold_that_lost_its_header() {
         assert!(report.contains("mode       aggregate"), "{report}");
         assert!(report.contains("7/15") && report.contains("Tier gaps"));
         let saved = std::fs::read_to_string(&run).unwrap();
-        for word in FORBIDDEN.iter().chain(&["send"]) {
-            assert!(!saved.contains(word), "the saved run names `{word}`");
-        }
+        assert_no_words_in_run(&saved);
     }
 
     // An import run takes the same road.

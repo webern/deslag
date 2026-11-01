@@ -18,15 +18,15 @@ use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, stderr, stdout};
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
-use deslag::config::{NotAtAll, VerbsNoNouns, VerbsNothing};
+use deslag::config::{NotAtAll, PossessiveOwn, VerbsNoNouns, VerbsNothing};
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{
-    Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, verbs_no_nouns,
-    verbs_nothing,
+    Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, possessive_own,
+    verbs_no_nouns, verbs_nothing,
 };
 use deslag::{Config, ConfigSource, Document, Violation, check_file};
 
@@ -898,6 +898,16 @@ fn the_corpus_locations_hold_what_they_point_at() {
                         );
                     }
                 }
+                Violation::PossessiveOwn(over) => {
+                    for found in &over.matches {
+                        let held = held(&found.location);
+                        assert!(
+                            held.split_whitespace().next() == found.quote.split_whitespace().next()
+                                && held.to_lowercase().contains("own"),
+                            "{context}: {held:?} for {found:?}"
+                        );
+                    }
+                }
                 Violation::Density(over) => {
                     for block in &over.blocks {
                         let held = held(&block.location);
@@ -1356,6 +1366,30 @@ fn verbs_nothing_flags_llm_text_far_more_than_human_text() {
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by verbs_nothing: human {human}, llm {llm}, mixed {mixed}");
     assert!(llm >= 3 * human, "human {human}, llm {llm}");
+}
+
+/// The tree is too small for the lint's 3 times claim, which `tools/corpus/tests/blobs.rs` checks
+/// on the big tier, so the tree asks only that `llm` files hold the padding more often than `human`
+/// files.
+#[test]
+fn possessive_own_flags_llm_text_more_than_human_text() {
+    let fixtures = corpus();
+    let settings = PossessiveOwn::default();
+    let flagged = |category: &str| {
+        fixtures
+            .iter()
+            .filter(|fixture| fixture.category == category)
+            // Its words are English.
+            .filter(|fixture| fixture.sidecar.content.natural_language == "en")
+            .filter(|fixture| {
+                let text = String::from_utf8_lossy(&fixture.bytes);
+                possessive_own::check(&Document::markdown(&text), Some(&settings)).is_some()
+            })
+            .count()
+    };
+    let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
+    eprintln!("flagged by possessive_own: human {human}, llm {llm}, mixed {mixed}");
+    assert!(llm > human, "human {human}, llm {llm}");
 }
 
 /// The number of `llm/` fixtures the catalogue must match, so that it is not dead weight.

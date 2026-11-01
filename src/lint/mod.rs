@@ -13,6 +13,7 @@ pub mod max_emphasis;
 pub mod max_size_bytes;
 pub mod not_at_all;
 pub mod pattern;
+pub mod possessive_own;
 pub mod repo_layout;
 pub mod verbs_no_nouns;
 pub mod verbs_nothing;
@@ -60,11 +61,13 @@ pub enum Lint {
     NotAtAll,
     /// `verbs_nothing`: a verb whose object is `nothing` or `none`, as in `finds nothing`.
     VerbsNothing,
+    /// `possessive_own`: a possessive noun padded with `own`, as in `the crate's own version`.
+    PossessiveOwn,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 9] = [
+    pub const ALL: [Lint; 10] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -74,6 +77,7 @@ impl Lint {
         Lint::VerbsNoNouns,
         Lint::NotAtAll,
         Lint::VerbsNothing,
+        Lint::PossessiveOwn,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -88,6 +92,7 @@ impl Lint {
             Lint::VerbsNoNouns => "verbs_no_nouns",
             Lint::NotAtAll => "not_at_all",
             Lint::VerbsNothing => "verbs_nothing",
+            Lint::PossessiveOwn => "possessive_own",
         }
     }
 
@@ -118,7 +123,9 @@ impl Lint {
     pub(crate) fn needs(self) -> Need {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
-            Lint::VerbsNoNouns | Lint::NotAtAll | Lint::VerbsNothing => Need::Sentences,
+            Lint::VerbsNoNouns | Lint::NotAtAll | Lint::VerbsNothing | Lint::PossessiveOwn => {
+                Need::Sentences
+            }
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
             }
@@ -147,6 +154,10 @@ impl Lint {
                 "A sentence must name what its verb did not find, as in \"does not find a \
                  provider\", not \"finds nothing\"."
             }
+            Lint::PossessiveOwn => {
+                "A possessive noun must not be padded with \"own\", as in \"the crate's own \
+                 version\"."
+            }
         }
     }
 
@@ -163,6 +174,7 @@ impl Lint {
             Lint::VerbsNoNouns => "with verbs negated through their objects",
             Lint::NotAtAll => "with negations padded with \"at all\"",
             Lint::VerbsNothing => "with verbs whose object is nothing",
+            Lint::PossessiveOwn => "with possessives padded with \"own\"",
         }
     }
 }
@@ -227,6 +239,8 @@ pub enum Violation {
     NotAtAll(not_at_all::Over),
     /// The file makes `nothing` or `none` the object of a verb.
     VerbsNothing(verbs_nothing::Over),
+    /// The file pads a possessive noun with "own".
+    PossessiveOwn(possessive_own::Over),
 }
 
 impl Violation {
@@ -242,6 +256,7 @@ impl Violation {
             Violation::VerbsNoNouns(_) => Lint::VerbsNoNouns,
             Violation::NotAtAll(_) => Lint::NotAtAll,
             Violation::VerbsNothing(_) => Lint::VerbsNothing,
+            Violation::PossessiveOwn(_) => Lint::PossessiveOwn,
         }
     }
 
@@ -258,6 +273,7 @@ impl Violation {
             Violation::VerbsNoNouns(over) => verbs_no_nouns::marks(over),
             Violation::NotAtAll(over) => not_at_all::marks(over),
             Violation::VerbsNothing(over) => verbs_nothing::marks(over),
+            Violation::PossessiveOwn(over) => possessive_own::marks(over),
         }
     }
 
@@ -276,6 +292,7 @@ impl Violation {
             Violation::VerbsNoNouns(_) => Vec::new(),
             Violation::NotAtAll(_) => Vec::new(),
             Violation::VerbsNothing(_) => Vec::new(),
+            Violation::PossessiveOwn(_) => Vec::new(),
         }
     }
 
@@ -304,6 +321,9 @@ impl Violation {
             Violation::NotAtAll(over) => not_at_all::retain(over, keep).map(Violation::NotAtAll),
             Violation::VerbsNothing(over) => {
                 verbs_nothing::retain(over, keep).map(Violation::VerbsNothing)
+            }
+            Violation::PossessiveOwn(over) => {
+                possessive_own::retain(over, keep).map(Violation::PossessiveOwn)
             }
         }
     }
@@ -375,6 +395,7 @@ impl Finding {
             Violation::VerbsNoNouns(over) => verbs_no_nouns::render(&self.path, over),
             Violation::NotAtAll(over) => not_at_all::render(&self.path, over),
             Violation::VerbsNothing(over) => verbs_nothing::render(&self.path, over),
+            Violation::PossessiveOwn(over) => possessive_own::render(&self.path, over),
         }
     }
 
@@ -621,7 +642,7 @@ pub(crate) fn read(file: &RepoFile) -> Result<Vec<u8>, Error> {
     })
 }
 
-/// `bytes` as the lints read them: the file's own text when it is valid UTF-8, else the text with
+/// `bytes` as the lints read them: the file's text when it is valid UTF-8, else the text with
 /// each invalid byte replaced by one `$`, so an offset into the text is an offset into the file,
 /// and `$` is inert in every reader. A lossy decode would turn an invalid byte into three.
 /// [`check_repo`], [`check_file`] and `deslag explain` all read through this. `fix` reads a file
@@ -721,6 +742,8 @@ pub(crate) fn check_text<'a>(
             }
             Lint::VerbsNothing => verbs_nothing::check(&document, lints.verbs_nothing.as_ref())
                 .map(Violation::VerbsNothing),
+            Lint::PossessiveOwn => possessive_own::check(&document, lints.possessive_own.as_ref())
+                .map(Violation::PossessiveOwn),
         };
         findings.extend(violation.map(|violation| Finding {
             path: relative.to_string(),

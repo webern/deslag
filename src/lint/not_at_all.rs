@@ -102,7 +102,7 @@ pub fn check(document: &Document<'_>, settings: Option<&NotAtAll>) -> Option<Ove
 /// `source`, the text of a match, without the link markup that the match cuts through: a `[` whose
 /// `]` is past the end of the match, and a `]` with its `(destination)` whose `[` is before the
 /// match. A link the match holds whole stays as written, and so does a bracket in a code span.
-fn without_cut_links(source: &str) -> String {
+pub(crate) fn without_cut_links(source: &str) -> String {
     let chars: Vec<char> = source.chars().collect();
     let mut cut = vec![false; chars.len()];
     let mut open = Vec::new();
@@ -362,7 +362,7 @@ mod tests {
         ] {
             assert!(found(text).is_empty(), "{text}");
         }
-        // The question mark has to be at the end of the match's own sentence.
+        // The question mark has to be at the end of the match's sentence.
         assert_eq!(found("Why? It is not used at all."), ["not used at all"]);
         assert_eq!(found("It is not used at all. Why?"), ["not used at all"]);
     }

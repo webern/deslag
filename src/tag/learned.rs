@@ -14,10 +14,10 @@
 //!   rules had it `Likely`, it stays `Likely` with the rules' tags kept, however small the margin.
 //!
 //! The features are 21 templates of the word and its neighbours (the common set of Collins's
-//! tagger and of the perceptron taggers after it) and four that read the rules' own reading: its
+//! tagger and of the perceptron taggers after it) and four that read the rules' reading: its
 //! tag, its confidence and the tags it kept. A word whose origin is not English is spelled by a
 //! placeholder, `<Symbol>` and so on, wherever a spelling is read; its shape stays. The previous
-//! tags are the learned stage's own choices, so a sentence is read from its start. The weights,
+//! tags are the learned stage's choices, so a sentence is read from its start. The weights,
 //! cutoffs and the character classes the features need come from [`super::weights`].
 //!
 //! Arithmetic is integer: scores are sums of `i64` totals and the cutoffs compare differences of
@@ -112,7 +112,7 @@ fn spelled<'t>(token: &'t Token<'_>) -> &'t str {
 
 /// Where a token's normal form is.
 enum Norm<'t> {
-    /// In the token's own text, or a constant.
+    /// In the token's text, or a constant.
     Text(&'t str),
     /// In the sentence's arena of lower-cased forms.
     Lowered(Range<usize>),
@@ -902,7 +902,7 @@ mod tests {
             decide_with(unknown, &scores(0, sure, 0), true).confidence,
             Confidence::Sure
         );
-        // A word that is the rules' own Likely guess stays Likely below the cutoff, keeping what
+        // A word that is the rules' Likely guess stays Likely below the cutoff, keeping what
         // the rules kept; another guess does not.
         let likely_word = old(Tag::Noun, Confidence::Likely, &[Tag::Verb]);
         let floor = decide_with(likely_word, &scores(0, unsure - 1, 0), true);

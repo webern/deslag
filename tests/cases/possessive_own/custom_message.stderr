@@ -1,0 +1,10 @@
+ERROR: deslag detected possessives padded with "own"!
+
+README.md has 1 possessive padded with "own".
+
+Delete "own" in README.md.
+
+The places:
+  line 3: "crate's own version"
+
+deslag: 1 of 1 files with possessives padded with "own".

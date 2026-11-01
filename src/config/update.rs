@@ -225,7 +225,7 @@ mod tests {
     use crate::config::paths::SchemaPaths;
     use crate::lint::banned_phrases::Catalogue;
 
-    /// The release these tests run as, which is what the stamp moves to. The crate's own version
+    /// The release these tests run as, which is what the stamp moves to. The crate's version
     /// is no part of what they check, so it is one the tests choose.
     fn running() -> Version {
         Version::new(0, 3, 0)

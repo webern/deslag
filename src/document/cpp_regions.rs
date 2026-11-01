@@ -663,7 +663,7 @@ mod tests {
         }
     }
 
-    /// The alphabet of the scanner's own property tests, and the markers, splices and directives
+    /// The alphabet of the scanner's property tests, and the markers, splices and directives
     /// that the rules turn on.
     const FRAGMENTS: [&str; 48] = [
         "/",

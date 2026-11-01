@@ -19,7 +19,7 @@
 //! on the reader: a control or format character, another default-ignorable one, or a blank other
 //! than the ASCII space; a `reason` may hold a tab, CR or LF. Reports, notices and `deslag explain`
 //! write each character that shows as nothing or acts on the reader as `<U+XXXX>`. The checks read
-//! the text after parsing, so an escape in the config's own syntax, such as TOML's `\u200B`, is no
+//! the text after parsing, so an escape in the config's syntax, such as TOML's `\u200B`, is no
 //! way round them.
 
 use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
@@ -43,7 +43,8 @@ pub(super) struct AllowFile {
     #[schemars(extend("since" = "0.0.3"))]
     path: String,
     /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases`,
-    /// `verbs_no_nouns`, `not_at_all` and `verbs_nothing`. One entry names one lint.
+    /// `verbs_no_nouns`, `not_at_all`, `verbs_nothing` and `possessive_own`. One entry names one
+    /// lint.
     #[schemars(schema_with = "lint_schema")]
     #[schemars(extend("since" = "0.0.3"))]
     lint: String,
@@ -87,7 +88,8 @@ fn takes(lint: Lint) -> Result<(), &'static str> {
         | Lint::BannedPhrases
         | Lint::VerbsNoNouns
         | Lint::NotAtAll
-        | Lint::VerbsNothing => Ok(()),
+        | Lint::VerbsNothing
+        | Lint::PossessiveOwn => Ok(()),
         Lint::MaxSizeBytes => Err(
             "its finding is the whole file. Set the budget in an override of the file: \
              `lints.max_size_bytes.value`",
@@ -471,6 +473,7 @@ mod tests {
             "verbs_no_nouns",
             "not_at_all",
             "verbs_nothing",
+            "possessive_own",
         ] {
             for ch in [
                 '\u{200B}',
@@ -610,8 +613,8 @@ mod tests {
         assert!(
             said.contains("\"banned_char\", which is no lint")
                 && said.contains(
-                    "`banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all` or \
-                         `verbs_nothing`"
+                    "`banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all`, \
+                         `verbs_nothing` or `possessive_own`"
                 ),
             "{said}"
         );
@@ -680,7 +683,8 @@ mod tests {
                 "banned_phrases",
                 "verbs_no_nouns",
                 "not_at_all",
-                "verbs_nothing"
+                "verbs_nothing",
+                "possessive_own"
             ])
         );
     }

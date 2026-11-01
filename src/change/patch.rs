@@ -1,7 +1,7 @@
 //! Reading the patch `git diff -U0` prints into what it did to each file.
 //!
 //! A patch opens with a `diff --git` line and has a header, then a hunk for each stretch of lines
-//! it replaces. Paths come from the header's own lines, `rename from`, `---` and the like, since
+//! it replaces. Paths come from the header's other lines, `rename from`, `---` and the like, since
 //! the `diff --git` line cannot always be split. A path git quotes, one holding `"`, `\` or a
 //! control character, is read back from its C-style escapes. A hunk's lines are counted off by its
 //! header, so a removed line that reads `--- a/x` is never taken for a header.

@@ -1,6 +1,6 @@
 //! `max_size_bytes`: a file must not be larger than its byte budget.
 //!
-//! The budget comes from, most specific first, the `max_size_bytes` key in the file's own
+//! The budget comes from, most specific first, the `max_size_bytes` key in the file's
 //! frontmatter, then the settings the config resolves for the file. A file with neither does not
 //! have a budget and is not checked, though it counts among the files the tally reports.
 //!

@@ -61,6 +61,9 @@ max_paragraph_chars = 500
 # A taste lint, off by default: this repo names what a verb did not find.
 [md.lints.verbs_nothing]
 
+# This repo writes the possessive alone, `the crate's version`.
+[md.lints.possessive_own]
+
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000
@@ -107,7 +110,7 @@ lints.max_size_bytes.value = 1585
 globs = ["/scripts/blobstore/blobs.md"]
 lints.max_size_bytes.value = 8192
 
-# The comments of deslag's own source. A comment may not hold the characters and phrases the
+# The comments of deslag's source. A comment may not hold the characters and phrases the
 # prose of this repo may not.
 [rust]
 globs = ["/src/**/*.rs"]
@@ -145,7 +148,9 @@ load-bearing = "say what depends on it"
 
 [rust.lints.verbs_nothing]
 
-# The comments of deslag's own TOML outside tests/, and not the golden files of tools/sweep, which
+[rust.lints.possessive_own]
+
+# The comments of deslag's TOML outside tests/, and not the golden files of tools/sweep, which
 # the sweep prints. They are held to the same characters and phrases as the Rust comments.
 [toml]
 globs = [
@@ -187,3 +192,5 @@ load-bearing = "say what depends on it"
 [toml.lints.not_at_all]
 
 [toml.lints.verbs_nothing]
+
+[toml.lints.possessive_own]

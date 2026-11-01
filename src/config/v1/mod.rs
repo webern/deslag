@@ -42,7 +42,7 @@ pub(crate) struct Reading {
 pub(crate) struct SectionReading {
     /// The section's key, such as `md`.
     pub(crate) name: &'static str,
-    /// The section's own table.
+    /// The section's table.
     pub(crate) lints: Lints,
     /// Each override's table, in the order of the file.
     pub(crate) overrides: Vec<Lints>,

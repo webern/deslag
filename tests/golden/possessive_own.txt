@@ -1,0 +1,85 @@
+# possessive_own: each fixture under tests/corpus/ that it fails, with what it measured there.
+# A fixture that passes is not listed. Each is linted alone, in an empty directory.
+# tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
+# `make fix-golden` rewrites it; read the diff before committing it.
+# fails 77 of 1230: core 7, human 2, llm 41, mixed 27
+
+[md.lints.possessive_own]
+
+core/den-accidental-style.md matches:1
+core/den-agents.md matches:2
+core/den-classifier-design.md matches:1
+core/den-design-decisions.md matches:22
+core/den-implementation-notes.md matches:2
+core/den-mx-api-gaps.md matches:1
+core/den-roadmap.md matches:2
+human/gitlab--gitlab-com--chatops/README.md matches:1
+human/typed-ember--ember-cli-typescript-blueprints/CHANGELOG.md matches:1
+llm/AIQ-Kitware--aiq-dkps-formalization/dev__posthoc-prompt-analysis__findings__aivm-2404-jon__FINDINGS.md matches:2
+llm/AliAkhtari78--SpotifyScraper/extras__blog__spotifyscraper-v3.md matches:1
+llm/Data-Wise--atlas/BRAINSTORM-cross-surface-nudges-and-day-activity-2026-08-01.md matches:1
+llm/GladysAssistant--Gladys/github__CLAUDE_AUTOFIX.md matches:3
+llm/JordiRigau--hp-prime-kit/docs__commands__spreadsheet__ConfT1mean.md matches:1
+llm/Jwuthri--Tracely-ai/guides__SECURITY_AUDIT.md matches:1
+llm/OpenAgentsInc--openagents/bench__terminal-bench__traces__tb4--coder-one-matched-v8--sound-change-cascade--matched-v8-9567-r3__sound-change-cascade__KUdjBfR.episode__artifacts__persist-1.brief.md matches:1
+llm/TAJD--economist-style-guide-plugin/economist-style__skills__economist-style__reference__DIALECT-CONVENTIONS.md matches:1
+llm/WillEhrendreich--SageFs/docs__ecosystem-compatibility.md matches:6
+llm/ahmadghoniem--Hypermark/claude__skills__better-typography__details-and-accessibility.md matches:1
+llm/blpsoares--agentistics/docs__superpowers__plans__2026-06-30-team-mode-phase7-ondemand-chat.md matches:1
+llm/commonfabric--labs/docs__common__capabilities__files.md matches:1
+llm/danikf--tik4net/Docs__findings-cli-history.md matches:3
+llm/danikf--tik4net/Docs__findings-routeros-6.md matches:4
+llm/getbintana--bintana/docs__llm__qr.md matches:1
+llm/github--gh-aw-mcpg/guards__github-guard__docs__WORKIQ_GUARD_PLAN.md matches:1
+llm/gitlab--cznic--ccgo/v4__lib__setjmp-recover-handoff.md matches:2
+llm/globeandmail--startr/AGENTS.md matches:1
+llm/jjjkkkjjj--Matft/claude__skills__test-design__SKILL.md matches:1
+llm/microsoft--agent-host-protocol/plugins__session-metadata-migration-plugin__skills__session-metadata-migration__SKILL.md matches:1
+llm/nacyot--vllm-ds4f-gb10/notes__2026-09-12-issue-28-head-scripts__results.md matches:1
+llm/nefarius--DsHidMini/docs__RELEASE.md matches:1
+llm/perftool-incubator--crucible/docs__how-agent-instructions-work.md matches:1
+llm/phuryn--claude-usage/vscode-extension__README.md matches:1
+llm/pipeshub-ai--pipeshub-ai/integration-tests__perf__README.md matches:3
+llm/plasma-umass--coz/java__README.md matches:1
+llm/radixark--miles/scripts__sandbox_smoke__README.md matches:3
+llm/reidmorrison--semantic_logger/docs__config.md matches:2
+llm/retentioneering--retentioneering-tools/docs__adr__0014-agent-facing-docs-surface.md matches:3
+llm/rlaope--oh-my-hermes/omh__README.md matches:3
+llm/rmstdope--atlantis-hud/docs__releases__v0.14.0.md matches:1
+llm/ruby-git--ruby-git/docs__adr__0003-validation-of-git-semantics-is-delegated-to-git.md matches:1
+llm/sangrokjung--claude-forge/skills__loop-forge__references__codex-prompt-mechanism.md matches:1
+llm/spec-kitty--spec-kitty/kitty-specs__read-side-seam-primary-primitive-closure-01KYKMMT__tasks__WP01-suite-states-target-design__review-cycle-3.md matches:2
+llm/streetsidesoftware--inject-markdown/docs__ADRs__relative-links__0003-rebase-base-resolution.md matches:3
+llm/synthetic-sciences--openscience/backend__cli__skills__biology__bionemo-nims__SKILL.md matches:1
+llm/toa-io--toa/migrations__262.md matches:1
+llm/tokens-studio--figma-plugin/tools__figma-bridge__docs__BEST-PRACTICES.md matches:2
+llm/twidi--twicc/src__twicc__agent__plugin__README.md matches:1
+llm/wp-cli--handbook/contributions__licensing.md matches:1
+llm/yamadashy--repomix/github__releases__v1.x__v1.17.0.md matches:1
+mixed/ColorlibHQ--gentelella/changelog.md matches:2
+mixed/MarkMichaelis--ScoopBucket/README.md matches:1
+mixed/MinaProtocol--mina/docs__block-producer.md matches:1
+mixed/Shekyl-Foundation--shekyl-core/docs__ANONYMITY_NETWORKS.md matches:1
+mixed/aa8y--docker-dataset/README.md matches:1
+mixed/aloisdeniel--flutter_device_preview/device_preview__CHANGELOG.md matches:4
+mixed/brsloan--warewoolf/README.md matches:1
+mixed/cksystemsteaching--selfie/assignments__introductory-assignments.md matches:1
+mixed/dosco--graphjin/SECURITY.md matches:1
+mixed/dotnet--ClangSharp/README.md matches:1
+mixed/dotnet--msbuild/documentation__wiki__Binary-Log.md matches:1
+mixed/homebridge--homebridge/CHANGELOG.md matches:1
+mixed/hydra-ecosystem--hydra/website__docs__advanced__instantiate_objects__overview.md matches:1
+mixed/jasonacox--tinytuya/RELEASE.md matches:1
+mixed/msarson--Clarion-Extension/README.md matches:1
+mixed/ncsa--NEAT/ChangeLog.md matches:2
+mixed/nteract--semiotic/README.md matches:2
+mixed/perftool-incubator--crucible/workshop__README.md matches:1
+mixed/prometheus-community--helm-charts/charts__kube-prometheus-stack__README.md matches:1
+mixed/rantala--string-sorting/README.md matches:1
+mixed/reidmorrison--semantic_logger/docs__api.md matches:1
+mixed/reidmorrison--semantic_logger/docs__metrics.md matches:1
+mixed/ruby-git--ruby-git/CONTRIBUTING.md matches:1
+mixed/toshiki670--dotfiles/README.md matches:2
+mixed/ttop32--MouseTooltipTranslator/doc__description.md matches:6
+mixed/ubolonton--emacs-module-rs/guide__src__testing.md matches:1
+mixed/zcash--librustzcash/zcash_client_sqlite__CHANGELOG.md matches:2

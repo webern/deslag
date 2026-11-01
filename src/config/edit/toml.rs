@@ -333,7 +333,7 @@ fn opening_comments_stay(lines: &[&str], line: usize, last_line: usize) -> bool 
 }
 
 /// What of the text that came before a key on its lines stays when the key goes: all of it but the
-/// key's own indentation, and, unless `keep_comments`, the comment lines directly above the key.
+/// key's indentation, and, unless `keep_comments`, the comment lines directly above the key.
 fn kept_before(before: &str, keep_comments: bool) -> String {
     let whole = match before.rfind('\n') {
         Some(end) => &before[..=end],

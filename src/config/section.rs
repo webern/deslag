@@ -171,7 +171,7 @@ pub struct Section {
     name: &'static str,
     /// The files it selects: its globs, written or default, less its exclude.
     globs: Globs,
-    /// The section's own lints table.
+    /// The section's lints table.
     pub(crate) lints: Lints,
     /// Its overrides, in the order of the file.
     pub(crate) overrides: Vec<Override>,

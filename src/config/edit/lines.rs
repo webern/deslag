@@ -213,8 +213,8 @@ fn is_blank(line: &str) -> bool {
     line.trim().is_empty()
 }
 
-/// For each line of `old`, whether an edit may take it away: a TOML key's own lines, the comment
-/// lines right above them, and the run of blank lines on each side; a YAML or JSON key's own lines
+/// For each line of `old`, whether an edit may take it away: a TOML key's lines, the comment
+/// lines right above them, and the run of blank lines on each side; a YAML or JSON key's lines
 /// only, and the stamp's lines only. [`seals`] adds the lines of the tables a delete emptied.
 fn removable(old: &[Line<'_>], touched: &[Touch]) -> Vec<bool> {
     let mut may = vec![false; old.len()];

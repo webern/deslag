@@ -65,3 +65,5 @@ load-bearing = "say what depends on it"
 [md.lints.not_at_all]
 
 [md.lints.verbs_nothing]
+
+[md.lints.possessive_own]

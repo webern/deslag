@@ -3,7 +3,7 @@
 //! A file's settings are the `lints` of the section that selects it, then each override that
 //! matches it in the order
 //! [`Section::overrides_for`](crate::config::Section::overrides_for) gives, then a budget in the
-//! file's own frontmatter. For each file this names the config, says whether the walk skips the
+//! file's frontmatter. For each file this names the config, says whether the walk skips the
 //! file and whether a section selects it or excludes it, lists the overrides and the frontmatter
 //! budget, and shows every lint's settings as TOML, whatever language the config is written in,
 //! then lists the `allow` entries that name the file, each with the line of its sentence or "no

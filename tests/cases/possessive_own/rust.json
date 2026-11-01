@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nsrc/lib.rs has 3 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"project's own config\"\n  line 5: \"users' own docs\"\n  line 9: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 24,
+          "end": 44,
+          "line": 1,
+          "column": 25,
+          "end_line": 1,
+          "end_column": 45,
+          "note": "\"project's own config\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 193,
+          "end": 208,
+          "line": 5,
+          "column": 19,
+          "end_line": 5,
+          "end_column": 34,
+          "note": "\"users' own docs\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 333,
+          "end": 349,
+          "line": 9,
+          "column": 26,
+          "end_line": 9,
+          "end_column": 42,
+          "note": "\"crate's own data\""
+        }
+      ]
+    }
+  ]
+}

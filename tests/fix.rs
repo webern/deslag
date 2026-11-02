@@ -327,6 +327,38 @@ fn fix_keeps_the_lone_crs_of_a_file_and_fixes_past_its_fences() {
 }
 
 #[test]
+fn fix_keeps_the_lone_crs_of_a_rust_file_and_a_cpp_file_and_fixes_their_comments() {
+    for (path, from) in [
+        (
+            "src/lib.rs",
+            "// A \u{2014} b.\rlet s = \"C \u{2014} d\";\r/// E \u{2014} f.\rfn b() {}\r",
+        ),
+        (
+            "src/a.cpp",
+            "// A \u{2014} b.\rchar *s = \"C \u{2014} d\";\r/*\r * E \u{2014} f.\r */\rint b;\r",
+        ),
+    ] {
+        let repo = Repo::new();
+        repo.write(
+            "deslag.toml",
+            "schema_version = 2\n\n[rust.lints.banned_chars]\n\n[rust.lints.banned_chars.groups]\n\
+             dashes = true\n\n[cpp.lints.banned_chars]\n\n[cpp.lints.banned_chars.groups]\n\
+             dashes = true\n",
+        );
+        repo.write(path, from);
+        let output = repo.run(&["fix"]);
+        assert_eq!(code(&output), 0, "{path}: {}", stderr(&output));
+        assert_eq!(
+            String::from_utf8(read(&repo, path)).expect("UTF-8"),
+            // The dash in the string is code, and the dashes in the comments are fixed.
+            from.replace("A \u{2014}", "A -")
+                .replace("E \u{2014}", "E -"),
+            "{path}"
+        );
+    }
+}
+
+#[test]
 fn fix_says_a_deletion_takes_out_only_the_character() {
     let repo = repo_with("# Notes\n\nA zero\u{200B} width space.\n");
     let output = repo.run(&["fix"]);

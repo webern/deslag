@@ -11,3 +11,4 @@ tests/cases/repo_layout/lone_cr/** -text
 tests/cases/banned_phrases/byte_order_mark/** -text
 tests/cases/not_at_all/metadata_blocks/** -text
 tests/cases/max_size_bytes/frontmatter_closers/** -text
+tests/cases/possessive_own/line_endings/** -text

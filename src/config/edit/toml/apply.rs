@@ -19,6 +19,9 @@
 //!   comment lines directly above it, and a table left empty by it is still written, as `{}` when it
 //!   is dotted, once every edit is made and it is empty still, and under its own header when the
 //!   file did not have a header for it;
+//! - the comments of what a delete takes away go above a key or header on a line of its own: when
+//!   the deleted key was in an inline table, above the key that holds the outermost one, since an
+//!   inline table is one line;
 //! - an item taken out of a list takes the rest of its line and the comment lines above it.
 //!
 //! The lines of the old text that each edit may take away are its [`Touch`]es; the check by lines
@@ -931,8 +934,30 @@ impl Editor<'_> {
     }
 }
 
-/// Writes `lines` above the key or table at `path`, in its decoration. Whether there was a place.
+/// `path`, or the nearest place above it that is not inside an inline table: the key that holds
+/// the outermost inline table on the way, since an inline table is one line and takes no comment.
+/// `None` when there is no such place.
+fn outside_inline(root: &Table, path: &TablePath) -> Option<TablePath> {
+    let all = steps(path);
+    let inside =
+        (1..all.len()).find(|&end| matches!(Held::at(root, &all[..end]), Some(Held::Inline(_))));
+    let Some(mut end) = inside else {
+        return Some(path.clone());
+    };
+    // An inline table in an array stands where the array's key does.
+    if matches!(all[end - 1], Step::Index(_)) {
+        end -= 1;
+    }
+    (end > 0).then(|| TablePath(path.0[..end].to_vec()))
+}
+
+/// Writes `lines` above the key or table at `path`, in its decoration, or above the key that holds
+/// the inline table `path` is in. Whether there was a place.
 fn lines_above(root: &mut Table, path: &TablePath, lines: &[String]) -> bool {
+    let Some(path) = outside_inline(root, path) else {
+        return false;
+    };
+    let path = &path;
     let steps = steps(path);
     let Some((Step::Key(name), above)) = steps.split_last() else {
         return false;

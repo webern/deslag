@@ -471,3 +471,66 @@ fn a_migration_that_drops_a_comment_no_edit_names_is_refused() {
         "{refusal:#?}"
     );
 }
+
+/// Whether `text` has a line break inside the braces of an inline table, which TOML 1.0 forbids and
+/// TOML 1.1 allows. Comments and strings are skipped.
+fn breaks_an_inline_table(text: &str) -> bool {
+    let (mut depth, mut quote, mut comment) = (0usize, None::<char>, false);
+    for letter in text.chars() {
+        match (quote, comment, letter) {
+            (_, true, '\n') if depth > 0 => return true,
+            (_, true, '\n') => comment = false,
+            (_, true, _) => {}
+            (Some(open), _, close) if open == close => quote = None,
+            (Some(_), _, _) => {}
+            (None, _, '"' | '\'') => quote = Some(letter),
+            (None, _, '#') => comment = true,
+            (None, _, '{') => depth += 1,
+            (None, _, '}') => depth = depth.saturating_sub(1),
+            (None, _, '\n') if depth > 0 => return true,
+            _ => {}
+        }
+    }
+    false
+}
+
+#[test]
+fn a_comment_of_a_key_deleted_in_an_inline_table_goes_above_the_key_that_holds_the_table() {
+    let ban = phrases().key("ban");
+    let edits = [
+        TableEdit::Delete {
+            table: phrases(),
+            key: "groups".to_string(),
+        },
+        TableEdit::Unlist {
+            table: phrases(),
+            key: "allow".to_string(),
+            item: "x".to_string(),
+        },
+        TableEdit::Create { table: ban.clone() },
+        set(ban, "delve", advice("delete it")),
+    ];
+    let cases = [
+        // The table is a key of a header table.
+        (
+            "schema_version = 1\n[md.lints]\n\
+             banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } # inline all\n",
+            "schema_version = 1\n[md.lints]\n\
+             # banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } # inline all\n\
+             banned_phrases = { allow = [], ban = { delve = \"delete it\" } } # inline all\n",
+        ),
+        // The table is inside a table that is inline too.
+        (
+            "schema_version = 1\n[md]\n\
+             lints = { banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } } # whole\n",
+            "schema_version = 1\n[md]\n\
+             # lints = { banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } } # whole\n\
+             lints = { banned_phrases = { allow = [], ban = { delve = \"delete it\" } } } # whole\n",
+        ),
+    ];
+    for (text, want) in cases {
+        let out = migrated(text, &edits);
+        assert!(!breaks_an_inline_table(&out), "a newline in braces:\n{out}");
+        assert_eq!(out, want);
+    }
+}

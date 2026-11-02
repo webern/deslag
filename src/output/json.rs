@@ -47,7 +47,7 @@ pub struct Exemption {
     pub section: String,
     /// The file it names, relative to the repo root, `/`-separated.
     pub path: String,
-    /// The lint it exempts the sentence from.
+    /// The lint it exempts the sentence or line from.
     pub lint: Lint,
     /// The sentence, as the config quotes it; an entry that names a line has `line` instead.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -56,7 +56,7 @@ pub struct Exemption {
     /// quote.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub line: Option<String>,
-    /// Why the sentence stays, as the config states it.
+    /// Why the sentence or line stays, as the config states it.
     pub reason: String,
     /// How it came out: `applied` when it dropped at least one occurrence, else why it did not
     /// hold.

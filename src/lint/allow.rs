@@ -240,11 +240,10 @@ impl Exemption {
             let sentences = if self.holding.is_empty() {
                 format!("No sentence of {path} holds a finding of `{lint}`.\n\n")
             } else {
-                let sentences = |what| format!("{what} of {path}");
                 listing(
                     &self.holding,
                     text,
-                    &sentences("sentences"),
+                    ("sentences", path),
                     &format!("that hold a finding of `{lint}`:",),
                     "quote",
                 )
@@ -260,7 +259,7 @@ impl Exemption {
                 listing(
                     &self.outside,
                     text,
-                    &format!("lines of {path}"),
+                    ("lines", path),
                     &format!(
                         "that hold a finding of `{lint}` that no sentence holds, which an entry \
                          names by `line`:"
@@ -337,14 +336,14 @@ impl Exemption {
 }
 
 /// A paragraph of a report that lists `holding`, the [`QUOTED`] closest to `text`, each cut to
-/// [`QUOTE_CHARS`] characters, and how many more there are. `of` says what is listed, as "sentences
-/// of a.md", `that` what they hold, and `near` what the closest are closest to.
-fn listing(holding: &[Held], text: &str, of: &str, that: &str, near: &str) -> String {
+/// [`QUOTE_CHARS`] characters, and how many more there are. `of` says what is listed and where, as
+/// "sentences" and "a.md", `that` what they hold, and `near` what the closest are closest to.
+fn listing(holding: &[Held], text: &str, of: (&str, &str), that: &str, near: &str) -> String {
     let (nearest, more) = closest(holding, text);
+    let (what, place) = of;
     let heading = if more == 0 {
-        format!("The {of} {that}")
+        format!("The {what} of {place} {that}")
     } else {
-        let (what, place) = of.split_once(" of ").unwrap_or((of, ""));
         format!("The {QUOTED} {what} of {place} closest to the {near} {that}")
     };
     let listed: String = nearest
@@ -493,6 +492,28 @@ impl Keep for OnLine<'_> {
 
     fn verdict(&self) -> bool {
         !self.inside
+    }
+}
+
+/// What an entry keeps or drops: the sentence it quotes, or the line it names.
+enum Selection<'d> {
+    Sentence(Within),
+    Line(OnLine<'d>),
+}
+
+impl Keep for Selection<'_> {
+    fn occurrence(&self, location: &Location) -> bool {
+        match self {
+            Selection::Sentence(within) => within.occurrence(location),
+            Selection::Line(on_line) => on_line.occurrence(location),
+        }
+    }
+
+    fn verdict(&self) -> bool {
+        match self {
+            Selection::Sentence(within) => within.verdict(),
+            Selection::Line(on_line) => on_line.verdict(),
+        }
     }
 }
 
@@ -711,23 +732,21 @@ pub(crate) fn apply(
             [] => Exemption::new(allow, none, lines),
             [_, _, ..] => Exemption::new(allow, two, lines),
             [range] => {
-                let keep = |inside| -> Box<dyn Keep + '_> {
-                    match allow.names {
-                        Names::Sentence(_) => Box::new(Within {
-                            range: range.clone(),
-                            inside,
-                        }),
-                        Names::Line(_) => Box::new(OnLine {
-                            line: range.clone(),
-                            sentences: &document.sentences,
-                            inside,
-                        }),
-                    }
+                let keep = |inside| match allow.names {
+                    Names::Sentence(_) => Selection::Sentence(Within {
+                        range: range.clone(),
+                        inside,
+                    }),
+                    Names::Line(_) => Selection::Line(OnLine {
+                        line: range.clone(),
+                        sentences: &document.sentences,
+                        inside,
+                    }),
                 };
-                let dropped = at.and_then(|at| findings[at].violation.retain(&*keep(true)));
+                let dropped = at.and_then(|at| findings[at].violation.retain(&keep(true)));
                 match (at, dropped) {
                     (Some(at), Some(dropped)) => {
-                        match findings[at].violation.retain(&*keep(false)) {
+                        match findings[at].violation.retain(&keep(false)) {
                             Some(kept) => findings[at].violation = kept,
                             None => {
                                 findings.remove(at);

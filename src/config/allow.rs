@@ -40,14 +40,14 @@ use crate::lint::banned_chars;
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub(super) struct AllowFile {
-    /// The file the sentence is in, written as a report prints it: relative to the repo root,
+    /// The file the sentence or line is in, written as a report prints it: relative to the repo root,
     /// `/`-separated, with no glob. One entry names one file. A `path` or `reason` may not hold a
     /// character that shows as nothing or acts on the reader: a control or format character,
     /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
     /// tab, CR or LF.
     #[schemars(extend("since" = "0.0.3"))]
     path: String,
-    /// The lint to exempt the sentence from, one of `banned_chars`, `banned_phrases`,
+    /// The lint to exempt the sentence or line from, one of `banned_chars`, `banned_phrases`,
     /// `verbs_no_nouns`, `not_at_all`, `verbs_nothing` and `possessive_own`. One entry names one
     /// lint.
     #[schemars(schema_with = "lint_schema")]
@@ -68,7 +68,7 @@ pub(super) struct AllowFile {
     #[schemars(extend("since" = "0.0.3"))]
     #[serde(default)]
     quote: Option<String>,
-    /// Why the sentence must stay as it is. Required. A `path` or `reason` may not hold a
+    /// Why the sentence or line must stay as it is. Required. A `path` or `reason` may not hold a
     /// character that shows as nothing or acts on the reader: a control or format character,
     /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
     /// tab, CR or LF.
@@ -178,11 +178,11 @@ pub struct Allow {
     pub index: usize,
     /// The file, relative to the repo root.
     pub path: String,
-    /// The lint it exempts the sentence from.
+    /// The lint it exempts the sentence or line from.
     pub lint: Lint,
     /// The sentence or the line it names, as the config writes it.
     pub names: Names,
-    /// Why the sentence stays.
+    /// Why the sentence or line stays.
     pub reason: String,
 }
 
@@ -226,9 +226,9 @@ pub(super) fn compile(
                 ".reason is empty; an exemption says why the sentence must stay".to_string(),
             ));
         }
-        let (quote, line) = match (file.quote, file.line) {
-            (Some(quote), None) => (Some(quote), None),
-            (None, Some(line)) => (None, Some(line)),
+        let names = match (file.quote, file.line) {
+            (Some(quote), None) => Names::Sentence(quote),
+            (None, Some(line)) => Names::Line(line),
             (Some(_), Some(_)) => {
                 return Err(refuse(
                     " has a `quote` and a `line`; an entry names a sentence by `quote` or a line \
@@ -243,20 +243,19 @@ pub(super) fn compile(
                 ));
             }
         };
-        // A lone CR counts as layout here, since no sentence is only that.
-        if let Some(quote) = &quote {
-            if fold_quote(quote, false).is_empty() {
+        match &names {
+            // A lone CR counts as layout here, since no sentence is only that.
+            Names::Sentence(quote) if fold_quote(quote, false).is_empty() => {
                 return Err(refuse(
                     ".quote is empty; an exemption names the sentence it exempts".to_string(),
                 ));
             }
-        }
-        if let Some(line) = &line {
-            if fold(line).is_empty() {
+            Names::Line(line) if fold(line).is_empty() => {
                 return Err(refuse(
                     ".line is empty; an exemption names the line it exempts".to_string(),
                 ));
             }
+            _ => {}
         }
         if let Some(problem) = path_problem(&file.path) {
             return Err(refuse(format!(".path {:?} {problem}", file.path)));
@@ -276,12 +275,10 @@ pub(super) fn compile(
                 ".lint is `{lint}`, which does not take an entry: {instead}"
             )));
         }
-        if line.is_some() {
-            if let Err(instead) = takes_line(lint) {
-                return Err(refuse(format!(
-                    ".lint is `{lint}`, which does not take a `line`: {instead}"
-                )));
-            }
+        if let (Names::Line(_), Err(instead)) = (&names, takes_line(lint)) {
+            return Err(refuse(format!(
+                ".lint is `{lint}`, which does not take a `line`: {instead}"
+            )));
         }
         let hidden = [
             ("path", file.path.chars().find(|ch| invisible(*ch))),
@@ -301,34 +298,29 @@ pub(super) fn compile(
                 )));
             }
         }
-        // Any other character may be in a quote, since the sentence it must equal holds it too.
-        if let Some(ch) = quote
-            .iter()
-            .flat_map(|quote| quote.chars())
-            .find(|ch| ch.is_control() && !layout(*ch))
-        {
-            return Err(refuse(format!(
-                ".quote holds {}, a control character; a quote may not hold one other than a \
-                 tab, CR or LF",
-                describe(ch)
-            )));
+        match &names {
+            // Any other character may be in a quote, since the sentence it must equal holds it too.
+            Names::Sentence(quote) => {
+                if let Some(ch) = quote.chars().find(|ch| ch.is_control() && !layout(*ch)) {
+                    return Err(refuse(format!(
+                        ".quote holds {}, a control character; a quote may not hold one other \
+                         than a tab, CR or LF",
+                        describe(ch)
+                    )));
+                }
+            }
+            // A line is one line, so a CR or LF cannot be in it, nor a control character but a
+            // tab.
+            Names::Line(line) => {
+                if let Some(ch) = line.chars().find(|ch| ch.is_control() && *ch != '\t') {
+                    return Err(refuse(format!(
+                        ".line holds {}, a control character; a line may not hold one other \
+                         than a tab",
+                        describe(ch)
+                    )));
+                }
+            }
         }
-        // A line is one line, so a CR or LF cannot be in it, and a control character other than a tab stays out too.
-        if let Some(ch) = line
-            .iter()
-            .flat_map(|line| line.chars())
-            .find(|ch| ch.is_control() && *ch != '\t')
-        {
-            return Err(refuse(format!(
-                ".line holds {}, a control character; a line may not hold one other than a tab",
-                describe(ch)
-            )));
-        }
-        let names = match (quote, line) {
-            (Some(quote), _) => Names::Sentence(quote),
-            (None, Some(line)) => Names::Line(line),
-            (None, None) => unreachable!("an entry with neither was refused"),
-        };
         let entry = Allow {
             section,
             index,

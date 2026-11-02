@@ -14,6 +14,9 @@
 //! A region with no text, such as `#` alone, is skipped, and so is a line that the skip list
 //! masks. A region is read as plain text.
 //!
+//! A lone CR ends a line, as an LF does: `read` scans a copy with each one made an LF, and the
+//! document stays on the bytes of the file.
+//!
 //! [`rust_regions`]: super::rust_regions
 
 use std::ops::Range;
@@ -30,7 +33,9 @@ use super::{Document, Language, Stack};
 /// `surfaces` has the comment surface.
 pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> Document<'a> {
     let skip = |surface| List::new(Language::Toml, stack.markup(surface));
-    Document::of_regions(stack, source, regions(source, surfaces, skip))
+    let copy = super::lone_returns_as_newlines(source);
+    let scanned = copy.as_deref().unwrap_or(source);
+    Document::of_regions(stack, source, regions(scanned, surfaces, skip))
 }
 
 /// The regions of `source` of the surfaces asked for, in the order of the file. `skip` gives the
@@ -290,6 +295,33 @@ mod tests {
         assert_eq!(document.regions.len(), 2);
         assert_eq!(document.blocks.len(), 2);
         assert_eq!(document.sentences.len(), 2);
+    }
+
+    /// The text of every region of `source`, read as a file is: through the reader, which scans a
+    /// lone CR as an LF.
+    fn read_texts(source: &str) -> Vec<String> {
+        stack()
+            .read(source)
+            .regions
+            .into_iter()
+            .map(|region| region.inner)
+            .collect()
+    }
+
+    #[test]
+    fn a_lone_cr_ends_a_line_of_a_run() {
+        let lf = "# file's\n# own words.\n";
+        for source in [lf.replace('\n', "\r"), lf.replace('\n', "\r\n")] {
+            assert_eq!(read_texts(&source), read_texts(lf), "{source:?}");
+            assert_eq!(read_texts(&source), ["file's\nown words."]);
+        }
+    }
+
+    #[test]
+    fn mixed_endings_in_one_run_are_lines() {
+        assert_eq!(read_texts("# a\n# b\r# c\r\n# d\n"), ["a\nb\nc\nd"]);
+        // A blank line still parts a run, whatever ends it.
+        assert_eq!(read_texts("# a\r\r# b\r"), ["a", "b"]);
     }
 
     /// A xorshift generator, so a failure repeats.

@@ -1085,32 +1085,22 @@ mod tests {
     }
 
     #[test]
-    fn a_lone_cr_ends_a_line_of_markdown_and_never_folds_in_a_comment() {
+    fn a_lone_cr_ends_a_line_of_markdown_and_ends_a_comment() {
         let quote = "A \u{2014} b c d.";
         let with_cr = "A \u{2014} b\rc d.";
         assert_eq!(count("A \u{2014} b\rc d.\n", quote), 1);
         assert_eq!(count("A \u{2014} b\rc d.\n", with_cr), 1);
-        // A Rust comment holds it as a character of its line, which the quote must hold too.
+        // A Rust comment ends at it, and what follows is code, so no quote reaches past it.
         let rust = || Reader::Rust {
             surfaces: vec![Surface::DocComment, Surface::Comment],
         };
-        assert_eq!(
-            count_in(rust(), "// A \u{2014} b\rc d.\nfn f() {}\n", quote),
-            0
-        );
-        assert_eq!(
-            count_in(rust(), "// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
-            1
-        );
-        assert_eq!(
-            count_in(rust(), "/// A \u{2014} b\rc d.\nfn f() {}\n", quote),
-            0
-        );
-        assert_eq!(
-            count_in(rust(), "/// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
-            1
-        );
-        // A TOML comment ends at it, so no quote reaches past it.
+        for marker in ["//", "///"] {
+            let source = format!("{marker} A \u{2014} b\rc d.\nfn f() {{}}\n");
+            assert_eq!(count_in(rust(), &source, quote), 0);
+            assert_eq!(count_in(rust(), &source, with_cr), 0);
+            assert_eq!(count_in(rust(), &source, "A \u{2014} b"), 1);
+        }
+        // A TOML comment ends at it too.
         let toml = || Reader::Toml {
             surfaces: vec![Surface::Comment],
         };
@@ -1155,19 +1145,19 @@ mod tests {
     }
 
     #[test]
-    fn a_quote_with_a_lone_cr_matches_only_a_comment_that_holds_a_lone_cr() {
+    fn a_quote_with_a_lone_cr_matches_no_comment() {
         let with_cr = "A \u{2014} b\rc d.";
         let rust = || Reader::Rust {
             surfaces: vec![Surface::DocComment, Surface::Comment],
         };
-        // A Rust line comment and a Rust doc comment that hold a lone CR.
+        // A lone CR ends a Rust comment, so none holds one. The comment is its first line only.
         assert_eq!(
             count_in(rust(), "// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
-            1
+            0
         );
         assert_eq!(
             count_in(rust(), "/// A \u{2014} b\rc d.\nfn f() {}\n", with_cr),
-            1
+            0
         );
         // The same comment wrapped with a line feed, with a CR and a line feed, and on one line.
         assert_eq!(
@@ -1202,7 +1192,7 @@ mod tests {
             count_in(rust(), "/// A \u{2014} b c d.\nfn f() {}\n", with_cr),
             0
         );
-        // A TOML comment ends at a lone CR, so none holds one, and none matches.
+        // So does a TOML comment, and none matches.
         let toml = || Reader::Toml {
             surfaces: vec![Surface::Comment],
         };

@@ -13,6 +13,10 @@
 //! 2. The marker and the least indent of the region's lines are stripped from every line.
 //! 3. A block comment loses a `*` gutter, and a first or last line of only `*`.
 //!
+//! A lone CR ends a line, as an LF does: `read` scans a copy with each one made an LF, so `lex`
+//! stays the compiler's lexer, and the document stays on the bytes of the file. A `//` comment
+//! that holds a lone CR ends there, and what follows it is code.
+//!
 //! Fenced code and hidden `# ` lines are left to the Markdown reader, which makes them code. A
 //! region with no text, such as `///` alone, is skipped.
 //!
@@ -31,7 +35,9 @@ use super::{Document, Language, Stack};
 /// a surface in `surfaces`.
 pub(super) fn read<'a>(stack: &Stack, surfaces: &[Surface], source: &'a str) -> Document<'a> {
     let skip = |surface| List::new(Language::Rust, stack.markup(surface));
-    Document::of_regions(stack, source, regions(source, surfaces, skip))
+    let copy = super::lone_returns_as_newlines(source);
+    let scanned = copy.as_deref().unwrap_or(source);
+    Document::of_regions(stack, source, regions(scanned, surfaces, skip))
 }
 
 /// The regions of `source` of the surfaces asked for, in the order of the file. `skip` gives the
@@ -476,6 +482,48 @@ mod tests {
         Stack::new(crate::document::Reader::Rust {
             surfaces: BOTH.to_vec(),
         })
+    }
+
+    /// The surface and text of every region of `source`, read as a file is: through the reader,
+    /// which scans a lone CR as an LF.
+    fn read_texts(source: &str) -> Vec<(Surface, String)> {
+        stack()
+            .read(source)
+            .regions
+            .into_iter()
+            .map(|region| (region.surface, region.inner))
+            .collect()
+    }
+
+    #[test]
+    fn a_lone_cr_ends_a_line_of_a_run() {
+        let lf = "// file's\n// own words.\n";
+        for source in [lf.replace('\n', "\r"), lf.replace('\n', "\r\n")] {
+            assert_eq!(read_texts(&source), read_texts(lf), "{source:?}");
+            assert_eq!(read_texts(&source), [plain("file's\nown words.")]);
+        }
+        // Lone CRs part a `///` run from a `//` run as LFs do.
+        assert_eq!(
+            read_texts("/// a\r/// b\r// c\r// d\r"),
+            [doc("a\nb"), plain("c\nd")]
+        );
+    }
+
+    #[test]
+    fn a_lone_cr_block_comment_loses_its_gutter() {
+        let lf = "/*\n * a\n * b\n */\n";
+        assert_eq!(read_texts(&lf.replace('\n', "\r")), read_texts(lf));
+        assert_eq!(read_texts(&lf.replace('\n', "\r")), [plain("a\nb")]);
+    }
+
+    #[test]
+    fn mixed_endings_in_one_run_are_lines() {
+        assert_eq!(
+            read_texts("// a\n// b\r// c\r\n// d\n"),
+            [plain("a\nb\nc\nd")]
+        );
+        // A lone CR in a `//` comment ends it, and what follows is code.
+        assert_eq!(read_texts("// a\rb();\n// c\n"), [plain("a"), plain("c")]);
     }
 
     /// Reads `source` and checks what any reading of regions holds: a region block for each region

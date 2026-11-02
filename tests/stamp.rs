@@ -4,7 +4,7 @@
 //! running deslag, with something released since, makes `check`, `fix` and `explain` say so. Only
 //! the tests here and in `tests/instructions.rs` see that note, through `raw_stderr`: `stderr`
 //! leaves it out, so a release does not change what any other test sees. The last two tests read
-//! deslag's config, which every release stamps with its version, and which bans what deslag
+//! this repo's config, which every release stamps with its version, and which bans what deslag
 //! recommends.
 
 mod common;
@@ -551,7 +551,7 @@ fn a_config_written_as_a_json_array_still_loads() {
     assert!(stderr.contains("max_size_bytes"), "stderr: {stderr}");
 }
 
-/// deslag's config is stamped with the crate version, which `deslag update --to <version>`
+/// This repo's config is stamped with the crate version, which `deslag update --to <version>`
 /// writes right after `deslag-release prep`, so that every release runs the real upgrade on a real
 /// config.
 #[test]
@@ -574,7 +574,7 @@ fn the_repos_own_config_is_stamped_with_the_crate_version() {
     );
 }
 
-/// deslag's config holds itself to the list `deslag init` writes and `deslag instructions
+/// This repo's config holds itself to the list `deslag init` writes and `deslag instructions
 /// update` offers: every file of every section gets a `ban` that holds every phrase of the
 /// catalogue and `groups` that name every group of characters. So a phrase or group that is added
 /// reaches this repo in the change that adds it, whatever the stamp.

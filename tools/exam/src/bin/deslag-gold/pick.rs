@@ -12,7 +12,7 @@
 //! A word below Likely is `Unsure` or `Unknown`, so an Unknown word is worth 2. The 4 keeps a
 //! two-word fragment from beating a sentence with real content. The `non_english` column (words
 //! whose origin is a symbol, command, path or flag) is shown and not scored: origin is
-//! step 0's work, and a word deslag commits to at Likely does not lower the score however it is
+//! step 0's work, and a word deslag commits to at Likely does not add a point however it is
 //! spelt. Ties go by id. The score only orders the list; the picking is an agent's, by the skill.
 //!
 //! Rows that would only fill the head of the list are dropped before ranking, and `rank` prints

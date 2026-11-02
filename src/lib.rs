@@ -181,17 +181,6 @@ pub enum Error {
         message: String,
     },
 
-    /// A file's frontmatter has a `max_size_bytes` that is not a byte count.
-    #[error("invalid {key} in the frontmatter of {path}: {value:?} is not a byte count")]
-    Frontmatter {
-        /// The Markdown file.
-        path: String,
-        /// The frontmatter key.
-        key: &'static str,
-        /// The value as written in the frontmatter.
-        value: String,
-    },
-
     /// `deslag explain` was given a path it cannot explain.
     #[error("cannot explain {path}: {problem}")]
     Explain {

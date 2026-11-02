@@ -409,11 +409,11 @@ fn reported(stderr: &str) -> Vec<(String, u64, u64)> {
 fn expected_report(path: &str, size_bytes: u64, budget: u64) -> String {
     max_size_bytes::render(
         path,
-        &max_size_bytes::Over {
+        &max_size_bytes::Over::Bloat(max_size_bytes::Bloat {
             size_bytes,
             budget,
             message: None,
-        },
+        }),
     )
 }
 

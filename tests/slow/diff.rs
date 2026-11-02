@@ -249,6 +249,24 @@ fn a_file_over_its_budget_is_reported_when_its_content_changes() {
 }
 
 #[test]
+fn an_unreadable_budget_is_reported_when_the_change_touches_its_line() {
+    let text = "---\nmax_size_bytes: lots\n---\n# Vendored\n";
+    let repo = repo(&[("vendored.md", text)]);
+    let run = |repo: &Repo| found(repo.root(), &["check", "--diff", "main"]);
+
+    // A line elsewhere in the file does not touch the key.
+    repo.write("vendored.md", &format!("{text}\nmore\n"));
+    assert_eq!(run(&repo), []);
+
+    // The key's own line does.
+    repo.write(
+        "vendored.md",
+        &text.replace("max_size_bytes: lots", "max_size_bytes: plenty"),
+    );
+    assert_eq!(run(&repo), [finding("vendored.md", "max_size_bytes", &[2])]);
+}
+
+#[test]
 fn an_emphasis_verdict_is_kept_whole_when_the_file_changes() {
     let text = "# Big\n\nThe **first** one.\n\nThe **second** one.\n";
     let repo = repo(&[("big.md", text)]);

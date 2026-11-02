@@ -140,6 +140,36 @@ fn nothing_above_the_top_of_the_work_tree_is_read() {
 }
 
 #[test]
+fn a_git_file_ends_the_search_as_a_directory_does() {
+    // A linked worktree and a submodule hold a `.git` file, not a directory.
+    let outer = Repo::new();
+    outer.mark_work_tree();
+    outer.write("deslag.toml", DASHES);
+    outer.write("inner/.git", "gitdir: ../.git/worktrees/inner\n");
+    outer.write("inner/sub/a.md", DASHED);
+    let output = outer.run_in("inner/sub", &["check"]);
+    let said = stderr(&output);
+    assert_eq!(code(&output), 2, "{said}");
+    assert!(said.contains("no deslag config found in"), "{said}");
+}
+
+#[test]
+fn update_from_a_subdirectory_edits_the_config_at_the_root() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("deslag.toml", "schema_version = 1\n");
+    repo.write("docs/a.md", "Clean.\n");
+    let version = env!("CARGO_PKG_VERSION");
+    let output = repo.run_in("docs", &["update", "--to", version]);
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
+    assert_eq!(
+        std::fs::read_to_string(repo.root().join("deslag.toml")).expect("a file"),
+        format!("schema_version = 2\ndeslag_version = \"{version}\"\n")
+    );
+    assert!(!repo.root().join("docs/deslag.toml").exists());
+}
+
+#[test]
 fn outside_a_work_tree_only_the_current_directory_is_looked_in() {
     let repo = Repo::new();
     repo.write("deslag.toml", DASHES);

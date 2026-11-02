@@ -3,6 +3,7 @@
 //! deslag runs, which inherits them. The patch reading is tested without git.
 
 use crate::common;
+use crate::sample;
 
 use std::collections::BTreeSet;
 use std::fs;
@@ -761,34 +762,25 @@ fn the_config_has_no_setting_for_a_change() {
     }
 }
 
-/// Every case, committed whole on top of an empty commit, is all change: `--diff` against the
+/// Every case of the sample, committed whole on top of an empty commit, is all change: `--diff` against the
 /// empty commit prints what a run of the whole tree from the same base prints, and a line on the
 /// change.
 #[test]
 fn every_case_is_all_change_from_an_empty_commit() {
-    let cases = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cases");
     let mut checks = Vec::new();
-    for group in fs::read_dir(&cases).expect("tests/cases") {
-        for case in fs::read_dir(group.expect("a group").path()).expect("a group of cases") {
-            let case = case.expect("a case").path();
-            // A base is the repo before a case's change, not a case.
-            if !case.is_dir()
-                || case
-                    .extension()
-                    .is_some_and(|extension| extension == "base")
-            {
-                continue;
-            }
-            let args: Vec<String> = match fs::read_to_string(case.with_extension("args")) {
-                Ok(text) => text.lines().map(str::to_string).collect(),
-                Err(_) => vec!["check".to_string()],
-            };
-            if args[0] == "check" {
-                checks.push((case, args));
-            }
-        }
+    for case in sample::cases() {
+        let args: Vec<String> = match fs::read_to_string(case.with_extension("args")) {
+            Ok(text) => text.lines().map(str::to_string).collect(),
+            Err(_) => vec!["check".to_string()],
+        };
+        assert_eq!(
+            args[0],
+            "check",
+            "{}: --diff is a flag of check",
+            case.display()
+        );
+        checks.push((case, args));
     }
-    assert!(checks.len() > 20, "only {} cases", checks.len());
     std::thread::scope(|scope| {
         for (case, args) in &checks {
             scope.spawn(move || all_change(case, args));

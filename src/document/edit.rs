@@ -170,9 +170,10 @@ impl<'a> Document<'a> {
             })
             .collect();
 
-        // Edits side by side, one ending where the next starts, stand or fall together: those
-        // inside a grapheme cluster, such as an emoji and its variation selector, and a run of one
-        // character, such as a line of dashes, which would otherwise be converted in part.
+        // Edits side by side, one ending where the next starts, stand or fall together when they
+        // are inside a grapheme cluster, such as an emoji and its variation selector, or when they
+        // replace the same text, a run of one character such as a line of dashes, which would
+        // otherwise be converted in part. Edits of different characters are not a run.
         let boundaries: Vec<usize> = self
             .source
             .grapheme_indices(true)
@@ -184,7 +185,17 @@ impl<'a> Document<'a> {
         for &index in order.iter().filter(|&&index| refused[index].is_none()) {
             let start = edits[index].range.start;
             match units.last_mut() {
-                Some(unit) if edits[unit[unit.len() - 1]].range.end == start => unit.push(index),
+                Some(unit)
+                    if {
+                        let last = &edits[unit[unit.len() - 1]];
+                        last.range.end == start
+                            && (!boundary(start)
+                                || self.source[last.range.clone()]
+                                    == self.source[edits[index].range.clone()])
+                    } =>
+                {
+                    unit.push(index)
+                }
                 _ => units.push(vec![index]),
             }
         }

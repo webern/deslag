@@ -159,6 +159,32 @@ fn a_run_of_one_character_is_made_whole_or_refused_whole() {
     assert_eq!(refused[3..], [None; 3]);
 }
 
+/// A run is of one character: a fixable edit beside a refused run of another character is not
+/// dragged down with it.
+#[test]
+fn edits_of_different_characters_side_by_side_are_not_a_run() {
+    let text = "\u{00A0}\u{00A0}\u{00A0}\u{00A0}\u{2014} text\n";
+    let edits: Vec<Edit> = text
+        .char_indices()
+        .map(|(at, ch)| Edit {
+            range: at..at + ch.len_utf8(),
+            replacement: match ch {
+                '\u{00A0}' => " ",
+                '\u{2014}' => "-",
+                _ => unreachable!(),
+            }
+            .to_string(),
+        })
+        .take(5)
+        .collect();
+    let applied = Document::markdown(text).apply(&edits).expect("edits apart");
+    assert_eq!(applied.text, "\u{00A0}\u{00A0}\u{00A0}\u{00A0}- text\n");
+    assert_eq!(
+        applied.refused,
+        [vec![Some(Refusal::Structure); 4], vec![None],].concat()
+    );
+}
+
 #[test]
 fn a_replacement_with_a_control_character_is_refused() {
     for to in ["\n", "\t", "a\u{7}"] {

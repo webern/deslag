@@ -12,7 +12,7 @@ const LOCK: &str = include_str!("../Cargo.lock");
 pub struct Lock<'a>(&'a str);
 
 impl Lock<'static> {
-    /// This crate's own lockfile.
+    /// This crate's lockfile.
     pub fn own() -> Self {
         Lock(LOCK)
     }

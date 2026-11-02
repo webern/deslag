@@ -24,10 +24,10 @@ pub mod report;
 pub mod rust;
 pub mod ts;
 
-// deslag's Rust scanner, compiled from its source file so that this crate shares no dependencies
-// with deslag. It uses `std` and `unicode-ident`, which this crate pins. Not a doc comment: the
-// file has its own, and its intra-doc links would resolve here, in this module's parent, if an
-// outer one joined it.
+// deslag's Rust scanner, compiled from its source file so that this crate does not share
+// dependencies with deslag. It uses `std` and `unicode-ident`, which this crate pins. Not a doc
+// comment: the file has its own, and its intra-doc links would resolve here, in this module's
+// parent, if an outer one joined it.
 #[path = "../../../src/document/rust.rs"]
 pub mod deslag_rust;
 

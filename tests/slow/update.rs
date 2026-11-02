@@ -6,6 +6,8 @@
 //!
 //! `src/config/edit/` tests the edits text by text; these tests run the command.
 
+use std::path::{Path, PathBuf};
+
 use crate::common;
 use crate::sample;
 

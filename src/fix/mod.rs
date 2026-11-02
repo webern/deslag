@@ -120,19 +120,20 @@ pub fn fix(
                 }
             }
         };
-        if let Outcome::Read { fixed, left, .. } = &outcome {
-            if fixed.is_empty() && left.is_empty() {
-                continue;
-            }
+        if let Outcome::Read { fixed, left, .. } = &outcome
+            && fixed.is_empty()
+            && left.is_empty()
+        {
+            continue;
         }
         fixes.push((file, outcome));
     }
     if !dry_run {
         for (file, outcome) in &fixes {
-            if let Outcome::Read { text, fixed, .. } = outcome {
-                if !fixed.is_empty() {
-                    crate::write::replace(&file.absolute, text.as_bytes())?;
-                }
+            if let Outcome::Read { text, fixed, .. } = outcome
+                && !fixed.is_empty()
+            {
+                crate::write::replace(&file.absolute, text.as_bytes())?;
             }
         }
     }

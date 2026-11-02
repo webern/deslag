@@ -490,10 +490,10 @@ impl<'a> Block<'a> {
         for (block, _) in document.walk() {
             match &block.kind {
                 BlockKind::Heading { level } => {
-                    if let Some((section_level, location)) = section {
-                        if *level <= section_level {
-                            return Err(Problem::NoBlock { location });
-                        }
+                    if let Some((section_level, location)) = section
+                        && *level <= section_level
+                    {
+                        return Err(Problem::NoBlock { location });
                     }
                     let title: String = document
                         .pieces_of(block)

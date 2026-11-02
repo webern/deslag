@@ -260,12 +260,11 @@ impl Weights {
             template::BEFORE => Some((template::BEFORE_NORM, "n ")),
             _ => None,
         };
-        if let Some((longer, lead)) = longer {
-            if let Some(rest) = text.strip_prefix(lead) {
-                if rest.contains(' ') {
-                    return self.find(longer, 0, 0, rest, None);
-                }
-            }
+        if let Some((longer, lead)) = longer
+            && let Some(rest) = text.strip_prefix(lead)
+            && rest.contains(' ')
+        {
+            return self.find(longer, 0, 0, rest, None);
         }
         self.find(template, 0, 0, text, None)
     }

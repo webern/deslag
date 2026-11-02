@@ -276,12 +276,12 @@ pub fn build(args: &Args<'_>, env: &Env) -> Result<String, Problems> {
             "--audit needs --archive-sha256, the sha256 of the archive published as `silver-raw/<name>/`".to_string(),
         ));
     }
-    if let Some(sha) = args.archive_sha256 {
-        if !super::table::is_sha256(sha) {
-            problems.push(bad(
-                "--archive-sha256 is a sha256 in lower case hex".to_string()
-            ));
-        }
+    if let Some(sha) = args.archive_sha256
+        && !super::table::is_sha256(sha)
+    {
+        problems.push(bad(
+            "--archive-sha256 is a sha256 in lower case hex".to_string()
+        ));
     }
     if args.parts.is_empty() {
         problems.push(bad("give at least one --part DIR:MERGE".to_string()));

@@ -115,11 +115,11 @@ pub(crate) fn without_cut_links(source: &str) -> String {
             ']' if !in_code && open.pop().is_none() => {
                 cut[at] = true;
                 let destination = chars.get(at + 1) == Some(&'(');
-                if let Some(close) = chars[at..].iter().position(|ch| *ch == ')') {
-                    if destination {
-                        cut[at + 1..=at + close].fill(true);
-                        at += close;
-                    }
+                if let Some(close) = chars[at..].iter().position(|ch| *ch == ')')
+                    && destination
+                {
+                    cut[at + 1..=at + close].fill(true);
+                    at += close;
                 }
             }
             _ => {}

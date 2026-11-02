@@ -234,12 +234,11 @@ impl<'a> Reader<'a> {
         self.end_implicit();
         if kind == BlockKind::Paragraph {
             // Paragraph markup in an item makes its list loose.
-            if let [.., list, item] = self.open.as_mut_slice() {
-                if let (BlockKind::List { tight, .. }, BlockKind::Item { .. }) =
+            if let [.., list, item] = self.open.as_mut_slice()
+                && let (BlockKind::List { tight, .. }, BlockKind::Item { .. }) =
                     (&mut list.kind, &item.kind)
-                {
-                    *tight = false;
-                }
+            {
+                *tight = false;
             }
         }
         let content = match holds {

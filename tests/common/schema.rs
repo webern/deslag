@@ -38,13 +38,12 @@ pub fn misfit(root: &Value, schema: &Value, value: &Value, at: &str) -> Option<S
             "a keyword misfit does not know: {keyword}"
         );
     }
-    if let Some(branches) = schema.get("anyOf").and_then(Value::as_array) {
-        if branches
+    if let Some(branches) = schema.get("anyOf").and_then(Value::as_array)
+        && branches
             .iter()
             .all(|branch| misfit(root, branch, value, at).is_some())
-        {
-            return Some(format!("{at} fits no branch"));
-        }
+    {
+        return Some(format!("{at} fits no branch"));
     }
     if let Some(branches) = schema.get("oneOf").and_then(Value::as_array) {
         let fits = branches
@@ -61,10 +60,10 @@ pub fn misfit(root: &Value, schema: &Value, value: &Value, at: &str) -> Option<S
     {
         return Some(format!("{at} is not {}", schema["const"]));
     }
-    if let Some(values) = schema.get("enum").and_then(Value::as_array) {
-        if !values.contains(value) {
-            return Some(format!("{at} is none of {}", Value::Array(values.clone())));
-        }
+    if let Some(values) = schema.get("enum").and_then(Value::as_array)
+        && !values.contains(value)
+    {
+        return Some(format!("{at} is none of {}", Value::Array(values.clone())));
     }
     if let Some(types) = schema.get("type") {
         let fits = |kind: &Value| match kind.as_str() {

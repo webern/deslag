@@ -122,10 +122,10 @@ enum Norm<'t> {
 /// with a digit as `!DIGITS`. A form that needs lower-casing is written to the end of `arena`, so
 /// that a sentence's forms take one allocation, not one each.
 fn normal<'t>(weights: &Weights, token: &'t Token<'_>, arena: &mut String) -> Norm<'t> {
-    if token.kind == TokenKind::Word {
-        if let Some((_, lower)) = placeholder(token.origin) {
-            return Norm::Text(lower);
-        }
+    if token.kind == TokenKind::Word
+        && let Some((_, lower)) = placeholder(token.origin)
+    {
+        return Norm::Text(lower);
     }
     let form: &str = &token.text;
     let Some(&lead) = form.as_bytes().first() else {

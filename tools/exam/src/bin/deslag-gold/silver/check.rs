@@ -113,7 +113,11 @@ pub struct Checked {
 pub fn split_of(repo: &str) -> &'static str {
     let hash = sha256_hex(repo.to_lowercase().as_bytes());
     let first = u8::from_str_radix(&hash[..2], 16).unwrap_or(1);
-    if first % 10 == 0 { "tune" } else { "train" }
+    if first.is_multiple_of(10) {
+        "tune"
+    } else {
+        "train"
+    }
 }
 
 /// The paths a batch may hold.

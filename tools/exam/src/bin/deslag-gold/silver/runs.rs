@@ -443,13 +443,13 @@ pub fn check(
                             get("endpoint")
                         ));
                     }
-                    if let Some(known) = &listed.quantizations {
-                        if !known.iter().any(|q| q == get("quantization")) {
-                            bad(format!(
-                                "run {run} was at quantization {}, which voters.json does not list for `{name}`",
-                                get("quantization")
-                            ));
-                        }
+                    if let Some(known) = &listed.quantizations
+                        && !known.iter().any(|q| q == get("quantization"))
+                    {
+                        bad(format!(
+                            "run {run} was at quantization {}, which voters.json does not list for `{name}`",
+                            get("quantization")
+                        ));
                     }
                     facts.models.insert(name.to_string(), listed.model);
                 }

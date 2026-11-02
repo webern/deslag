@@ -419,12 +419,12 @@ mod tests {
             })
             .read(source);
             for (block, _) in code.walk() {
-                if let BlockKind::Code { info: Some(info) } = &block.kind {
-                    if Language::named(info).is_some() {
-                        match Fence::new(source, block) {
-                            Some(_) => self.fences += 1,
-                            None => self.raw += 1,
-                        }
+                if let BlockKind::Code { info: Some(info) } = &block.kind
+                    && Language::named(info).is_some()
+                {
+                    match Fence::new(source, block) {
+                        Some(_) => self.fences += 1,
+                        None => self.raw += 1,
                     }
                 }
             }

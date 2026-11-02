@@ -90,6 +90,8 @@ jobs:
       - name: Install Rust
         if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
         if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
@@ -145,6 +147,8 @@ jobs:
       # Installs what rust-toolchain.toml names and caches the registry and target dir.
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # make preflight asks for it, though nothing here spell checks. A prebuilt binary.
       - name: Install typos

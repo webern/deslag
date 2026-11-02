@@ -28,26 +28,26 @@ impl Tsv {
             if line.trim().is_empty() {
                 continue;
             }
-            if let Some(comment) = line.strip_prefix('#') {
-                if table.columns.is_empty() {
-                    if let Some((key, value)) = comment.split_once('=') {
-                        table
-                            .header
-                            .push((key.trim().to_string(), value.trim().to_string()));
-                    }
-                    continue;
+            if let Some(comment) = line.strip_prefix('#')
+                && table.columns.is_empty()
+            {
+                if let Some((key, value)) = comment.split_once('=') {
+                    table
+                        .header
+                        .push((key.trim().to_string(), value.trim().to_string()));
                 }
+                continue;
             }
             let cells: Vec<String> = line.split('\t').map(str::to_string).collect();
             if table.columns.is_empty() {
-                if let Some(expected) = columns {
-                    if cells != expected {
-                        return Err(Error::at(
-                            path,
-                            index + 1,
-                            format!("the columns should be {}", expected.join(", ")),
-                        ));
-                    }
+                if let Some(expected) = columns
+                    && cells != expected
+                {
+                    return Err(Error::at(
+                        path,
+                        index + 1,
+                        format!("the columns should be {}", expected.join(", ")),
+                    ));
                 }
                 table.columns = cells;
                 continue;
@@ -343,10 +343,10 @@ pub fn machine_paths(path: &str, text: &str, machine: &Machine) -> Vec<String> {
                 found.extend(paths_in(cell));
                 // A cell may hold JSON, as `runs.tsv`'s settings do.
                 let cell = cell.trim();
-                if cell.starts_with(['{', '[']) {
-                    if let Ok(value) = serde_json::from_str::<serde_json::Value>(cell) {
-                        strings_of(&value, &mut found);
-                    }
+                if cell.starts_with(['{', '['])
+                    && let Ok(value) = serde_json::from_str::<serde_json::Value>(cell)
+                {
+                    strings_of(&value, &mut found);
                 }
             }
         }

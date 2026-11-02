@@ -85,21 +85,23 @@ export PYTHONHASHSEED=0
 python=scripts/train/percept.py
 brill=scripts/train/brill.py
 shaped=scripts/train/shaped.py
-mkdir -p .train
 
 # The treebank's train and dev files, each under a `# exam.trains = yes|no` line from the lock, which
 # the exam carries into its skeletons and readings and the trainers check. The test file stays where
 # it is, unread.
+# Fails before it writes anything when the treebank is not fetched.
 stamp_ewt() {
-  mkdir -p .train/ewt
   local name value
+  for name in en_ewt-ud-train.conllu en_ewt-ud-dev.conllu; do
+    [ -f "$ewt/$name" ] || { echo "run.sh: no $ewt/$name; run make fetch-ewt" >&2; exit 2; }
+  done
+  mkdir -p .train/ewt
   for name in en_ewt-ud-train.conllu en_ewt-ud-dev.conllu; do
     value=$(awk -v name="$name" '$1 == "trains" && $3 == name { print $2 }' scripts/ewt/ewt.lock)
     [ -n "$value" ] || { echo "run.sh: scripts/ewt/ewt.lock has no trains line for $name" >&2; exit 2; }
     { echo "# exam.trains = $value"; cat "$ewt/$name"; } >".train/ewt/$name"
   done
 }
-stamp_ewt
 ewt_train=.train/ewt/en_ewt-ud-train.conllu
 
 baseline() {
@@ -462,6 +464,14 @@ milestone() {
       tee "$milestone_dir/$set.$after.vs.$before.compare.txt"
   done
 }
+
+# The subcommands that read the treebank's train or dev file stamp it. generate-weights reads a model
+# generate-shapes left; ticlist reads the corpus; milestone reads the test file in place.
+case "$cmd" in
+  baseline|generate|generate-brill|generate-brill-deslag|generate-brill-percept|test|test-brill|test-brill-deslag|test-brill-percept|curve|generate-shapes|test-shapes|shapes)
+    stamp_ewt ;;
+esac
+mkdir -p .train
 
 case "$cmd" in
   baseline) baseline ;;

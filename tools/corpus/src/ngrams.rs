@@ -291,11 +291,12 @@ pub(crate) fn hits(grams: &Grams, vocab: &Vocab, docs: &[&Doc]) -> Vec<Vec<Hit>>
                 let mut next = vec![NONE; stream.len()];
                 let mut any = false;
                 for start in 0..stream.len().saturating_sub(n - 1) {
-                    if kept[start] != NONE && kept[start + 1] != NONE {
-                        if let Some(gram) = level.get(&Key::of(&stream[start..start + n])) {
-                            next[start] = *gram;
-                            any = true;
-                        }
+                    if kept[start] != NONE
+                        && kept[start + 1] != NONE
+                        && let Some(gram) = level.get(&Key::of(&stream[start..start + n]))
+                    {
+                        next[start] = *gram;
+                        any = true;
                     }
                 }
                 if !any {

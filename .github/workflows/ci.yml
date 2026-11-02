@@ -17,13 +17,16 @@ permissions:
 # side by side, so a run takes as long as its longest job. The parts and their jobs: check, build and
 # test-scanners run in `check`; test-exam and test-product in `test`; test-tools in `tools`;
 # test-silver and test-tier in `blobs`; test-time in time.yml, alone on its runner and on a pull
-# request only when what it times changes. Nothing but this comment checks that mapping: a part added
+# request only when what it times changes. check-msrv, which make ci leaves out because it needs a second
+# toolchain, is the `msrv` job. Nothing but this comment checks that mapping: a part added
 # to make ci gets a job, and a place in this list. Each job installs and caches only what its line
 # reads, except typos, which make preflight wants in all of them, and each has a target cache of its
 # own, keyed by setup-rust-toolchain on the job and on Cargo.lock, the manifests and the toolchain.
 # Only a push to main saves those caches; a pull request restores main's, so a branch that changes
-# Cargo.lock adds none to the repository's 10 GB, where it would add six, and time.yml's a seventh.
-# make ci is not everything: python.yml runs make test-python when the scripts it tests change.
+# Cargo.lock adds none to the repository's 10 GB, where it would add seven, and time.yml's and
+# python.yml's more. Every workflow that caches follows the same rule.
+# make ci is not everything: python.yml runs make test-python on every pull request and push to main,
+# beside this workflow, with no filter on paths. The repository is public, so the minutes are free.
 jobs:
   # Fmt, clippy, deslag on its own Markdown, rustdoc, typos, the builds, and the scanners' sweeps.
   check:
@@ -154,3 +157,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: make CARGO_FLAGS=--locked test-silver test-tier
 
+  # The rust-version in Cargo.toml is the oldest Rust deslag builds on; cargo install deslag fails on
+  # anything older with an error that names no version. make check-msrv installs that release, and checks
+  # the workspace on it. Linux only, and not a required check: main has no branch protection.
+  msrv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, 2026-07-20
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install typos
+        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.29, 2026-10-16
+        with:
+          tool: typos
+
+      - name: Check on the oldest Rust
+        run: make check-msrv

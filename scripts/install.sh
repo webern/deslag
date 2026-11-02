@@ -5,11 +5,11 @@
 # same hint preflight gives, and nothing is downloaded behind the user's back
 # for them. typos is a cargo install, which takes a few minutes from source;
 # CI uses a prebuilt binary instead, which is why the version is not pinned
-# here and tracks the latest release like CI does.
+# here and tracks the latest release like CI does. A C compiler and python3 are
+# not something cargo can install, so they stay by hand: it ends by running
+# preflight.sh, which says how, and exits with its status.
 
 set -euo pipefail
-
-installed=0
 
 have() {
     command -v "$1" >/dev/null 2>&1
@@ -29,9 +29,6 @@ fi
 if ! have typos; then
     echo "installing typos with cargo"
     cargo install typos-cli --locked
-    installed=1
 fi
 
-if [ "$installed" -eq 0 ]; then
-    echo "nothing to install"
-fi
+DESLAG_FROM_INSTALL=1 exec "$(dirname "$0")/preflight.sh"

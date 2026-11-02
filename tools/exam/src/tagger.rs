@@ -261,10 +261,10 @@ mod tests {
         let shipped = run_on(text, &Deslag).unwrap();
         for (rule, ship) in rules.iter().zip(&shipped) {
             assert_eq!(rule.is_some(), ship.is_some());
-            if let (Some(rule), Some(ship)) = (rule, ship) {
-                if rule.confidence == Confidence::Sure {
-                    assert_eq!(rule, ship);
-                }
+            if let (Some(rule), Some(ship)) = (rule, ship)
+                && rule.confidence == Confidence::Sure
+            {
+                assert_eq!(rule, ship);
             }
         }
     }

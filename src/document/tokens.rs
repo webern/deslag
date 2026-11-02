@@ -99,10 +99,10 @@ impl<'a> Rows<'_, 'a> {
             }
             let kind = match piece.kind {
                 PieceKind::Text => {
-                    if let Some(end) = run.end {
-                        if self.breaks(end..piece.range.start) {
-                            run.flush(out);
-                        }
+                    if let Some(end) = run.end
+                        && self.breaks(end..piece.range.start)
+                    {
+                        run.flush(out);
                     }
                     run.push(piece);
                     continue;

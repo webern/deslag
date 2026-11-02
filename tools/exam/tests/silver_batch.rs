@@ -199,7 +199,11 @@ fn parts_become_a_batch_with_every_file_of_the_layout_and_it_checks() {
         let cells: Vec<&str> = line.split('\t').collect();
         let first =
             u8::from_str_radix(&sha256(cells[5].to_lowercase().as_bytes())[..2], 16).unwrap();
-        let split = if first % 10 == 0 { "tune" } else { "train" };
+        let split = if first.is_multiple_of(10) {
+            "tune"
+        } else {
+            "train"
+        };
         assert_eq!(cells[1], split, "{line}");
         assert!(cells[13] == "01" || cells[13] == "02", "{line}");
     }

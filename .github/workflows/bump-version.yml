@@ -54,6 +54,8 @@ jobs:
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        with:
+          cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # make check-typos runs it.
       - name: Install typos

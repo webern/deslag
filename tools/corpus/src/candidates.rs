@@ -196,10 +196,10 @@ pub fn candidates(
     let tools_of = |gram: u32| -> Vec<Share> {
         let mut files: BTreeMap<&str, u64> = BTreeMap::new();
         for (doc, _) in &counted.hits[0][gram as usize] {
-            if let Some(tool) = focus.docs[*doc as usize].single_tool() {
-                if compared_tools.iter().any(|compared| compared == tool) {
-                    *files.entry(tool).or_default() += 1;
-                }
+            if let Some(tool) = focus.docs[*doc as usize].single_tool()
+                && compared_tools.iter().any(|compared| compared == tool)
+            {
+                *files.entry(tool).or_default() += 1;
             }
         }
         shares(files)

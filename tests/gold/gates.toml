@@ -1,4 +1,4 @@
-# The exam's gates on deslag's own tagger. `deslag-exam gate --gates tests/gold/gates.toml SET...`
+# The exam's gates on deslag's tagger. `deslag-exam gate --gates tests/gold/gates.toml SET...`
 # judges each named set: `make test-exam` runs dev, mustpass and holdout, `make test-ewt` runs ewt-dev.
 #
 # A rate gate is a whole number per mille: min_per_mille = 860 means at least 86.0%. It is judged

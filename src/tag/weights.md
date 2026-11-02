@@ -14,8 +14,8 @@ rules did not keep.
 
 The file has a header, the normal forms the model was trained on (20,214 words), and 87,179 rows of
 weights for 25 feature templates: 21 of the word, its neighbours and the tags before it, and four
-that read the rules' own reading. It is 3,526,814 bytes of UTF-8 text. Every number in it is an
-integer, so the Rust reader sums with `i64` and uses no floating point. The format is described at
+that read the rules' reading. It is 3,526,814 bytes of UTF-8 text. Every number in it is an
+integer, so the Rust reader sums with `i64` and does not use floating point. The format is described at
 the top of `scripts/train/weights.py`.
 
 The file is a deliberate exception to the build doctrine's rule of thumb that text data over 1 MB
@@ -46,11 +46,13 @@ Measured on macOS x86-64 (an i9-9980HK) with the machine idle, release builds un
   `b7711cce01cdd4f5fcc0a8199b8a50d951b16c0c`, train file only: 12,544 sentences. The exam aligned its
   words to deslag's tokens and its tags to deslag's 13 codes. The dev and test files never trained
   anything.
-- The silver batch `2026-10-08-silver`, train split only: 4,395 sentences of its 4,794. The
-  batch's own datasheet gives its sources, its licences and how right its labels are. The labels
-  are a model's, voted by three open-weight models and settled by a stronger one, and were checked
-  by the owner on a sample.
-- The dev gold, the holdout and the owner's set trained nothing. The silver batch's tune split (399
+- The silver batch `2026-10-08-silver`, train split only: 4,395 sentences of its 4,794.
+
+  The batch's datasheet gives its sources, its licences and how right its labels are.
+
+  The labels are a model's, voted by three open-weight models and settled by a stronger one, and
+  were checked by the owner on a sample.
+- The dev gold, the holdout and the owner's set did not train the model. The silver batch's tune split (399
   sentences) chose the cutoffs below and the mapping of margins to scores, and nothing else.
 
 Each sentence was first read by deslag's rules, version 12, and the model learned to correct that
@@ -67,15 +69,18 @@ code licence. The weights hold words and numbers, not sentences.
 - Seed: 20261004. Passes: 10 over 16,939 sentences, each pass in an order shuffled by the seed.
 - Steps: 1,394,830. A weight is stored as its total over all steps, not its average, and the file
   says the step count, so a score is a total and a margin is compared as a whole number.
-- The three cutoffs are whole numbers over the steps, each a margin the tuning set showed. A margin
-  of at least 75,460,458 is `Sure`. Below 49,944,573 the word is `Unsure`, or stays `Likely` when
-  it is the rules' own tag and the rules were `Likely`. Tags within 49,944,573 of the best score
-  stay in the word's kept set when it is `Unsure`.
-- The exporter, `scripts/train/weights.py`, writes the model as it is. It retrains nothing and
-  prunes nothing, and it refuses a model whose cutoffs are not whole numbers over the steps.
+- The three cutoffs are whole numbers over the steps, each a margin the tuning set showed.
+
+  A margin of at least 75,460,458 is `Sure`. Below 49,944,573 the word is `Unsure`, or stays
+  `Likely` when it is the rules' tag and the rules were `Likely`.
+
+  Tags within 49,944,573 of the best score stay in the word's kept set when it is `Unsure`.
+- The exporter, `scripts/train/weights.py`, writes the model as it is. It does not retrain or
+  prune the model, and it refuses a model whose cutoffs are not whole numbers over the steps.
 - The model's file is `.train/shapes/p-hyb-s.model.json` after `make generate-shapes`. Its sha256
-  is `4ade3302e849ca3255135d553ef02b36df093e8c6d4857b142634c756b43e0f9`. The two readings files it
-  trained on have sha256 `2e7f239c16a77d1a21ba02a801047ea38a688c1b2a22ad6f53cc19a6dee91dab` (the
+  is `4ade3302e849ca3255135d553ef02b36df093e8c6d4857b142634c756b43e0f9`.
+
+  The two readings files it trained on have sha256 `2e7f239c16a77d1a21ba02a801047ea38a688c1b2a22ad6f53cc19a6dee91dab` (the
   treebank's train file) and `68e2c9353571606d328cd0c57d66f6ec91c43bdff6f6342ec60f21c35628bcca`
   (silver's train split).
 - The file's header names the model's sha256 (`model_sha256`). `weights.py check --model` refuses
@@ -89,22 +94,33 @@ fails a change to it until `RULES_VERSION` is raised and `make fix-golden` run. 
 
 1. Copy `.train/shapes` to a directory of its own first (`cp -a .train/shapes .train/shapes-r11`):
    `make generate-shapes` writes over the models of the last training, and a retraining on the
-   same features should be compared with them. Then `make generate-shapes`, under Python 3.13,
+   same features should be compared with them.
+
+   Then `make generate-shapes`, under Python 3.13,
    trains the models from the rules of the new version.
 2. `make generate-weights`, with Python 3.13, writes this file from the hybrid model and checks it
-   against the model. Nothing else makes the file. When the features did not change, only
-   `rules_version` and `model_sha256` differ from the last file, and `python3
+   against the model. Nothing else makes the file.
+
+   When the features did not change, only `rules_version` and `model_sha256` differ from the last
+   file.
+
+   `python3
    scripts/train/weights.py same --old .train/shapes-r11/p-hyb-s.model.json --new
    .train/shapes/p-hyb-s.model.json` says whether the new model's weights, vocabulary, steps and
    tuning are the old one's.
 3. A change to the file is a change to the tagger: raise `deslag::tag::VERSION`, run
    `make fix-golden`, and update the counts and costs here.
 4. Read the diff of `tests/golden/verbs_no_nouns.txt`, `tests/golden/not_at_all.txt` and
-   `tests/golden/verbs_nothing.txt` after `make fix-golden`. The three lints read the tagger,
-   `not_at_all` its nouns at `Likely`, so a retrain can move their findings, their unit tests in
+   `tests/golden/verbs_nothing.txt` after `make fix-golden`.
+
+   The three lints read the tagger, `not_at_all` its nouns at `Likely`.
+
+   So a retrain can move their findings, their unit tests in
    `src/lint/`, the `forms.stderr` of `tests/cases/verbs_no_nouns` and `verbs_nothing`, the tree
    tests in `tests/slow/corpus.rs` and the big tier's ceilings and ratios in
-   `tools/corpus/tests/blobs.rs`. If a ceiling or ratio test fails, stop and ask a human: no limit
+   `tools/corpus/tests/blobs.rs`.
+
+   If a ceiling or ratio test fails, stop and ask a human: no limit
    moves on a retrain's say-so.
 
 While the weights lag a `RULES_VERSION` bump the learned stage is off, so a `make fix-golden` run
@@ -119,12 +135,17 @@ Two gates of the dev gold have no slack at this model's counts (`clean_sentences
 ## How it scores
 
 The Rust tagger gives the same answers as the Python import that the exam graded before this stage
-shipped. CI checks it on the `core` fixtures of the corpus and on synthetic Unicode cases: a golden
+shipped.
+
+CI checks it on the `core` fixtures of the corpus and on synthetic Unicode cases: a golden
 file of decisions, `tools/exam/tests/golden/learned.txt`, which `cargo test` holds the Rust to and
-`make test-python` holds the Python to. A comparison run once, when the file was written, found no
-word that decides differently in the dev set (3,138 words), the treebank's dev set (21,315), a set
-the maintainer labelled (583), or the corpus (840,484). The scores
-below are the exam's counts on the dev gold, with the rules alone (version 12) against the shipped
+`make test-python` holds the Python to.
+
+A comparison run once, when the file was written, did not
+find a word that decides differently in the dev set (3,138 words), the treebank's dev set (21,315), a set
+the maintainer labelled (583), or the corpus (840,484).
+
+The scores below are the exam's counts on the dev gold, with the rules alone (version 12) against the shipped
 tagger (version 13).
 
 | measure | rules alone | with the learned stage |
@@ -140,7 +161,7 @@ tagger (version 13).
 | best guess right, treebank dev | 18,466 of 21,149 | 19,728 of 21,149 |
 | gold tag kept, treebank dev | 20,394 of 21,149 | 20,346 of 21,149 |
 
-The model's own `Score` is not shipped: the file holds no calibration, so a word's `score` is
+The model's `Score` is not shipped: the file does not hold a calibration, so a word's `score` is
 `None` and any calibration differs by construction from the Python import's.
 
 ## Known limits
@@ -149,10 +170,13 @@ The model's own `Score` is not shipped: the file holds no calibration, so a word
   not, and on text with many words it has not seen: a word outside the 20,214 the model knows, and
   unknown to the rules, stays `Unknown`.
 - The perceptron lowercases and reads the shape of a word with Rust's Unicode tables (version 17),
-  and Python's `isdigit` and `isdecimal` tables (version 15.1) are written into the file. About 55
-  code points case differently between the two versions. A word made of such a character can decide
-  differently from the Python import. No test checks that the golden file of the stage holds none
-  of them; the tests check that Python 3.13 writes the same digit ranges again.
+  and Python's `isdigit` and `isdecimal` tables (version 15.1) are written into the file.
+
+  About 55 code points case differently between the two versions. A word made of such a character
+  can decide differently from the Python import.
+
+  No test checks whether the golden file of the stage holds
+  any of them; the tests check that Python 3.13 writes the same digit ranges again.
 - The `Unsure` width and the cutoffs were tuned on 399 sentences, so they are good to a few words.
 - The labels of the silver batch are a model's. A label that is 96 or 97 percent right bounds what
   the stage can learn from it.
@@ -169,6 +193,7 @@ which its datasheet lists.
 The weights hold words and pairs of words from the silver batch's texts. Eleven of its source
 repositories offer their Markdown under CC BY 4.0, alone or beside another licence, and CC BY 4.0
 asks for attribution on an adapted work. `LICENSES/CC-BY-4.0.txt` names them, with the licence text.
+
 CC BY 4.0 lets an adapter share an adapted work under its own licence where that does not stop
 anyone from meeting CC BY's terms; CC BY-SA 4.0 does not, so the file stays under CC BY-SA 4.0
 and the crate's licence expression is unchanged.

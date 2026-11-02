@@ -6,14 +6,23 @@ deslag_version = "0.0.5"
 
 # ACKNOWLEDGEMENTS.md does not require a byte budget.
 [md]
-globs = [
-  "/AGENTS.md",
-  "/tests/AGENTS.md",
-  "/tools/AGENTS.md",
-  "/ACKNOWLEDGEMENTS.md",
-  "/.agents/skills/**/*.md",
-  "/scripts/blobstore/blobs.md",
-  "/src/instructions/**/*.md",
+globs = ["**/*.md"]
+
+# Every Markdown file is checked unless it is excluded here, with a reason.
+exclude = [
+  # Human-authored; front-matter says llm_edit: false.
+  "/README.md",
+  "/docs/design/deslag.desired.md",
+  # Fixtures, whose bytes tests pin.
+  "/tests/cases/**",
+  "/tests/corpus/**",
+  "/tools/exam/tests/silver-fixture/**",
+  # Printed by the tool, not written.
+  "/tools/corpus/tests/golden/**",
+  # The system prompt of every labelling run. Each run records its sha256, so a reword changes
+  # the instrument, not its prose.
+  "/tests/gold/annotation-guide.md",
+  "/scripts/label/prompts/**",
 ]
 
 [md.lints.max_emphasis]
@@ -111,6 +120,24 @@ lints.max_size_bytes.value = 1585
 globs = ["/scripts/blobstore/blobs.md"]
 lints.max_size_bytes.value = 8192
 
+# The four documents first checked when the globs widened: each one's size plus 5%, rounded up to
+# the next 100 bytes.
+[[md.overrides]]
+globs = ["/scripts/label/README.md"]
+lints.max_size_bytes.value = 69300
+
+[[md.overrides]]
+globs = ["/scripts/blobstore/batches.md"]
+lints.max_size_bytes.value = 13900
+
+[[md.overrides]]
+globs = ["/src/tag/weights.md"]
+lints.max_size_bytes.value = 12000
+
+[[md.overrides]]
+globs = ["/scripts/label/silver-datasheet.md"]
+lints.max_size_bytes.value = 6700
+
 # The comments of deslag's source. A comment may not hold the characters and phrases the
 # prose of this repo may not.
 [rust]
@@ -162,6 +189,8 @@ globs = [
   "**/Cargo.toml",
   "/src/**/*.toml",
   "/tools/corpus/*.toml",
+  "/tests/gold/gates.toml",
+  "/tests/golden/config.toml",
 ]
 
 [toml.lints.banned_chars.groups]

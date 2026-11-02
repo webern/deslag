@@ -17,10 +17,13 @@ grade: dev, holdout and `owner.conllu` stay the only gold.
 {{#if audit.present}}
 The owner reviewed {{audit.sentences}} sentences of this batch, drawn at random and shown
 without the labels, and rejected {{audit.rejected}} (personal data or not English), which are
-not counted. Against his labels on {{audit.words}} words, silver's part of speech is right in
+not counted.
+
+Against his labels on {{audit.words}} words, silver's part of speech is right in
 {{audit.pos}} percent (the point and a 95% interval, from a bootstrap over sentences) and its
 whole code in {{audit.code}} percent.
-{{audit.prefilled}} of those words were left at deslag's own pre-filled reading, which anchors
+
+{{audit.prefilled}} of those words were left at deslag's pre-filled reading, which anchors
 him and flatters silver where he agrees.
 
 The bar on the part of speech was {{audit.bar}}; met: {{audit.met}}.{{#if audit.accepted}} The
@@ -31,7 +34,7 @@ quality.
 {{table audit.table}}
 {{/if}}
 {{#unless audit.present}}
-This batch has no audit. It is not to be used until it has one.
+This batch was not audited. It is not to be used until it is.
 {{/unless}}
 
 {{#if has_calibration}}
@@ -55,7 +58,7 @@ with the gold push it up.
 ## What it is for, and what it is never for
 
 It is for training a tagger and for choosing its thresholds on the `tune` split, with the
-labels' own errors in mind: a label that is 96 or 97 percent right cannot by itself certify a
+label errors in mind: a label that is 96 or 97 percent right cannot by itself certify a
 97 percent gate, so refit on `tune` and confirm on gold.
 
 It is never for grading a tagger, and its sentences are never in the owner's stratum: the tools
@@ -79,8 +82,9 @@ sentence; none of them is of a banned family.
 
 Each labeller's model, licence, the date the licence was read, endpoint and quantisation are
 recorded in `runs.tsv` for every run, and in `record/voters.json` as they stood. The labellers are
-open-weight models under MIT or Apache 2.0, at least three from different makers (D2). The
-adjudicator, {{adjudicator}}, is run as Claude Code in a confined process (D2a). spaCy, whose model
+open-weight models under MIT or Apache 2.0, at least three from different makers (D2).
+
+The adjudicator, {{adjudicator}}, is run as Claude Code in a confined process (D2a). spaCy, whose model
 is MIT by its maker and was trained on OntoNotes, votes on the base tag alone and is never one of
 the three (D3); `Runs=` and `Prov=` on every word let its influence be filtered out with the
 batch's `parts/`.
@@ -157,5 +161,5 @@ By the origin of the word:
 
 To filter spaCy out, take `parts/NN/voters.tsv` and `worklist.tsv` with `silver.conllu`: together
 they give every voter's code on every word, and each word's `Runs=` names the runs that vouch for
-it. Dropping a model voter leaves no word with three answers, so that needs a new voter and a new
+it. Dropping a model voter does not leave a word with three answers, so that needs a new voter and a new
 adjudication.

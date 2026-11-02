@@ -509,3 +509,26 @@ fn each_group_covers_the_characters_it_covered() {
         );
     }
 }
+
+/// A bidi control is reported with advice that is its own, and a fix never deletes one.
+#[test]
+fn a_bidi_character_is_reported_and_never_fixed() {
+    let group = GROUPS
+        .iter()
+        .find(|group| group.name == "bidi")
+        .expect("the bidi group");
+    let on = settings("groups = { bidi = true }");
+    for rule in group.rules {
+        assert_eq!(rule.instead, None, "{rule:?}");
+        let text = format!("a {}b\n", rule.first);
+        let over = check(&Document::markdown(&text), Some(&on)).expect("a finding");
+        let edits = deslag::lint::banned_chars::edits(&over);
+        assert_eq!(edits.len(), 1, "{rule:?}");
+        assert!(edits[0].1.is_err(), "{rule:?} has a fix");
+        assert!(
+            edits[0].0.note.contains("right to left"),
+            "{}",
+            edits[0].0.note
+        );
+    }
+}

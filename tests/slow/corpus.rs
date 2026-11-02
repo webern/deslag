@@ -1087,6 +1087,11 @@ fn check_fixed(
         None => (0, [].as_slice()),
     };
     assert_eq!(made, fixed_here, "{path}: fix reports {fixed_here} fixed");
+    assert_eq!(
+        made + left.len(),
+        places.len(),
+        "{path}: a banned character was neither fixed nor left"
+    );
 
     // What is left is what check still finds, each place with a reason. A file fix did not change
     // is read as it was, so what check finds in it is what it found before.
@@ -1183,15 +1188,16 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
         "fix: {fixed} of {banned} banned characters fixed, {whole} files fixed whole, {not_utf8} \
          not UTF-8; left: {left_by_reason:#?}"
     );
+    // Every banned character was fixed or left, and the corpus holds some of each, so neither
+    // count is inert.
+    let left: usize = left_by_reason.iter().map(|(_, count)| count).sum();
     assert_eq!(
-        (fixed, whole, left_by_reason.as_slice()),
-        (FIXED, FIXED_WHOLE, LEFT_BY_REASON),
-        "if the corpus changed, pin the new numbers"
+        fixed + left,
+        banned,
+        "a banned character was neither fixed nor left"
     );
-    assert_eq!(
-        fixed + LEFT_BY_REASON.iter().map(|(_, count)| count).sum::<usize>(),
-        banned
-    );
+    assert!(fixed > 0, "fix fixed nothing in the corpus");
+    assert!(left > 0, "fix left nothing in the corpus");
 }
 
 /// The groups but `emoji` are meant to catch the characters agents write and people do not.

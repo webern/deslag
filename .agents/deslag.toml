@@ -119,6 +119,24 @@ lints.max_size_bytes.value = 1585
 globs = ["/scripts/blobstore/blobs.md"]
 lints.max_size_bytes.value = 8192
 
+# The four documents first checked when the globs widened: each one's size plus 5%, rounded up to
+# the next 100 bytes.
+[[md.overrides]]
+globs = ["/scripts/label/README.md"]
+lints.max_size_bytes.value = 69300
+
+[[md.overrides]]
+globs = ["/scripts/blobstore/batches.md"]
+lints.max_size_bytes.value = 13900
+
+[[md.overrides]]
+globs = ["/src/tag/weights.md"]
+lints.max_size_bytes.value = 12000
+
+[[md.overrides]]
+globs = ["/scripts/label/silver-datasheet.md"]
+lints.max_size_bytes.value = 6700
+
 # The comments of deslag's source. A comment may not hold the characters and phrases the
 # prose of this repo may not.
 [rust]

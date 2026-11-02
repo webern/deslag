@@ -10,6 +10,7 @@
 //!   parent is an inline table, as dotted keys when the parent is dotted or its tables are, and
 //!   under a header of its own otherwise, right after the last table of its parent. A dotted table
 //!   left empty is written `{}`, so that it is still there;
+//! - a table made in an empty inline table rewrites the line of that table, as a key set in one does;
 //! - a deleted value goes as [`delete_value`] says; a deleted table goes with its header and the
 //!   comment lines directly above it, and a table left empty by it is still written, as `{}` when it
 //!   is dotted and under its own header when the file did not have a header for it;
@@ -136,8 +137,30 @@ fn table_lines(table: &Table, text: &str, touched: &mut Vec<Touch>) {
 
 /// What the text as it was, parsed at `root`, says about `edit`.
 fn seen(root: &Table, text: &str, edit: &TableEdit) -> Seen {
-    let Some(held) = Held::at(root, &steps(edit.table())) else {
-        return Seen::default();
+    let all = steps(edit.table());
+    let Some(held) = Held::at(root, &all) else {
+        // A table to make is made in the nearest table the file has above it. When that is inline,
+        // its key's lines are rewritten, as a change to a key in it rewrites them.
+        let nearest = (0..all.len())
+            .rev()
+            .find_map(|depth| Held::at(root, &all[..depth]));
+        return match (edit, nearest) {
+            (TableEdit::Create { .. }, Some(Held::Inline(table))) => {
+                let span = table.span();
+                Seen {
+                    line: span.clone().map(|span| line_of(text, span.start)),
+                    touched: span
+                        .map(|span| Touch {
+                            lines: lines_of(text, span),
+                            kind: TouchKind::Rewrite,
+                        })
+                        .into_iter()
+                        .collect(),
+                    ..Seen::default()
+                }
+            }
+            _ => Seen::default(),
+        };
     };
     // An inline table is on its key's lines, which any change to it rewrites.
     let inline = match held {

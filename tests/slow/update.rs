@@ -999,6 +999,22 @@ fn a_phrase_left_out_by_hand_fails_the_check_and_names_it() {
     }
 }
 
+#[test]
+fn a_banned_chars_table_written_empty_and_inline_migrates_and_still_bans() {
+    for text in [
+        "schema_version = 1\n[md]\nglobs = [\"*.md\"]\nlints.banned_chars = {}\n",
+        "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n[md.lints]\nbanned_chars = {}\n",
+    ] {
+        let repo = repo_with("toml", text);
+        repo.write("a.md", "A dash \u{2014} here.\n");
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{text}: {}", raw_stderr(&output));
+        let check = repo.check();
+        assert_eq!(code(&check), 1, "{text}: {}", raw_stderr(&check));
+        assert!(raw_stderr(&check).contains("a.md"), "{text}");
+    }
+}
+
 /// Every phrase of the catalogue, and those the running version has shipped, which
 /// `instructions update` offers to a config stamped [`BEFORE_ALL`].
 fn phrases() -> (Vec<&'static str>, Vec<&'static str>) {

@@ -984,6 +984,26 @@ mod tests {
     }
 
     #[test]
+    fn an_empty_inline_banned_chars_table_migrates_dotted_or_under_a_header() {
+        for text in [
+            "schema_version = 1\n[md]\nlints.banned_chars = {}\n",
+            "schema_version = 1\n[md.lints]\nbanned_chars = {}\n",
+            "schema_version = 1\n[md]\nlints = { banned_chars = {} }\n",
+        ] {
+            let text = migrated(text);
+            let config = Config::parse(&text, PathBuf::from("deslag.toml"), ConfigSource::Explicit)
+                .expect("it loads");
+            let chars = config.sections()[0]
+                .lints
+                .banned_chars
+                .clone()
+                .expect("chars");
+            let groups = serde_json::to_value(&chars.groups).expect("data");
+            assert_eq!(groups["dashes"], true, "{text}");
+        }
+    }
+
+    #[test]
     fn a_char_table_names_the_groups_it_had_on() {
         let text =
             migrated("schema_version = 1\n[md.lints.banned_chars]\ngroups = { dashes = false }\n");

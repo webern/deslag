@@ -98,6 +98,28 @@ fn an_inline_table_gains_a_member_inside_its_braces() {
 }
 
 #[test]
+fn a_table_made_in_an_empty_inline_table_rewrites_its_line_and_keeps_its_comment() {
+    let text = "schema_version = 1\n[md.lints]\nbanned_chars = {} # on\n\
+                [rust]\nlints.banned_chars = {}\n";
+    let groups = |section: &str| lints(section).key("banned_chars").key("groups");
+    let edits = [
+        TableEdit::Create {
+            table: groups("md"),
+        },
+        set(groups("md"), "dashes", Scalar::Bool(true)),
+        TableEdit::Create {
+            table: groups("rust"),
+        },
+        set(groups("rust"), "dashes", Scalar::Bool(true)),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md.lints]\nbanned_chars = { groups = { dashes = true } } # on\n\
+         [rust]\nlints.banned_chars = { groups = { dashes = true } }\n"
+    );
+}
+
+#[test]
 fn a_missing_table_is_made_after_its_parents_tables_and_under_its_own_header() {
     // The section's lint tables come after its overrides, and the rust section after them.
     let text = "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\n\

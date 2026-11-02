@@ -74,7 +74,7 @@ impl Layout {
 struct Case {
     name: &'static str,
     layout: Layout,
-    /// The canonical location the config is written to, or `None` for no config at all.
+    /// The canonical location the config is written to, or `None` for no config.
     location: Option<&'static str>,
     /// A place to write the config that is not a canonical location, passed with
     /// `--config-path`. The config written there is the case's `global` and `globs`.
@@ -84,8 +84,8 @@ struct Case {
     /// The `max_size_bytes` the harness writes into a named fixture's frontmatter.
     frontmatter: &'static [(&'static str, u64)],
     /// The budget the case intends for a fixture its `frontmatter` does not name and whose own
-    /// file declares none. These must line up with what `globs` and `global` actually do: that is
-    /// the assertion.
+    /// file does not declare one. These must line up with what `globs` and `global` actually do:
+    /// that is the assertion.
     overrides: &'static [(&'static str, u64)],
 }
 
@@ -535,8 +535,8 @@ fn reported_emphasis(stderr: &str) -> Vec<(String, u64, f64)> {
 /// Writes every fixture at its `layout_path` in `repo`, returning the paths in corpus order.
 ///
 /// The walk honours the global git excludes file, which on some machines ignores a directory such
-/// as `.vscode` that a fixture's path holds. A `.ignore` that ignores nothing takes precedence over
-/// that file, so every machine walks the same corpus.
+/// as `.vscode` that a fixture's path holds. A `.ignore` that does not ignore a path takes
+/// precedence over that file, so every machine walks the same corpus.
 fn place_real(repo: &Repo, fixtures: &[Fixture]) -> Vec<String> {
     repo.write(".ignore", "!*\n");
     fixtures
@@ -617,7 +617,7 @@ fn the_whole_corpus_is_held_to_its_budgets() {
 
 /// `text` read as the default `[md]` reads it, which is with the comments of the fenced code in
 /// every language deslag reads. The tests that compare a report with the library expect from this,
-/// and not from [`Document::markdown`], which reads no fences.
+/// and not from [`Document::markdown`], which does not read fences.
 fn default_md(text: &str) -> Document<'_> {
     Stack::new(Reader::Markdown {
         fences: Fences::all(),
@@ -1125,7 +1125,7 @@ fn check_fixed(
 
 /// `deslag fix` over the corpus, with the default groups: every byte it changes is a banned
 /// character replaced as the report says, every banned character it leaves has a reason, and a
-/// second run changes nothing.
+/// second run does not change a byte.
 ///
 /// Fix reads every fixture as check does, and this test reads each again to compare, so both run
 /// on every core: one at a time, this was the slowest test of the corpus.
@@ -1164,7 +1164,7 @@ fn the_corpus_is_fixed_only_where_the_report_says() {
         }
     }
 
-    // A file the first run made no edit to is read the same way again, so only the files it
+    // A file the first run did not edit is read the same way again, so only the files it
     // edited can change.
     let edited: Vec<String> = fixes
         .iter()

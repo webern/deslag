@@ -278,7 +278,7 @@ fn an_unreadable_budget_is_reported_when_the_change_touches_its_line() {
     repo.write("vendored.md", &format!("{text}\nmore\n"));
     assert_eq!(run(&repo), []);
 
-    // The key's own line does.
+    // The key's line does.
     repo.write(
         "vendored.md",
         &text.replace("max_size_bytes: lots", "max_size_bytes: plenty"),
@@ -508,7 +508,7 @@ fn every_format_is_narrowed_alike() {
         serde_json::json!({ "rev": "main", "merge_base": merge_base.trim() })
     );
     assert_eq!(run["files_scanned"], 2);
-    // A run of the whole tree names no change, and no base.
+    // A run of the whole tree does not name a change or a base.
     let whole: Value = serde_json::from_str(&stdout(&deslag(
         repo.root(),
         &["check", "--format", "json"],
@@ -724,8 +724,8 @@ fn without_git_it_cannot_run() {
     );
 }
 
-/// A base alone narrows nothing: every finding of the whole tree is reported, with no line on the
-/// change.
+/// A base alone does not narrow the report: every finding of the whole tree is reported, with no
+/// line on the change.
 #[test]
 fn a_base_does_not_narrow_the_report() {
     let repo = repo(&[

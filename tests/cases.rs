@@ -11,7 +11,8 @@
 //!
 //! The `.json` file beside a case is what the same run prints on stdout with `--format json`, with
 //! the version of deslag written as `[VERSION]`. That run must print the same stderr and exit with
-//! the same code. A case where deslag cannot run prints nothing on stdout, and has no `.json`.
+//! the same code. A case where deslag cannot run does not print output on stdout, and has no
+//! `.json`.
 //!
 //! A case runs `deslag check` unless an `.args` file beside it holds other arguments, one to a
 //! line, the subcommand first.

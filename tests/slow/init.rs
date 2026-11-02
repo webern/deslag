@@ -1,5 +1,5 @@
-//! `deslag init`: it writes the config with everything on where the config search finds none, and
-//! refuses, writing nothing, where it finds one.
+//! `deslag init`: it writes the config with everything on where the config search does not find
+//! one, and refuses, writing nothing, where it finds one.
 //!
 //! `tests/instructions.rs` holds what the config says to the lints pages; these tests run the
 //! command.

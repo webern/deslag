@@ -137,8 +137,8 @@ fn no_since_is_above_the_crate_version() {
     );
 }
 
-/// What arrives in `next` reaches no config, since no stamp is `next`: the release gives it the
-/// version it ships in.
+/// What arrives in `next` does not reach a config, since no stamp is `next`: the release gives it
+/// the version it ships in.
 #[test]
 #[ignore = "fails until the release change sets each `next` to the version"]
 fn nothing_arrives_in_next() {
@@ -169,7 +169,7 @@ fn the_crate_version_is_a_release() {
 /// `deslag-release prep` sets `next` to the version in three exact forms, each in its own files.
 /// One written another way, or somewhere else under `src/`, would ship as `next`. This applies the
 /// rewrite of `prep` to the text under `src/`, without writing it, and fails on each form it
-/// leaves; after `prep` the rewrite has nothing left to do.
+/// leaves; after `prep` the rewrite does not have a form left to change.
 #[test]
 #[ignore = "a release-time check, run by make check-release"]
 fn no_arrival_names_next() {

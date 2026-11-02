@@ -75,7 +75,7 @@ fn yaml(value: &Value, depth: usize) -> String {
         Value::Object(map) => map
             .iter()
             .map(|(key, inner)| match inner {
-                // Written `key:` an empty map would read as null, which is no table at all.
+                // Written `key:` an empty map would read as null, which is no table.
                 Value::Object(map) if map.is_empty() => format!("{pad}{key}: {{}}\n"),
                 Value::Object(_) => format!("{pad}{key}:\n{}", yaml(inner, depth + 1)),
                 Value::Array(items) if items.iter().all(Value::is_object) => {
@@ -118,7 +118,7 @@ fn each_redirect_old_set_compiles_equal_to_new_set_or_neither_and_warns_once() {
     for redirect in REDIRECTS {
         let example: Value = serde_json::from_str(redirect.example).expect("JSON");
         for over in [false, true] {
-            // The override variant selects a.md; the section variant has no override.
+            // The override variant selects a.md; the section variant does not have an override.
             let target = match redirect.new {
                 Some(new) => config_with(new, &example, over),
                 None => json!({ "schema_version": 2 }),

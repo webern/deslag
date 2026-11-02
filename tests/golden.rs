@@ -3,19 +3,21 @@
 //! deslag reads a config, and each file opens with them, defaults filled in, and a tally.
 //!
 //! A second file, `tests/golden/tags.txt`, is the tag stream: what the tagger reads of each sentence
-//! of `tests/corpus/core/`, so that a change to any reading shows in review. It has no verdict
-//! either. A third, `tests/golden/rules.txt`, is a hash of the same stream as the rules alone read
-//! it, with the [`RULES_VERSION`] it belongs to: the learned stage was trained on what the rules
-//! read, so a change to that must raise `RULES_VERSION`, and the weights be trained again.
+//! of `tests/corpus/core/`, so that a change to any reading shows in review. It does not have a
+//! verdict either. A third, `tests/golden/rules.txt`, is a hash of the same stream as the rules
+//! alone read it, with the [`RULES_VERSION`] it belongs to: the learned stage was trained on what
+//! the rules read, so a change to that must raise `RULES_VERSION`, and the weights be trained
+//! again.
 //!
 //! The set is a snapshot, not a verdict. It says what deslag does today, so that a change to what a
 //! lint finds shows in review, and a change not meant to move it must leave it as it is. Whether a
 //! lint is right about the corpus is for `tests/slow/corpus.rs` to say. The one verdict here is
 //! that the corpus holds fixtures on both sides of every lint.
 //!
-//! Each fixture is linted alone in an empty directory, so a lint that looks at the disk finds
-//! nothing there. `repo_layout` fails every fixture that has the section, since none of the paths
-//! it lists exist. It fails one without the section in any directory, and the set leaves it out.
+//! Each fixture is linted alone in an empty directory, so a lint that looks at the disk does not
+//! find its files there. `repo_layout` fails every fixture that has the section, since none of the
+//! paths it lists exist. It fails one without the section in any directory, and the set leaves it
+//! out.
 //!
 //! `make fix-golden` rewrites the files from what the lints find now; read the diff before
 //! committing it.
@@ -53,7 +55,7 @@ const TAGGED: &str = "core";
 const MAX_DIFF_LINES: usize = 40;
 
 /// The measurements the verdict on `violation` compared, as a golden file records them, or `None`
-/// for a file with no layout at all, which the set leaves out. A new lint does not compile until
+/// for a file with no layout, which the set leaves out. A new lint does not compile until
 /// it has an arm here.
 fn record_of(violation: &Violation) -> Option<String> {
     let record = match violation {

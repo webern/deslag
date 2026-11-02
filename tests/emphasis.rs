@@ -60,7 +60,7 @@ fn one_word_in_capitals_is_not_a_span() {
 
 #[test]
 fn letters_with_no_case_are_not_capitals() {
-    // CJK has no upper case, so a word in it is not in capitals and cannot join a run.
+    // CJK does not have an upper case, so a word in it is not in capitals and cannot join a run.
     assert!(spans("設定は IN ファイル、 NO 設定 だけを読む。\n").is_empty());
     assert!(spans("IN 設定は\n").is_empty());
     assert!(

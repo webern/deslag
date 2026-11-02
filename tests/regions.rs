@@ -256,7 +256,7 @@ fn a_block_comment_refuses_a_replacement_it_would_read_as_its_own_syntax() {
     assert_eq!(replaced(source, "—", "/*").1, Some(Refusal::Syntax));
     assert_eq!(replaced(source, "—", "-").1, None);
     assert_eq!(replaced(source, "—", "* /").1, None);
-    // A line comment has no syntax in its text.
+    // A line comment does not have syntax in its text.
     assert_eq!(replaced("/// a — b\n", "—", "*/").1, None);
     // Neighbours can still make `*/`, and only reading the result shows it.
     assert_eq!(
@@ -323,7 +323,7 @@ fn a_markdown_stack_reads_the_comments_of_the_fences_it_is_given() {
     let found = |stack: &Stack| banned_chars::scan(&stack.document(source)).len();
 
     assert_eq!(found(&reading), 1);
-    // The default stack reads none, and a fence is code.
+    // The default stack does not read the comments of a fence, and a fence is code.
     let none = Stack::new(Reader::Markdown {
         fences: Fences::default(),
     });

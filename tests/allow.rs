@@ -770,7 +770,8 @@ fn an_entry_names_an_invisible_character_it_exempts_with_a_toml_escape() {
         "{text}"
     );
 
-    // Another lint's quote may hold it too, since the sentence does; this one finds nothing there.
+    // Another lint's quote may hold it too, since the sentence does; this lint does not report a
+    // finding there.
     repo.write("a.md", source);
     repo.write("deslag.toml", &toml("banned_phrases"));
     let run = run_json(repo.root(), &["check"]);
@@ -933,7 +934,7 @@ fn a_failed_entry_quotes_the_three_closest_sentences_and_counts_the_rest() {
     assert!(!text.contains(" more."), "{text}");
 }
 
-/// A repo whose `a.md` holds `sentences`, and an entry that matches none.
+/// A repo whose `a.md` holds `sentences`, and an entry that does not match any of them.
 fn repo_with(sentences: &[&str]) -> Repo {
     repo(
         &config(&[entry("a.md", "banned_chars", TITLE, "A quoted title.")]),
@@ -1025,7 +1026,7 @@ fn a_line_with_a_character_added_fails_its_entry_and_brings_the_finding_back() {
         text.contains("does not hold a line equal to the line"),
         "{text}"
     );
-    // The report lists the lines that hold a finding no sentence holds, so it denies none.
+    // The report lists the lines that hold a finding no sentence holds, so it does not deny a line.
     assert!(text.contains("line 5: \"<p>cc \u{2014} d</p>\""), "{text}");
 }
 

@@ -29,9 +29,9 @@ pub const FILL_SPACE_LINE: &str = "One.\u{a0}Two.";
 /// A repo holding the frozen config at `path` as `deslag.<extension>`, and the files every frozen
 /// config selects: `docs/note.md`, a note every lint passes, and a file for each section, each
 /// holding [`FILL_QUOTE`], which the `allow` entries of a config frozen from
-/// `tests/configs/fill.toml` exempt. A config before those entries turns no lint on that finds it.
-/// A config with a `line` entry also gets the lines [`FILL_HTML_LINE`] and [`FILL_SPACE_LINE`]
-/// that its entries name; an older config would report their findings.
+/// `tests/configs/fill.toml` exempt. A config before those entries does not turn on a lint that
+/// finds it. A config with a `line` entry also gets the lines [`FILL_HTML_LINE`] and
+/// [`FILL_SPACE_LINE`] that its entries name; an older config would report their findings.
 pub fn repo(path: &Path, extension: &str) -> Repo {
     let repo = Repo::new();
     let text = std::fs::read_to_string(path).expect("a readable config");
@@ -91,7 +91,7 @@ pub fn releases() -> Vec<(semver::Version, PathBuf)> {
 
 /// The frozen files, each as its path from `tests/configs/` with `/` for separators, and the hash
 /// of its bytes, in the order of the lines of `hashes`: the files of each release, then its
-/// [`MIGRATED`] where it has one. A file that is gone has no hash.
+/// [`MIGRATED`] where it has one. A file that is gone does not have a hash.
 pub fn hash_lines() -> Vec<(String, Option<String>)> {
     let mut lines = Vec::new();
     for (release, directory) in releases() {

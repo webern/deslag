@@ -12,8 +12,8 @@
 //! what the copy meant: it says what it checked and removes the copy, or refuses and names each
 //! difference, and the copy stays. While the copy is there, `check`, `fix` and `explain` refuse the
 //! config (`Config::load_text_at`), so that a bare bump of `schema_version` cannot pass unchecked.
-//! A refusal that lists no edits saves no copy: no text could pass. A dry run saves and removes
-//! none. The copy of a config that is still of its old schema is saved again.
+//! A refusal with no edits to list does not save a copy: no text could pass. A dry run neither
+//! saves nor removes a copy. The copy of a config that is still of its old schema is saved again.
 //!
 //! It loads the config as `check` would, but says nothing of what it loads: the warnings it would
 //! print are the edits it is about to make. It then asks [`edit::edit`] for the text with every

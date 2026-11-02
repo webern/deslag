@@ -45,6 +45,9 @@ pub struct File {
     pub hunks: Vec<Hunk>,
     /// Whether git calls it binary, and so does not give lines for it.
     pub binary: bool,
+    /// The bytes of the working file that [`hunks`](File::hunks) add or sit beside, once
+    /// [`File::read_spans`] has walked the file; `None` before that.
+    pub spans: Option<Vec<Range<usize>>>,
 }
 
 /// What a change did to a file.
@@ -61,9 +64,10 @@ pub enum Status {
     Deleted,
 }
 
-/// One stretch of lines a change replaced. Lines count from 1 and end at each LF, as a
-/// [`Location`](crate::document::Location)'s do; an empty range sits between lines `start - 1`
-/// and `start`.
+/// One stretch of lines a change replaced. Lines count from 1 and end at each LF alone, as git
+/// counts them; a lone CR does not end one here, though it does in a
+/// [`Location`](crate::document::Location). An empty range sits between lines `start - 1` and
+/// `start`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Hunk {
     /// The lines of the base file it removes.
@@ -89,6 +93,60 @@ impl File {
             };
             first <= *lines.end() && *lines.start() <= last
         })
+    }
+
+    /// Walks the working file's `bytes`, counting LF alone as git does, and turns each hunk's lines
+    /// into the bytes they cover, which [`File::touches_bytes`] then answers by. The lines of a
+    /// [`Location`](crate::document::Location) are never mapped back to git's, since the two
+    /// disagree on a lone CR.
+    pub fn read_spans(&mut self, bytes: &[u8]) {
+        let starts: Vec<usize> = std::iter::once(0)
+            .chain(
+                bytes
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, byte)| **byte == b'\n')
+                    .map(|(at, _)| at + 1),
+            )
+            .collect();
+        // The first byte of line `number`, or the end of the file for a line past the last.
+        let start = |number: usize| {
+            starts
+                .get(number.saturating_sub(1))
+                .copied()
+                .unwrap_or(bytes.len())
+        };
+        self.spans = Some(
+            self.hunks
+                .iter()
+                .map(|hunk| {
+                    let added = &hunk.added;
+                    let (first, past) = if added.is_empty() {
+                        (added.start - 1, added.start + 1)
+                    } else {
+                        (added.start, added.end)
+                    };
+                    let (first, past) = (start(first), start(past));
+                    // A span that reaches the end of the file also holds the point after its
+                    // last byte, where an empty location at the end of the file sits.
+                    first..if past >= bytes.len() { past + 1 } else { past }
+                })
+                .collect(),
+        );
+    }
+
+    /// Whether the change touched any of the bytes `place`, a location in the working file, covers.
+    /// An empty `place` is the point where it starts. Without the spans [`File::read_spans`]
+    /// makes, nothing but a new or binary file is touched.
+    pub fn touches_bytes(&self, place: Range<usize>) -> bool {
+        if self.status == Status::Added || self.binary {
+            return true;
+        }
+        let place = place.start..place.end.max(place.start + 1);
+        self.spans
+            .iter()
+            .flatten()
+            .any(|span| span.start < place.end && place.start < span.end)
     }
 
     /// Whether the change touched what the file says, not only its name or mode.
@@ -193,8 +251,17 @@ impl Change {
                     base_path: None,
                     hunks: Vec::new(),
                     binary: false,
+                    spans: None,
                 },
             );
+        }
+        for (path, file) in &mut files {
+            if matches!(file.status, Status::Deleted | Status::Added) || file.binary {
+                continue;
+            }
+            if let Ok(bytes) = std::fs::read(root.join(path)) {
+                file.read_spans(&bytes);
+            }
         }
 
         Ok(Change {
@@ -254,4 +321,81 @@ fn failed(name: &str, output: &Output) -> String {
         output.status,
         text(&output.stderr)
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn modified(hunks: &[(Range<usize>, Range<usize>)]) -> File {
+        File {
+            status: Status::Modified,
+            base_path: None,
+            hunks: hunks
+                .iter()
+                .map(|(removed, added)| Hunk {
+                    removed: removed.clone(),
+                    added: added.clone(),
+                })
+                .collect(),
+            binary: false,
+            spans: None,
+        }
+    }
+
+    /// The offsets in `text` whose byte the change touches.
+    fn touched(file: &File, text: &[u8]) -> Vec<usize> {
+        (0..text.len())
+            .filter(|at| file.touches_bytes(*at..*at + 1))
+            .collect()
+    }
+
+    #[test]
+    fn a_hunk_covers_the_bytes_of_its_lf_lines_and_a_lone_cr_ends_none() {
+        // Git sees the lines "ab\rc\n" and "d\n": a lone CR in line 1 does not end it.
+        let text = b"ab\rc\nd\n";
+        let mut first = modified(&[(1..2, 1..2)]);
+        first.read_spans(text);
+        assert_eq!(touched(&first, text), [0, 1, 2, 3, 4]);
+        let mut second = modified(&[(2..3, 2..3)]);
+        second.read_spans(text);
+        assert_eq!(touched(&second, text), [5, 6]);
+    }
+
+    #[test]
+    fn a_crlf_ends_a_line_at_its_lf() {
+        let text = b"a\r\nb\r\nc\r\n";
+        let mut file = modified(&[(2..3, 2..3)]);
+        file.read_spans(text);
+        assert_eq!(touched(&file, text), [3, 4, 5]);
+    }
+
+    #[test]
+    fn a_removal_touches_the_lines_beside_it() {
+        let text = b"a\rb\nc\nd\n";
+        // Lines 2 and 3 of the base are gone; the working lines 1 and 2 meet there.
+        let mut file = modified(&[(2..4, 2..2)]);
+        file.read_spans(text);
+        assert_eq!(touched(&file, text), [0, 1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn a_last_line_with_no_lf_runs_to_the_end_and_holds_the_point_after_it() {
+        let text = b"a\nb\rc";
+        let mut file = modified(&[(2..3, 2..3)]);
+        file.read_spans(text);
+        assert_eq!(touched(&file, text), [2, 3, 4]);
+        // An empty location at the end of the file is on that line.
+        assert!(file.touches_bytes(5..5));
+        assert!(!file.touches_bytes(1..1));
+    }
+
+    #[test]
+    fn an_empty_location_is_the_point_where_it_starts() {
+        let text = b"a\nb\n";
+        let mut file = modified(&[(2..3, 2..3)]);
+        file.read_spans(text);
+        assert!(!file.touches_bytes(1..1));
+        assert!(file.touches_bytes(2..2));
+    }
 }

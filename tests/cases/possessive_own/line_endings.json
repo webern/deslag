@@ -1,0 +1,321 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 13,
+  "findings": [
+    {
+      "path": "block.rs",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nblock.rs has 1 possessive padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 2: \"file's own words\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 10,
+          "end": 29,
+          "line": 2,
+          "column": 8,
+          "end_line": 3,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        }
+      ]
+    },
+    {
+      "path": "cr.cpp",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\ncr.cpp has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 26,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 46,
+          "end": 65,
+          "line": 6,
+          "column": 8,
+          "end_line": 7,
+          "end_column": 12,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "cr.rs",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\ncr.rs has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 26,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 48,
+          "end": 64,
+          "line": 6,
+          "column": 9,
+          "end_line": 6,
+          "end_column": 25,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "cr.toml",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\ncr.toml has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 5: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 6,
+          "end": 24,
+          "line": 1,
+          "column": 7,
+          "end_line": 2,
+          "end_column": 12,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 39,
+          "end": 55,
+          "line": 5,
+          "column": 7,
+          "end_line": 5,
+          "end_column": 23,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "crlf.cpp",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\ncrlf.cpp has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 27,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 51,
+          "end": 71,
+          "line": 6,
+          "column": 8,
+          "end_line": 7,
+          "end_column": 12,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "crlf.rs",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\ncrlf.rs has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 27,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 53,
+          "end": 69,
+          "line": 6,
+          "column": 9,
+          "end_line": 6,
+          "end_column": 25,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "crlf.toml",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\ncrlf.toml has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 5: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 6,
+          "end": 25,
+          "line": 1,
+          "column": 7,
+          "end_line": 2,
+          "end_column": 12,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 43,
+          "end": 59,
+          "line": 5,
+          "column": 7,
+          "end_line": 5,
+          "end_column": 23,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "lf.cpp",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nlf.cpp has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 26,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 46,
+          "end": 65,
+          "line": 6,
+          "column": 8,
+          "end_line": 7,
+          "end_column": 12,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "lf.rs",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nlf.rs has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 26,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 48,
+          "end": 64,
+          "line": 6,
+          "column": 9,
+          "end_line": 6,
+          "end_column": 25,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "lf.toml",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nlf.toml has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 5: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 6,
+          "end": 24,
+          "line": 1,
+          "column": 7,
+          "end_line": 2,
+          "end_column": 12,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 39,
+          "end": 55,
+          "line": 5,
+          "column": 7,
+          "end_line": 5,
+          "end_column": 23,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "mixed.cpp",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nmixed.cpp has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 26,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 47,
+          "end": 67,
+          "line": 6,
+          "column": 8,
+          "end_line": 7,
+          "end_column": 12,
+          "note": "\"crate's own data\""
+        }
+      ]
+    },
+    {
+      "path": "mixed.rs",
+      "lint": "possessive_own",
+      "report": "ERROR: deslag detected possessives padded with \"own\"!\n\nmixed.rs has 2 possessives padded with \"own\".\n\nDelete \"own\": the possessive already says whose. Write \"the crate's version\", not \"the crate's own version\". Where the contrast is the point, name what it contrasts with instead, such as \"deslag's config, not the user's\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"file's own words\"\n  line 6: \"crate's own data\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 7,
+          "end": 26,
+          "line": 1,
+          "column": 8,
+          "end_line": 2,
+          "end_column": 13,
+          "note": "\"file's own words\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 49,
+          "end": 65,
+          "line": 6,
+          "column": 9,
+          "end_line": 6,
+          "end_column": 25,
+          "note": "\"crate's own data\""
+        }
+      ]
+    }
+  ]
+}

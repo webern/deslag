@@ -374,6 +374,79 @@ fn crlf_lines_are_counted_as_lf_lines() {
     );
 }
 
+/// Git counts lines by LF alone, and deslag also ends a line at a lone CR. A file of lone CRs is
+/// one line to git, so a change anywhere in it covers every line deslag reads.
+#[test]
+fn a_file_of_lone_crs_is_one_line_to_git() {
+    let old = "# A\r\rone \u{2014}\rtwo\r";
+    let repo = repo(&[("cr.md", old)]);
+    repo.write("cr.md", "# A\r\rone \u{2014}\rtwo \u{2014}\r");
+    assert_eq!(
+        found(repo.root(), &["check", "--diff", "main"]),
+        [finding("cr.md", "banned_chars", &[3, 4])]
+    );
+}
+
+/// The same in a Rust file, where deslag reads a lone CR as a line end too: a file of lone CRs is
+/// one line to git, and a change to LF lines among them is scoped by those.
+#[test]
+fn a_rust_file_with_lone_crs_is_scoped_by_git_lines() {
+    let config = "schema_version = 2\n\n[rust.lints.banned_chars]\ngroups = { dashes = true }\n";
+    let repo = Repo::new();
+    git(repo.root(), &["init", "-q", "-b", "main"]);
+    repo.write("deslag.toml", config);
+    repo.write(
+        "cr.rs",
+        "// old \u{2014} one\r// two\rfn f() {}\r// three\r",
+    );
+    repo.write(
+        "mixed.rs",
+        "// old \u{2014} one\n// two\rfn f() {}\r// three\n",
+    );
+    commit(repo.root(), "base");
+    repo.write(
+        "cr.rs",
+        "// old \u{2014} one\r// two\rfn f() {}\r// three \u{2014}\r",
+    );
+    repo.write(
+        "mixed.rs",
+        "// old \u{2014} one\n// two\rfn f() {}\r// three \u{2014}\n",
+    );
+    assert_eq!(
+        found(repo.root(), &["check", "--diff", "main"]),
+        [
+            finding("cr.rs", "banned_chars", &[1, 4]),
+            finding("mixed.rs", "banned_chars", &[4]),
+        ]
+    );
+}
+
+/// Among LF lines a lone CR is a line end to deslag only: the change is the second line to git,
+/// which holds deslag's lines 2 to 4, and line 1 is not in it.
+#[test]
+fn a_lone_cr_among_lf_lines_is_scoped_by_the_lf_lines_git_counts() {
+    let old = "one \u{2014}\ntwo\rthree\rfour\nfive\n";
+    let repo = repo(&[("mixed.md", old)]);
+    repo.write(
+        "mixed.md",
+        "one \u{2014}\ntwo\rthree\rfour \u{2014}\nfive\n",
+    );
+    assert_eq!(
+        found(repo.root(), &["check", "--diff", "main"]),
+        [finding("mixed.md", "banned_chars", &[4])]
+    );
+
+    // A change to the last LF line is no change to the lines before it.
+    repo.write(
+        "mixed.md",
+        "one \u{2014}\ntwo\rthree\rfour\nfive \u{2014}\n",
+    );
+    assert_eq!(
+        found(repo.root(), &["check", "--diff", "main"]),
+        [finding("mixed.md", "banned_chars", &[5])]
+    );
+}
+
 /// Git counts a last line with no newline as removed and added again when a line is appended, so
 /// what is on it is reported.
 #[test]
@@ -848,6 +921,7 @@ fn file(status: Status, base_path: Option<&str>, hunks: Vec<Hunk>, binary: bool)
         base_path: base_path.map(str::to_string),
         hunks,
         binary,
+        spans: None,
     }
 }
 

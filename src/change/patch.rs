@@ -121,6 +121,7 @@ impl Patch {
             base_path,
             hunks: self.hunks,
             binary: self.binary,
+            spans: None,
         };
         match files.get_mut(&key) {
             Some(first) => {

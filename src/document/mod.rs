@@ -627,6 +627,27 @@ pub(crate) fn text_start(source: &str) -> usize {
     }
 }
 
+/// A copy of `source` with each lone CR, one that no LF follows, made an LF, or `None` when it
+/// does not have one. The readers scan the copy and keep the source, so a lone CR ends a line for
+/// every one of them. pulldown-cmark ends a fence's line at an LF alone, so a fence in a file whose
+/// lines end in a lone CR never closes and the rest of the file is read as its code; `rustc_lexer`
+/// and the TOML lexer end a comment at an LF alone. A CR and an LF are a byte each, so every offset
+/// into the copy is the same offset into the source. The CR of a CRLF is left as it is.
+fn lone_returns_as_newlines(source: &str) -> Option<String> {
+    let lone: Vec<usize> = (source.match_indices('\r'))
+        .map(|(at, _)| at)
+        .filter(|at| !source[at + 1..].starts_with('\n'))
+        .collect();
+    if lone.is_empty() {
+        return None;
+    }
+    let mut copy = source.as_bytes().to_vec();
+    for at in lone {
+        copy[at] = b'\n';
+    }
+    Some(String::from_utf8(copy).expect("an ASCII byte for another keeps the text UTF-8"))
+}
+
 /// The items of `items`, which are in the order of the file and do not overlap, that lie wholly
 /// inside `range`.
 fn within<T>(items: &[T], range_of: impl Fn(&T) -> &Range<usize>, range: Range<usize>) -> &[T] {
@@ -669,6 +690,48 @@ impl<'d, 'a> Iterator for Walk<'d, 'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_lone_cr_counts_as_a_line_end_and_a_crlf_as_one() {
+        let document = Document::markdown("a\rb\r\nc\n");
+        // Offsets: a 0, CR 1, b 2, CR 3, LF 4, c 5.
+        assert_eq!(
+            [0, 1, 2, 3, 4, 5].map(|at| document.line(at)),
+            [1, 1, 2, 2, 2, 3]
+        );
+    }
+
+    #[test]
+    fn a_lone_cr_becomes_an_lf_of_the_same_length() {
+        assert_eq!(lone_returns_as_newlines(""), None);
+        assert_eq!(lone_returns_as_newlines("a\nb\n"), None);
+        assert_eq!(lone_returns_as_newlines("a\r\nb\r\n"), None);
+        assert_eq!(
+            lone_returns_as_newlines("a\rb\r").as_deref(),
+            Some("a\nb\n")
+        );
+        assert_eq!(lone_returns_as_newlines("\r").as_deref(), Some("\n"));
+        // CR last: nothing follows it, so it is lone.
+        assert_eq!(
+            lone_returns_as_newlines("a\r\nb\r").as_deref(),
+            Some("a\r\nb\n")
+        );
+        // Each ending is judged alone: LF, CR and CRLF in turn.
+        assert_eq!(
+            lone_returns_as_newlines("a\nb\rc\r\nd").as_deref(),
+            Some("a\nb\nc\r\nd")
+        );
+        // Two CRs in a row: the first is lone, the second is the CR of a CRLF.
+        assert_eq!(
+            lone_returns_as_newlines("a\r\r\nb").as_deref(),
+            Some("a\n\r\nb")
+        );
+        // Multi-byte neighbours: the copy is valid and every offset is the same.
+        let source = "é\rü\r\n日\r本";
+        let copy = lone_returns_as_newlines(source).unwrap();
+        assert_eq!(copy, "é\nü\r\n日\n本");
+        assert_eq!(copy.len(), source.len());
+    }
 
     #[test]
     fn text_is_a_markdown_entity_as_written() {

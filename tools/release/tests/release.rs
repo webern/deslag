@@ -174,6 +174,63 @@ fn a_fill_item_with_a_new_key_is_appended() {
     );
 }
 
+/// A fill item is laid onto a config item of its own kind, whatever the order of the list: an
+/// `allow` entry with a `quote` and one with a `line` never merge into one entry, which the loader
+/// refuses.
+#[test]
+fn a_fill_list_is_laid_by_kind_not_by_position() {
+    let entry = |key: &str, text: &str| json!({ "path": "p.md", "lint": "l", key: text });
+    let filled = |key: &str, text: &str| {
+        let mut item = entry(key, text);
+        item["reason"] = json!("r");
+        item
+    };
+    let fill = json!({ "md": { "allow": [filled("quote", "q"), filled("line", "l")] } });
+    let lay = |config: Value| {
+        let mut newest = full(true);
+        newest["md"]["allow"] = config;
+        let value = freeze::freeze(&newest, &version("0.0.2"), &rules(true, Vec::new()), &fill)
+            .expect("fills");
+        let items = value["md"]["allow"].as_array().expect("a list").clone();
+        for item in &items {
+            assert!(
+                item.get("quote").is_some() != item.get("line").is_some(),
+                "an entry that does not name exactly one of a quote and a line: {item}"
+            );
+        }
+        items
+    };
+    // Reordered: each fill item finds its kind.
+    assert_eq!(
+        lay(json!([entry("line", "own"), entry("quote", "own")])),
+        [
+            {
+                let mut item = entry("line", "own");
+                item["reason"] = json!("r");
+                item
+            },
+            {
+                let mut item = entry("quote", "own");
+                item["reason"] = json!("r");
+                item
+            },
+        ]
+    );
+    // Two quote entries: the first takes the fill's quote, the fill's line is appended.
+    assert_eq!(
+        lay(json!([entry("quote", "a"), entry("quote", "b")])),
+        [
+            {
+                let mut item = entry("quote", "a");
+                item["reason"] = json!("r");
+                item
+            },
+            entry("quote", "b"),
+            filled("line", "l"),
+        ]
+    );
+}
+
 /// The fill holds settings with no default, and where it holds one with a default, the default is
 /// what the freeze takes: the fill is laid only where the config is still silent.
 #[test]

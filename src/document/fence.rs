@@ -239,6 +239,7 @@ mod tests {
     use std::path::{Path, PathBuf};
 
     use super::*;
+    use crate::document::plain;
     use crate::document::{Edit, Refusal};
 
     const BOTH: [Surface; 2] = [Surface::DocComment, Surface::Comment];
@@ -463,7 +464,7 @@ mod tests {
                 // editable.
                 let readings = [
                     markdown::read_doc(&Stack::new(Reader::Plain), &region.inner),
-                    Stack::new(Reader::Plain).read(&region.inner),
+                    plain::read_text(&Stack::new(Reader::Plain), &region.inner),
                 ];
                 for piece in readings.iter().flat_map(|reading| &reading.pieces) {
                     self.pieces += 1;

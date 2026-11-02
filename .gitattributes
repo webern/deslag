@@ -9,3 +9,5 @@ tests/gold/holdout* -diff linguist-generated=true
 tests/cases/banned_chars/line_endings/** -text
 tests/cases/repo_layout/lone_cr/** -text
 tests/cases/banned_phrases/byte_order_mark/** -text
+tests/cases/not_at_all/metadata_blocks/** -text
+tests/cases/max_size_bytes/frontmatter_closers/** -text

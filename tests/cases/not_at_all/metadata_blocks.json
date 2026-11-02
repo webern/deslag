@@ -1,0 +1,228 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 13,
+  "findings": [
+    {
+      "path": "mid_pair.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_pair.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 8: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 45,
+          "end": 55,
+          "line": 8,
+          "column": 15,
+          "end_line": 8,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "mid_pair_cr.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_pair_cr.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 8: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 45,
+          "end": 55,
+          "line": 8,
+          "column": 15,
+          "end_line": 8,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "mid_pair_mark.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_pair_mark.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 8: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 48,
+          "end": 58,
+          "line": 8,
+          "column": 15,
+          "end_line": 8,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "mid_pair_mark_cr.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_pair_mark_cr.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 8: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 48,
+          "end": 58,
+          "line": 8,
+          "column": 15,
+          "end_line": 8,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "mid_toml.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_toml.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 6: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 28,
+          "end": 38,
+          "line": 6,
+          "column": 10,
+          "end_line": 6,
+          "end_column": 20,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "mid_toml_cr.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_toml_cr.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 6: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 28,
+          "end": 38,
+          "line": 6,
+          "column": 10,
+          "end_line": 6,
+          "end_column": 20,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "mid_toml_mark.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_toml_mark.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 6: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 31,
+          "end": 41,
+          "line": 6,
+          "column": 10,
+          "end_line": 6,
+          "end_column": 20,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "mid_toml_mark_cr.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nmid_toml_mark_cr.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 6: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 31,
+          "end": 41,
+          "line": 6,
+          "column": 10,
+          "end_line": 6,
+          "end_column": 20,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "top_toml.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\ntop_toml.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 5: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 44,
+          "end": 54,
+          "line": 5,
+          "column": 15,
+          "end_line": 5,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "top_toml_cr.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\ntop_toml_cr.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 5: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 44,
+          "end": 54,
+          "line": 5,
+          "column": 15,
+          "end_line": 5,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "top_toml_mark.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\ntop_toml_mark.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 5: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 47,
+          "end": 57,
+          "line": 5,
+          "column": 15,
+          "end_line": 5,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "top_toml_mark_cr.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\ntop_toml_mark_cr.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 5: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 47,
+          "end": 57,
+          "line": 5,
+          "column": 15,
+          "end_line": 5,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    },
+    {
+      "path": "top_yaml.md",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\ntop_yaml.md has 1 negation padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 5: \"not at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 41,
+          "end": 51,
+          "line": 5,
+          "column": 15,
+          "end_line": 5,
+          "end_column": 25,
+          "note": "\"not at all\""
+        }
+      ]
+    }
+  ]
+}

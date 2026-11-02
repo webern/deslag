@@ -1,0 +1,12 @@
+﻿# Doc
+
+Intro.
+
+---
+## Section
+
+This cache is not at all fast.
+
+---
+
+End.

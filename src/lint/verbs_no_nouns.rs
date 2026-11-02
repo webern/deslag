@@ -215,7 +215,7 @@ fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
 /// Whether the first word of the match at `found`, a range of the document's tokens, heads a noun
 /// phrase and so is no verb. Three cues, each read from its sentence:
 ///
-/// - an article (`a`, `an` or `the`, read as a determiner) right before it;
+/// - an article (`a`, `an` or `the`, read as a determiner) or `whose` right before it;
 /// - a fronted phrase: the tagger's best guess for the word is a noun or proper noun, and the
 ///   sentence opens with a preposition read at `Likely` or above, after at most one conjunction,
 ///   then at most one determiner, then only adjectives, numerals and nouns up to the word, none of
@@ -247,14 +247,16 @@ fn tag_of(token: &Token<'_>) -> Option<Tag> {
         .map(|reading| reading.tag)
 }
 
-/// Whether the token before `tokens[start]` is `a`, `an` or `the`, read as a determiner.
+/// Whether the token before `tokens[start]` is `a`, `an` or `the`, read as a determiner, or `whose`.
 fn after_an_article(tokens: &[Token<'_>], start: usize) -> bool {
     start
         .checked_sub(1)
         .map(|before| &tokens[before])
         .is_some_and(|token| {
-            matches!(token.folded().as_str(), "a" | "an" | "the")
-                && tag_of(token) == Some(Tag::Determiner)
+            token.kind == TokenKind::Word
+                && (token.folded() == "whose"
+                    || (matches!(token.folded().as_str(), "a" | "an" | "the")
+                        && tag_of(token) == Some(Tag::Determiner)))
         })
 }
 
@@ -666,6 +668,17 @@ mod tests {
         assert_eq!(found("The new tool ships no binary."), ["ships no binary"]);
         // An article that ends the sentence before is no article of this one.
         assert_eq!(found("It stops the. Ships no binary."), ["Ships no binary"]);
+    }
+
+    #[test]
+    fn a_word_after_whose_is_a_noun() {
+        assert!(found("Fix projects whose repositories no longer build.").is_empty());
+        assert!(found("Fix projects whose repositories no tool builds.").is_empty());
+        // Without `whose` the word is a verb again.
+        assert_eq!(
+            found("Fix projects, repositories no tool builds."),
+            ["repositories no tool"]
+        );
     }
 
     #[test]

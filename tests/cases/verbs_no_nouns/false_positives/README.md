@@ -22,3 +22,5 @@ of the wallet received are listed.
 - **Open warnings** no one reads.
 
 **GIVEN** no compatible driver, the build stops.
+
+Fix projects whose repositories no tool builds.

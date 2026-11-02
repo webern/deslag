@@ -383,7 +383,7 @@ fn is_apostrophe(c: char) -> bool {
 
 /// Whether `word` is in capitals: two or more letters, each one upper case, no digits. A letter
 /// with no case, such as a CJK character, is not upper case.
-fn is_caps(word: &str) -> bool {
+pub(super) fn is_caps(word: &str) -> bool {
     let letters = word.chars().filter(|c| c.is_alphabetic()).count();
     letters >= 2 && word.chars().all(|c| is_apostrophe(c) || c.is_uppercase())
 }

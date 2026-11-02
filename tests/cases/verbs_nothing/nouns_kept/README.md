@@ -11,3 +11,5 @@ It **does** nothing.
 *Finds* nothing.
 
 - **The linter reports** nothing.
+
+**Given** nothing matches

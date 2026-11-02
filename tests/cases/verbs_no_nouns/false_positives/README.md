@@ -20,3 +20,5 @@ The ones no real change reaches stay. The members no position placed stay. The o
 of the wallet received are listed.
 
 - **Open warnings** no one reads.
+
+**GIVEN** no compatible driver, the build stops.

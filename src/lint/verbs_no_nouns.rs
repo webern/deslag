@@ -29,6 +29,8 @@
 
 use std::ops::Range;
 
+use super::max_emphasis::is_caps;
+
 use crate::config::VerbsNoNouns;
 use crate::document::{Document, Location, SpanKind, Token, TokenKind};
 use crate::lint::pattern::{Item, Pattern};
@@ -301,7 +303,8 @@ fn fronted(tokens: &[Token<'_>], start: usize) -> bool {
 /// last word of a label: strong or emphasized text that ends before the next token and opens the
 /// sentence or follows a comma or a semicolon. Any determiner (`a`, `an`, `the`, `this`, `that`,
 /// `these`, `those`, `its`, `our`, `your`) in the span, or any word whose first reading is a verb
-/// or an auxiliary at any confidence, makes it text.
+/// or an auxiliary at any confidence, makes it text, unless every word of the span is in capitals
+/// (`is_caps`), as in `**GIVEN**`: that is a label whatever the tagger reads.
 fn labelled(document: &Document<'_>, first: usize, start: usize) -> bool {
     let word = &document.tokens[first + start];
     let Some(next) = document.tokens.get(first + start + 1) else {
@@ -331,11 +334,10 @@ fn labelled(document: &Document<'_>, first: usize, start: usize) -> bool {
         };
         let lead = first + lead;
         let opens = lead == first || matches!(document.tokens[lead - 1].text.as_ref(), "," | ";");
+        let words = || document.tokens[lead..=first + start].iter().filter(inside);
         opens
-            && document.tokens[lead..=first + start]
-                .iter()
-                .filter(inside)
-                .all(|token| {
+            && (words().all(|token| is_caps(&token.text))
+                || words().all(|token| {
                     !matches!(
                         token.folded().as_str(),
                         "a" | "an"
@@ -348,7 +350,7 @@ fn labelled(document: &Document<'_>, first: usize, start: usize) -> bool {
                             | "our"
                             | "your"
                     ) && !matches!(tag_of(token), Some(Tag::Verb | Tag::Auxiliary))
-                })
+                }))
     })
 }
 
@@ -733,6 +735,8 @@ mod tests {
             "- **Warnings** no more than three.",
             "*Findings* no one reads.",
             "- **Open warnings** no one reads.",
+            // A span in capitals is a label whatever the tagger reads.
+            "**GIVEN** no compatible driver, the build stops.",
             "**Errors** no one reads, **warnings** no one reads.",
         ] {
             assert!(found(text).is_empty(), "{text}");
@@ -747,7 +751,6 @@ mod tests {
             "- **The linter reports** no binary.",
             "**This flag disables** no binary.",
             "**Ships** no binary.",
-            "**GIVEN** no compatible driver, it stops.",
         ] {
             assert!(!found(text).is_empty(), "{text}");
         }

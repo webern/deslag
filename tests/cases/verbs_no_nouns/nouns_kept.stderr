@@ -1,6 +1,6 @@
 ERROR: deslag detected verbs with no-nouns!
 
-README.md has 6 verbs with no-nouns.
+README.md has 5 verbs with no-nouns.
 
 This repo negates the verb: write "does not ship X", not "ships no X". Negate the verb, or drop the absolute claim if it is not true. Swapping in "zero", "without", "lacks" or "free of" is the same sentence and does not fix it.
 
@@ -12,6 +12,5 @@ The places:
   line 5: "emits no warnings"
   line 5: "contains no type"
   line 7: "ships** no binary"
-  line 9: "GIVEN** no compatible"
 
 deslag: 1 of 1 files with verbs negated through their objects.

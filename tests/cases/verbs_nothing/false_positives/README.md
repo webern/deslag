@@ -31,3 +31,5 @@ The ones nothing reaches stay. An accept nothing sends to the queue is dropped.
 **Errors** none, **warnings** none.
 
 **Caches** nothing
+
+**WHEN** nothing matches

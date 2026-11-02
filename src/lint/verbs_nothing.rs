@@ -735,6 +735,7 @@ mod tests {
             "**Errors** none.",
             "**Errors** none, **warnings** none.",
             "**Caches** nothing",
+            "**WHEN** nothing matches",
         ]);
     }
 
@@ -747,6 +748,8 @@ mod tests {
             "- **The linter reports** nothing.",
             "**This flag disables** nothing.",
             "It **does** nothing",
+            // Not every word is in capitals.
+            "**Given** nothing matches",
         ] {
             assert!(!found(text).is_empty(), "{text}");
         }

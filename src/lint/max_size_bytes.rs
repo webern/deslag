@@ -161,7 +161,7 @@ fn render_bloat(path: &str, over: &Bloat) -> String {
     format!(
         "{HEADING}\n\
          \n\
-         {path} is {size_bytes}, which is larger than {budget} bytes (by {over_amount} bytes).\n\
+         {path} is {size_bytes} bytes, which is larger than {budget} bytes (by {over_amount} bytes).\n\
          \n\
          {advice}"
     )
@@ -174,7 +174,7 @@ fn default_advice(budget: u64) -> String {
          \n\
          Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its \
          budget. Is what you are adding important? Hint: lists and counts of things that churn \
-         frequently are usually less important that cross-cutting concerns and high level concepts \
+         frequently are usually less important than cross-cutting concerns and high level concepts \
          that cannot as easily be ascertained by reading the code. You must decide; and if your edit \
          is truly important, then you must remove something less important from the doc to make \
          room for it.\n\

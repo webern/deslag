@@ -205,3 +205,25 @@ pub fn over_budget(stderr: &str, path: &str, budget: u64) -> bool {
             && right.ends_with(" bytes).")
     })
 }
+
+/// Runs `f` on each of `items`, the items split across the machine's cores, and returns what it
+/// returns, in the order of `items`.
+pub fn on_every_core<T: Sync, R: Send>(items: &[T], f: impl Fn(&[T]) -> Vec<R> + Sync) -> Vec<R> {
+    let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
+    let f = &f;
+    std::thread::scope(|scope| {
+        let workers: Vec<_> = items
+            .chunks(items.len().div_ceil(threads).max(1))
+            .map(|chunk| scope.spawn(move || f(chunk)))
+            .collect();
+        workers
+            .into_iter()
+            .flat_map(|worker| {
+                // A panic in a worker fails the test with its own message.
+                worker
+                    .join()
+                    .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+            })
+            .collect()
+    })
+}

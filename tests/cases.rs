@@ -28,14 +28,14 @@
 //! `deslag fix`, writes to its copy alone. A case cannot hold a `.git` directory, or a `.gitignore`
 //! that ignores its own files, because git would apply it to this repo too.
 
-use crate::common;
+mod common;
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use common::git::{commit, git, hermetic};
-use common::{Repo, code, stderr, stdout};
+use common::{Repo, code, on_every_core, stderr, stdout};
 use deslag::Lint;
 
 /// Set to 1 to rewrite the `.stderr` and `.json` files instead of comparing with them.
@@ -277,7 +277,10 @@ fn every_case_prints_its_stderr_file() {
         Case::find(&Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cases"));
     assert!(!cases.is_empty(), "no cases under tests/cases");
 
-    failures.extend(cases.iter().filter_map(|case| case.run(fix)));
+    // Every case runs deslag twice, so the cases run on every core.
+    failures.extend(on_every_core(&cases, |chunk| {
+        chunk.iter().filter_map(|case| case.run(fix)).collect()
+    }));
 
     assert!(
         failures.is_empty(),

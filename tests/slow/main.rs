@@ -5,7 +5,6 @@
 #[path = "../common/mod.rs"]
 mod common;
 
-mod cases;
 mod corpus;
 mod diff;
 mod init;

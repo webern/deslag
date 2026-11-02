@@ -16,7 +16,7 @@ use std::path::{Path, PathBuf};
 
 use common::corpus::{corpus, load_corpus};
 use common::fixture::Fixture;
-use common::{Repo, code, config_text, stderr, stdout};
+use common::{Repo, code, config_text, on_every_core, stderr, stdout};
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
 use deslag::config::{NotAtAll, PossessiveOwn, VerbsNoNouns, VerbsNothing};
 use deslag::document::{Fences, Location, Reader, Stack};
@@ -992,64 +992,6 @@ fn the_corpus_banned_characters_agree_with_the_library() {
         )),
         "stderr:\n{stderr}"
     );
-}
-
-/// How many banned characters `deslag fix` fixes in the corpus, with the default groups.
-const FIXED: usize = 6473;
-
-/// How many fixtures with banned characters it fixes whole.
-const FIXED_WHOLE: usize = 354;
-
-/// How many banned characters it leaves for each reason.
-const LEFT_BY_REASON: &[(&str, usize)] = &[
-    (
-        "it is drawn as one with the character beside it, which the edit would leave behind",
-        2,
-    ),
-    ("it is in HTML, which is not prose", 55),
-    ("it is in a URL", 1),
-    ("it is in the frontmatter, which is not prose", 35),
-    (
-        "the edit changes how the file reads, as when a line comes to start a list or a code \
-         block, so reword it",
-        143,
-    ),
-    (
-        "the replacement holds letters or digits, a guess at meaning that can run into the text \
-         beside it",
-        708,
-    ),
-    (
-        "the replacement is the default for a range of characters, a guess at what this one means",
-        4,
-    ),
-    (
-        "there is no replacement for it, since the arrows of its range point every way and only \
-         the writer knows which this one means",
-        2,
-    ),
-];
-
-/// Runs `f` on each of `items`, the items split across the machine's cores, and returns what it
-/// returns, in the order of `items`.
-fn on_every_core<T: Sync, R: Send>(items: &[T], f: impl Fn(&[T]) -> Vec<R> + Sync) -> Vec<R> {
-    let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
-    let f = &f;
-    std::thread::scope(|scope| {
-        let workers: Vec<_> = items
-            .chunks(items.len().div_ceil(threads).max(1))
-            .map(|chunk| scope.spawn(move || f(chunk)))
-            .collect();
-        workers
-            .into_iter()
-            .flat_map(|worker| {
-                // A failed check fails the test with its own message.
-                worker
-                    .join()
-                    .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
-            })
-            .collect()
-    })
 }
 
 /// `deslag fix` on the files at `paths` in the repo at `root`, each core fixing some of them, as

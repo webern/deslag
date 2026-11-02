@@ -644,7 +644,7 @@ fix-catalog: preflight fetch-blobs
 
 # Accepts whatever deslag prints now, so read the diff before committing it.
 fix-test-output: preflight
-	DESLAG_FIX_TEST_OUTPUT=1 cargo test $(CARGO_FLAGS) --profile fast --all-features --test slow -- cases::
+	DESLAG_FIX_TEST_OUTPUT=1 cargo test $(CARGO_FLAGS) --profile fast --all-features --test cases
 
 preflight:
 	@$(SCRIPTS)/preflight.sh

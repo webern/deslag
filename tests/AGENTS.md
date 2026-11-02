@@ -12,7 +12,8 @@ tests/
   golden/    <- what each lint finds in the corpus, and the tag stream of corpus/core
   gold/      <- the tagger's gold sets, its gates and its frozen word lists
   common/    <- the temp repo and corpus helpers the test files share
-  slow/      <- the cases, the corpus end to end, diff and update; one binary, --test slow
+  slow/      <- the corpus end to end, diff and update; one binary, --test slow
+  cases.rs   <- runs each case of cases/
   golden.rs  <- runs the golden set
 ```
 

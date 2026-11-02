@@ -48,8 +48,9 @@ tempfile = "3.27.0"
 [lints]
 workspace = true
 
-# The product tests that spawn deslag per case or build a repository per test, as one binary.
-# `make test-product` runs them; `cargo test -p deslag` does not.
+# The product tests that run the corpus end to end or build a repository per test (the diff and
+# update loops, over a sample of the cases), as one binary. `make test-product` runs them;
+# `cargo test -p deslag` does not. The cases run in `tests/cases.rs`, which it does.
 [[test]]
 name = "slow"
 path = "tests/slow/main.rs"

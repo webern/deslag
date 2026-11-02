@@ -6,14 +6,23 @@ deslag_version = "0.0.5"
 
 # ACKNOWLEDGEMENTS.md does not require a byte budget.
 [md]
-globs = [
-  "/AGENTS.md",
-  "/tests/AGENTS.md",
-  "/tools/AGENTS.md",
-  "/ACKNOWLEDGEMENTS.md",
-  "/.agents/skills/**/*.md",
-  "/scripts/blobstore/blobs.md",
-  "/src/instructions/**/*.md",
+globs = ["**/*.md"]
+
+# Every Markdown file is checked unless it is excluded here, with a reason.
+exclude = [
+  # Human-authored; front-matter says llm_edit: false.
+  "/README.md",
+  "/docs/design/deslag.desired.md",
+  # Fixtures, whose bytes tests pin.
+  "/tests/cases/**",
+  "/tests/corpus/**",
+  "/tools/exam/tests/silver-fixture/**",
+  # Printed by the tool, not written.
+  "/tools/corpus/tests/golden/**",
+  # The system prompt of every labelling run. Each run records its sha256, so a reword changes
+  # the instrument, not its prose.
+  "/tests/gold/annotation-guide.md",
+  "/scripts/label/prompts/**",
 ]
 
 [md.lints.max_emphasis]
@@ -160,6 +169,8 @@ globs = [
   "**/Cargo.toml",
   "/src/**/*.toml",
   "/tools/corpus/*.toml",
+  "/tests/gold/gates.toml",
+  "/tests/golden/config.toml",
 ]
 
 [toml.lints.banned_chars.groups]

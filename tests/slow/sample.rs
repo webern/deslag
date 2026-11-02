@@ -3,8 +3,10 @@
 //! sample of `tests/cases/` instead of all of it. Every case is already run, with its `.stderr`
 //! file, by `tests/cases.rs`.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+use crate::common::{Repo, code};
 use deslag::Lint;
 
 /// The cases of the sample, as `<lint>/<case>` under `tests/cases/`, written out and not
@@ -62,4 +64,63 @@ fn every_case_of_the_sample_exists_and_every_lint_has_its_broken_one() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+/// What `check` exits with in `case`, a `<lint>/<case>` of the sample.
+fn exit_of(case: &str) -> i32 {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/cases")
+        .join(case);
+    code(&Repo::copy_of(&dir).check())
+}
+
+/// The config of `case`, a `<lint>/<case>` of the sample.
+fn config_of(case: &str) -> String {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/cases")
+        .join(case)
+        .join("deslag.toml");
+    std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("{}: {error}", path.display()))
+}
+
+/// Each entry is still of the kind the rule says: every `broken` fails, the Rust, C++ and TOML
+/// cases configure their section, the `allow` case has an `allow` entry, and the refusal is
+/// refused. A rename or an edit that makes an entry another kind would leave the diff and update
+/// loops running on something they were not written for.
+#[test]
+fn every_entry_of_the_sample_is_of_the_kind_the_rule_says() {
+    assert_eq!(exit_of("banned_chars/broken"), 1, "banned_chars/broken");
+    assert_eq!(exit_of("banned_phrases/broken"), 1, "banned_phrases/broken");
+    assert_eq!(exit_of("density/broken"), 1, "density/broken");
+    assert_eq!(exit_of("max_emphasis/broken"), 1, "max_emphasis/broken");
+    assert_eq!(exit_of("max_size_bytes/broken"), 1, "max_size_bytes/broken");
+    assert_eq!(exit_of("not_at_all/broken"), 1, "not_at_all/broken");
+    assert_eq!(exit_of("possessive_own/broken"), 1, "possessive_own/broken");
+    assert_eq!(exit_of("repo_layout/broken"), 1, "repo_layout/broken");
+    assert_eq!(exit_of("verbs_no_nouns/broken"), 1, "verbs_no_nouns/broken");
+    assert_eq!(exit_of("verbs_nothing/broken"), 1, "verbs_nothing/broken");
+
+    assert!(
+        config_of("banned_chars/rust").contains("[rust."),
+        "banned_chars/rust"
+    );
+    assert!(
+        config_of("banned_chars/cpp").contains("[cpp."),
+        "banned_chars/cpp"
+    );
+    assert!(
+        config_of("banned_phrases/toml").contains("[toml."),
+        "banned_phrases/toml"
+    );
+    assert!(
+        config_of("banned_chars/allow_applied").contains("[[md.allow]]"),
+        "banned_chars/allow_applied"
+    );
+    assert_eq!(exit_of("density/zero_limit"), 2, "density/zero_limit");
+}
+
+#[test]
+fn the_sample_lists_no_case_twice() {
+    let distinct: BTreeSet<_> = SAMPLE.iter().collect();
+    assert_eq!(distinct.len(), SAMPLE.len(), "{SAMPLE:?}");
 }

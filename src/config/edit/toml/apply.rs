@@ -10,10 +10,15 @@
 //!   parent is an inline table, as dotted keys when the parent is dotted or its tables are, and
 //!   under a header of its own otherwise, right after the last table of its parent. A dotted table
 //!   left empty is written `{}`, so that it is still there;
+//! - the phrases of a `ban` are one to a line: an inline `ban` in a table that is not inline,
+//!   which a set would make longer, is written out in its parent's form first (its own header, or
+//!   dotted lines), with its entries first and its comments with it; a `ban` in an inline table
+//!   stays inline, since an inline table is one line;
 //! - a table made in an empty inline table rewrites the line of that table, as a key set in one does;
 //! - a deleted value goes as [`delete_value`] says; a deleted table goes with its header and the
 //!   comment lines directly above it, and a table left empty by it is still written, as `{}` when it
-//!   is dotted and under its own header when the file did not have a header for it;
+//!   is dotted, once every edit is made and it is empty still, and under its own header when the
+//!   file did not have a header for it;
 //! - an item taken out of a list takes the rest of its line and the comment lines above it.
 //!
 //! The lines of the old text that each edit may take away are its [`Touch`]es; the check by lines
@@ -25,6 +30,9 @@ use toml_edit::{Decor, Document, DocumentMut, InlineTable, Item, Table, TableLik
 
 use super::super::{Edit, Part, Plan, Refusal, Scalar, TableEdit, TablePath, Touch, TouchKind};
 use super::{Layout, Step, TableMut, cut, delete_value, line_of, seal, table_at, table_ref, take};
+
+/// The key of the map of phrases a lint bans, which is written one phrase to a line.
+const BAN: &str = "ban";
 
 /// The steps to the table at `path`.
 fn steps(path: &TablePath) -> Vec<Step<'_>> {
@@ -184,6 +192,21 @@ fn seen(root: &Table, text: &str, edit: &TableEdit) -> Seen {
                 .key_value(key)
                 .and_then(|(name, item)| key_lines(text, name, item));
             let mut touched: Vec<Touch> = inline.into_iter().collect();
+            // An inline `ban` in a table is written out as a table of its own, which takes its
+            // key's line and the comments above it.
+            let hoisted = match (held, all.split_last()) {
+                (Held::Inline(_), Some((Step::Key(BAN), above))) => Held::at(root, above)
+                    .and_then(|parent| match parent {
+                        Held::Table(table) => table.get_key_value(BAN),
+                        Held::Inline(_) => None,
+                    })
+                    .and_then(|(name, item)| key_lines(text, name, item)),
+                _ => None,
+            };
+            touched.extend(hoisted.map(|lines| Touch {
+                lines,
+                kind: TouchKind::Key,
+            }));
             touched.extend(lines.clone().map(|lines| Touch {
                 lines,
                 kind: TouchKind::Rewrite,
@@ -342,6 +365,18 @@ struct Editor<'a> {
     marks: usize,
     /// The dotted tables made, to write as `{}` if they are left empty.
     made: Vec<TablePath>,
+    /// The tables a delete may have left empty, with the decoration of the key that was deleted,
+    /// to write as `{}` if they are still empty when every edit is made.
+    emptied: Vec<(TablePath, Decor)>,
+}
+
+/// The comments of an inline `ban` that was written out as a table, for the table that replaces it
+/// to keep.
+struct Moved {
+    /// The space and comment lines before the key.
+    above: String,
+    /// The rest of the key's line, after its value.
+    trailing: String,
 }
 
 impl Editor<'_> {
@@ -421,7 +456,97 @@ impl Editor<'_> {
         Ok(true)
     }
 
+    /// Writes out the inline `ban` at `path` as a table, in its parent's form, when setting `key` to
+    /// `scalar` changes it, so that a phrase a line is added to a phrase a line. It keeps the
+    /// entries, first, and the comments. A `ban` in an inline table stays inline.
+    fn hoist(
+        &mut self,
+        path: &TablePath,
+        key: &str,
+        scalar: &Scalar,
+    ) -> Result<Option<Moved>, String> {
+        let steps = steps(path);
+        let Some((Step::Key(BAN), above)) = steps.split_last() else {
+            return Ok(None);
+        };
+        let Some(TableMut::Inline(inline)) = table_at(self.root, &steps) else {
+            return Ok(None);
+        };
+        if inline.get(key).is_some_and(|old| scalar.is(old)) {
+            return Ok(None);
+        }
+        let (form, position) = match table_at(self.root, above) {
+            Some(TableMut::Table(parent)) => {
+                let position = last_position(parent);
+                (Form::of(&TableMut::Table(parent)), position)
+            }
+            _ => return Ok(None),
+        };
+        let again = || format!("cannot find `{path}` again");
+        let taken = take(self.root, above, BAN).ok_or_else(again)?;
+        let Item::Value(Value::InlineTable(inline)) = taken.item else {
+            return Err(again());
+        };
+        let text = |decor: Option<&toml_edit::RawString>| {
+            decor.and_then(|raw| raw.as_str()).unwrap_or("").to_string()
+        };
+        let moved = Moved {
+            above: text(taken.leaf.prefix()),
+            trailing: text(inline.decor().suffix()),
+        };
+        let mut table = inline.into_table();
+        // The members of `{ a = 1, b = 2 }` carry the space around the braces and commas.
+        let bare =
+            |raw: Option<&toml_edit::RawString>| text(raw).chars().all(|c| c == ' ' || c == '\t');
+        for (mut name, item) in table.iter_mut() {
+            if bare(name.leaf_decor().prefix()) {
+                name.leaf_decor_mut().set_prefix("");
+            }
+            if let Item::Value(value) = item {
+                if bare(value.decor().suffix()) {
+                    value.decor_mut().set_suffix("");
+                }
+            }
+        }
+        match form {
+            Form::Dotted => table.set_dotted(true),
+            _ => {
+                table.set_position(position);
+                *table.decor_mut() = Decor::new(moved.above.clone(), moved.trailing.clone());
+            }
+        }
+        let mut parent = table_at(self.root, above).ok_or_else(again)?;
+        parent.like().insert(BAN, Item::Table(table));
+        Ok(matches!(form, Form::Dotted).then_some(moved))
+    }
+
+    /// Gives the first member of the dotted table at `path` the comments `moved` holds.
+    fn keep_comments(&mut self, path: &TablePath, moved: Moved) {
+        let Some(mut table) = table_at(self.root, &steps(path)) else {
+            return;
+        };
+        let like = table.like();
+        let Some(name) = like.iter().next().map(|(name, _)| name.to_string()) else {
+            return;
+        };
+        if let Some(mut key) = like.key_mut(&name) {
+            key.leaf_decor_mut().set_prefix(moved.above);
+        }
+        if let Some(Item::Value(value)) = like.get_mut(&name) {
+            value.decor_mut().set_suffix(moved.trailing);
+        }
+    }
+
     fn set(&mut self, path: &TablePath, key: &str, scalar: &Scalar) -> Result<bool, String> {
+        let moved = self.hoist(path, key, scalar)?;
+        let changed = self.set_in(path, key, scalar)?;
+        if let Some(moved) = moved {
+            self.keep_comments(path, moved);
+        }
+        Ok(changed)
+    }
+
+    fn set_in(&mut self, path: &TablePath, key: &str, scalar: &Scalar) -> Result<bool, String> {
         let steps = steps(path);
         let Some(mut table) = table_at(self.root, &steps) else {
             return Err(format!("the file has no table `{path}`"));
@@ -502,7 +627,7 @@ impl Editor<'_> {
                     }
                 }
                 if !steps.is_empty() {
-                    seal(self.root, &steps, taken.leaf).ok_or_else(again)?;
+                    self.emptied.push((path.clone(), taken.leaf));
                 }
                 Ok(true)
             }
@@ -563,8 +688,12 @@ impl Editor<'_> {
         Ok(true)
     }
 
-    /// Writes each dotted table made and left empty as `{}`.
+    /// Writes each dotted table made or emptied and left empty by every edit as `{}`.
     fn seal_made(&mut self) -> Result<(), String> {
+        for (path, leaf) in std::mem::take(&mut self.emptied) {
+            seal(self.root, &steps(&path), leaf)
+                .ok_or_else(|| format!("cannot find `{path}` again"))?;
+        }
         for path in std::mem::take(&mut self.made) {
             seal(self.root, &steps(&path), Decor::default())
                 .ok_or_else(|| format!("cannot find `{path}` again"))?;
@@ -630,6 +759,7 @@ pub(in crate::config::edit) fn migrate(
         lines: &lines,
         marks: 0,
         made: Vec::new(),
+        emptied: Vec::new(),
     };
     let (mut done, mut touched) = (Vec::new(), Vec::new());
     for (edit, seen) in edits.into_iter().zip(seen) {

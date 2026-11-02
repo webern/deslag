@@ -120,6 +120,71 @@ fn a_table_made_in_an_empty_inline_table_rewrites_its_line_and_keeps_its_comment
 }
 
 #[test]
+fn an_inline_ban_gains_phrases_as_a_table_of_its_own_in_its_parents_form() {
+    let ban = phrases().key("ban");
+    let edits = [
+        TableEdit::Create { table: ban.clone() },
+        set(ban.clone(), "delve", advice("dig")),
+        set(
+            ban.clone(),
+            "load-bearing wall",
+            advice("say what it holds up"),
+        ),
+    ];
+    // Under a header, it has a header of its own, after the tables of its parent, and takes its
+    // comments, the ones above it and the one after it.
+    let text = "schema_version = 1\n[md.lints.banned_phrases]\nallow = []\n\
+                # Mine.\nban = { delve = \"\", \"x y\" = \"z\" } # kept\n\
+                [md.lints.banned_phrases.other]\na = 1\n\n[md.lints.banned_chars]\n";
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md.lints.banned_phrases]\nallow = []\n\
+         [md.lints.banned_phrases.other]\na = 1\n\
+         # Mine.\n[md.lints.banned_phrases.ban] # kept\n\
+         delve = \"dig\"\n\"x y\" = \"z\"\n\"load-bearing wall\" = \"say what it holds up\"\n\
+         \n[md.lints.banned_chars]\n"
+    );
+    // In dotted keys, it is dotted keys, the comments on the first.
+    let text = "schema_version = 1\n[md]\nlints.banned_phrases.allow = []\n\
+                # Mine.\nlints.banned_phrases.ban = { delve = \"\" } # kept\n";
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md]\nlints.banned_phrases.allow = []\n\
+         # Mine.\nlints.banned_phrases.ban.delve = \"dig\" # kept\n\
+         lints.banned_phrases.ban.\"load-bearing wall\" = \"say what it holds up\"\n"
+    );
+    // In an inline table, it stays inline.
+    let text = "schema_version = 1\n[md]\nlints.banned_phrases = { ban = { delve = \"\" } }\n";
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md]\nlints.banned_phrases = { ban = { delve = \"dig\", \
+         \"load-bearing wall\" = \"say what it holds up\" } }\n"
+    );
+}
+
+#[test]
+fn a_table_a_delete_empties_is_sealed_only_if_nothing_is_made_in_it() {
+    let text = "schema_version = 1\n[md]\nlints.banned_phrases.groups.x = false\n\
+                lints.banned_chars.groups.x = false\n";
+    let delete = |lint: &str| TableEdit::Delete {
+        table: lints("md").key(lint),
+        key: "groups".to_string(),
+    };
+    let ban = phrases().key("ban");
+    let edits = [
+        delete("banned_phrases"),
+        delete("banned_chars"),
+        TableEdit::Create { table: ban.clone() },
+        set(ban, "delve", advice("dig")),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md]\nlints.banned_phrases.ban.delve = \"dig\"\n\
+         lints.banned_chars = {}\n"
+    );
+}
+
+#[test]
 fn a_missing_table_is_made_after_its_parents_tables_and_under_its_own_header() {
     // The section's lint tables come after its overrides, and the rust section after them.
     let text = "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\n\

@@ -1015,6 +1015,33 @@ fn a_banned_chars_table_written_empty_and_inline_migrates_and_still_bans() {
     }
 }
 
+#[test]
+fn an_inline_ban_the_migration_adds_to_is_written_out_a_phrase_to_a_line() {
+    let header = "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n[md.lints.banned_phrases]\n\
+                  ban = { \"in order to\" = \"\" }\n";
+    let dotted = "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n\
+                  lints.banned_phrases.ban = { \"in order to\" = \"\" }\n";
+    let inline = "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n\
+                  lints.banned_phrases = { ban = { \"in order to\" = \"\" } }\n";
+    for (name, text, many_lines) in [
+        ("header", header, true),
+        ("dotted", dotted, true),
+        ("inline", inline, false),
+    ] {
+        let repo = repo_with("toml", text);
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{name}: {}", raw_stderr(&output));
+        let now = read(&repo, "toml");
+        let longest = now.lines().map(str::len).max().unwrap_or(0);
+        assert_eq!(longest < 200, many_lines, "{name}: {now}");
+        assert!(
+            now.contains("\"in order to\" = \"delete it\""),
+            "{name}: {now}"
+        );
+        assert_eq!(code(&repo.check()), 0, "{name}");
+    }
+}
+
 /// Every phrase of the catalogue, and those the running version has shipped, which
 /// `instructions update` offers to a config stamped [`BEFORE_ALL`].
 fn phrases() -> (Vec<&'static str>, Vec<&'static str>) {

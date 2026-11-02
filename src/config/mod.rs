@@ -348,6 +348,7 @@ impl Config {
                 path: path.display().to_string(),
                 copy: copy.display().to_string(),
                 found,
+                rerun: update::rerun(explicit, None),
             });
         }
         Ok((config, text))

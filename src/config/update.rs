@@ -133,7 +133,7 @@ impl Update {
 }
 
 /// The command a person runs again after making by hand the edits a refusal lists.
-fn rerun(explicit: Option<&Path>, to: Option<&Version>) -> String {
+pub(super) fn rerun(explicit: Option<&Path>, to: Option<&Version>) -> String {
     let mut command = String::from("deslag update");
     if let Some(path) = explicit {
         command.push_str(&format!(" --config-path {}", path.display()));
@@ -865,6 +865,22 @@ mod tests {
         );
         assert!(copy.exists());
         assert_eq!(fs::read_to_string(&path).expect("a config"), bare);
+    }
+
+    #[test]
+    fn the_refusal_while_a_copy_sits_beside_a_config_names_its_config_path() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        fs::write(&path, by_hand()).expect("a config");
+        let error = Config::load(dir.path(), Some(&path)).expect_err("a copy beside it");
+        let said = error.to_string();
+        assert!(
+            said.contains(&format!(
+                "run `deslag update --config-path {}`",
+                path.display()
+            )),
+            "{said}"
+        );
     }
 
     #[test]

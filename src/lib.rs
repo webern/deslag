@@ -151,7 +151,7 @@ pub enum Error {
     /// by hand have not been checked.
     #[error(
         "{path} has not been checked: {copy}, the text it had at schema {found}, sits beside it; \
-         run `deslag update`, which checks that {path} means what {copy} meant and removes the copy"
+         run `{rerun}`, which checks that {path} means what {copy} meant and removes the copy"
     )]
     UncheckedCopy {
         /// The config file.
@@ -160,6 +160,8 @@ pub enum Error {
         copy: String,
         /// The schema the copy is of.
         found: NonZeroU32,
+        /// The command that checks it, with the `--config-path` the run was given.
+        rerun: String,
     },
 
     /// The config was last updated by a later deslag than this one.

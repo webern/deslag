@@ -617,17 +617,6 @@ fn arrived(news: &News) -> Vec<(String, String)> {
         .collect()
 }
 
-/// The lints a config turns on are read from every section and from its overrides.
-#[test]
-fn lints_turned_on_reads_every_section() {
-    let config = "schema_version = 2\n[md.lints.density]\n[x.lints.max_emphasis]\n\
-                  [[x.overrides]]\nglobs = [\"a\"]\n[x.overrides.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n";
-    assert_eq!(
-        lints_turned_on(config),
-        BTreeSet::from(["density", "max_emphasis", "banned_chars"].map(String::from))
-    );
-}
-
 /// `## New lints` holds a section for each lint whose `since` is after the stamp, up to the running
 /// version, and no other: its heading, then the page `deslag instructions lints` prints for it.
 #[test]

@@ -52,7 +52,7 @@ Measured on macOS x86-64 (an i9-9980HK) with the machine idle, release builds un
 
   The labels are a model's, voted by three open-weight models and settled by a stronger one, and
   were checked by the owner on a sample.
-- The dev gold, the holdout and the owner's set did not train anything. The silver batch's tune split (399
+- The dev gold, the holdout and the owner's set did not train the model. The silver batch's tune split (399
   sentences) chose the cutoffs below and the mapping of margins to scores, and nothing else.
 
 Each sentence was first read by deslag's rules, version 12, and the model learned to correct that
@@ -76,7 +76,7 @@ code licence. The weights hold words and numbers, not sentences.
 
   Tags within 49,944,573 of the best score stay in the word's kept set when it is `Unsure`.
 - The exporter, `scripts/train/weights.py`, writes the model as it is. It does not retrain or
-  prune anything, and it refuses a model whose cutoffs are not whole numbers over the steps.
+  prune the model, and it refuses a model whose cutoffs are not whole numbers over the steps.
 - The model's file is `.train/shapes/p-hyb-s.model.json` after `make generate-shapes`. Its sha256
   is `4ade3302e849ca3255135d553ef02b36df093e8c6d4857b142634c756b43e0f9`.
 

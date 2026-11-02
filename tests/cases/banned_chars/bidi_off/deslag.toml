@@ -1,0 +1,7 @@
+schema_version = 2
+
+[md.lints.banned_chars]
+
+[md.lints.banned_chars.groups]
+bidi = false
+dashes = true

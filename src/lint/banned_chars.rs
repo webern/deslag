@@ -23,6 +23,7 @@
 //! character and leaves the choice of an ASCII arrow or words to the writer. A character of the
 //! `bidi` group is reported and never fixed: deleting one can reorder right-to-left text.
 
+use crate::config::allow::invisible;
 use crate::config::{BannedChars, CharGroups};
 use crate::document::{BlockKind, Body, Document, Edit, Location, PieceKind};
 use crate::lint::{Keep, Mark, MarkKind, on_lines};
@@ -310,7 +311,7 @@ pub const GROUPS: &[Group] = &[
     },
 ];
 
-/// The characters that do not take space, which the report does not quote.
+/// The characters that do not take space.
 const INVISIBLE: &[Rule] = &[
     one('\u{200B}', "zero width space", ""),
     one('\u{2060}', "word joiner", ""),
@@ -619,10 +620,7 @@ fn note(banned: &Banned) -> String {
     if let Some(name) = banned.name {
         what.push_str(&format!(" {name}"));
     }
-    let hidden = ch.is_whitespace()
-        || rule(INVISIBLE, ch).is_some()
-        || ('\u{FE00}'..='\u{FE0F}').contains(&ch);
-    if !hidden {
+    if !invisible(ch) {
         what.push_str(&format!(" \"{ch}\""));
     }
     let instead = match banned.instead.as_deref() {
@@ -643,3 +641,49 @@ const DEFAULT_ADVICE: &str = "This repo writes in plain characters. The list giv
     \n\
     Do not write the characters as HTML entities, and do not change the config to get past this \
     check. Only a human can tell you to do that, and I am a linter, not a human.";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// What the report says of `ch`, banned with `instead`.
+    fn noted(ch: char, instead: Option<&str>) -> String {
+        note(&Banned {
+            ch,
+            name: name(ch),
+            instead: instead.map(str::to_string),
+            without: None,
+            range_default: false,
+            locations: Vec::new(),
+        })
+    }
+
+    #[test]
+    fn a_character_the_config_calls_hidden_is_never_printed_raw() {
+        for group in GROUPS {
+            for rule in group.rules {
+                for ch in (rule.first..=rule.last).filter(|ch| invisible(*ch)) {
+                    let said = noted(ch, rule.instead);
+                    assert!(
+                        !said.contains(ch),
+                        "{} prints U+{:04X} raw: {said:?}",
+                        group.name,
+                        ch as u32
+                    );
+                    assert!(said.starts_with(&format!("U+{:04X}", ch as u32)), "{said:?}");
+                }
+            }
+        }
+    }
+
+    /// The joiners and the ideographic space are in no group, so a `ban` is the only way to ban
+    /// them, and the report names them by code point alone.
+    #[test]
+    fn a_banned_character_no_group_knows_prints_as_its_code_point() {
+        for ch in ['\u{200C}', '\u{200D}', '\u{3000}'] {
+            assert_eq!(name(ch), None);
+            let said = noted(ch, Some(""));
+            assert_eq!(said, format!("U+{:04X}; delete it", ch as u32));
+        }
+    }
+}

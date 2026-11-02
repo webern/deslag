@@ -1,0 +1,134 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 12 banned characters.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+061C arabic letter mark; delete it, unless the text around it is right to left and needs it\n  line 5: U+200E left-to-right mark; delete it, unless the text around it is right to left and needs it\n  line 7: U+200F right-to-left mark; delete it, unless the text around it is right to left and needs it\n  line 9: U+202A left-to-right embedding; delete it, unless the text around it is right to left and needs it\n  line 11: U+202B right-to-left embedding; delete it, unless the text around it is right to left and needs it\n  line 13: U+202C pop directional formatting; delete it, unless the text around it is right to left and needs it\n  line 15: U+202D left-to-right override; delete it, unless the text around it is right to left and needs it\n  line 17: U+202E right-to-left override; delete it, unless the text around it is right to left and needs it\n  line 19: U+2066 left-to-right isolate; delete it, unless the text around it is right to left and needs it\n  line 21: U+2067 right-to-left isolate; delete it, unless the text around it is right to left and needs it\n  line 23: U+2068 first strong isolate; delete it, unless the text around it is right to left and needs it\n  line 25: U+2069 pop directional isolate; delete it, unless the text around it is right to left and needs it",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 18,
+          "end": 20,
+          "line": 3,
+          "column": 5,
+          "end_line": 3,
+          "end_column": 6,
+          "note": "U+061C arabic letter mark; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 31,
+          "end": 34,
+          "line": 5,
+          "column": 5,
+          "end_line": 5,
+          "end_column": 6,
+          "note": "U+200E left-to-right mark; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 45,
+          "end": 48,
+          "line": 7,
+          "column": 5,
+          "end_line": 7,
+          "end_column": 6,
+          "note": "U+200F right-to-left mark; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 59,
+          "end": 62,
+          "line": 9,
+          "column": 5,
+          "end_line": 9,
+          "end_column": 6,
+          "note": "U+202A left-to-right embedding; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 73,
+          "end": 76,
+          "line": 11,
+          "column": 5,
+          "end_line": 11,
+          "end_column": 6,
+          "note": "U+202B right-to-left embedding; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 87,
+          "end": 90,
+          "line": 13,
+          "column": 5,
+          "end_line": 13,
+          "end_column": 6,
+          "note": "U+202C pop directional formatting; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 101,
+          "end": 104,
+          "line": 15,
+          "column": 5,
+          "end_line": 15,
+          "end_column": 6,
+          "note": "U+202D left-to-right override; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 115,
+          "end": 118,
+          "line": 17,
+          "column": 5,
+          "end_line": 17,
+          "end_column": 6,
+          "note": "U+202E right-to-left override; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 129,
+          "end": 132,
+          "line": 19,
+          "column": 5,
+          "end_line": 19,
+          "end_column": 6,
+          "note": "U+2066 left-to-right isolate; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 143,
+          "end": 146,
+          "line": 21,
+          "column": 5,
+          "end_line": 21,
+          "end_column": 6,
+          "note": "U+2067 right-to-left isolate; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 157,
+          "end": 160,
+          "line": 23,
+          "column": 5,
+          "end_line": 23,
+          "end_column": 6,
+          "note": "U+2068 first strong isolate; delete it, unless the text around it is right to left and needs it"
+        },
+        {
+          "kind": "occurrence",
+          "start": 171,
+          "end": 174,
+          "line": 25,
+          "column": 5,
+          "end_line": 25,
+          "end_column": 6,
+          "note": "U+2069 pop directional isolate; delete it, unless the text around it is right to left and needs it"
+        }
+      ]
+    }
+  ]
+}

@@ -26,6 +26,21 @@ fn main() -> ExitCode {
     }
 }
 
+/// The config's path as the note line shows it: from the root where it is under the root, else
+/// absolute. A `--config-path` is given from `cwd`, so the same path means different files in
+/// different notes unless it is resolved first.
+fn shown_config(cwd: &Path, root: &Path, config: &Path) -> std::path::PathBuf {
+    let joined = cwd.join(config);
+    let resolved = match (joined.parent(), joined.file_name()) {
+        (Some(dir), Some(name)) => dir.canonicalize().map_or(joined.clone(), |d| d.join(name)),
+        _ => joined.clone(),
+    };
+    match resolved.strip_prefix(root) {
+        Ok(under) => under.to_path_buf(),
+        Err(_) => resolved,
+    }
+}
+
 /// Finds the root and the config for a run in `cwd` and loads the config, returning the root.
 ///
 /// It says on stderr where the root is when that is not `cwd`, what in the config deslag ignores
@@ -39,7 +54,7 @@ fn load_config(
     let root = located.root;
     let config = deslag::Config::load(&root, explicit)?;
     if root != cwd {
-        let shown = config.path().strip_prefix(&root).unwrap_or(config.path());
+        let shown = shown_config(cwd, &root, config.path());
         eprintln!(
             "deslag: note: root {}, config {}",
             root.display(),

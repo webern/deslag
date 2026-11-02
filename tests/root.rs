@@ -58,7 +58,24 @@ fn config_path_from_a_subdirectory_scans_the_repo_from_its_top() {
     let said = stderr(&output);
     assert_eq!(code(&output), 1, "{said}");
     assert!(said.contains("2 of 2 files"), "{said}");
-    assert!(said.contains(&note(&repo, "", "../deslag.toml")), "{said}");
+    assert!(said.contains(&note(&repo, "", "deslag.toml")), "{said}");
+}
+
+#[test]
+fn a_config_path_outside_the_work_tree_is_named_in_full() {
+    let repo = repo();
+    let elsewhere = Repo::new();
+    elsewhere.write("other.toml", DASHES);
+    let config = elsewhere
+        .root()
+        .canonicalize()
+        .expect("a real path")
+        .join("other.toml");
+    let path = config.to_str().expect("a UTF-8 path");
+    let output = repo.run_in("docs", &["check", "--config-path", path]);
+    let said = stderr(&output);
+    assert_eq!(code(&output), 1, "{said}");
+    assert!(said.contains(&note(&repo, "", path)), "{said}");
 }
 
 #[test]

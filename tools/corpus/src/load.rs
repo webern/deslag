@@ -577,8 +577,16 @@ fn check_sidecar(
 
     // And the budget it declares for itself must be what the reader actually reads.
     let text = String::from_utf8_lossy(bytes);
-    let declared = deslag::parse::frontmatter::max_size_bytes(&text, &sidecar.fixture)
-        .map_err(|error| Problem(format!("{name}: {error}")))?;
+    let declared = match deslag::parse::frontmatter::max_size_bytes(&text) {
+        deslag::parse::frontmatter::Declared::Absent => None,
+        deslag::parse::frontmatter::Declared::Budget(budget) => Some(budget),
+        deslag::parse::frontmatter::Declared::Unreadable(found) => {
+            return Err(Problem(format!(
+                "{name}: the frontmatter budget {:?} is not a byte count",
+                found.written
+            )));
+        }
+    };
     ensure!(
         declared == content.frontmatter_max_size_bytes,
         "{name}: the recorded frontmatter budget does not match the file"

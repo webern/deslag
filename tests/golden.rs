@@ -32,6 +32,7 @@ use common::corpus::{CATEGORIES, corpus};
 use common::fixture::Fixture;
 use deslag::document::{Document, Token, TokenKind};
 use deslag::lint::density;
+use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::Problem;
 use deslag::tag::{Confidence, Features, Origin, RULES_VERSION, Reading, Tag, VERSION};
 use deslag::{Config, ConfigSource, Lint, Violation, check_file};
@@ -56,8 +57,11 @@ const MAX_DIFF_LINES: usize = 40;
 /// it has an arm here.
 fn record_of(violation: &Violation) -> Option<String> {
     let record = match violation {
-        Violation::MaxSizeBytes(over) => {
+        Violation::MaxSizeBytes(max_size_bytes::Over::Bloat(over)) => {
             format!("size_bytes:{} budget:{}", over.size_bytes, over.budget)
+        }
+        Violation::MaxSizeBytes(max_size_bytes::Over::Unreadable(over)) => {
+            format!("unreadable:{}", over.written)
         }
         Violation::MaxEmphasis(over) => format!(
             "spans:{} percent:{:.2}",

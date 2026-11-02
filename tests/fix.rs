@@ -544,3 +544,21 @@ fn a_file_with_only_places_left_is_not_a_run_that_reported_on_no_file() {
         stderr(&output)
     );
 }
+
+#[test]
+fn fix_still_edits_a_file_beside_one_with_an_unreadable_budget() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", CONFIG);
+    repo.write("a.md", "---\nmax_size_bytes: lots\n---\n# A\n");
+    repo.write("b.md", "# B\n\nOne \u{2014} two.\n");
+
+    let output = repo.run(&["fix"]);
+
+    assert_eq!(code(&output), 1, "stderr: {}", stderr(&output));
+    assert_eq!(read(&repo, "b.md"), b"# B\n\nOne - two.\n");
+    assert!(
+        stderr(&output).contains("a.md, line 2"),
+        "stderr: {}",
+        stderr(&output)
+    );
+}

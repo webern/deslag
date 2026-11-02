@@ -163,18 +163,18 @@ impl Lint {
 
     /// How the tally of a run describes the files this lint failed, as in `2 of 9 files over
     /// budget`.
-    fn tally(self) -> &'static str {
+    fn tallies(self) -> &'static [&'static str] {
         match self {
-            Lint::MaxSizeBytes => "over budget",
-            Lint::MaxEmphasis => "over-emphasized",
-            Lint::RepoLayout => "with a broken repository layout",
-            Lint::BannedChars => "with banned characters",
-            Lint::BannedPhrases => "with banned phrases",
-            Lint::Density => "with dense text",
-            Lint::VerbsNoNouns => "with verbs negated through their objects",
-            Lint::NotAtAll => "with negations padded with \"at all\"",
-            Lint::VerbsNothing => "with verbs whose object is nothing",
-            Lint::PossessiveOwn => "with possessives padded with \"own\"",
+            Lint::MaxSizeBytes => &[OVER_BUDGET, UNREADABLE_BUDGET],
+            Lint::MaxEmphasis => &["over-emphasized"],
+            Lint::RepoLayout => &["with a broken repository layout"],
+            Lint::BannedChars => &["with banned characters"],
+            Lint::BannedPhrases => &["with banned phrases"],
+            Lint::Density => &["with dense text"],
+            Lint::VerbsNoNouns => &["with verbs negated through their objects"],
+            Lint::NotAtAll => &["with negations padded with \"at all\""],
+            Lint::VerbsNothing => &["with verbs whose object is nothing"],
+            Lint::PossessiveOwn => &["with possessives padded with \"own\""],
         }
     }
 }
@@ -184,6 +184,12 @@ impl fmt::Display for Lint {
         f.write_str(self.id())
     }
 }
+
+/// How the tally describes a file over its byte budget.
+const OVER_BUDGET: &str = "over budget";
+
+/// How the tally describes a file whose frontmatter declares a byte budget that is not a byte count.
+const UNREADABLE_BUDGET: &str = "with an unreadable max_size_bytes budget";
 
 /// A place in a file that a finding points at.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, JsonSchema)]
@@ -221,7 +227,7 @@ pub struct Finding {
 /// What a lint found wrong with a file.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Violation {
-    /// The file is larger than its byte budget.
+    /// The file is larger than its byte budget, or declares one that is not a byte count.
     MaxSizeBytes(max_size_bytes::Over),
     /// The file has more bold, italics and capitals than it is allowed.
     MaxEmphasis(max_emphasis::Over),
@@ -244,6 +250,16 @@ pub enum Violation {
 }
 
 impl Violation {
+    /// How the tally of a run describes the file this failed: one lint may fail a file in more
+    /// than one way, and the tally counts each apart.
+    fn tally(&self) -> &'static str {
+        match self {
+            Violation::MaxSizeBytes(max_size_bytes::Over::Unreadable(_)) => UNREADABLE_BUDGET,
+            Violation::MaxSizeBytes(max_size_bytes::Over::Bloat(_)) => OVER_BUDGET,
+            other => other.lint().tallies()[0],
+        }
+    }
+
     /// The lint that found it.
     pub fn lint(&self) -> Lint {
         match self {
@@ -264,7 +280,7 @@ impl Violation {
     /// with nothing to point at, such as a file over its byte budget, does not have a mark.
     pub fn marks(&self) -> Vec<Mark> {
         match self {
-            Violation::MaxSizeBytes(_) => Vec::new(),
+            Violation::MaxSizeBytes(over) => max_size_bytes::marks(over),
             Violation::MaxEmphasis(over) => max_emphasis::marks(over),
             Violation::RepoLayout(over) => repo_layout::marks(over),
             Violation::BannedChars(over) => banned_chars::marks(over),
@@ -301,10 +317,11 @@ impl Violation {
     /// marks list only what is kept.
     pub fn retain(&self, keep: &dyn Keep) -> Option<Violation> {
         match self {
-            // A verdict on the whole file, and its evidence.
-            Violation::MaxSizeBytes(_) | Violation::MaxEmphasis(_) => {
-                keep.verdict().then(|| self.clone())
+            Violation::MaxSizeBytes(over) => {
+                max_size_bytes::retain(over, keep).map(Violation::MaxSizeBytes)
             }
+            // A verdict on the whole file, and its evidence.
+            Violation::MaxEmphasis(_) => keep.verdict().then(|| self.clone()),
             Violation::RepoLayout(over) => {
                 repo_layout::retain(over, keep).map(Violation::RepoLayout)
             }
@@ -498,14 +515,17 @@ impl Report {
     /// to one.
     pub fn summary(&self) -> String {
         let scanned = self.scanned.len();
-        let tally = Lint::ALL.iter().filter_map(|lint| {
-            let failed = self
-                .findings
-                .iter()
-                .filter(|finding| finding.violation.lint() == *lint)
-                .count();
-            (failed > 0).then(|| format!("deslag: {failed} of {scanned} files {}.", lint.tally()))
-        });
+        let tally = Lint::ALL
+            .iter()
+            .flat_map(|lint| lint.tallies().iter().copied())
+            .filter_map(|how| {
+                let failed = self
+                    .findings
+                    .iter()
+                    .filter(|finding| finding.violation.tally() == how)
+                    .count();
+                (failed > 0).then(|| format!("deslag: {failed} of {scanned} files {how}."))
+            });
         let change = self.change.iter().map(|change| {
             format!(
                 "deslag: {} of {scanned} files changed since {}; \
@@ -721,7 +741,7 @@ pub(crate) fn check_text<'a>(
     for lint in Lint::ALL {
         let violation = match lint {
             Lint::MaxSizeBytes => {
-                max_size_bytes::check(relative, contents, text, lints.max_size_bytes.as_ref())?
+                max_size_bytes::check(contents, text, &document, lints.max_size_bytes.as_ref())
                     .map(Violation::MaxSizeBytes)
             }
             Lint::MaxEmphasis => max_emphasis::check(&document, lints.max_emphasis.as_ref())

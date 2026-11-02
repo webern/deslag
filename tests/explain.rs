@@ -397,6 +397,25 @@ fn an_exclude_does_not_bring_back_a_file_the_walk_skips() {
 }
 
 #[test]
+fn an_unreadable_budget_in_the_frontmatter_is_shown_and_sets_nothing() {
+    let repo = Repo::new();
+    repo.write("deslag.toml", "schema_version = 2\n");
+    repo.write("AGENTS.md", "---\nmax_size_bytes: lots\n---\n# Agents\n");
+    let (code, stdout, stderr) = explain(&repo, &["AGENTS.md"]);
+    assert_eq!((code, stderr.as_str()), (0, ""));
+    assert!(
+        stdout.contains(
+            "# frontmatter: max_size_bytes = \"lots\", which is not a byte count; check reports it\n"
+        ),
+        "stdout: {stdout}"
+    );
+    assert!(
+        stdout.contains("# max_size_bytes: off\n"),
+        "stdout: {stdout}"
+    );
+}
+
+#[test]
 fn a_budget_in_the_frontmatter_is_the_last_layer() {
     let repo = Repo::new();
     repo.write("deslag.toml", "schema_version = 2\n");
@@ -528,8 +547,8 @@ fn explain_reads_a_file_that_is_not_utf8_with_a_dollar_for_each_bad_byte() {
         b"---\nmax_size_bytes: 3\xff\xfe\n---\n# Agents\n",
     );
     let (code, stdout, stderr) = explain(&repo, &["AGENTS.md"]);
-    assert_eq!((code, stdout.as_str()), (2, ""));
-    assert!(stderr.contains("3$$"), "{stderr}");
+    assert_eq!((code, stderr.as_str()), (0, ""));
+    assert!(stdout.contains("max_size_bytes = \"3$$\""), "{stdout}");
 }
 
 /// A config whose `[md]` reads fenced code by default, `[rust]` reads both surfaces and `[cpp]` only

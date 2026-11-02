@@ -102,10 +102,20 @@ fn block(
         source,
     })?;
     let text = lint::decode(&contents);
-    if let Some(budget) = frontmatter::max_size_bytes(&text, relative)? {
-        let key = frontmatter::MAX_SIZE_BYTES;
-        out.push_str(&format!("# frontmatter: {key} = {budget}\n"));
-        lints.max_size_bytes.get_or_insert_default().value = Some(budget);
+    let key = frontmatter::MAX_SIZE_BYTES;
+    match frontmatter::max_size_bytes(&text) {
+        frontmatter::Declared::Absent => {}
+        frontmatter::Declared::Budget(budget) => {
+            out.push_str(&format!("# frontmatter: {key} = {budget}\n"));
+            lints.max_size_bytes.get_or_insert_default().value = Some(budget);
+        }
+        // check reports this as a finding, and the file's budget stays the config's.
+        frontmatter::Declared::Unreadable(found) => {
+            let written = &found.written;
+            out.push_str(&format!(
+                "# frontmatter: {key} = {written:?}, which is not a byte count; check reports it\n"
+            ));
+        }
     }
 
     let unwritable = |error: toml::ser::Error| Error::Explain {

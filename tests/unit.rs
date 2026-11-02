@@ -216,7 +216,7 @@ fn a_frontmatter_that_declares_nothing_is_ignored() {
 }
 
 #[test]
-fn a_max_size_bytes_that_is_not_a_number_is_an_error() {
+fn a_max_size_bytes_that_is_not_a_number_is_a_finding() {
     let repo = Repo::new();
     repo.write(".deslag/config.toml", &global_config(1000));
     repo.write("AGENTS.md", "---\nmax_size_bytes: plenty\n---\n# A\n");
@@ -224,9 +224,57 @@ fn a_max_size_bytes_that_is_not_a_number_is_an_error() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 2, "stderr: {stderr}");
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
-        stderr.contains("invalid max_size_bytes in the frontmatter of AGENTS.md"),
+        stderr.contains("AGENTS.md, line 2: the frontmatter says `max_size_bytes: plenty`"),
+        "stderr: {stderr}"
+    );
+    assert!(
+        stderr.contains("deslag: 1 of 1 files with an unreadable max_size_bytes budget."),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn a_trailing_comment_on_the_budget_is_not_part_of_it() {
+    let repo = Repo::new();
+    repo.write(".deslag/config.toml", &global_config(5));
+    repo.write(
+        "big.md",
+        "---\nmax_size_bytes: 100000 # generous\n---\n# A\nover five bytes\n",
+    );
+    repo.write(
+        "small.md",
+        "---\nmax_size_bytes: \"10\" # tight\n---\n# A\nover ten bytes\n",
+    );
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(over_budget(&stderr, "small.md", 10), "stderr: {stderr}");
+    assert!(!stderr.contains("big.md"), "stderr: {stderr}");
+}
+
+#[test]
+fn a_bad_budget_in_one_file_does_not_hide_the_others_nor_need_a_table() {
+    let repo = Repo::new();
+    // Only banned_chars is on: there is no max_size_bytes table.
+    repo.write(
+        "deslag.toml",
+        "schema_version = 2\n\n[md.lints.banned_chars]\ngroups = { dashes = true }\n",
+    );
+    repo.write("a.md", "---\nmax_size_bytes: lots\n---\n# A\n");
+    repo.write("b.md", "# B\n\nOne \u{2014} two.\n");
+
+    let output = repo.check();
+    let stderr = stderr(&output);
+
+    assert_eq!(code(&output), 1, "stderr: {stderr}");
+    assert!(stderr.contains("a.md, line 2"), "stderr: {stderr}");
+    assert!(stderr.contains("b.md"), "stderr: {stderr}");
+    assert!(
+        stderr.contains("deslag: 1 of 2 files with banned characters."),
         "stderr: {stderr}"
     );
 }

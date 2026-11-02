@@ -9,8 +9,8 @@ would fail, and never raise one, or add an override or exclude, only to pass a c
 
 ## 1. Find the config
 
-deslag runs from the root of the repository. It reads the first of these paths that exists, each
-with one of the extensions {config_extensions}:
+deslag runs from the repository root. It reads the first of these paths that exists, each with one
+of the extensions {config_extensions}:
 
 ```text
 {config_stems}
@@ -26,13 +26,13 @@ and read, such as AGENTS.md, CLAUDE.md, skills and design docs. Ask before addin
 writes, such as README.md. It also reads the comments of Rust, C, C++ and TOML code fences;
 `fences.languages = []` turns that off.
 
-`[rust]`, `[cpp]` and `[toml]` lint the comments of those source files; without the section they are
-not read. Keep one only where comments must meet prose's standard. Rust doc comments are read as
+`[rust]`, `[cpp]` and `[toml]` lint comments in those source files; without the section they are not
+read. Keep one only where comments should meet prose's standard. Rust doc comments are read as
 Markdown, other comments as plain text.
 
-Keep generated and vendored code out. A pattern with a `/` matches the path from the root, one
-without matches the file name anywhere, and `**` crosses directories. No `globs` reads every file of
-the kind.
+Keep generated and vendored code out. A pattern with `/` matches the path from the root, one without
+matches the file name anywhere, and `**` crosses directories. Without `globs`, every file of the
+kind is read.
 
 An override cannot turn a lint off, so leave generated code out with `exclude`, which takes the same
 patterns as `globs` and works in an override too:
@@ -93,14 +93,13 @@ text reads as before; `--dry-run` does not write a file. Ask before fixing a hum
 ## 6. CI, and the next agent
 
 Add `deslag check --base origin/main` where the repository's checks run, with `fetch-depth: 0` in
-GitHub Actions. deslag is not on crates.io yet, so ask the human how to install it. `--format
-github` annotates files and `--format sarif` prints a code scanning log. `--diff <BASE>` reports
-only what a change touched, and each failed `allow` entry; it misses some failures, so never upload
-its log.
+GitHub Actions. deslag is not on crates.io yet; ask the human how to install it. `--format github`
+annotates files and `--format sarif` prints a code scanning log. `--diff <BASE>` reports only what a
+change touched, and each failed `allow` entry; it misses some failures, so never upload its log.
 
 With the human's consent, add a line to AGENTS.md: "Run `deslag check --base origin/main` before you
 push, and fix what it reports."
 
-When a command notes an older deslag last updated the config, run `deslag instructions update`,
+When a command notes that an older deslag last updated the config, run `deslag instructions update`,
 offer the human each new lint, and do what it says. When it warns that a setting was renamed or
 removed, or refuses an older schema, run `deslag update`.

@@ -138,10 +138,18 @@ lints.max_size_bytes.value = 12000
 globs = ["/scripts/label/silver-datasheet.md"]
 lints.max_size_bytes.value = 6700
 
-# The comments of deslag's source. A comment may not hold the characters and phrases the
+# The comments of deslag's Rust. A comment may not hold the characters and phrases the
 # prose of this repo may not.
 [rust]
-globs = ["/src/**/*.rs"]
+globs = ["**/*.rs"]
+
+# Every Rust file is checked unless it is excluded here, with a reason.
+exclude = [
+  # Lint fixtures, whose findings are the point and whose output the .stderr files pin.
+  "/tests/cases/**",
+  # Lexer inputs that the sweep goldens pin, so a reword changes the instrument.
+  "/tools/sweep/tests/fixtures/**",
+]
 
 [rust.lints.banned_chars]
 

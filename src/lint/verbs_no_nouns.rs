@@ -161,7 +161,7 @@ pub const FORMS: Pattern = Pattern {
 pub struct Match {
     /// Where it is, from the verb to the word after `no`.
     pub location: Location,
-    /// The sentence it is in, as a report quotes it.
+    /// The matched text, as a report quotes it.
     pub quote: String,
 }
 
@@ -356,10 +356,13 @@ fn labelled(document: &Document<'_>, first: usize, start: usize) -> bool {
     })
 }
 
+/// The names a `message` may put in braces, which the report fills.
+pub const PLACEHOLDERS: &[&str] = &["path"];
+
 /// The report for one file at `path` that holds the construction, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let advice = match &over.message {
-        Some(message) => message.replace("{path}", path),
+        Some(message) => super::fill(message, PLACEHOLDERS, |_| path.to_string()),
         None => DEFAULT_ADVICE.to_string(),
     };
     let listed: String = over

@@ -217,6 +217,9 @@ fn within(inner: &Range<usize>, outer: &Range<usize>) -> bool {
     outer.start <= inner.start && inner.end <= outer.end
 }
 
+/// The names a `message` may put in braces, which the report fills.
+pub const PLACEHOLDERS: &[&str] = &["path", "free_spans", "max_percent"];
+
 /// The report for one over-emphasized file at `path`, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let measure = &over.measure;
@@ -238,10 +241,12 @@ pub fn render(path: &str, over: &Over) -> String {
         ),
     };
     let advice = match &over.message {
-        Some(message) => message
-            .replace("{path}", path)
-            .replace("{free_spans}", &over.free_spans.to_string())
-            .replace("{max_percent}", &over.max_percent.to_string()),
+        Some(message) => super::fill(message, PLACEHOLDERS, |name| match name {
+            "path" => path.to_string(),
+            "free_spans" => over.free_spans.to_string(),
+            "max_percent" => over.max_percent.to_string(),
+            _ => unreachable!("{name} is not in PLACEHOLDERS"),
+        }),
         None => DEFAULT_ADVICE.to_string(),
     };
     let spans: String = measure

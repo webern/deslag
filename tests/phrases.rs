@@ -361,6 +361,32 @@ fn a_phrase_in_both_ban_and_allow_is_refused() {
 }
 
 #[test]
+fn two_ban_keys_that_fold_alike_are_refused_and_both_are_named() {
+    let both = |first: &str, second: &str| {
+        settings(&format!(
+            "ban = {{ {first:?} = \"to\", {second:?} = \"so as to\" }}"
+        ))
+        .invalid()
+    };
+    // Case, the style of apostrophe and the space between words do not make a phrase new.
+    let cases = [
+        ("in order to", "In Order To"),
+        ("don't do it", "don\u{2019}t do it"),
+        ("don't do it", "DON\u{2019}T  do it"),
+    ];
+    for (first, second) in cases {
+        let refused = both(first, second).unwrap_or_else(|| panic!("{first:?} and {second:?}"));
+        assert!(
+            refused.starts_with("banned_phrases.ban holds ")
+                && refused.contains(&format!("{first:?}"))
+                && refused.contains(&format!("{second:?}")),
+            "{refused}"
+        );
+    }
+    assert_eq!(both("in order to", "in order that"), None);
+}
+
+#[test]
 fn no_catalogue_phrase_repeats_or_lies_inside_another() {
     let phrases: Vec<(&str, Vec<String>)> = CATALOGUE
         .entries

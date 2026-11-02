@@ -146,6 +146,9 @@ pub fn measure(document: &Document<'_>) -> Vec<Block> {
     blocks
 }
 
+/// The names a `message` may put in braces, which the report fills.
+pub const PLACEHOLDERS: &[&str] = &["path", "max_paragraph_chars", "max_item_chars"];
+
 /// The report for one dense file at `path`, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let count = |kind: Kind| {
@@ -171,13 +174,12 @@ pub fn render(path: &str, over: &Over) -> String {
     .collect::<Vec<_>>()
     .join(" and ");
     let advice = match &over.message {
-        Some(message) => message
-            .replace("{path}", path)
-            .replace(
-                "{max_paragraph_chars}",
-                &over.max_paragraph_chars.to_string(),
-            )
-            .replace("{max_item_chars}", &over.max_item_chars.to_string()),
+        Some(message) => super::fill(message, PLACEHOLDERS, |name| match name {
+            "path" => path.to_string(),
+            "max_paragraph_chars" => over.max_paragraph_chars.to_string(),
+            "max_item_chars" => over.max_item_chars.to_string(),
+            _ => unreachable!("{name} is not in PLACEHOLDERS"),
+        }),
         None => DEFAULT_ADVICE.to_string(),
     };
     let listed: String = over

@@ -1,10 +1,10 @@
 ERROR: deslag detected Markdown bloat!
 
-closer_dots.md is 72, which is larger than 10 bytes (by 62 bytes).
+closer_dots.md is 72 bytes, which is larger than 10 bytes (by 62 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -16,11 +16,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-closer_dots_cr.md is 72, which is larger than 10 bytes (by 62 bytes).
+closer_dots_cr.md is 72 bytes, which is larger than 10 bytes (by 62 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -32,11 +32,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-closer_dots_mark.md is 75, which is larger than 10 bytes (by 65 bytes).
+closer_dots_mark.md is 75 bytes, which is larger than 10 bytes (by 65 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -48,11 +48,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-closer_dots_mark_cr.md is 75, which is larger than 10 bytes (by 65 bytes).
+closer_dots_mark_cr.md is 75 bytes, which is larger than 10 bytes (by 65 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -64,11 +64,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-closer_spaces.md is 74, which is larger than 10 bytes (by 64 bytes).
+closer_spaces.md is 74 bytes, which is larger than 10 bytes (by 64 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -80,11 +80,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-closer_spaces_cr.md is 74, which is larger than 10 bytes (by 64 bytes).
+closer_spaces_cr.md is 74 bytes, which is larger than 10 bytes (by 64 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -96,11 +96,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-closer_spaces_mark.md is 77, which is larger than 10 bytes (by 67 bytes).
+closer_spaces_mark.md is 77 bytes, which is larger than 10 bytes (by 67 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -112,11 +112,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-closer_spaces_mark_cr.md is 77, which is larger than 10 bytes (by 67 bytes).
+closer_spaces_mark_cr.md is 77 bytes, which is larger than 10 bytes (by 67 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -128,11 +128,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-opener_tab.md is 73, which is larger than 10 bytes (by 63 bytes).
+opener_tab.md is 73 bytes, which is larger than 10 bytes (by 63 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -144,11 +144,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-opener_tab_cr.md is 73, which is larger than 10 bytes (by 63 bytes).
+opener_tab_cr.md is 73 bytes, which is larger than 10 bytes (by 63 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -160,11 +160,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-opener_tab_mark.md is 76, which is larger than 10 bytes (by 66 bytes).
+opener_tab_mark.md is 76 bytes, which is larger than 10 bytes (by 66 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget
@@ -176,11 +176,11 @@ You are responsible for maintaining the integrity of the doc. Do not puke garbag
 
 ERROR: deslag detected Markdown bloat!
 
-opener_tab_mark_cr.md is 76, which is larger than 10 bytes (by 66 bytes).
+opener_tab_mark_cr.md is 76 bytes, which is larger than 10 bytes (by 66 bytes).
 
 The file must fit within its max_size_bytes budget of 10 bytes.
 
-Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important that cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
+Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its budget. Is what you are adding important? Hint: lists and counts of things that churn frequently are usually less important than cross-cutting concerns and high level concepts that cannot as easily be ascertained by reading the code. You must decide; and if your edit is truly important, then you must remove something less important from the doc to make room for it.
 
 You must not:
 - defer editing the doc based solely on its byte budget

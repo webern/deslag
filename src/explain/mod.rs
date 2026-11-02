@@ -31,7 +31,7 @@ pub fn explain(root: &Path, config: &Config, paths: &[PathBuf]) -> Result<String
         source,
     })?;
     let config_path = config.path().strip_prefix(root).unwrap_or(config.path());
-    let walked = glob::walk(&canonical)?;
+    let walked = glob::walk(&canonical)?.files;
 
     let blocks = paths
         .iter()

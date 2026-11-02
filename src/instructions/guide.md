@@ -93,7 +93,7 @@ text reads as before; `--dry-run` does not write a file. Ask before fixing a hum
 ## 6. CI, and the next agent
 
 Add `deslag check --base origin/main` where the repository's checks run, with `fetch-depth: 0` in
-GitHub Actions. deslag is not on crates.io yet; ask the human how to install it. `--format github`
+GitHub Actions. Install it there with `cargo install deslag --locked`. `--format github`
 annotates files and `--format sarif` prints a code scanning log. `--diff <BASE>` reports only what a
 change touched, and each failed `allow` entry; it misses some failures, so never upload its log.
 

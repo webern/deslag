@@ -110,6 +110,9 @@ pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
     kept.then(|| over.clone())
 }
 
+/// The names a `message` may put in braces, which the report fills.
+pub const PLACEHOLDERS: &[&str] = &["path", "max_size_bytes"];
+
 /// The report for one finding at `path`, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     match over {
@@ -153,15 +156,17 @@ fn render_bloat(path: &str, over: &Bloat) -> String {
     let size_bytes = over.size_bytes;
     let over_amount = over.size_bytes - over.budget;
     let advice = match &over.message {
-        Some(message) => message
-            .replace("{path}", path)
-            .replace("{max_size_bytes}", &budget.to_string()),
+        Some(message) => super::fill(message, PLACEHOLDERS, |name| match name {
+            "path" => path.to_string(),
+            "max_size_bytes" => budget.to_string(),
+            _ => unreachable!("{name} is not in PLACEHOLDERS"),
+        }),
         None => default_advice(budget),
     };
     format!(
         "{HEADING}\n\
          \n\
-         {path} is {size_bytes}, which is larger than {budget} bytes (by {over_amount} bytes).\n\
+         {path} is {size_bytes} bytes, which is larger than {budget} bytes (by {over_amount} bytes).\n\
          \n\
          {advice}"
     )
@@ -174,7 +179,7 @@ fn default_advice(budget: u64) -> String {
          \n\
          Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within its \
          budget. Is what you are adding important? Hint: lists and counts of things that churn \
-         frequently are usually less important that cross-cutting concerns and high level concepts \
+         frequently are usually less important than cross-cutting concerns and high level concepts \
          that cannot as easily be ascertained by reading the code. You must decide; and if your edit \
          is truly important, then you must remove something less important from the doc to make \
          room for it.\n\

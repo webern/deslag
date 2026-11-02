@@ -1,5 +1,9 @@
 //! The command-line entry point. The logic lives in the library.
 
+// Standard error and standard output are written only through `write_stderr` and `write_stdout`,
+// which survive a closed pipe. `eprintln!` and `println!` panic on one and exit 101.
+#![deny(clippy::print_stderr, clippy::print_stdout)]
+
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::ExitCode;
@@ -20,7 +24,7 @@ fn main() -> ExitCode {
     match run() {
         Ok(code) => code,
         Err(error) => {
-            eprintln!("deslag: {error:#}");
+            write_stderr(&format!("deslag: {error:#}"));
             ExitCode::from(2)
         }
     }
@@ -55,19 +59,19 @@ fn load_config(
     let config = deslag::Config::load(&root, explicit)?;
     if root != cwd {
         let shown = shown_config(cwd, &root, config.path());
-        eprintln!(
+        write_stderr(&format!(
             "deslag: note: root {}, config {}",
             root.display(),
             shown.display()
-        );
+        ));
     }
     for warning in config.warnings() {
-        eprintln!("deslag: warning: {warning}");
+        write_stderr(&format!("deslag: warning: {warning}"));
     }
     let (stamp, running) = (config.deslag_version(), Version::current());
     let news = News::embedded(&stamp, &running);
     if let Some(notice) = instructions::notice(&news, &stamp, &running) {
-        eprintln!("deslag: note: {notice}");
+        write_stderr(&format!("deslag: note: {notice}"));
     }
     Ok((root, config))
 }
@@ -100,10 +104,10 @@ fn run() -> anyhow::Result<ExitCode> {
             changed(&root, base)?;
             let fixes = deslag::fix::fix(&root, &config, &args.paths, args.dry_run)?;
             if fixes.is_empty() {
-                eprintln!("{}\n", deslag::fix::nothing_fixed(args.dry_run));
+                write_stderr(&format!("{}\n", deslag::fix::nothing_fixed(args.dry_run)));
             }
             for file in fixes {
-                eprintln!("{}\n", file.render(args.dry_run));
+                write_stderr(&format!("{}\n", file.render(args.dry_run)));
             }
             // What fix wrote is part of the change.
             let change = changed(&root, base)?;
@@ -121,7 +125,7 @@ fn run() -> anyhow::Result<ExitCode> {
                 &deslag::version::current_release(),
             )?;
             for line in done.lines() {
-                eprintln!("deslag: {line}");
+                write_stderr(&format!("deslag: {line}"));
             }
             Ok(ExitCode::SUCCESS)
         }
@@ -136,7 +140,7 @@ fn run() -> anyhow::Result<ExitCode> {
                 deslag::news::Known::embedded(),
             )?;
             for line in done.lines() {
-                eprintln!("deslag: {line}");
+                write_stderr(&format!("deslag: {line}"));
             }
             Ok(ExitCode::SUCCESS)
         }
@@ -222,19 +226,22 @@ fn check(
     if let (Some(change), true) = (change, narrowed) {
         report = report.within(change);
     }
+    for warning in report.warnings() {
+        write_stderr(&warning);
+    }
     for finding in &report.findings {
-        eprintln!("{}\n", finding.render());
+        write_stderr(&format!("{}\n", finding.render()));
     }
     for failure in report.failures() {
-        eprintln!("{failure}\n");
+        write_stderr(&format!("{failure}\n"));
     }
     for notice in report.notices() {
-        eprintln!("{notice}");
+        write_stderr(&notice);
     }
     if !report.is_clean() {
-        eprintln!("{}", report.summary());
+        write_stderr(&report.summary());
     } else if let Some(tally) = report.exemption_tally() {
-        eprintln!("{tally}");
+        write_stderr(&tally);
     }
     write_stdout(&match format {
         Format::Text => String::new(),
@@ -248,6 +255,19 @@ fn check(
     } else {
         Ok(ExitCode::FAILURE)
     }
+}
+
+/// Writes `text` and a newline to standard error.
+///
+/// Every line deslag prints to standard error goes through here. A reader that stops early, such
+/// as `true` in `deslag check 2>&1 >/dev/null | true`, ends the writing and is not an error, so the
+/// exit code stays the run's. `eprintln!` would panic and exit 101. Any other failure is dropped
+/// too: there is nowhere left to report it.
+fn write_stderr(text: &str) {
+    let mut stderr = io::stderr().lock();
+    let _ = stderr
+        .write_all(text.as_bytes())
+        .and_then(|()| stderr.write_all(b"\n"));
 }
 
 /// Writes `text`, all a command prints, to standard output.

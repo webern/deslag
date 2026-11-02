@@ -256,17 +256,22 @@ pub fn check(document: &Document<'_>, dir: &Path, settings: Option<&RepoLayout>)
     })
 }
 
+/// The names a `message` may put in braces, which the report fills.
+pub const PLACEHOLDERS: &[&str] = &["path", "heading", "min_entries", "max_entries", "max_width"];
+
 /// The report for one file at `path` with a broken layout, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let heading = &over.heading;
     let range = over.range();
     let advice = match &over.message {
-        Some(message) => message
-            .replace("{path}", path)
-            .replace("{heading}", heading)
-            .replace("{min_entries}", &over.min_entries.to_string())
-            .replace("{max_entries}", &over.max_entries.to_string())
-            .replace("{max_width}", &over.max_width.to_string()),
+        Some(message) => super::fill(message, PLACEHOLDERS, |name| match name {
+            "path" => path.to_string(),
+            "heading" => heading.to_string(),
+            "min_entries" => over.min_entries.to_string(),
+            "max_entries" => over.max_entries.to_string(),
+            "max_width" => over.max_width.to_string(),
+            _ => unreachable!("{name} is not in PLACEHOLDERS"),
+        }),
         None => default_advice(path, heading, &range, over.max_width),
     };
 

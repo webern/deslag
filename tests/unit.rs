@@ -474,13 +474,13 @@ fn the_report_is_the_whole_message_or_none_of_it() {
     let expected = format!(
         "{HEADING}\n\
          \n\
-         AGENTS.md is 34, which is larger than 10 bytes (by 24 bytes).\n\
+         AGENTS.md is 34 bytes, which is larger than 10 bytes (by 24 bytes).\n\
          \n\
          The file must fit within its max_size_bytes budget of 10 bytes.\n\
          \n\
          Your job is to prioritize what belongs in the doc and make tradeoffs to keep it within \
          its budget. Is what you are adding important? Hint: lists and counts of things that \
-         churn frequently are usually less important that cross-cutting concerns and high level \
+         churn frequently are usually less important than cross-cutting concerns and high level \
          concepts that cannot as easily be ascertained by reading the code. You must decide; and \
          if your edit is truly important, then you must remove something less important from the \
          doc to make room for it.\n\
@@ -522,14 +522,14 @@ fn an_override_sets_only_the_fields_it_names() {
     assert_eq!(code(&output), 1, "stderr: {stderr}");
     assert!(
         stderr.contains(
-            "AGENTS.md is 34, which is larger than 10 bytes (by 24 bytes).\n\nOnly a human may edit \
+            "AGENTS.md is 34 bytes, which is larger than 10 bytes (by 24 bytes).\n\nOnly a human may edit \
              AGENTS.md.\n"
         ),
         "stderr: {stderr}"
     );
     assert!(
         stderr.contains(
-            "other.md is 34, which is larger than 10 bytes (by 24 bytes).\n\nThe file must fit within"
+            "other.md is 34 bytes, which is larger than 10 bytes (by 24 bytes).\n\nThe file must fit within"
         ),
         "other.md keeps the default advice, stderr: {stderr}"
     );

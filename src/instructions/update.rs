@@ -244,7 +244,25 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
             text.push_str(&format!("{}\n", item.text));
         }
     }
-    text.push_str(&format!("\n## Finish\n\n{}\n", words("Closing")));
+    // One sentence for each kind of news the text printed a section for.
+    let offers: Vec<String> = [
+        (!news.lints().is_empty(), "Closing lints"),
+        (!news.phrases().is_empty(), "Closing phrases"),
+        (!news.settings().is_empty(), "Closing settings"),
+    ]
+    .into_iter()
+    .filter(|(printed, _)| *printed)
+    .map(|(_, name)| words(name))
+    .collect();
+    text.push_str(&format!("\n## Finish\n\n{}\n\n", words("Closing")));
+    // When no kind of news is offered, "once they have chosen" would have no offer to refer to.
+    let last = if offers.is_empty() {
+        "Closing update alone"
+    } else {
+        text.push_str(&format!("{}\n\n", offers.join("\n")));
+        "Closing update"
+    };
+    text.push_str(&format!("{}\n", words(last)));
     text
 }
 
@@ -510,8 +528,8 @@ What rust leaves out.
 Nothing `check` finds depends on `deslag_version`.
 
 Offer each new lint to the person, with what it fails, and add the table of each they choose.
-Offer each new phrase too, and add its `ban` line to each table they choose. A new setting keeps
-its default until the config sets it; name it to the person, and set it only if they ask.
+A new setting keeps its default until the config sets it; name it to the person, and set it only if
+they ask.
 
 Once they have chosen, run `deslag update --to next`, adding your `--config-path` if any. It sets
 `deslag_version` to "next", ending this list, and edits renamed or removed settings. If the person
@@ -875,9 +893,78 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         assert_eq!(marked, ["never silently"]);
     }
 
+    /// The closing of the text for a range holding only lints, only phrases, or only settings: it
+    /// offers what the text lists and nothing else.
+    #[test]
+    fn the_closing_offers_only_the_kinds_of_news_the_text_lists() {
+        let lints = SchemaPaths::of(&json!({
+            "type": "object",
+            "properties": { "md": {
+                "type": "object", "since": "0.0.1",
+                "properties": { "lints": {
+                    "type": "object", "since": "0.0.1",
+                    "properties": { "not_at_all": {
+                        "type": "object", "since": "0.3.0", "properties": {},
+                    } },
+                } },
+            } },
+        }));
+        let settings = SchemaPaths::of(&json!({
+            "type": "object",
+            "properties": { "x": property("0.3.0", "An x.") },
+        }));
+        let nothing = SchemaPaths::of(&json!({ "type": "object", "properties": {} }));
+        let (from, to) = (version("0.2.0"), version("0.3.0"));
+        let offer = |name: &str| piece(name).to_string();
+        let (lint, phrase, setting) = (
+            offer("Closing lints"),
+            offer("Closing phrases"),
+            offer("Closing settings"),
+        );
+
+        // Which of the three sentences the closing holds, for each range.
+        let offered = |paths: &SchemaPaths, catalogue: &Catalogue| {
+            let news = News::between(paths, &[], catalogue, &from, &to);
+            let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
+            let finish = text.split("## Finish").nth(1).expect("a closing");
+            [&lint, &phrase, &setting].map(|sentence| finish.contains(sentence.as_str()))
+        };
+        assert_eq!(offered(&lints, &no_phrases()), [true, false, false]);
+        assert_eq!(offered(&nothing, &phrases()), [false, true, false]);
+        assert_eq!(offered(&settings, &no_phrases()), [false, false, true]);
+        assert_eq!(offered(&settings, &phrases()), [false, true, true]);
+    }
+
+    /// A range whose only news is a renamed or removed setting has nothing to choose, so its
+    /// closing says to run the update and does not say "once they have chosen".
+    #[test]
+    fn a_closing_with_only_redirects_does_not_wait_for_a_choice() {
+        let nothing = SchemaPaths::of(&json!({ "type": "object", "properties": {} }));
+        let (from, to) = (version("0.2.0"), Version::Next);
+        let (redirects, catalogue) = (redirects(), no_phrases());
+        let news = News::between(&nothing, &redirects, &catalogue, &from, &to);
+        let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
+        let finish = text.split("## Finish").nth(1).expect("a closing");
+        assert!(text.contains("## Renamed or removed settings"));
+        assert!(!finish.contains("Once they have chosen"), "{finish}");
+        assert!(!finish.contains("cannot be asked"), "{finish}");
+        assert!(finish.contains("deslag update --to"), "{finish}");
+    }
+
     #[test]
     fn update_md_has_each_piece_the_text_prints() {
-        for name in ["Heading", "Closing", "Current", "Nothing new", "No config"] {
+        for name in [
+            "Heading",
+            "Closing",
+            "Closing lints",
+            "Closing phrases",
+            "Closing settings",
+            "Closing update",
+            "Closing update alone",
+            "Current",
+            "Nothing new",
+            "No config",
+        ] {
             assert!(!piece(name).is_empty(), "{name}");
         }
     }

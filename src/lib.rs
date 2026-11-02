@@ -99,7 +99,8 @@ pub enum Error {
         source: io::Error,
     },
 
-    /// The repo could not be walked: a directory could not be read, or an ignore file is broken.
+    /// The repo could not be walked: its root could not be read, or an ignore file is broken. A
+    /// directory below the root that could not be read is skipped, not an error.
     #[error("cannot walk {root}")]
     Walk {
         /// The repo root being walked.

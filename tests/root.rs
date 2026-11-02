@@ -239,3 +239,115 @@ fn init_refuses_a_config_path_check_would_not_look_at_and_writes_nothing() {
     assert!(!repo.root().join("deslag.toml").exists());
     assert!(!repo.root().join("sub/deslag.toml").exists());
 }
+
+/// Makes a directory unreadable, and restores it when dropped so the temp directory
+/// can be removed.
+struct Locked(std::path::PathBuf);
+
+impl Locked {
+    fn new(path: std::path::PathBuf) -> Locked {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000))
+            .expect("a directory to lock");
+        Locked(path)
+    }
+}
+
+impl Drop for Locked {
+    fn drop(&mut self) {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&self.0, std::fs::Permissions::from_mode(0o755));
+    }
+}
+
+/// Whether this process can read a directory with mode 000, as root can.
+fn reads_locked_directories() -> bool {
+    let repo = Repo::new();
+    repo.write("d/f", "");
+    let _locked = Locked::new(repo.root().join("d"));
+    std::fs::read_dir(repo.root().join("d")).is_ok()
+}
+
+#[test]
+#[cfg(unix)]
+fn an_unreadable_directory_is_skipped_and_named_and_the_rest_is_checked() {
+    if reads_locked_directories() {
+        return;
+    }
+    let repo = repo();
+    repo.write("locked/hidden.md", DASHED);
+    let _locked = Locked::new(repo.root().join("locked"));
+
+    for command in ["check", "fix"] {
+        let output = repo.run(&[command, "--dry-run"][..if command == "fix" { 2 } else { 1 }]);
+        let text = stderr(&output);
+
+        assert_eq!(code(&output), 1, "{command}: {text}");
+        let warning = "deslag: warning: cannot read locked, skipped: Permission denied";
+        assert_eq!(text.matches(warning).count(), 1, "{command}: {text}");
+        if command == "check" {
+            assert!(text.find(warning) < text.find("top.md"), "{text}");
+        }
+        assert!(text.contains("top.md"), "{command}: {text}");
+        assert!(text.contains("docs/a.md"), "{command}: {text}");
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn an_unreadable_directory_beside_clean_files_still_exits_zero() {
+    if reads_locked_directories() {
+        return;
+    }
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("deslag.toml", DASHES);
+    repo.write("ok.md", "Fine.\n");
+    repo.write("locked/x.md", "x\n");
+    let _locked = Locked::new(repo.root().join("locked"));
+
+    let output = repo.check();
+
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    assert!(stderr(&output).contains("cannot read locked, skipped"));
+}
+
+/// Runs `deslag check` in `repo` with standard error a pipe whose reader has already gone, and
+/// returns the exit code.
+fn check_into_a_closed_pipe(repo: &Repo) -> Option<i32> {
+    use std::process::{Command, Stdio};
+
+    let mut child = Command::new(env!("CARGO_BIN_EXE_deslag"))
+        .arg("check")
+        .current_dir(repo.root())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("deslag runs");
+    drop(child.stderr.take());
+    child.wait().expect("deslag ends").code()
+}
+
+#[test]
+#[cfg(unix)]
+fn a_closed_stderr_pipe_does_not_change_the_exit_code_of_a_run_with_findings() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("deslag.toml", DASHES);
+    // A report well past the size of a pipe buffer.
+    for index in 0..400 {
+        repo.write(&format!("d/{index}.md"), DASHED);
+    }
+
+    assert_eq!(check_into_a_closed_pipe(&repo), Some(1));
+}
+
+#[test]
+#[cfg(unix)]
+fn a_closed_stderr_pipe_does_not_change_the_exit_code_of_a_run_that_fails() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("deslag.toml", "schema_version = 2\nnot_a_key = 1\n");
+
+    assert_eq!(check_into_a_closed_pipe(&repo), Some(2));
+}

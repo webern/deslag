@@ -33,7 +33,7 @@ use crate::change::{self, Change};
 use crate::config::paths::SINCE;
 use crate::config::{Allow, Config, Lints, Section};
 use crate::document::{Document, Edit, Location, Need};
-use crate::glob::{self, RepoFile};
+use crate::glob::{self, RepoFile, Skipped, Walked};
 use crate::version::Version;
 
 pub use allow::Exemption;
@@ -427,6 +427,53 @@ impl Finding {
     }
 }
 
+/// Where a `{name}` stands in a lint's `message`: the byte range of the braces and the name between
+/// them. A name is letters and `_`.
+fn placeholders(message: &str) -> impl Iterator<Item = (std::ops::Range<usize>, &str)> {
+    let mut from = 0;
+    std::iter::from_fn(move || {
+        while let Some(open) = message[from..].find('{').map(|at| from + at) {
+            let name = message[open + 1..]
+                .split(|ch: char| !(ch.is_ascii_alphabetic() || ch == '_'))
+                .next()
+                .unwrap_or_default();
+            let end = open + 1 + name.len();
+            if !name.is_empty() && message[end..].starts_with('}') {
+                from = end + 1;
+                return Some((open..from, name));
+            }
+            from = open + 1;
+        }
+        None
+    })
+}
+
+/// `message` with each `{name}` that `names` lists replaced by `value(name)`. Any other `{name}`
+/// stays as written; the config refuses one at load ([`unknown_placeholder`]).
+///
+/// A lint lists its names in one constant, and this is how it reads them, so what a config may
+/// write and what a report fills cannot differ.
+pub(crate) fn fill(message: &str, names: &[&str], value: impl Fn(&str) -> String) -> String {
+    let mut filled = String::with_capacity(message.len());
+    let mut done = 0;
+    for (range, name) in placeholders(message) {
+        if names.contains(&name) {
+            filled.push_str(&message[done..range.start]);
+            filled.push_str(&value(name));
+            done = range.end;
+        }
+    }
+    filled.push_str(&message[done..]);
+    filled
+}
+
+/// The first `{name}` in `message` that `names` does not list.
+pub(crate) fn unknown_placeholder<'m>(message: &'m str, names: &[&str]) -> Option<&'m str> {
+    placeholders(message)
+        .map(|(_, name)| name)
+        .find(|name| !names.contains(name))
+}
+
 /// What one run of `deslag check` found.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Report {
@@ -444,6 +491,8 @@ pub struct Report {
     pub exemptions: Vec<Exemption>,
     /// The config's path as a report names it: relative to the repo root when it is under it.
     pub config: String,
+    /// Each directory the walk could not read and so did not check. Nothing in it was linted.
+    pub skipped: Vec<Skipped>,
 }
 
 /// The base a run read a change from, given with `--base` or `--diff`.
@@ -470,6 +519,19 @@ impl Report {
     /// Whether nothing failed: no file fails a lint, and every `allow` entry holds.
     pub fn is_clean(&self) -> bool {
         self.findings.is_empty() && !self.exemptions.iter().any(Exemption::failed)
+    }
+
+    /// A line for each directory the walk skipped, to print before the findings.
+    pub fn warnings(&self) -> Vec<String> {
+        self.skipped
+            .iter()
+            .map(|skipped| {
+                format!(
+                    "deslag: warning: cannot read {}, skipped: {}",
+                    skipped.path, skipped.error
+                )
+            })
+            .collect()
     }
 
     /// The entries that did not hold.
@@ -590,6 +652,7 @@ impl Report {
             }),
             exemptions,
             config: self.config.clone(),
+            skipped: self.skipped.clone(),
         }
     }
 }
@@ -610,7 +673,11 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         ..Report::default()
     };
 
-    let walked = glob::walk(root)?;
+    let Walked {
+        files: walked,
+        skipped,
+    } = glob::walk(root)?;
+    report.skipped = skipped;
     let known: BTreeSet<String> = match config.has_allow() {
         true => walked.iter().map(|file| file.relative.clone()).collect(),
         false => BTreeSet::new(),
@@ -640,7 +707,7 @@ pub(crate) fn selected<'c>(
     root: &Path,
     config: &'c Config,
 ) -> Result<Vec<(RepoFile, &'c Section)>, Error> {
-    select(glob::walk(root)?, config)
+    select(glob::walk(root)?.files, config)
 }
 
 /// The `files` that the config selects, each with the section that selects it.
@@ -786,8 +853,37 @@ mod tests {
     use std::fs;
     use std::path::Path;
 
-    use super::{Lint, decode};
+    use super::{Lint, decode, fill, unknown_placeholder};
     use crate::document::{Fences, Reader, Stack};
+
+    /// A name in braces is a placeholder when it is letters and `_`; the other braces are text.
+    #[test]
+    fn fill_replaces_the_listed_names_and_leaves_the_rest() {
+        let value = |name: &str| name.to_uppercase();
+        let names = ["path", "max_size_bytes"];
+        let cases = [
+            (
+                "Cut {path} to {max_size_bytes}.",
+                "Cut PATH to MAX_SIZE_BYTES.",
+            ),
+            ("{size_bytes} stays", "{size_bytes} stays"),
+            ("{{path}}", "{PATH}"),
+            ("{ path } {} {pa th} {path", "{ path } {} {pa th} {path"),
+            ("a {b} {path} c", "a {b} PATH c"),
+        ];
+        for (message, expected) in cases {
+            assert_eq!(fill(message, &names, value), expected, "{message}");
+        }
+    }
+
+    /// The first name a lint does not list is the one named; a message of listed names is fine.
+    #[test]
+    fn unknown_placeholder_names_the_first_unlisted_name() {
+        let names = ["path"];
+        assert_eq!(unknown_placeholder("{path} {x_y} {z}", &names), Some("x_y"));
+        assert_eq!(unknown_placeholder("{path} {path}", &names), None);
+        assert_eq!(unknown_placeholder("{} { a } {1}", &names), None);
+    }
 
     /// A valid file reads as it is. An invalid byte is one `$` wherever it falls, so the text is
     /// as long as the bytes: alone, in front of a multi-byte character, cut off at the end, or
@@ -847,5 +943,150 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// A message holding each of `names` in angle brackets, and what a report fills it to when
+    /// `value` gives the name's text.
+    fn message_of(names: &[&str], value: impl Fn(&str) -> String) -> (String, String) {
+        let message: String = names.iter().map(|name| format!("<{{{name}}}>")).collect();
+        let filled: String = names
+            .iter()
+            .map(|name| format!("<{}>", value(name)))
+            .collect();
+        (message, filled)
+    }
+
+    /// A `{name}` a lint lists that its render does not fill panics there, or prints as written.
+    /// Each test below renders a message holding every name the lint lists, so that shows here
+    /// and not in a report.
+    #[test]
+    fn max_size_bytes_fills_every_name_it_lists() {
+        use super::max_size_bytes::{Bloat, Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "max_size_bytes" => "10".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let bloat = Bloat {
+            size_bytes: 33,
+            budget: 10,
+            message: Some(message),
+        };
+        assert!(render("a.md", &Over::Bloat(bloat)).contains(&filled));
+    }
+
+    #[test]
+    fn max_emphasis_fills_every_name_it_lists() {
+        use super::max_emphasis::{Measure, Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "free_spans" => "3".to_string(),
+            "max_percent" => "5".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let over = Over {
+            measure: Measure::default(),
+            free_spans: 3,
+            max_percent: 5.0,
+            message: Some(message),
+        };
+        assert!(render("a.md", &over).contains(&filled));
+    }
+
+    #[test]
+    fn repo_layout_fills_every_name_it_lists() {
+        use super::repo_layout::{Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "heading" => "Layout".to_string(),
+            "min_entries" => "2".to_string(),
+            "max_entries" => "9".to_string(),
+            "max_width" => "80".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let over = Over {
+            heading: "Layout".to_string(),
+            min_entries: 2,
+            max_entries: 9,
+            max_width: 80,
+            problems: Vec::new(),
+            message: Some(message),
+        };
+        assert!(render("a.md", &over).contains(&filled));
+    }
+
+    #[test]
+    fn density_fills_every_name_it_lists() {
+        use super::density::{Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "max_paragraph_chars" => "700".to_string(),
+            "max_item_chars" => "300".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let over = Over {
+            blocks: Vec::new(),
+            max_paragraph_chars: 700,
+            max_item_chars: 300,
+            message: Some(message),
+        };
+        assert!(render("a.md", &over).contains(&filled));
+    }
+
+    /// The lints whose message may hold `{path}` only.
+    #[test]
+    fn the_path_only_lints_fill_path() {
+        use super::{
+            banned_chars, banned_phrases, not_at_all, possessive_own, verbs_no_nouns, verbs_nothing,
+        };
+        let path_only = |names: &[&str]| {
+            assert_eq!(names, ["path"]);
+            message_of(names, |_| "a.md".to_string())
+        };
+        let (message, filled) = path_only(banned_chars::PLACEHOLDERS);
+        let over = banned_chars::Over {
+            banned: Vec::new(),
+            message: Some(message),
+        };
+        assert!(banned_chars::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(banned_phrases::PLACEHOLDERS);
+        let over = banned_phrases::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(banned_phrases::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(not_at_all::PLACEHOLDERS);
+        let over = not_at_all::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(not_at_all::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(possessive_own::PLACEHOLDERS);
+        let over = possessive_own::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(possessive_own::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(verbs_no_nouns::PLACEHOLDERS);
+        let over = verbs_no_nouns::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(verbs_no_nouns::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(verbs_nothing::PLACEHOLDERS);
+        let over = verbs_nothing::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(verbs_nothing::render("a.md", &over).contains(&filled));
     }
 }

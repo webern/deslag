@@ -141,13 +141,12 @@ endpoint that cannot be asked is skipped without a run, and said so.
 A 401, 402 or 413 is about
 the key, the credit or the request, so it stops the run. A network error here (connection refused, DNS, a
 dropped connection, or a timeout through every wait when the endpoint listing, asked once more, does not
-answer either) is no endpoint's fault: it does not switch anything; it stops the run with exit 2 and keeps it,
+answer either) is no endpoint's fault: it does not switch to another endpoint; it stops the run with exit 2 and keeps it,
 and the same command continues it once the network is back.
 
 If every endpoint fails it stops with exit 2
 (exit 5 when the last run ended `failed`), naming each and why; every run is abandoned, the last too, so
-the same command (with or without `--again`) starts a new run at the first endpoint and does not replay anything
-that was refused.
+the same command (with or without `--again`) starts a new run at the first endpoint and does not replay a refused call.
 
 If every endpoint timed out, the network here may be the cause, and the message says so.
 A run's `run.json` and `runs.tsv` row record the endpoint it used, and the quantisation, whichever
@@ -207,7 +206,7 @@ kept in `run.json` as `cut_off`; a rerun pays for none of it again.
 Unsettled items. An item the adjudicator never settled after its retries does not stop `judge`: the
 word is left out of `labelled.conllu` with its whole sentence (a sentence with an unsettled word is
 dropped, the header says `# left_out = N`), `unsettled.tsv` lists the words, and `judge` says how many
-and exits 0. `--strict` exits 3 and does not finish anything instead (an open item is never left out silently).
+and exits 0. `--strict` exits 3 and does not finish the merge instead (an open item is never left out silently).
 
 The report grades the pipeline on every
 word of the sample: the words of a sentence left out count as wrong in the pipeline line (and in a
@@ -289,7 +288,7 @@ not continue, and what differs), so a rerun never reads replies given to an olde
 
 Running `judge` again on a merge that is finished
 (`labelled.conllu` written, the adjudicator's run complete with no item open, the same scope and
-`--trains`) does not do anything: it says "already finished", does not delete anything, does not ask anything and exits 0.
+`--trains`) does not redo the work: it says "already finished", does not delete a file, does not call a model and exits 0.
 `--again` redoes it.
 
 Exit codes:
@@ -394,9 +393,7 @@ The loop, one pass of `judge` at a time:
 
    `label.py handoff-agent --request PATH` prints the prompt a process gets for one (`prompts/handoff-agent.md`
    with `{request}` filled), and `handoff-agent --sha256` the template's sha256.
-3.
-
-   `label.py handoff-run --dir D --into M [--parallel 6] [--claude PATH]` answers every request still without
+3. `label.py handoff-run --dir D --into M [--parallel 6] [--claude PATH]` answers every request still without
    a reply, `--parallel` processes at once. A process writes only the answer lines to the `reply_path` its
    request names and replies with its exact model id.
 
@@ -412,32 +409,51 @@ The loop, one pass of `judge` at a time:
    ```
 
    then checks the call, copies a reply that passed every check into the run's folder, and removes the
-   directory. The reply is staged as `<call>.<12 hex of request_sha256>.reply.txt.incoming`, which nothing
+   directory.
+
+   The reply is staged as `<call>.<12 hex of request_sha256>.reply.txt.incoming`, which nothing
    reads, and renamed to `<call>.<12 hex of request_sha256>.reply.txt` once the round's final checks pass
    (see Silver).
 
-   `--tools Read,Write` gives the process those two tools and
-   no shell; `--strict-mcp-config` with no `--mcp-config` gives it no MCP server, since the request holds
-   sentences from the corpus, which may read like instructions; `--safe-mode` gives it no `CLAUDE.md`, skill,
-   hook or plugin; `--permission-mode acceptEdits` lets it write inside its directory without a prompt, which
-   `-p` could not answer, and does not grant anything outside.
+   The flags:
 
-   The first call that passes every check writes
-   `handoff/<run>/agent.json`: `harness` (`claude-code`), `version` (`claude --version`), `agent_type`,
-   `model_reported` (the model id the process's init event named), `effort` (`default`), `tools`
-   (`Read,Write`), `prompt_sha256` (the template's), `safe_mode` (true), `args` (the argument list above,
-   without the prompt) and `cwd` (the rule for the working directory).
+   - `--tools Read,Write` gives the process those two tools and no shell;
+   - `--strict-mcp-config` with no `--mcp-config` gives it no MCP server, since the request holds
+     sentences from the corpus, which may read like instructions;
+   - `--safe-mode` gives it no `CLAUDE.md`, skill, hook or plugin;
+   - `--permission-mode acceptEdits` lets it write inside its directory without a prompt, which
+     `-p` could not answer, and does not grant a permission outside it.
+
+   The first call that passes every check writes `handoff/<run>/agent.json`, with these keys:
+
+   - `harness` (`claude-code`);
+   - `version` (`claude --version`);
+   - `agent_type`;
+   - `model_reported` (the model id the process's init event named);
+   - `effort` (`default`);
+   - `tools` (`Read,Write`);
+   - `prompt_sha256` (the template's);
+   - `safe_mode` (true);
+   - `args` (the argument list above, without the prompt);
+   - `cwd` (the rule for the working directory).
 
    Every later call must report the same
    model.
 
-   A round refuses to start if `agent.json` is there and differs from what it would write. Exit 0 when
-   every request has its reply; 2 when a call failed a check, the round's final checks failed or the round
-   was refused; 7 when a call met the Claude plan's usage limit (wait for the reset, then run handoff-run
-   again); 6 when a process wrote no reply (run handoff-run again); 130 on an interrupt.
+   A round refuses to start if `agent.json` is there and differs from what it would write.
+
+   The exit codes:
+
+   - 0 when every request has its reply;
+   - 2 when a call failed a check, the round's final checks failed or the round was refused;
+   - 7 when a call met the Claude plan's usage limit (wait for the reset, then run handoff-run again);
+   - 6 when a process wrote no reply (run handoff-run again);
+   - 130 on an interrupt.
 
    When one round has both a failed call and a usage limit, 2 wins.
-4. The same `judge` command, run again once handoff-run has returned, reads the replies. A reply is read only
+4. The same `judge` command, run again once handoff-run has returned, reads the replies.
+
+   A reply is read only
    with an `agent.json` that has every key, `safe_mode` true, the argument list handoff-run uses now, the tools
    `Read,Write`, a `model_reported` that is the pinned model (or a dated version) and the template's current
    sha256.
@@ -448,7 +464,9 @@ The loop, one pass of `judge` at a time:
 
    An accepted reply is saved into `raw/opus/<run>/` as an OpenRouter reply is, booked in the ledger at
    cost 0 with provider `claude-code` and tokens `-`, and `agent.json` goes into `run.json` and the `settings`
-   of `runs.tsv` (tokens and seconds there are `-`, which is not 0). Items still open go to a retry round,
+   of `runs.tsv` (tokens and seconds there are `-`, which is not 0).
+
+   Items still open go to a retry round,
    which is a new set of requests and another exit 6, until none are or the retries are spent.
 
 A reply file that is empty or not valid UTF-8 is not read: `judge` and `handoff` warn, naming the file, and the
@@ -506,9 +524,7 @@ Each part is a sample of its own. With `D` the part's directory and `M` its merg
 
    A run asks the batch texts it read under that lock.
 2. `spacy.sh D` tags the part with spaCy and runs `label.py register --name spacy --model en-core-web-trf`.
-3.
-
-   `label.py judge --dir D --into M --max-usd USD --trains yes`, with the merge's voter flags, writes the
+3. `label.py judge --dir D --into M --max-usd USD --trains yes`, with the merge's voter flags, writes the
    adjudicator's requests and exits 6; `label.py handoff-run --dir D --into M` answers them; the same `judge`
    command run again reads them.
 
@@ -549,7 +565,7 @@ run at once:
 - `judge`, once the merge is judged to its labels: the commit, the draw, the voters it judges, the
   adjudicator, `min_voters`, the adjudicator's model, and the agent of a handoff adjudicator's run;
 - `handoff-run`, after a round whose replies were put in place: the commit, the draw and the agent;
-- `judge`, reading the replies, holds `agent.json`'s version and args to the lock's `agent`, and does not write anything.
+- `judge`, reading the replies, holds `agent.json`'s version and args to the lock's `agent`, and does not write the lock.
 
 A step that is refused, fails or stops, and a smoke run, never writes the lock. So the first step that counts
 writes it, and each later one adds what it is the first to know.
@@ -568,7 +584,7 @@ adjudicator's Claude Code changed, `judge --again` and `handoff-run` on that par
 
 `deslag-gold silver build --check-part` holds a part that passes to the same lock, field by field from the part's files (its runs' commit, its manifest header, `voters.tsv`, `adjudicator.json`, its runs' hashes and agent record), refuses it the same way, and adds the fields the lock lacks.
 
-The first part to pass its preflight writes the lock if no step has, except after a reset: with `lock-resets.jsonl` beside and no `lock.json`, it holds a part to nothing and does not write anything, so the next `label.py` step writes the new lock.
+The first part to pass its preflight writes the lock if no step has, except after a reset: with `lock-resets.jsonl` beside and no `lock.json`, it holds a part to nothing and does not write the lock, so the next `label.py` step writes the new lock.
 
 Confinement. Measured with Claude Code 2.1.293 in `-p` mode: without `--safe-mode` the user's `CLAUDE.md`
 and any `CLAUDE.md` above the working directory reach the process; with it none does, and the subscription
@@ -692,7 +708,7 @@ output, `stream.jsonl`. Run it again whenever Claude Code changes: handoff-run r
 version.
 
 Status. `label.py status --dir D [--into M] [--max-usd USD] [--gold-bin PATH]` prints counts and run ids
-only, never a tag or a word, and does not write anything in `D`. Without `--into` it reads `merge-spacy` in a part of a
+only, never a tag or a word, and does not write a file in `D`. Without `--into` it reads `merge-spacy` in a part of a
 draw (the merge the assembler reads) and `merge` in any other sample:
 
 ```
@@ -747,7 +763,7 @@ Makefile), so the run can change them.
   at once, each in a process of its own, then `spacy.sh`.
 
   `LABEL_FLAGS` reach `label.py tag`, so
-  `LABEL_FLAGS="--limit 1"` is a smoke run, and `--dry-run` does not send anything; with either, spaCy does not run, so
+  `LABEL_FLAGS="--limit 1"` is a smoke run, and `--dry-run` does not send a request; with either, spaCy does not run, so
   that nothing writes the lock.
 
   A voter that fails is named with its exit code (`the voters that failed: qwen
@@ -855,22 +871,16 @@ The batch, `silver/NAME/`:
 The audit. The batch holds its own: the owner's answers are part of what it is checked against.
 
 1. `silver build` with no `--audit`: a draft in `.label/silver/draft/NAME`.
-2.
-
-   `deslag-gold audit --blind --from .label/silver/draft/NAME/silver.conllu --out .label/silver/audit` draws 50
+2. `deslag-gold audit --blind --from .label/silver/draft/NAME/silver.conllu --out .label/silver/audit` draws 50
    sentences at random and writes `queue.conllu` with no UPOS, FEATS, `Prov=` or `Runs=`, and `labels.conllu`
    with silver's labels of them.
 
    The directory is never under `tests/gold/`, whose queues reserve their
    repositories; `audit` refuses a path there, and a directory that holds a queue or labels already, which may
    be under review.
-3.
-
-   The owner reviews `queue.conllu` in `deslag-gold web`. The review pre-fills deslag's readings at Likely and
+3. The owner reviews `queue.conllu` in `deslag-gold web`. The review pre-fills deslag's readings at Likely and
    above, as for `owner.conllu`, and he may reject a sentence.
-4.
-
-   `deslag-gold audit --score --queue Q --labels L --bar 95.0` refuses a queue that is not `exam.silver = yes`
+4. `deslag-gold audit --score --queue Q --labels L --bar 95.0` refuses a queue that is not `exam.silver = yes`
    or has a sentence neither reviewed nor rejected.
 
    It prints silver's accuracy on the part of speech and on
@@ -881,9 +891,7 @@ The audit. The batch holds its own: the owner's answers are part of what it is c
    when the score is under the bar, or when a bar is given and no word was scored, after the report and
    the file are written. Exit 1 below the bar is expected and is a result to record; the way on after it
    is step 5 with `--accept-below-bar`.
-5.
-
-   `silver build ... --audit .label/silver/audit --archive-sha256 SHA --out .label/silver/batch/NAME`: the
+5. `silver build ... --audit .label/silver/audit --archive-sha256 SHA --out .label/silver/batch/NAME`: the
    rejected sentences leave `silver.conllu` and are counted in `record/drops.tsv`, and the datasheet leads with
    the score.
 
@@ -893,7 +901,7 @@ The audit. The batch holds its own: the owner's answers are part of what it is c
 
    Without them `silver check` refuses a
    low bar or a small audit, and `silver standing` refuses those and a score under the bar. An empty acceptance
-   does not accept anything: `silver build` refuses one, and `silver check` an empty file.
+   does not accept a batch below the bar: `silver build` refuses one, and `silver check` an empty file.
 
 The checks. `deslag-gold silver check [--silver DIR] [--batch DIR ...]` takes each batch against what it recorded and never against the checkout:
 
@@ -909,7 +917,7 @@ The checks. `deslag-gold silver check [--silver DIR] [--batch DIR ...]` takes ea
 
 `record/kit.tsv` carries `check_version` (1), and a check that does not know a batch's version refuses it. The
 rules are frozen once a batch is live: a changed rule is a new version, with the old rules kept beside it, so a
-batch that passes once passes forever. The check does not read anything of the machine it runs on (not `HOME`, not the
+batch that passes once passes forever. The check does not read the state of the machine it runs on (not `HOME`, not the
 temp directory, not the checkout), so it gives the same verdict on every machine.
 
 `tools/exam/tests/silver-fixture/` is a small batch, committed, that a unit test holds to them; regenerate it
@@ -956,7 +964,7 @@ run ids hold across them. They live in `${XDG_STATE_HOME:-$HOME/.local/state}/de
 Every time a checkout opens it,
 the rows of that checkout's `.label/ledger.tsv` that the state ledger lacks are added, by call id and
 under the lock, so what a checkout spent counts however many other checkouts opened the state
-directory before it, and opening again does not add anything.
+directory before it, and opening again does not add a row.
 
 The next run id is above the highest in the
 state ledger, in the checkout's ledger, in any `.label/**/runs.tsv` and in any `raw/<voter>/rN` of

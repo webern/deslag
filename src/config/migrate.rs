@@ -208,7 +208,15 @@ fn means_what_one_meant(
             .collect::<Result<Vec<Lints>, String>>()?;
         wrong.extend(compare(section, &reading.stamp, &lints(table)?, &overrides));
     }
-    data_differences("", &outside_lints(before), &outside_lints(file), &mut wrong);
+    let (before, defaults_before) = outside_lints(before);
+    let (file, defaults_after) = outside_lints(file);
+    data_differences(
+        "",
+        &before,
+        &file,
+        (Some(&defaults_before), Some(&defaults_after)),
+        &mut wrong,
+    );
     if wrong.is_empty() {
         Ok(())
     } else {
@@ -218,11 +226,14 @@ fn means_what_one_meant(
 
 /// `file` without what a migration changes by design (the schema and the stamp), without the
 /// `lints` of each section and override, which are compared as what they mean, and without a key
-/// that is set to its default, which means what leaving it out does.
-fn outside_lints(mut file: Value) -> Value {
+/// that is set to its default, which means what leaving it out does. It also gives the keys it
+/// took out for being at their default, in a tree shaped like the file, so that a difference can
+/// say the default was written.
+fn outside_lints(mut file: Value) -> (Value, Value) {
     let schema = crate::config::schema();
+    let mut defaults = serde_json::Map::new();
     let Some(top) = file.as_object_mut() else {
-        return file;
+        return (file, Value::Object(defaults));
     };
     top.remove("schema_version");
     top.remove("deslag_version");
@@ -232,16 +243,26 @@ fn outside_lints(mut file: Value) -> Value {
         };
         section.remove("lints");
         let definition = format!("{}File", capitalised(name));
-        without_defaults(section, &schema, &definition);
+        let mut taken = without_defaults(section, &schema, &definition);
         let overrides = section.get_mut("overrides").and_then(Value::as_array_mut);
+        let mut taken_overrides = Vec::new();
         for over in overrides.into_iter().flatten() {
-            if let Some(over) = over.as_object_mut() {
-                over.remove("lints");
-                without_defaults(over, &schema, "OverrideFile");
-            }
+            taken_overrides.push(match over.as_object_mut() {
+                Some(over) => {
+                    over.remove("lints");
+                    Value::Object(without_defaults(over, &schema, "OverrideFile"))
+                }
+                None => Value::Null,
+            });
         }
+        // The defaults of the overrides that remain, by position. A side with no `overrides` key
+        // is not listed here, so a difference never reads this list as a default that was written.
+        if section.contains_key("overrides") {
+            taken.insert("overrides".to_string(), Value::Array(taken_overrides));
+        }
+        defaults.insert(name.clone(), Value::Object(taken));
     }
-    file
+    (file, Value::Object(defaults))
 }
 
 /// `name` with its first letter capital: `md` is `Md`, as the schema names the definitions.
@@ -253,31 +274,62 @@ fn capitalised(name: &str) -> String {
         .unwrap_or_default()
 }
 
-/// Takes out of `table` each key that holds the default the schema gives it in `definition`.
-fn without_defaults(table: &mut serde_json::Map<String, Value>, schema: &Value, definition: &str) {
+/// Takes out of `table` each key that holds the default the schema gives it in `definition`, and
+/// gives what it took out.
+fn without_defaults(
+    table: &mut serde_json::Map<String, Value>,
+    schema: &Value,
+    definition: &str,
+) -> serde_json::Map<String, Value> {
+    let mut taken = serde_json::Map::new();
     let Some(properties) = schema
         .pointer(&format!("/definitions/{definition}/properties"))
         .and_then(Value::as_object)
     else {
-        return;
+        return taken;
     };
     table.retain(|key, value| {
-        properties
+        let default = properties
             .get(key)
-            .and_then(|property| property.get("default"))
-            != Some(&*value)
+            .and_then(|property| property.get("default"));
+        if default == Some(&*value) {
+            taken.insert(key.clone(), value.clone());
+            false
+        } else {
+            true
+        }
     });
+    taken
 }
 
 /// Adds to `found` a line for each place `old` and `new` differ, named by its path from the top
 /// level, `path` being the path of the two. A table is compared member by member, so that the line
-/// names the key that differs and not the table around it.
+/// names the key that differs and not the table around it. `defaults` is what [`outside_lints`]
+/// took out of each for being a default, at the same place.
 ///
 /// A list is a set, and only `overrides` is read in order, because the last override that matches a
 /// file wins. A set whose members differ by one, one gone and one new, is compared as that pair, so
 /// the line names the key of the entry that changed; any other difference is members added or
 /// dropped.
-fn data_differences(path: &str, old: &Value, new: &Value, found: &mut Vec<String>) {
+fn data_differences(
+    path: &str,
+    old: &Value,
+    new: &Value,
+    defaults: (Option<&Value>, Option<&Value>),
+    found: &mut Vec<String>,
+) {
+    let below = |key: &str| {
+        (
+            defaults.0.and_then(|d| d.get(key)),
+            defaults.1.and_then(|d| d.get(key)),
+        )
+    };
+    let at_index = |index: usize| {
+        (
+            defaults.0.and_then(|d| d.get(index)),
+            defaults.1.and_then(|d| d.get(index)),
+        )
+    };
     let enter = |path: &str, key: &str| {
         if path.is_empty() {
             key.to_string()
@@ -291,15 +343,30 @@ fn data_differences(path: &str, old: &Value, new: &Value, found: &mut Vec<String
             for key in keys {
                 let at = enter(path, key);
                 match (old.get(key), new.get(key)) {
-                    (Some(old), Some(new)) => data_differences(&at, old, new, found),
-                    (Some(old), None) => found.push(format!(
-                        "{at}: it is {} at schema 1 and not set at schema 2",
-                        shown(old)
-                    )),
-                    (None, Some(new)) => found.push(format!(
-                        "{at}: it is not set at schema 1 and {} at schema 2",
-                        shown(new)
-                    )),
+                    (Some(old), Some(new)) => data_differences(&at, old, new, below(key), found),
+                    // A default the text wrote is what it said, not "not set".
+                    (Some(old), None) => found.push(match defaults.1.and_then(|d| d.get(key)) {
+                        Some(written) => format!(
+                            "{at}: it is {} at schema 1 and {}, the default, at schema 2",
+                            shown(old),
+                            shown(written)
+                        ),
+                        None => format!(
+                            "{at}: it is {} at schema 1 and not set at schema 2",
+                            shown(old)
+                        ),
+                    }),
+                    (None, Some(new)) => found.push(match defaults.0.and_then(|d| d.get(key)) {
+                        Some(written) => format!(
+                            "{at}: it is {}, the default, at schema 1 and {} at schema 2",
+                            shown(written),
+                            shown(new)
+                        ),
+                        None => format!(
+                            "{at}: it is not set at schema 1 and {} at schema 2",
+                            shown(new)
+                        ),
+                    }),
                     (None, None) => {}
                 }
             }
@@ -308,7 +375,13 @@ fn data_differences(path: &str, old: &Value, new: &Value, found: &mut Vec<String
             if old.len() == new.len() && path.ends_with("overrides") =>
         {
             for (index, (old, new)) in old.iter().zip(new).enumerate() {
-                data_differences(&format!("{path}[{index}]"), old, new, found);
+                data_differences(
+                    &format!("{path}[{index}]"),
+                    old,
+                    new,
+                    at_index(index),
+                    found,
+                );
             }
         }
         // The same members in another order.
@@ -320,7 +393,7 @@ fn data_differences(path: &str, old: &Value, new: &Value, found: &mut Vec<String
                 && old.len() == new.len()
             {
                 let index = old.iter().position(|value| value == *gone).unwrap_or(0);
-                data_differences(&format!("{path}[{index}]"), gone, came, found);
+                data_differences(&format!("{path}[{index}]"), gone, came, (None, None), found);
                 return;
             }
             let list = |values: &[&Value]| {
@@ -1328,6 +1401,28 @@ mod tests {
     }
 
     #[test]
+    fn a_default_written_on_one_side_is_said_to_be_the_default() {
+        let copy = "schema_version: 1\nmd:\n  globs: [\"*.md\"]\n  overrides:\n    - globs: \
+                    [\"a/**\"]\n      exclude: []\n";
+        let current = "schema_version: 2\nmd:\n  globs: [\"y/*.md\"]\n  overrides:\n    - globs: \
+                       [\"a/**\"]\n      exclude: [\"z\"]\n";
+        assert_eq!(
+            said_of_yaml(copy, current),
+            [
+                "md.globs: it is [\"*.md\"], the default, at schema 1 and [\"y/*.md\"] at schema 2",
+                "md.overrides[0].exclude: it is [], the default, at schema 1 and [\"z\"] at schema 2",
+            ]
+        );
+        // And the other way round.
+        let copy = copy.replace("[\"*.md\"]", "[\"y/*.md\"]");
+        let current = current.replace("[\"y/*.md\"]", "[\"*.md\"]");
+        assert_eq!(
+            said_of_yaml(&copy, &current)[0],
+            "md.globs: it is [\"y/*.md\"] at schema 1 and [\"*.md\"], the default, at schema 2"
+        );
+    }
+
+    #[test]
     fn a_yaml_config_is_refused_with_every_edit() {
         let refusal = migrate(
             "schema_version: 1\nmd:\n  lints:\n    banned_phrases: {}\n",
@@ -1510,8 +1605,11 @@ mod tests {
             change(|new| {
                 new["md"]["globs"] = serde_json::json!(["*.md", "x/*.md"]);
             }),
-            // The old globs are the default, which is the same as none.
-            ["md.globs: it is not set at schema 1 and [\"*.md\",\"x/*.md\"] at schema 2"]
+            // The old text wrote the default itself, so it is not "not set".
+            [
+                "md.globs: it is [\"*.md\"], the default, at schema 1 and [\"*.md\",\"x/*.md\"] \
+                 at schema 2"
+            ]
         );
         assert_eq!(
             change(|new| {

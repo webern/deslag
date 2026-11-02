@@ -929,7 +929,10 @@ mod tests {
 
         // `update` of the edited config gives the same refusal, not one about reading a copy.
         let updated = run(&dir, false, None, &nothing_new()).expect_err("a directory beside it");
-        assert!(matches!(updated, Error::CopyIsDirectory { .. }), "{updated}");
+        assert!(
+            matches!(updated, Error::CopyIsDirectory { .. }),
+            "{updated}"
+        );
         assert!(updated.to_string().contains("is a directory"), "{updated}");
     }
 

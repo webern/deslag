@@ -270,8 +270,13 @@ fn without_defaults(table: &mut serde_json::Map<String, Value>, schema: &Value, 
 }
 
 /// Adds to `found` a line for each place `old` and `new` differ, named by its path from the top
-/// level, `path` being the path of the two. A table or a list of the same length is compared member
-/// by member, so that the line names the key that differs and not the table around it.
+/// level, `path` being the path of the two. A table is compared member by member, so that the line
+/// names the key that differs and not the table around it.
+///
+/// A list is a set, and only `overrides` is read in order, because the last override that matches a
+/// file wins. A set whose members differ by one, one gone and one new, is compared as that pair, so
+/// the line names the key of the entry that changed; any other difference is members added or
+/// dropped.
 fn data_differences(path: &str, old: &Value, new: &Value, found: &mut Vec<String>) {
     let enter = |path: &str, key: &str| {
         if path.is_empty() {
@@ -299,13 +304,25 @@ fn data_differences(path: &str, old: &Value, new: &Value, found: &mut Vec<String
                 }
             }
         }
-        (Value::Array(old), Value::Array(new)) if old.len() == new.len() => {
+        (Value::Array(old), Value::Array(new))
+            if old.len() == new.len() && path.ends_with("overrides") =>
+        {
             for (index, (old, new)) in old.iter().zip(new).enumerate() {
                 data_differences(&format!("{path}[{index}]"), old, new, found);
             }
         }
+        // The same members in another order.
+        (Value::Array(old), Value::Array(new))
+            if old.len() == new.len() && !left_over(old, new) => {}
         (Value::Array(old), Value::Array(new)) if left_over(old, new) => {
             let (dropped, added) = (not_in(old, new), not_in(new, old));
+            if let ([gone], [came]) = (dropped.as_slice(), added.as_slice())
+                && old.len() == new.len()
+            {
+                let index = old.iter().position(|value| value == *gone).unwrap_or(0);
+                data_differences(&format!("{path}[{index}]"), gone, came, found);
+                return;
+            }
             let list = |values: &[&Value]| {
                 values
                     .iter()
@@ -1265,6 +1282,49 @@ mod tests {
             said.iter().any(|line| line.starts_with("md.exclude: ")),
             "{said:#?}"
         );
+    }
+
+    /// What `check_copy` says of the YAML `copy` of schema 1 against the YAML `current`.
+    fn said_of_yaml(copy: &str, current: &str) -> Vec<String> {
+        let schema = NonZeroU32::new(1).expect("one");
+        match check_copy(copy, schema, current, ConfigFormat::Yaml) {
+            Ok(()) => Vec::new(),
+            Err(said) => said,
+        }
+    }
+
+    #[test]
+    fn a_pure_reordering_of_a_list_is_no_difference() {
+        let copy = "schema_version: 1\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                    quote: \"a\", reason: r}\n    - {lint: banned_chars, path: q.md, line: \"a | b\", \
+                    reason: r}\n  globs: [\"x/*.md\", \"y/*.md\"]\n";
+        let current = "schema_version: 2\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                       line: \"a | b\", reason: r}\n    - {lint: banned_chars, path: q.md, quote: \
+                       \"a\", reason: r}\n  globs: [\"y/*.md\", \"x/*.md\"]\n";
+        assert_eq!(said_of_yaml(copy, current), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_reordering_with_one_entry_changed_reports_that_entry_only() {
+        let copy = "schema_version: 1\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                    quote: \"a\", reason: r}\n    - {lint: banned_chars, path: q.md, line: \"a | b\", \
+                    reason: r}\n";
+        let current = "schema_version: 2\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                       line: \"a | b\", reason: r}\n    - {lint: banned_chars, path: q.md, quote: \
+                       \"z\", reason: r}\n";
+        assert_eq!(
+            said_of_yaml(copy, current),
+            ["md.allow[0].quote: it is \"a\" at schema 1 and \"z\" at schema 2"]
+        );
+    }
+
+    #[test]
+    fn overrides_are_still_compared_in_order() {
+        let copy = "schema_version: 1\nmd:\n  overrides:\n    - globs: [\"a/**\"]\n    - globs: \
+                    [\"b/**\"]\n";
+        let current = "schema_version: 2\nmd:\n  overrides:\n    - globs: [\"b/**\"]\n    - globs: \
+                       [\"a/**\"]\n";
+        assert!(!said_of_yaml(copy, current).is_empty());
     }
 
     #[test]

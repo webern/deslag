@@ -21,7 +21,8 @@ pub(super) fn places(text: &str) -> Vec<(usize, usize)> {
         let bytes = line.as_bytes();
         let mut at = 0;
         while at < bytes.len() {
-            let rest = &line[at..];
+            // A step may land inside a wide character, which no delimiter starts in.
+            let rest = line.get(at..).unwrap_or("");
             match state {
                 In::MultiBasic => {
                     if bytes[at] == b'\\' {
@@ -135,5 +136,13 @@ mod tests {
         );
         // A comment twice is kept twice.
         assert!(kept("# a\n# a\n", "# a\n").is_err());
+    }
+
+    #[test]
+    fn a_wide_character_before_a_comment_or_in_a_string_is_no_trouble() {
+        assert_eq!(
+            of("\u{feff}x = \"\u{e9}\\\u{e9}\" # a\n'\u{e9}' = 1 # b\n"),
+            vec!["# a", "# b"]
+        );
     }
 }

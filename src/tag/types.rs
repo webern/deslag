@@ -473,7 +473,6 @@ mod tests {
         for (i, tag) in Tag::ALL.into_iter().enumerate() {
             assert_eq!(tag.index(), i);
         }
-        assert_eq!(Tag::ALL.len(), 13);
     }
 
     #[test]

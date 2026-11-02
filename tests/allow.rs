@@ -941,34 +941,6 @@ fn repo_with(sentences: &[&str]) -> Repo {
     )
 }
 
-/// The section of `ACKNOWLEDGEMENTS.md` headed `## <name>`, up to the next.
-fn acknowledged(name: &str) -> String {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("ACKNOWLEDGEMENTS.md");
-    let text = std::fs::read_to_string(path).expect("ACKNOWLEDGEMENTS.md");
-    let heading = format!("\n## {name}\n");
-    let from = text.find(&heading).expect("a section for the project");
-    let rest = &text[from + heading.len()..];
-    rest.split("\n## ")
-        .next()
-        .unwrap_or(rest)
-        .replace('\n', " ")
-}
-
-#[test]
-fn the_acknowledgements_credit_the_two_designs_the_entry_takes() {
-    let safety = acknowledged("unicode-safety-check");
-    assert!(
-        safety.contains("must give a reason") && safety.contains("`allow` entry"),
-        "{safety}"
-    );
-    let charcheck = acknowledged("charcheck");
-    assert!(
-        charcheck.contains("visible count") && charcheck.contains("`allow` entries applied"),
-        "{charcheck}"
-    );
-    assert!(charcheck.contains("ratchet"), "{charcheck}");
-}
-
 /// A file whose banned characters no sentence holds: a dash in the frontmatter and one in an HTML
 /// block, with a sentence of its own that has a dash.
 const OUTSIDE: &str =

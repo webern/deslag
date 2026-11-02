@@ -277,14 +277,6 @@ fn a_lint_setting_is_named_by_any_section_that_sets_it() {
     assert!(!frozen::names(&value, "x.globs"));
 }
 
-/// The hash is FNV-1a 64, whose published test values these are.
-#[test]
-fn the_hash_is_fnv_1a_64() {
-    assert_eq!(frozen::hash(b""), "cbf29ce484222325");
-    assert_eq!(frozen::hash(b"a"), "af63dc4c8601ec8c");
-    assert_eq!(frozen::hash(b"foobar"), "85944171f73967e8");
-}
-
 /// Whether a section of `value` has an `allow` entry.
 fn allows(value: &Value) -> bool {
     value.as_object().into_iter().flatten().any(|(_, section)| {

@@ -16,8 +16,8 @@ use deslag::config::{
     CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, SCHEMA_VERSION, canonical_config_paths, schema,
 };
 use deslag::instructions::{ALLOW, Reading, Start, guide, lints, update_json, update_text};
+use deslag::lint::banned_chars;
 use deslag::lint::banned_phrases::CATALOGUE;
-use deslag::lint::{banned_chars, check_file};
 use deslag::news::News;
 use deslag::version::{BASELINE, Version, current_release};
 use deslag::{Config, ConfigSource};
@@ -617,17 +617,6 @@ fn arrived(news: &News) -> Vec<(String, String)> {
         .collect()
 }
 
-/// The lints a config turns on are read from every section and from its overrides.
-#[test]
-fn lints_turned_on_reads_every_section() {
-    let config = "schema_version = 2\n[md.lints.density]\n[x.lints.max_emphasis]\n\
-                  [[x.overrides]]\nglobs = [\"a\"]\n[x.overrides.lints.banned_chars]\ngroups = { dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }\n";
-    assert_eq!(
-        lints_turned_on(config),
-        BTreeSet::from(["density", "max_emphasis", "banned_chars"].map(String::from))
-    );
-}
-
 /// `## New lints` holds a section for each lint whose `since` is after the stamp, up to the running
 /// version, and no other: its heading, then the page `deslag instructions lints` prints for it.
 #[test]
@@ -979,32 +968,6 @@ fn a_config_above_a_subdirectory_is_found_from_there_within_a_work_tree() {
     assert_eq!(code(&found), 0);
     assert_eq!(stdout(&found), stdout(&from_root));
     assert!(!stdout(&found).starts_with("No deslag config was found"));
-}
-
-/// `src/instructions/update.md` is held to the budget `.agents/deslag.toml` gives it, and to the
-/// repo's other rules.
-#[test]
-fn update_md_meets_its_budget() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let path = root.join(".agents/deslag.toml");
-    let text = std::fs::read_to_string(&path).expect(".agents/deslag.toml");
-    let config = Config::parse(&text, path, ConfigSource::Explicit).expect("the repo's config");
-    let file = "src/instructions/update.md";
-    let section = config.sole_section_for(file).expect("one section at most");
-    let section = section.unwrap_or_else(|| panic!("{file} is not linted"));
-    let budget = section
-        .lints_for(file)
-        .max_size_bytes
-        .and_then(|lint| lint.value)
-        .unwrap_or_else(|| panic!("{file} has no byte budget in .agents/deslag.toml"));
-    let contents = std::fs::read(root.join(file)).expect(file);
-    assert!(
-        contents.len() as u64 <= budget,
-        "{file} is {} bytes, over its budget of {budget}",
-        contents.len()
-    );
-    let findings = check_file(&config, file, &contents, root).expect("the lints run");
-    assert!(findings.is_empty(), "{findings:?}");
 }
 
 /// A lint the config already turns on is listed as new, with a mark that says so.

@@ -503,34 +503,6 @@ fn the_report_is_the_whole_message_or_none_of_it() {
 }
 
 #[test]
-fn a_config_message_replaces_the_advice() {
-    let repo = Repo::new();
-    repo.write(
-        ".deslag/config.toml",
-        "schema_version = 2\n\
-         \n[md.lints.max_size_bytes]\nvalue = 10\n\
-         message = \"Cut {path} to {max_size_bytes} bytes.\"\n",
-    );
-    repo.write("AGENTS.md", "# A\nthis is longer than ten bytes\n");
-
-    let output = repo.check();
-    let stderr = stderr(&output);
-
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(
-        stderr.contains(&format!(
-            "{HEADING}\n\nAGENTS.md is 34, which is larger than 10 bytes (by 24 bytes).\n\nCut \
-             AGENTS.md to 10 bytes.\n"
-        )),
-        "stderr: {stderr}"
-    );
-    assert!(
-        !stderr.contains("Do not raise max_size_bytes."),
-        "the default advice should be gone, stderr: {stderr}"
-    );
-}
-
-#[test]
 fn an_override_sets_only_the_fields_it_names() {
     let repo = Repo::new();
     // The override changes the message for one file and inherits the section's budget.

@@ -76,7 +76,7 @@ pub enum LexemeKind {
 /// name.
 pub fn lex(src: &str) -> Vec<Lexeme> {
     let mut scanner = Scanner {
-        bytes: src.as_bytes(),
+        src: Reader::new(src),
         no_close_before: 0,
         out: Vec::new(),
     };
@@ -113,17 +113,95 @@ const LONGEST_WORD: usize = 18;
 /// one is given a logical position, one that is not inside a line splice, and a method that
 /// returns one returns a logical position or the end of the file.
 struct Scanner<'a> {
-    bytes: &'a [u8],
+    /// The only way the scan reads the source.
+    src: Reader<'a>,
     /// A `<` before this offset has no `>` on its line, so a header name there is not worth
     /// looking for again.
     no_close_before: usize,
     out: Vec<Lexeme>,
 }
 
+/// The source as bytes, read only through methods that count what they read in a test build, so
+/// that no code path can read the source uncounted. The counter is for the test that the scan
+/// reads each byte a bounded number of times. Outside a test the methods do nothing more than the
+/// read.
+mod reader {
+    pub(super) struct Reader<'a> {
+        bytes: &'a [u8],
+        #[cfg(test)]
+        reads: std::cell::Cell<usize>,
+    }
+
+    impl<'a> Reader<'a> {
+        pub(super) fn new(src: &'a str) -> Self {
+            Self {
+                bytes: src.as_bytes(),
+                #[cfg(test)]
+                reads: std::cell::Cell::new(0),
+            }
+        }
+
+        /// Counts `n` reads. The compiler removes it outside a test.
+        fn count(&self, n: usize) {
+            #[cfg(test)]
+            self.reads.set(self.reads.get() + n);
+            #[cfg(not(test))]
+            let _ = n;
+        }
+
+        /// The reads so far.
+        #[cfg(test)]
+        pub(super) fn reads(&self) -> usize {
+            self.reads.get()
+        }
+
+        /// The length of the source, which does not read a byte of it.
+        pub(super) fn len(&self) -> usize {
+            self.bytes.len()
+        }
+
+        /// The byte at `i`, if there is one.
+        pub(super) fn at(&self, i: usize) -> Option<u8> {
+            self.count(1);
+            self.bytes.get(i).copied()
+        }
+
+        /// The byte at `i`, which is in the source.
+        pub(super) fn byte(&self, i: usize) -> u8 {
+            self.count(1);
+            self.bytes[i]
+        }
+
+        /// The bytes in `range`, which is in the source, counted by its length.
+        pub(super) fn slice(&self, range: std::ops::Range<usize>) -> &'a [u8] {
+            self.count(range.len());
+            &self.bytes[range]
+        }
+
+        /// Whether `needle` is in the source at `i`, counted by the length of `needle`.
+        pub(super) fn has_at(&self, i: usize, needle: &[u8]) -> bool {
+            self.count(needle.len());
+            self.bytes
+                .get(i..)
+                .is_some_and(|rest| rest.starts_with(needle))
+        }
+
+        /// The offset of the first `target` at or after `from`, counted by the bytes up to it, or
+        /// to the end if there is none.
+        pub(super) fn find(&self, from: usize, target: u8) -> Option<usize> {
+            let rest = &self.bytes[from..];
+            let found = rest.iter().position(|&c| c == target);
+            self.count(found.map_or(rest.len(), |found| found + 1));
+            found.map(|found| from + found)
+        }
+    }
+}
+use reader::Reader;
+
 impl Scanner<'_> {
     /// The byte at `i`, if there is one.
     fn at(&self, i: usize) -> Option<u8> {
-        self.bytes.get(i).copied()
+        self.src.at(i)
     }
 
     /// The end of the line splice that starts at the backslash at `i`, if it is one.
@@ -167,7 +245,7 @@ impl Scanner<'_> {
 
     /// Finds the lexemes of the whole file.
     fn scan(&mut self) {
-        let mut i = if self.bytes.starts_with("\u{feff}".as_bytes()) {
+        let mut i = if self.src.has_at(0, "\u{feff}".as_bytes()) {
             3
         } else {
             0
@@ -229,7 +307,7 @@ impl Scanner<'_> {
     /// The end of the `#` or the digraph `%:` at `i`, if it is one.
     fn hash_end(&self, i: usize) -> Option<usize> {
         let after = self.next(i);
-        match self.bytes[i] {
+        match self.src.byte(i) {
             b'#' => Some(after),
             _ if self.at(after) == Some(b':') => Some(self.next(after)),
             _ => None,
@@ -268,7 +346,7 @@ impl Scanner<'_> {
     /// letter or digit, whatever that makes of it.
     fn number_end(&self, start: usize) -> usize {
         let mut i = self.next(start);
-        let mut previous = self.bytes[start];
+        let mut previous = self.src.byte(start);
         while let Some(c) = self.at(i) {
             let exponent_sign =
                 matches!(c, b'+' | b'-') && matches!(previous, b'e' | b'E' | b'p' | b'P');
@@ -378,19 +456,19 @@ impl Scanner<'_> {
             i = after;
         }
         let kind = LexemeKind::BlockComment { terminated: false };
-        self.push(start, self.bytes.len(), kind);
-        (self.bytes.len(), ends_a_line)
+        self.push(start, self.src.len(), kind);
+        (self.src.len(), ends_a_line)
     }
 
     /// Records the string or character whose opening quote is at `quote`, with its prefix from
     /// `start`, and returns where to go on, past any splices after it. It ends at its line if its
     /// closing quote is not there.
     fn literal(&mut self, start: usize, quote: usize, escapes: Escapes) -> usize {
-        let mark = self.bytes[quote];
+        let mark = self.src.byte(quote);
         let mut i = self.next(quote);
         let (end, terminated) = loop {
             match self.at(i) {
-                None => break (self.bytes.len(), false),
+                None => break (self.src.len(), false),
                 Some(c) if is_line_end(c) => break (i, false),
                 Some(c) if c == mark => break (i + 1, true),
                 Some(b'\\') if escapes == Escapes::Honoured => {
@@ -419,28 +497,29 @@ impl Scanner<'_> {
         let delimiter = quote + 1;
         let mut open = delimiter;
         while self.at(open)? != b'(' {
-            let c = self.bytes[open];
+            let c = self.src.byte(open);
             if open - delimiter == MAX_DELIMITER || is_forbidden_in_delimiter(c) {
                 return None;
             }
             open += 1;
         }
-        let delimiter = &self.bytes[delimiter..open];
+        let delimiter = self.src.slice(delimiter..open);
         let mut close = open + 1;
         let end = loop {
-            let Some(found) = self.bytes[close..].iter().position(|&c| c == b')') else {
+            let Some(found) = self.src.find(close, b')') else {
                 break None;
             };
-            close += found;
-            let after = &self.bytes[close + 1..];
-            if after.starts_with(delimiter) && after.get(delimiter.len()) == Some(&b'"') {
+            close = found;
+            if self.src.has_at(close + 1, delimiter)
+                && self.at(close + 1 + delimiter.len()) == Some(b'"')
+            {
                 break Some(close + delimiter.len() + 2);
             }
             close += 1;
         };
         let (end, terminated) = match end {
             Some(end) => (end, true),
-            None => (self.bytes.len(), false),
+            None => (self.src.len(), false),
         };
         self.push(start, end, LexemeKind::Str { terminated });
         Some(if terminated { self.skip(end) } else { end })
@@ -872,22 +951,56 @@ mod tests {
         ]);
     }
 
+    /// The most reads the scan makes for each byte of the source. `Reader` is the only way the
+    /// scan reads the source, and it counts one for each byte it hands out: one for `at` and
+    /// `byte`, the length for `slice` and `has_at`, the bytes up to the hit for `find`. The bound is
+    /// argued from the code, not found by running it. A lexeme start in `scan` makes at most 11
+    /// reads (the busiest is a `#` and the blanks and word after it) and steps over at least one
+    /// byte. Each loop in the body of a lexeme (`word`, `number_end`, `literal`, the comments,
+    /// `header_name`) makes at most 2 reads for each byte it steps over. A blank after a backslash
+    /// is read again by `splice_end` each time `skip` is called on that backslash, which at most 6
+    /// callers do, so it costs at most 6 more. A `<` with no `>` is read to its line end once, as
+    /// `no_close_before` says, which is 2 more. That is under 11 + 2 + 6 + 2 = 21 for a byte. In
+    /// a raw string, `find` counts each byte of its search once, and the check after each `)`
+    /// reads the delimiter, at most 16 bytes, and the quote, so under 18. The bound of 32 is over
+    /// both. A scan that reads the rest of the file again for each directive, by any method, reads
+    /// on the order of the source length for each line, which is far over any such constant.
+    const MOST_READS_PER_BYTE: usize = 32;
+
+    /// The lexemes of `src`, after checking that the scan read each byte of it a bounded number of
+    /// times.
+    fn lexed_in_linear_time(src: &str) -> Vec<Lexeme> {
+        let mut scanner = Scanner {
+            src: Reader::new(src),
+            no_close_before: 0,
+            out: Vec::new(),
+        };
+        scanner.scan();
+        let (reads, most) = (scanner.src.reads(), MOST_READS_PER_BYTE * src.len());
+        assert!(reads <= most, "{reads} reads of {} bytes", src.len());
+        scanner.out
+    }
+
     #[test]
     fn many_directives_that_open_a_raw_string_are_read_in_linear_time() {
         // The first raw string swallows the file, so there is one lexeme. A scan that gave up on
-        // each of these and went on to the next line would read the rest of the file 100,000 times.
-        let src = "#define X R\"(a\n".repeat(100_000);
-        let started = std::time::Instant::now();
-        let lexemes = lex(&src);
+        // each of these and went on to the next line would read the rest of the file once for each
+        // of the 10,000 lines.
+        let src = "#define X R\"(a\n".repeat(10_000);
         assert_eq!(
-            lexemes,
+            lexed_in_linear_time(&src),
             [Lexeme {
                 range: 10..src.len(),
                 kind: LexemeKind::Str { terminated: false }
             }]
         );
-        // Quadratic takes seconds. Linear takes a few milliseconds, so this bound is loose.
-        assert!(started.elapsed().as_secs() < 2, "{:?}", started.elapsed());
+    }
+
+    #[test]
+    fn many_plain_directives_are_read_in_linear_time() {
+        // A scan that read the rest of the file again for each directive would do so 10,000 times.
+        let src = "#define X 1\n".repeat(10_000);
+        assert_eq!(lexed_in_linear_time(&src), []);
     }
 
     #[test]

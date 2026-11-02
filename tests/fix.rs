@@ -327,7 +327,7 @@ fn fix_keeps_the_lone_crs_of_a_file_and_fixes_past_its_fences() {
 }
 
 #[test]
-fn fix_keeps_the_lone_crs_of_a_rust_file_and_a_cpp_file_and_fixes_their_comments() {
+fn fix_keeps_the_lone_crs_of_a_rust_cpp_and_toml_file_and_fixes_their_comments() {
     for (path, from) in [
         (
             "src/lib.rs",
@@ -337,12 +337,17 @@ fn fix_keeps_the_lone_crs_of_a_rust_file_and_a_cpp_file_and_fixes_their_comments
             "src/a.cpp",
             "// A \u{2014} b.\rchar *s = \"C \u{2014} d\";\r/*\r * E \u{2014} f.\r */\rint b;\r",
         ),
+        (
+            "a.toml",
+            "# A \u{2014} b.\rs = \"C \u{2014} d\"\r# E \u{2014} f.\rn = 1\r",
+        ),
     ] {
         let repo = Repo::new();
         repo.write(
             "deslag.toml",
             "schema_version = 2\n\n[rust.lints.banned_chars]\n\n[rust.lints.banned_chars.groups]\n\
              dashes = true\n\n[cpp.lints.banned_chars]\n\n[cpp.lints.banned_chars.groups]\n\
+             dashes = true\n\n[toml.lints.banned_chars]\n\n[toml.lints.banned_chars.groups]\n\
              dashes = true\n",
         );
         repo.write(path, from);

@@ -40,11 +40,11 @@ use crate::lint::banned_chars;
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub(super) struct AllowFile {
-    /// The file the sentence or line is in, written as a report prints it: relative to the repo root,
-    /// `/`-separated, with no glob. One entry names one file. A `path` or `reason` may not hold a
-    /// character that shows as nothing or acts on the reader: a control or format character,
-    /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
-    /// tab, CR or LF.
+    /// The file the sentence or line is in, written as a report prints it: relative to the repo
+    /// root, `/`-separated, with no glob. One entry names one file. A `path` or `reason` may not
+    /// hold a character that shows as nothing or acts on the reader: a control or format
+    /// character, another default-ignorable one, or a blank other than the ASCII space; a
+    /// `reason` may hold a tab, CR or LF.
     #[schemars(extend("since" = "0.0.3"))]
     path: String,
     /// The lint to exempt the sentence or line from, one of `banned_chars`, `banned_phrases`,

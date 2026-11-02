@@ -124,7 +124,10 @@ pub fn freeze(
 }
 
 /// Lays `fill` over `value` where `value` is silent: a key `value` lacks takes `fill`'s, a table
-/// both have is laid key by key, and so is the first item of a list both have.
+/// both have is laid key by key, and so is each item of a list both have, by position. An item
+/// of `fill` past the end of the list is appended when it holds a key that no item of the list
+/// has, so that entries of different shapes, such as an `allow` entry with a `quote` and one with
+/// a `line`, each get a place; the config's own values stay.
 fn overlay(value: &mut Value, fill: &Value) {
     match (value, fill) {
         (Value::Object(value), Value::Object(fill)) => {
@@ -138,12 +141,25 @@ fn overlay(value: &mut Value, fill: &Value) {
             }
         }
         (Value::Array(value), Value::Array(fill)) => {
-            if let (Some(to), Some(from)) = (value.first_mut(), fill.first()) {
-                overlay(to, from);
+            for (index, from) in fill.iter().enumerate() {
+                if let Some(to) = value.get_mut(index) {
+                    overlay(to, from);
+                } else if brings_a_key(value, from) {
+                    value.push(from.clone());
+                }
             }
         }
         _ => {}
     }
+}
+
+/// Whether `item` has a key that no item of `items` has set.
+fn brings_a_key(items: &[Value], item: &Value) -> bool {
+    item.as_object().into_iter().flatten().any(|(key, _)| {
+        items
+            .iter()
+            .all(|have| have.get(key).is_none_or(Value::is_null))
+    })
 }
 
 /// The part of `leaf` after `<section>.lints.`, when it is a lint setting.

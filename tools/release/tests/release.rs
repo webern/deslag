@@ -115,7 +115,7 @@ fn base() -> Value {
 #[test]
 fn a_missing_setting_takes_its_default_else_its_fill_and_the_release_is_stamped() {
     // A lint setting lands in `md`, from its default or from the fill. The fill is laid into the
-    // first item of a list the config has.
+    // item of a list the config has, by position.
     let fill = json!({
         "md": {
             "surfaces": ["doc"],
@@ -155,6 +155,23 @@ fn a_missing_setting_takes_its_default_else_its_fill_and_the_release_is_stamped(
         })
     );
     assert!(freeze::missing(&value, &leaves.paths).is_empty());
+}
+
+/// A second item of a list in the fill is appended when it brings a key no item of the config's
+/// list has, so that entries of different shapes each get a place.
+#[test]
+fn a_fill_item_with_a_new_key_is_appended() {
+    let fill = json!({
+        "md": { "overrides": [{ "globs": ["x"] }, { "lints": {} }] },
+    });
+    let mut newest = full(true);
+    newest["md"]["overrides"] = json!([{ "globs": ["o"] }]);
+    let value =
+        freeze::freeze(&newest, &version("0.0.2"), &rules(true, Vec::new()), &fill).expect("fills");
+    assert_eq!(
+        value["md"]["overrides"],
+        json!([{ "globs": ["o"] }, { "lints": {} }])
+    );
 }
 
 /// The fill holds settings with no default, and where it holds one with a default, the default is

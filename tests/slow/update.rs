@@ -92,6 +92,15 @@ fn it_rewrites_an_older_schema_and_sets_the_stamp_and_a_second_run_says_current(
     );
     let stamp = format!("deslag: deslag.toml: set deslag_version to \"{CURRENT}\" (it had none)");
     assert_eq!(lines.last().copied(), Some(stamp.as_str()));
+    // A migration deslag wrote says it checked it, after its edits and before the stamp.
+    let checked = "deslag: checked against deslag.toml as it was: it means at schema 2 what it \
+                   meant at schema 1";
+    let at = lines.iter().position(|line| *line == checked);
+    let took = lines.iter().position(|line| line.contains(": took "));
+    assert!(
+        at.zip(took).is_some_and(|(at, took)| took < at) && at == Some(lines.len() - 2),
+        "{said}"
+    );
     // The comments stay where they were.
     assert_eq!(
         read(&repo, "toml"),
@@ -729,6 +738,276 @@ fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() 
     }
 }
 
+// The copy of the old text, which a migration deslag cannot write leaves beside the config.
+
+/// The frozen releases whose config is of an older schema, with their directories.
+fn older_releases() -> Vec<(semver::Version, PathBuf)> {
+    let found: Vec<_> = frozen::releases()
+        .into_iter()
+        .filter(|(_, directory)| directory.join(MIGRATED).is_file())
+        .collect();
+    assert!(found.len() >= 2, "{found:?}");
+    found
+}
+
+/// The frozen config in `extension`, as the file a person edits it to: the release's
+/// `config.migrated.toml` as data, which JSON writes and so does YAML.
+fn by_hand(directory: &Path) -> serde_json::Value {
+    let text = std::fs::read_to_string(directory.join(MIGRATED)).expect("a migrated config");
+    toml::from_str(&text).expect("a migrated config is data")
+}
+
+/// `value` as the text of a config in `extension`.
+fn text_of(value: &serde_json::Value) -> String {
+    serde_json::to_string_pretty(value).expect("data")
+}
+
+/// A repo holding the frozen config of `directory` in `extension`, and whether the file `name`
+/// beside it exists.
+fn frozen_in(directory: &Path, extension: &str) -> (Repo, String) {
+    let repo = frozen::repo(&frozen::config(directory, extension), extension);
+    let copy = format!("deslag.{extension}.schema1");
+    (repo, copy)
+}
+
+fn writes(repo: &Repo, extension: &str, text: &str) {
+    repo.write(&format!("deslag.{extension}"), text);
+}
+
+#[test]
+fn a_refused_migration_saves_the_old_text_beside_the_config_and_a_dry_run_saves_nothing() {
+    for (release, directory) in older_releases() {
+        for extension in ["yaml", "json"] {
+            let name = format!("{release} {extension}");
+            let (repo, copy) = frozen_in(&directory, extension);
+            let old = read(&repo, extension);
+
+            for args in [
+                &["update", "--dry-run"][..],
+                &["update", "--dry-run", "--to", CURRENT],
+            ] {
+                let output = repo.run(args);
+                let said = raw_stderr(&output);
+                assert_eq!(code(&output), 2, "{name}: {said}");
+                assert!(
+                    said.contains(&format!(
+                        "without --dry-run, deslag saves the old text as {copy}"
+                    )),
+                    "{name}: {said}"
+                );
+                assert!(!repo.root().join(&copy).exists(), "{name}");
+            }
+
+            let output = repo.run(&["update"]);
+            let said = raw_stderr(&output);
+            assert_eq!(code(&output), 2, "{name}: {said}");
+            assert!(
+                said.contains(&format!("deslag saved the old text as {copy}")),
+                "{name}: {said}"
+            );
+            assert_eq!(read(&repo, extension), old, "{name}");
+            let saved = std::fs::read_to_string(repo.root().join(&copy)).expect("a copy");
+            assert_eq!(saved, old, "{name}");
+        }
+    }
+}
+
+#[test]
+fn a_config_still_of_the_old_schema_saves_the_copy_again() {
+    let (release, directory) = older_releases().remove(0);
+    let (repo, copy) = frozen_in(&directory, "yaml");
+    assert_eq!(code(&repo.run(&["update"])), 2, "{release}");
+    let edited = format!("{}# edited\n", read(&repo, "yaml"));
+    writes(&repo, "yaml", &edited);
+    assert_eq!(code(&repo.run(&["update"])), 2, "{release}");
+    let saved = std::fs::read_to_string(repo.root().join(&copy)).expect("a copy");
+    assert_eq!(saved, edited);
+}
+
+#[test]
+fn a_refusal_that_lists_no_edit_saves_no_copy() {
+    let repo = repo_with(
+        "json",
+        "{\"schema_version\": 1, \"md\": {\"lints\": {\"banned_phrases\": {\"ban\": 3}}}}\n",
+    );
+    let output = repo.run(&["update"]);
+    let said = raw_stderr(&output);
+    assert_eq!(code(&output), 2, "{said}");
+    assert!(
+        said.contains("nothing was written; edit it by hand"),
+        "{said}"
+    );
+    assert!(!repo.root().join("deslag.json.schema1").exists());
+}
+
+#[test]
+fn check_fix_and_explain_refuse_a_config_while_its_copy_sits_beside_it() {
+    let (_, directory) = older_releases().remove(0);
+    for extension in ["yaml", "json"] {
+        let (repo, copy) = frozen_in(&directory, extension);
+        assert_eq!(code(&repo.run(&["update"])), 2);
+        // The person edits the config to the new schema, and has not run `update` yet.
+        writes(&repo, extension, &text_of(&by_hand(&directory)));
+        for args in [
+            &["check"][..],
+            &["fix", "docs/note.md"],
+            &["explain", "docs/note.md"],
+        ] {
+            let output = repo.run(args);
+            let said = raw_stderr(&output);
+            assert_eq!(code(&output), 2, "{extension} {args:?}: {said}");
+            assert!(
+                said.contains(&copy) && said.contains("run `deslag update`"),
+                "{extension} {args:?}: {said}"
+            );
+            assert_eq!(stdout(&output), "", "{extension} {args:?}");
+        }
+    }
+}
+
+#[test]
+fn the_frozen_configs_by_hand_pass_the_check_and_the_copy_goes() {
+    for (release, directory) in older_releases() {
+        for extension in ["yaml", "json"] {
+            let name = format!("{release} {extension}");
+            let (repo, copy) = frozen_in(&directory, extension);
+            assert_eq!(code(&repo.run(&["update"])), 2, "{name}");
+            let by_hand = text_of(&by_hand(&directory));
+            writes(&repo, extension, &by_hand);
+
+            // A dry run says it passed and keeps the copy.
+            let dry = repo.run(&["update", "--dry-run"]);
+            let said = raw_stderr(&dry);
+            let checked = format!(
+                "deslag: checked against {copy}: it means at schema 2 what it meant at schema 1"
+            );
+            assert_eq!(code(&dry), 0, "{name}: {said}");
+            assert!(said.lines().any(|line| line == checked), "{name}: {said}");
+            assert!(repo.root().join(&copy).exists(), "{name}");
+
+            let output = repo.run(&["update"]);
+            let said = raw_stderr(&output);
+            assert_eq!(code(&output), 0, "{name}: {said}");
+            assert!(said.lines().any(|line| line == checked), "{name}: {said}");
+            assert!(!repo.root().join(&copy).exists(), "{name}");
+
+            let check = repo.check();
+            assert_eq!(code(&check), 0, "{name}: {}", raw_stderr(&check));
+            let again = raw_stderr(&repo.run(&["update"]));
+            assert!(!again.contains("checked against"), "{name}: {again}");
+        }
+    }
+}
+
+#[test]
+fn a_bare_bump_of_the_schema_fails_the_check_naming_what_it_lost_and_the_copy_stays() {
+    for (release, directory) in older_releases() {
+        for extension in ["yaml", "json"] {
+            let name = format!("{release} {extension}");
+            let (repo, copy) = frozen_in(&directory, extension);
+            assert_eq!(code(&repo.run(&["update"])), 2, "{name}");
+
+            // The config as the migration writes it, without the `ban` and the `groups` that it
+            // writes: the schema bumped, and the lints left to mean less.
+            let mut bare = by_hand(&directory);
+            bare["md"]["lints"]["banned_phrases"]
+                .as_object_mut()
+                .expect("a table")
+                .remove("ban");
+            bare["md"]["lints"]["banned_chars"]
+                .as_object_mut()
+                .expect("a table")
+                .remove("groups");
+            writes(&repo, extension, &text_of(&bare));
+
+            let output = repo.run(&["update"]);
+            let said = raw_stderr(&output);
+            assert_eq!(code(&output), 2, "{name}: {said}");
+            assert!(
+                said.contains("banned_chars: the group `dashes` is at schema 1 only")
+                    && said.contains("banned_phrases: \"in order to\" is banned at schema 1 only")
+                    && said.contains("make it mean what it meant, and change it after")
+                    && said.contains(&format!("{copy} is the way back")),
+                "{name}: {said}"
+            );
+            assert!(repo.root().join(&copy).exists(), "{name}");
+            assert_eq!(read(&repo, extension), text_of(&bare), "{name}");
+            assert_eq!(code(&repo.check()), 2, "{name}");
+        }
+    }
+}
+
+#[test]
+fn a_phrase_left_out_by_hand_fails_the_check_and_names_it() {
+    for (release, directory) in older_releases() {
+        for extension in ["yaml", "json"] {
+            let name = format!("{release} {extension}");
+            let (repo, copy) = frozen_in(&directory, extension);
+            assert_eq!(code(&repo.run(&["update"])), 2, "{name}");
+            let mut value = by_hand(&directory);
+            let ban = value["md"]["lints"]["banned_phrases"]["ban"]
+                .as_object_mut()
+                .expect("a ban map");
+            assert!(ban.remove("in order to").is_some(), "{name}");
+            writes(&repo, extension, &text_of(&value));
+
+            let output = repo.run(&["update"]);
+            let said = raw_stderr(&output);
+            assert_eq!(code(&output), 2, "{name}: {said}");
+            assert!(
+                said.contains(
+                    "md.lints: banned_phrases: \"in order to\" is banned at schema 1 only"
+                ),
+                "{name}: {said}"
+            );
+            assert!(repo.root().join(&copy).exists(), "{name}");
+        }
+    }
+}
+
+#[test]
+fn a_banned_chars_table_written_empty_and_inline_migrates_and_still_bans() {
+    for text in [
+        "schema_version = 1\n[md]\nglobs = [\"*.md\"]\nlints.banned_chars = {}\n",
+        "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n[md.lints]\nbanned_chars = {}\n",
+    ] {
+        let repo = repo_with("toml", text);
+        repo.write("a.md", "A dash \u{2014} here.\n");
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{text}: {}", raw_stderr(&output));
+        let check = repo.check();
+        assert_eq!(code(&check), 1, "{text}: {}", raw_stderr(&check));
+        assert!(raw_stderr(&check).contains("a.md"), "{text}");
+    }
+}
+
+#[test]
+fn an_inline_ban_the_migration_adds_to_is_written_out_a_phrase_to_a_line() {
+    let header = "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n[md.lints.banned_phrases]\n\
+                  ban = { \"in order to\" = \"\" }\n";
+    let dotted = "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n\
+                  lints.banned_phrases.ban = { \"in order to\" = \"\" }\n";
+    let inline = "schema_version = 1\n[md]\nglobs = [\"*.md\"]\n\
+                  lints.banned_phrases = { ban = { \"in order to\" = \"\" } }\n";
+    for (name, text, many_lines) in [
+        ("header", header, true),
+        ("dotted", dotted, true),
+        ("inline", inline, false),
+    ] {
+        let repo = repo_with("toml", text);
+        let output = repo.run(&["update", "--to", CURRENT]);
+        assert_eq!(code(&output), 0, "{name}: {}", raw_stderr(&output));
+        let now = read(&repo, "toml");
+        let longest = now.lines().map(str::len).max().unwrap_or(0);
+        assert_eq!(longest < 200, many_lines, "{name}: {now}");
+        assert!(
+            now.contains("\"in order to\" = \"delete it\""),
+            "{name}: {now}"
+        );
+        assert_eq!(code(&repo.check()), 0, "{name}");
+    }
+}
+
 /// Every phrase of the catalogue, and those the running version has shipped, which
 /// `instructions update` offers to a config stamped [`BEFORE_ALL`].
 fn phrases() -> (Vec<&'static str>, Vec<&'static str>) {
@@ -866,4 +1145,24 @@ fn a_catalogue_phrase_reports_only_where_a_ban_names_it_whatever_the_stamp() {
     // The topic has nothing more to say about them.
     let topic = stdout(&repo.run(&["instructions", "update"]));
     assert!(!topic.contains("## New phrases"), "{topic}");
+}
+
+#[test]
+fn the_comments_of_what_the_migration_deletes_are_kept_and_the_copy_goes() {
+    let text = "schema_version = 1\ndeslag_version = \"0.0.1\"\n[md]\nglobs = [\"*.md\"]\n\
+                [md.lints.banned_phrases]\nallow = [\"x\", # about x\n  # above y\n  \"y\", # about y\n  \"z\"]\n\
+                [md.lints.banned_phrases.groups]\n# Metaphors.\nmetaphors = true # bad\n";
+    let repo = repo_with("toml", text);
+    let output = repo.run(&["update"]);
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
+    let now = read(&repo, "toml");
+    for kept in [
+        "# Metaphors.",
+        "# metaphors = true # bad",
+        "\"x\", # about x",
+        "# above y",
+    ] {
+        assert!(now.contains(kept), "{kept}: {now}");
+    }
+    assert_eq!(code(&repo.check()), 0, "{now}");
 }

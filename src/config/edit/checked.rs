@@ -6,7 +6,7 @@
 
 use semver::Version;
 
-use super::{Edit, Plan, Refusal, lines};
+use super::{Edit, Plan, Refusal, comments, lines};
 use crate::config::Config;
 
 /// Text that has been read back as a config and found to be the one intended, and to differ from
@@ -105,6 +105,11 @@ pub(super) fn migrated(
     } = plan;
     let refuse = |reason: String| Refusal::of(reason, path, &edits);
     lines::only_touched_lines_removed(old_text, &text, &touched).map_err(|why| {
+        refuse(format!(
+            "the migrated config changes more than its edits: {why}"
+        ))
+    })?;
+    comments::kept(old_text, &text).map_err(|why| {
         refuse(format!(
             "the migrated config changes more than its edits: {why}"
         ))

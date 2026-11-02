@@ -31,6 +31,7 @@
 //! refused, with the edits spelled out.
 
 mod checked;
+mod comments;
 mod json;
 mod lines;
 mod remove;

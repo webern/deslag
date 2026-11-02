@@ -98,6 +98,93 @@ fn an_inline_table_gains_a_member_inside_its_braces() {
 }
 
 #[test]
+fn a_table_made_in_an_empty_inline_table_rewrites_its_line_and_keeps_its_comment() {
+    let text = "schema_version = 1\n[md.lints]\nbanned_chars = {} # on\n\
+                [rust]\nlints.banned_chars = {}\n";
+    let groups = |section: &str| lints(section).key("banned_chars").key("groups");
+    let edits = [
+        TableEdit::Create {
+            table: groups("md"),
+        },
+        set(groups("md"), "dashes", Scalar::Bool(true)),
+        TableEdit::Create {
+            table: groups("rust"),
+        },
+        set(groups("rust"), "dashes", Scalar::Bool(true)),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md.lints]\nbanned_chars = { groups = { dashes = true } } # on\n\
+         [rust]\nlints.banned_chars = { groups = { dashes = true } }\n"
+    );
+}
+
+#[test]
+fn an_inline_ban_gains_phrases_as_a_table_of_its_own_in_its_parents_form() {
+    let ban = phrases().key("ban");
+    let edits = [
+        TableEdit::Create { table: ban.clone() },
+        set(ban.clone(), "delve", advice("dig")),
+        set(
+            ban.clone(),
+            "load-bearing wall",
+            advice("say what it holds up"),
+        ),
+    ];
+    // Under a header, it has a header of its own, after the tables of its parent, and takes its
+    // comments, the ones above it and the one after it.
+    let text = "schema_version = 1\n[md.lints.banned_phrases]\nallow = []\n\
+                # Mine.\nban = { delve = \"\", \"x y\" = \"z\" } # kept\n\
+                [md.lints.banned_phrases.other]\na = 1\n\n[md.lints.banned_chars]\n";
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md.lints.banned_phrases]\nallow = []\n\
+         [md.lints.banned_phrases.other]\na = 1\n\
+         # Mine.\n[md.lints.banned_phrases.ban] # kept\n\
+         delve = \"dig\"\n\"x y\" = \"z\"\n\"load-bearing wall\" = \"say what it holds up\"\n\
+         \n[md.lints.banned_chars]\n"
+    );
+    // In dotted keys, it is dotted keys, the comments on the first.
+    let text = "schema_version = 1\n[md]\nlints.banned_phrases.allow = []\n\
+                # Mine.\nlints.banned_phrases.ban = { delve = \"\" } # kept\n";
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md]\nlints.banned_phrases.allow = []\n\
+         # Mine.\nlints.banned_phrases.ban.delve = \"dig\" # kept\n\
+         lints.banned_phrases.ban.\"load-bearing wall\" = \"say what it holds up\"\n"
+    );
+    // In an inline table, it stays inline.
+    let text = "schema_version = 1\n[md]\nlints.banned_phrases = { ban = { delve = \"\" } }\n";
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md]\nlints.banned_phrases = { ban = { delve = \"dig\", \
+         \"load-bearing wall\" = \"say what it holds up\" } }\n"
+    );
+}
+
+#[test]
+fn a_table_a_delete_empties_is_sealed_only_if_nothing_is_made_in_it() {
+    let text = "schema_version = 1\n[md]\nlints.banned_phrases.groups.x = false\n\
+                lints.banned_chars.groups.x = false\n";
+    let delete = |lint: &str| TableEdit::Delete {
+        table: lints("md").key(lint),
+        key: "groups".to_string(),
+    };
+    let ban = phrases().key("ban");
+    let edits = [
+        delete("banned_phrases"),
+        delete("banned_chars"),
+        TableEdit::Create { table: ban.clone() },
+        set(ban, "delve", advice("dig")),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md]\nlints.banned_phrases.ban.delve = \"dig\"\n\
+         lints.banned_chars = {}\n"
+    );
+}
+
+#[test]
 fn a_missing_table_is_made_after_its_parents_tables_and_under_its_own_header() {
     // The section's lint tables come after its overrides, and the rust section after them.
     let text = "schema_version = 1\n\n[[md.overrides]]\nglobs = [\"/AGENTS.md\"]\n\n\
@@ -162,16 +249,17 @@ fn a_deleted_table_takes_its_header_and_comments_and_leaves_its_parent_written()
         },
     ];
     // The rust table was written only through its groups, so it takes their header and comments.
+    // The comment of the groups of the md table, which has other keys, goes above the table.
     assert_eq!(
         migrated(text, &edits),
-        "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\"x\"]\n\n\
+        "schema_version = 1\n# Groups, which go.\n[md.lints.banned_phrases]\nallow = [\"x\"]\n\n\
          # Kept.\n[rust.lints.banned_phrases]\n\n\
          [[md.overrides]]\nglobs = [\"/a.md\"]\nlints.banned_phrases = {}\n"
     );
 }
 
 #[test]
-fn an_item_taken_out_of_a_list_takes_its_line_and_the_comments_on_it() {
+fn an_item_taken_out_of_a_list_leaves_its_comments_and_comments_itself_out() {
     let text = "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\n  \"a\", # about a\n  \
                 # above b\n  \"b\", # about b\n  \"c\",\n]\n[md.lints.banned_chars]\n\
                 allow = [\"x\", \"y\", \"z\"]\n";
@@ -189,7 +277,7 @@ fn an_item_taken_out_of_a_list_takes_its_line_and_the_comments_on_it() {
     assert_eq!(
         migrated(text, &edits),
         "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\n  \"a\", # about a\n  \
-         \"c\",\n]\n[md.lints.banned_chars]\nallow = [\"y\"]\n"
+         # above b\n  # \"b\", # about b\n  \"c\",\n]\n[md.lints.banned_chars]\nallow = [\"y\"]\n"
     );
 }
 
@@ -343,4 +431,128 @@ fn a_yaml_or_json_config_is_refused_with_every_migration_edit_to_make_by_hand() 
             ]
         );
     }
+}
+
+#[test]
+fn the_comments_of_a_deleted_key_go_above_the_first_key_written_in_its_table() {
+    let text = "schema_version = 1\n[md.lints.banned_phrases]\n# About the groups.\n\
+                groups.metaphors = true # bad\n";
+    let edits = [
+        TableEdit::Delete {
+            table: phrases(),
+            key: "groups".to_string(),
+        },
+        TableEdit::Create {
+            table: phrases().key("ban"),
+        },
+        set(phrases().key("ban"), "delve", advice("delete it")),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md.lints.banned_phrases]\n# About the groups.\n\
+         # groups.metaphors = true # bad\n[md.lints.banned_phrases.ban]\ndelve = \"delete it\"\n"
+    );
+}
+
+#[test]
+fn a_migration_that_drops_a_comment_no_edit_names_is_refused() {
+    let old = "schema_version = 1\n# keep me\nx = 1\n";
+    let plan = Plan {
+        text: "schema_version = 1\nx = 1\n".to_string(),
+        edits: Vec::new(),
+        touched: vec![Touch {
+            lines: 2..=2,
+            kind: TouchKind::Key,
+        }],
+    };
+    let refusal = checked::migrated(old, "deslag.toml", plan, reads).unwrap_err();
+    assert!(
+        refusal.reason.contains("it drops the comment `# keep me`"),
+        "{refusal:#?}"
+    );
+}
+
+/// Whether `text` has a line break inside the braces of an inline table, which TOML 1.0 forbids and
+/// TOML 1.1 allows. Comments and strings are skipped.
+fn breaks_an_inline_table(text: &str) -> bool {
+    let (mut depth, mut quote, mut comment) = (0usize, None::<char>, false);
+    for letter in text.chars() {
+        match (quote, comment, letter) {
+            (_, true, '\n') if depth > 0 => return true,
+            (_, true, '\n') => comment = false,
+            (_, true, _) => {}
+            (Some(open), _, close) if open == close => quote = None,
+            (Some(_), _, _) => {}
+            (None, _, '"' | '\'') => quote = Some(letter),
+            (None, _, '#') => comment = true,
+            (None, _, '{') => depth += 1,
+            (None, _, '}') => depth = depth.saturating_sub(1),
+            (None, _, '\n') if depth > 0 => return true,
+            _ => {}
+        }
+    }
+    false
+}
+
+#[test]
+fn a_comment_of_a_key_deleted_in_an_inline_table_goes_above_the_key_that_holds_the_table() {
+    let ban = phrases().key("ban");
+    let edits = [
+        TableEdit::Delete {
+            table: phrases(),
+            key: "groups".to_string(),
+        },
+        TableEdit::Unlist {
+            table: phrases(),
+            key: "allow".to_string(),
+            item: "x".to_string(),
+        },
+        TableEdit::Create { table: ban.clone() },
+        set(ban, "delve", advice("delete it")),
+    ];
+    let cases = [
+        // The table is a key of a header table.
+        (
+            "schema_version = 1\n[md.lints]\n\
+             banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } # inline all\n",
+            "schema_version = 1\n[md.lints]\n\
+             # banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } # inline all\n\
+             banned_phrases = { allow = [], ban = { delve = \"delete it\" } } # inline all\n",
+        ),
+        // The table is inside a table that is inline too.
+        (
+            "schema_version = 1\n[md]\n\
+             lints = { banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } } # whole\n",
+            "schema_version = 1\n[md]\n\
+             # lints = { banned_phrases = { groups = { metaphors = false }, allow = [\"x\"] } } # whole\n\
+             lints = { banned_phrases = { allow = [], ban = { delve = \"delete it\" } } } # whole\n",
+        ),
+    ];
+    for (text, want) in cases {
+        let out = migrated(text, &edits);
+        assert!(!breaks_an_inline_table(&out), "a newline in braces:\n{out}");
+        assert_eq!(out, want);
+    }
+}
+#[test]
+fn a_comment_moved_above_a_header_with_nothing_after_it_leaves_the_header_in_place() {
+    let text = "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\"a\", \"b\"]\n# why groups\n\
+                groups = { metaphors = false }\n";
+    let unlist = |item: &str| TableEdit::Unlist {
+        table: phrases(),
+        key: "allow".to_string(),
+        item: item.to_string(),
+    };
+    let edits = [
+        TableEdit::Delete {
+            table: phrases(),
+            key: "groups".to_string(),
+        },
+        unlist("a"),
+        unlist("b"),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n# why groups\n[md.lints.banned_phrases]\nallow = []\n"
+    );
 }

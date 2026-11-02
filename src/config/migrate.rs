@@ -8,15 +8,18 @@
 //! the result at the next schema and compares the effective settings of every table with the old
 //! reading: the section's, the section's with each override laid over it, and the section's with
 //! two or three overrides laid over it in either order, as a file that several overrides match
-//! gets them. Only text that passes is written. A YAML or JSON config is refused with every edit
-//! listed, as the editor refuses one.
+//! gets them. It compares everything outside the `lints` tables as data too, but for the schema and
+//! the stamp. Where they differ, the refusal names each table, lint and difference. Only text that
+//! passes is written. A YAML or JSON config is refused with every edit listed, as the editor
+//! refuses one, and `deslag update` then saves its old text beside it. The next `update`, on the
+//! config the person edited, holds it to the same check against that copy ([`check_copy`]).
 //!
 //! The stamp is not moved here, and a phrase of the catalogue that the stamp had not reached is not
 //! written: it stays news, and `deslag instructions update` offers it.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::num::NonZeroU32;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
@@ -85,6 +88,42 @@ pub fn migrate(text: &str, path: &str) -> Result<Option<Edited>, Refusal> {
     Ok(made)
 }
 
+/// Where the copy of the config at `config`, of `schema`, is kept: beside it, with `.schema` and the
+/// number after its name, such as `deslag.yaml.schema1`.
+pub(crate) fn copy_path(config: &Path, schema: NonZeroU32) -> PathBuf {
+    let mut name = config.file_name().unwrap_or_default().to_os_string();
+    name.push(format!(".schema{schema}"));
+    config.with_file_name(name)
+}
+
+/// The copy of an older schema that sits beside the config at `config`, with its schema; the newest
+/// when there are several. A directory of that name counts: it is not a copy, but nothing has
+/// checked the config against one either.
+pub(crate) fn copy_beside(config: &Path) -> Option<(PathBuf, NonZeroU32)> {
+    (1..SCHEMA_VERSION.get())
+        .rev()
+        .filter_map(NonZeroU32::new)
+        .map(|schema| (copy_path(config, schema), schema))
+        .find(|(copy, _)| copy.exists())
+}
+
+/// Whether `current`, a config of [`SCHEMA_VERSION`] written in `format`, means what `copy`, the
+/// text it had at `schema`, meant; and if not, each way it does not, one to a line. It judges text
+/// deslag did not write, so it is the check a migration deslag cannot make is held to.
+pub fn check_copy(
+    copy: &str,
+    schema: NonZeroU32,
+    current: &str,
+    format: ConfigFormat,
+) -> Result<(), Vec<String>> {
+    let lines = |why: String| why.lines().map(str::to_string).collect::<Vec<_>>();
+    let migration = MIGRATIONS
+        .iter()
+        .find(|migration| migration.from == schema)
+        .ok_or_else(|| vec![format!("this deslag has no migration from schema {schema}")])?;
+    (migration.verify)(copy, format, current, format).map_err(lines)
+}
+
 /// The step from schema 1 to 2: each `banned_phrases` table bans in its `ban` what it banned, and
 /// each `banned_chars` table names the groups it had on. Per section:
 ///
@@ -106,7 +145,10 @@ fn one_to_two(text: &str, format: ConfigFormat) -> Result<Vec<TableEdit>, String
     let mut edits = Vec::new();
     for section in &reading.sections {
         let plan = Plan::of(section, &reading.stamp)?;
-        compare(section, &reading.stamp, &plan.lints, &plan.overrides)?;
+        let wrong = compare(section, &reading.stamp, &plan.lints, &plan.overrides);
+        if !wrong.is_empty() {
+            return Err(wrong.join("\n"));
+        }
         edits.extend(plan.edits);
     }
     edits.push(TableEdit::Set {
@@ -117,11 +159,14 @@ fn one_to_two(text: &str, format: ConfigFormat) -> Result<Vec<TableEdit>, String
     Ok(edits)
 }
 
-/// Whether `new` reads at schema 2 as `old`, of schema 1, meant.
+/// Whether `new` reads at schema 2 as `old`, of schema 1, meant; and if not, each way it does not,
+/// one to a line.
 ///
-/// It reads the `lints` tables of `new` and nothing else, so a config that was wrong at schema 1
-/// in some other key, or in a value that a lint refuses, passes when its tables mean what they
-/// meant, and loading it then says what is wrong.
+/// It compares the `lints` tables of every section and override as what they make deslag do, and
+/// everything else the file says, its globs, `exclude`, fences, surfaces, `allow` and the globs of
+/// its overrides, as data, but for the schema and the stamp. A key that is wrong in some other way,
+/// or a value that a lint refuses, passes when it means what it meant, and loading the file then
+/// says what is wrong.
 fn means_what_one_meant(
     old: &str,
     old_format: ConfigFormat,
@@ -135,6 +180,15 @@ fn means_what_one_meant(
     }
     let file: Value =
         deserialize(new, format).map_err(|error| format!("it does not read: {error}"))?;
+    let before: Value = deserialize(old, old_format)
+        .map_err(|error| format!("the old text does not read: {error}"))?;
+    if !before.is_object() || !file.is_object() {
+        return Err(
+            "a config written as a list by position cannot be compared; write it as a table"
+                .to_string(),
+        );
+    }
+    let mut wrong = Vec::new();
     for section in &reading.sections {
         let table = file.get(section.name);
         let lints = |table: Option<&Value>| -> Result<Lints, String> {
@@ -152,9 +206,266 @@ fn means_what_one_meant(
             .iter()
             .map(|over| lints(Some(over)))
             .collect::<Result<Vec<Lints>, String>>()?;
-        compare(section, &reading.stamp, &lints(table)?, &overrides)?;
+        wrong.extend(compare(section, &reading.stamp, &lints(table)?, &overrides));
     }
-    Ok(())
+    let (before, defaults_before) = outside_lints(before);
+    let (file, defaults_after) = outside_lints(file);
+    data_differences(
+        "",
+        &before,
+        &file,
+        (Some(&defaults_before), Some(&defaults_after)),
+        &mut wrong,
+    );
+    if wrong.is_empty() {
+        Ok(())
+    } else {
+        Err(wrong.join("\n"))
+    }
+}
+
+/// `file` without what a migration changes by design (the schema and the stamp), without the
+/// `lints` of each section and override, which are compared as what they mean, and without a key
+/// that is set to its default, which means what leaving it out does. It also gives the keys it
+/// took out for being at their default, in a tree shaped like the file, so that a difference can
+/// say the default was written.
+fn outside_lints(mut file: Value) -> (Value, Value) {
+    let schema = crate::config::schema();
+    let mut defaults = serde_json::Map::new();
+    let Some(top) = file.as_object_mut() else {
+        return (file, Value::Object(defaults));
+    };
+    top.remove("schema_version");
+    top.remove("deslag_version");
+    for (name, section) in top.iter_mut() {
+        let Some(section) = section.as_object_mut() else {
+            continue;
+        };
+        section.remove("lints");
+        let definition = format!("{}File", capitalised(name));
+        let mut taken = without_defaults(section, &schema, &definition);
+        let overrides = section.get_mut("overrides").and_then(Value::as_array_mut);
+        let mut taken_overrides = Vec::new();
+        for over in overrides.into_iter().flatten() {
+            taken_overrides.push(match over.as_object_mut() {
+                Some(over) => {
+                    over.remove("lints");
+                    Value::Object(without_defaults(over, &schema, "OverrideFile"))
+                }
+                None => Value::Null,
+            });
+        }
+        // The defaults of the overrides that remain, by position. A side with no `overrides` key
+        // is not listed here, so a difference never reads this list as a default that was written.
+        if section.contains_key("overrides") {
+            taken.insert("overrides".to_string(), Value::Array(taken_overrides));
+        }
+        defaults.insert(name.clone(), Value::Object(taken));
+    }
+    (file, Value::Object(defaults))
+}
+
+/// `name` with its first letter capital: `md` is `Md`, as the schema names the definitions.
+fn capitalised(name: &str) -> String {
+    let mut letters = name.chars();
+    letters
+        .next()
+        .map(|first| first.to_uppercase().chain(letters).collect())
+        .unwrap_or_default()
+}
+
+/// Takes out of `table` each key that holds the default the schema gives it in `definition`, and
+/// gives what it took out.
+fn without_defaults(
+    table: &mut serde_json::Map<String, Value>,
+    schema: &Value,
+    definition: &str,
+) -> serde_json::Map<String, Value> {
+    let mut taken = serde_json::Map::new();
+    let Some(properties) = schema
+        .pointer(&format!("/definitions/{definition}/properties"))
+        .and_then(Value::as_object)
+    else {
+        return taken;
+    };
+    table.retain(|key, value| {
+        let default = properties
+            .get(key)
+            .and_then(|property| property.get("default"));
+        if default == Some(&*value) {
+            taken.insert(key.clone(), value.clone());
+            false
+        } else {
+            true
+        }
+    });
+    taken
+}
+
+/// Adds to `found` a line for each place `old` and `new` differ, named by its path from the top
+/// level, `path` being the path of the two. A table is compared member by member, so that the line
+/// names the key that differs and not the table around it. `defaults` is what [`outside_lints`]
+/// took out of each for being a default, at the same place.
+///
+/// A list is a set, and only `overrides` is read in order, because the last override that matches a
+/// file wins. A set whose members differ by one, one gone and one new, is compared as that pair, so
+/// the line names the key of the entry that changed; any other difference is members added or
+/// dropped.
+fn data_differences(
+    path: &str,
+    old: &Value,
+    new: &Value,
+    defaults: (Option<&Value>, Option<&Value>),
+    found: &mut Vec<String>,
+) {
+    let below = |key: &str| {
+        (
+            defaults.0.and_then(|d| d.get(key)),
+            defaults.1.and_then(|d| d.get(key)),
+        )
+    };
+    let at_index = |index: usize| {
+        (
+            defaults.0.and_then(|d| d.get(index)),
+            defaults.1.and_then(|d| d.get(index)),
+        )
+    };
+    let enter = |path: &str, key: &str| {
+        if path.is_empty() {
+            key.to_string()
+        } else {
+            format!("{path}.{key}")
+        }
+    };
+    match (old, new) {
+        (Value::Object(old), Value::Object(new)) => {
+            let keys: BTreeSet<&String> = old.keys().chain(new.keys()).collect();
+            for key in keys {
+                let at = enter(path, key);
+                match (old.get(key), new.get(key)) {
+                    (Some(old), Some(new)) => data_differences(&at, old, new, below(key), found),
+                    // A default the text wrote is what it said, not "not set".
+                    (Some(old), None) => found.push(match defaults.1.and_then(|d| d.get(key)) {
+                        Some(written) => format!(
+                            "{at}: it is {} at schema 1 and {}, the default, at schema 2",
+                            shown(old),
+                            shown(written)
+                        ),
+                        None => format!(
+                            "{at}: it is {} at schema 1 and not set at schema 2",
+                            shown(old)
+                        ),
+                    }),
+                    (None, Some(new)) => found.push(match defaults.0.and_then(|d| d.get(key)) {
+                        Some(written) => format!(
+                            "{at}: it is {}, the default, at schema 1 and {} at schema 2",
+                            shown(written),
+                            shown(new)
+                        ),
+                        None => format!(
+                            "{at}: it is not set at schema 1 and {} at schema 2",
+                            shown(new)
+                        ),
+                    }),
+                    (None, None) => {}
+                }
+            }
+        }
+        (Value::Array(old), Value::Array(new))
+            if old.len() == new.len() && path.ends_with("overrides") =>
+        {
+            for (index, (old, new)) in old.iter().zip(new).enumerate() {
+                data_differences(
+                    &format!("{path}[{index}]"),
+                    old,
+                    new,
+                    at_index(index),
+                    found,
+                );
+            }
+        }
+        // The same members in another order.
+        (Value::Array(old), Value::Array(new))
+            if old.len() == new.len() && !left_over(old, new) => {}
+        (Value::Array(old), Value::Array(new)) if left_over(old, new) => {
+            let (dropped, added) = (not_in(old, new), not_in(new, old));
+            if let ([gone], [came]) = (dropped.as_slice(), added.as_slice())
+                && old.len() == new.len()
+            {
+                let index = old.iter().position(|value| value == *gone).unwrap_or(0);
+                data_differences(&format!("{path}[{index}]"), gone, came, (None, None), found);
+                return;
+            }
+            let list = |values: &[&Value]| {
+                values
+                    .iter()
+                    .map(|value| shown(value))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            let said = match (added.is_empty(), dropped.is_empty()) {
+                (false, false) => format!("adds {} and drops {}", list(&added), list(&dropped)),
+                (false, true) => format!("adds {}", list(&added)),
+                _ => format!("drops {}", list(&dropped)),
+            };
+            found.push(format!("{path}: at schema 2 it {said}"));
+        }
+        (old, new) if old != new => {
+            let (old, new) = shown_apart(old, new);
+            found.push(format!(
+                "{path}: it is {old} at schema 1 and {new} at schema 2"
+            ));
+        }
+        _ => {}
+    }
+}
+
+/// `value` as a short phrase of a report.
+/// The most characters of a value a difference shows.
+const SHOWN: usize = 60;
+
+fn shown(value: &Value) -> String {
+    let text = value.to_string();
+    match text.char_indices().nth(SHOWN) {
+        Some((end, _)) => format!("{}...", &text[..end]),
+        None => text,
+    }
+}
+
+/// The elements of `from` that `other` does not hold.
+fn not_in<'a>(from: &'a [Value], other: &[Value]) -> Vec<&'a Value> {
+    from.iter().filter(|value| !other.contains(value)).collect()
+}
+
+/// Whether the lists differ in an element that one holds and the other does not.
+fn left_over(old: &[Value], new: &[Value]) -> bool {
+    !not_in(old, new).is_empty() || !not_in(new, old).is_empty()
+}
+
+/// Two different values as text, each cut so that it still shows where they differ: a side is cut
+/// at 60 characters, or, when they read the same until later, a little after the first difference.
+fn shown_apart(old: &Value, new: &Value) -> (String, String) {
+    let (old, new) = (old.to_string(), new.to_string());
+    let same = old
+        .chars()
+        .zip(new.chars())
+        .take_while(|(a, b)| a == b)
+        .count();
+    let (from, to) = if same < SHOWN {
+        (0, SHOWN)
+    } else {
+        (same - SHOWN / 3, same + SHOWN / 3)
+    };
+    let cut = |text: &str| {
+        let chars: Vec<char> = text.chars().collect();
+        let part: String = chars.iter().skip(from).take(to - from).collect();
+        format!(
+            "{}{part}{}",
+            if from > 0 { "..." } else { "" },
+            if chars.len() > to { "..." } else { "" }
+        )
+    };
+    (cut(&old), cut(&new))
 }
 
 /// What one section of schema 1 becomes: the edits, and the tables they make, the section's and
@@ -401,7 +712,7 @@ struct Meaning {
 
 /// What `banned_phrases` reports: each phrase by its folded tokens with the advice printed for it,
 /// the `allow` phrases that keep a banned one from reporting, and the message.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 struct Phrases {
     ban: BTreeMap<Vec<String>, String>,
     allow: BTreeSet<Vec<String>>,
@@ -439,7 +750,7 @@ impl Phrases {
 }
 
 /// What `banned_chars` reports: the groups on, `allow`, `ban` and the message.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 struct Chars {
     groups: BTreeSet<String>,
     allow: BTreeSet<String>,
@@ -451,6 +762,157 @@ impl Chars {
     /// The lint, or `None` when it does not ban a character.
     fn banning(self) -> Option<Chars> {
         (!self.groups.is_empty() || !self.ban.is_empty()).then_some(self)
+    }
+}
+
+/// `tokens`, the folded tokens of a phrase, as a person would write it: a space between words,
+/// and none beside a mark such as the hyphen of `load-bearing`.
+fn said(tokens: &[String]) -> String {
+    let word = |token: &str| token.starts_with(|c: char| c.is_alphanumeric());
+    let mut text = String::new();
+    for (at, token) in tokens.iter().enumerate() {
+        if at > 0 && word(token) && word(&tokens[at - 1]) {
+            text.push(' ');
+        }
+        text.push_str(token);
+    }
+    format!("\"{text}\"")
+}
+
+/// A message, or `none`.
+fn message_of(message: &Option<String>) -> String {
+    message
+        .as_deref()
+        .map_or_else(|| "none".to_string(), |message| format!("{message:?}"))
+}
+
+/// Adds to `found` a line for each member of two keyed collections that one has and the other does
+/// not, or has with another value. `what` names a member and `how` says its value.
+fn keyed_differences<K: Ord, V: PartialEq>(
+    (old, new): (&BTreeMap<K, V>, &BTreeMap<K, V>),
+    lint: &'static str,
+    what: impl Fn(&K) -> String,
+    how: impl Fn(&V) -> String,
+    found: &mut Vec<(&'static str, String)>,
+) {
+    for (key, value) in old {
+        match new.get(key) {
+            None => found.push((lint, format!("{} is banned at schema 1 only", what(key)))),
+            Some(other) if other != value => found.push((
+                lint,
+                format!(
+                    "the advice for {} is {} at schema 1 and {} at schema 2",
+                    what(key),
+                    how(value),
+                    how(other)
+                ),
+            )),
+            Some(_) => {}
+        }
+    }
+    for key in new.keys().filter(|key| !old.contains_key(key)) {
+        found.push((lint, format!("{} is banned at schema 2 only", what(key))));
+    }
+}
+
+/// Adds to `found` a line for each member of `old` or `new` that the other lacks.
+fn set_differences<K: Ord>(
+    (old, new): (&BTreeSet<K>, &BTreeSet<K>),
+    lint: &'static str,
+    what: impl Fn(&K) -> String,
+    found: &mut Vec<(&'static str, String)>,
+) {
+    for key in old.difference(new) {
+        found.push((lint, format!("{} is at schema 1 only", what(key))));
+    }
+    for key in new.difference(old) {
+        found.push((lint, format!("{} is at schema 2 only", what(key))));
+    }
+}
+
+impl Meaning {
+    /// Each way `new`, what a table means at schema 2, differs from `self`, what it meant at
+    /// schema 1: the lint, and what differs.
+    fn differences(&self, new: &Meaning) -> Vec<(&'static str, String)> {
+        let mut found = Vec::new();
+        if self.phrases != new.phrases {
+            let old = self.phrases.clone().unwrap_or_default();
+            let new = new.phrases.clone().unwrap_or_default();
+            keyed_differences(
+                (&old.ban, &new.ban),
+                "banned_phrases",
+                |tokens| said(tokens),
+                |advice| format!("{advice:?}"),
+                &mut found,
+            );
+            set_differences(
+                (&old.allow, &new.allow),
+                "banned_phrases",
+                |tokens| format!("the allowed phrase {}", said(tokens)),
+                &mut found,
+            );
+            if old.message != new.message {
+                found.push((
+                    "banned_phrases",
+                    format!(
+                        "the message is {} at schema 1 and {} at schema 2",
+                        message_of(&old.message),
+                        message_of(&new.message)
+                    ),
+                ));
+            }
+        }
+        if self.chars != new.chars {
+            let old = self.chars.clone().unwrap_or_default();
+            let new = new.chars.clone().unwrap_or_default();
+            set_differences(
+                (&old.groups, &new.groups),
+                "banned_chars",
+                |group| format!("the group `{group}`"),
+                &mut found,
+            );
+            set_differences(
+                (&old.allow, &new.allow),
+                "banned_chars",
+                |ch| format!("the allowed character {ch:?}"),
+                &mut found,
+            );
+            keyed_differences(
+                (&old.ban, &new.ban),
+                "banned_chars",
+                |ch| format!("{ch:?}"),
+                |advice| format!("{advice:?}"),
+                &mut found,
+            );
+            if old.message != new.message {
+                found.push((
+                    "banned_chars",
+                    format!(
+                        "the message is {} at schema 1 and {} at schema 2",
+                        message_of(&old.message),
+                        message_of(&new.message)
+                    ),
+                ));
+            }
+        }
+        if self.others != new.others {
+            let none = serde_json::Map::new();
+            let (old, new) = (
+                self.others.as_object().unwrap_or(&none),
+                new.others.as_object().unwrap_or(&none),
+            );
+            let keys: BTreeSet<&String> = old.keys().chain(new.keys()).collect();
+            for key in keys
+                .into_iter()
+                .filter(|key| old.get(*key) != new.get(*key))
+            {
+                found.push((
+                    "the other lints",
+                    format!("`{key}` is set differently at schema 2 than at schema 1"),
+                ));
+            }
+        }
+        found
     }
 }
 
@@ -517,19 +979,19 @@ impl Meaning {
     }
 }
 
-/// Whether `lints` and `overrides`, the tables of a section at schema 2, mean what `section`, read
-/// at schema 1 with `stamp`, meant, for every file: the section alone, each override laid over it,
-/// and every two or three overrides that set a banning lint, laid over it in each order. Where one
-/// does not, why, naming the table.
+/// Each way `lints` and `overrides`, the tables of a section at schema 2, do not mean what
+/// `section`, read at schema 1 with `stamp`, meant, for every file: the section alone, each
+/// override laid over it, and every two or three overrides that set a banning lint, laid over it
+/// in each order. One line each, naming the table and the lint; none when they mean the same.
 fn compare(
     section: &v1::SectionReading,
     stamp: &semver::Version,
     lints: &Lints,
     overrides: &[Lints],
-) -> Result<(), String> {
+) -> Vec<String> {
     let name = section.name;
     if overrides.len() != section.overrides.len() {
-        return Err(format!("[{name}] does not have the overrides it had"));
+        return vec![format!("[{name}] does not have the overrides it had")];
     }
     let banning: Vec<usize> = (0..overrides.len())
         .filter(|&at| {
@@ -551,6 +1013,10 @@ fn compare(
             }
         }
     }
+    // What the section alone gets wrong, which a file in an override gets wrong too, and is said
+    // once.
+    let mut inherited: Vec<(&'static str, String)> = Vec::new();
+    let mut found: Vec<String> = Vec::new();
     for chain in chains {
         let mut old = section.lints.clone();
         let mut new = lints.clone();
@@ -559,37 +1025,42 @@ fn compare(
             new.merge(&overrides[at]);
         }
         let (old, new) = (Meaning::of_one(&old, stamp), Meaning::of_two(&new));
-        if old == new {
-            continue;
-        }
-        let lint = if old.phrases != new.phrases {
-            "banned_phrases"
-        } else if old.chars != new.chars {
-            "banned_chars"
+        let mut differences = old.differences(&new);
+        if chain.is_empty() {
+            inherited = differences.clone();
         } else {
-            "the other lints"
-        };
+            differences.retain(|difference| !inherited.contains(difference));
+        }
         let place = |at: &usize| format!("{name}.overrides[{at}]");
-        return Err(match chain.as_slice() {
-            [] => {
-                format!("{name}.lints: {lint} would not mean at schema 2 what it meant at schema 1")
+        let lines: Vec<String> = match chain.as_slice() {
+            [] => differences
+                .into_iter()
+                .map(|(lint, what)| format!("{name}.lints: {lint}: {what}"))
+                .collect(),
+            [at] => differences
+                .into_iter()
+                .map(|(lint, what)| format!("{}.lints: {lint}: {what}", place(at)))
+                .collect(),
+            [init @ .., last] => match differences.first() {
+                None => Vec::new(),
+                Some((lint, _)) => {
+                    let others: Vec<String> = init.iter().map(place).collect();
+                    vec![format!(
+                        "{}.lints.{lint}: schema 2 cannot ban what schema 1 did in a file that {} \
+                         also match without changing another file; migrate these overrides by hand",
+                        place(last),
+                        others.join(" and ")
+                    )]
+                }
+            },
+        };
+        for line in lines {
+            if !found.contains(&line) {
+                found.push(line);
             }
-            [at] => format!(
-                "{}.lints: {lint} would not mean at schema 2 what it meant at schema 1",
-                place(at)
-            ),
-            [init @ .., last] => {
-                let others: Vec<String> = init.iter().map(place).collect();
-                format!(
-                    "{}.lints.{lint}: schema 2 cannot ban what schema 1 did in a file that {} \
-                     also match without changing another file; migrate these overrides by hand",
-                    place(last),
-                    others.join(" and ")
-                )
-            }
-        });
+        }
     }
-    Ok(())
+    found
 }
 
 #[cfg(test)]
@@ -693,6 +1164,26 @@ mod tests {
     }
 
     #[test]
+    fn an_empty_inline_banned_chars_table_migrates_dotted_or_under_a_header() {
+        for text in [
+            "schema_version = 1\n[md]\nlints.banned_chars = {}\n",
+            "schema_version = 1\n[md.lints]\nbanned_chars = {}\n",
+            "schema_version = 1\n[md]\nlints = { banned_chars = {} }\n",
+        ] {
+            let text = migrated(text);
+            let config = Config::parse(&text, PathBuf::from("deslag.toml"), ConfigSource::Explicit)
+                .expect("it loads");
+            let chars = config.sections()[0]
+                .lints
+                .banned_chars
+                .clone()
+                .expect("chars");
+            let groups = serde_json::to_value(&chars.groups).expect("data");
+            assert_eq!(groups["dashes"], true, "{text}");
+        }
+    }
+
+    #[test]
     fn a_char_table_names_the_groups_it_had_on() {
         let text =
             migrated("schema_version = 1\n[md.lints.banned_chars]\ngroups = { dashes = false }\n");
@@ -729,6 +1220,205 @@ mod tests {
             refusal.reason.contains("banned_phrases"),
             "{}",
             refusal.reason
+        );
+    }
+
+    #[test]
+    fn a_bare_bump_with_overlapping_overrides_reports_the_sections_differences_only() {
+        let overrides = "  overrides:\n    - globs: [\"a/**\"]\n      lints:\n        banned_phrases:\n          \
+                         ban: {\"foo\": \"bar\"}\n    - globs: [\"a/b/**\"]\n      lints:\n        \
+                         banned_phrases:\n          ban: {\"baz\": \"qux\"}\n";
+        let section =
+            "md:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      allow: [\"x y\"]\n";
+        let copy = format!("schema_version: 1\n{section}{overrides}");
+        let bare = format!("schema_version: 2\n{section}{overrides}");
+        let schema = NonZeroU32::new(1).expect("one");
+        let said = check_copy(&copy, schema, &bare, ConfigFormat::Yaml).expect_err("it means less");
+        assert!(
+            said.iter()
+                .any(|line| line.starts_with("md.lints: banned_phrases:")),
+            "{said:#?}"
+        );
+        assert!(
+            said.iter()
+                .all(|line| !line.contains("migrate these overrides by hand")),
+            "{said:#?}"
+        );
+    }
+
+    #[test]
+    fn an_allow_entry_with_a_line_is_compared_like_one_with_a_quote() {
+        let directory = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/configs/0.0.3/");
+        let copy = std::fs::read_to_string(format!("{directory}config.yaml")).expect("a copy");
+        let data = std::fs::read_to_string(format!("{directory}config.migrated.toml"))
+            .expect("a migrated config");
+        let data: Value = toml::from_str(&data).expect("a migrated config is data");
+        let schema = NonZeroU32::new(1).expect("one");
+        let entry = |line: &str| {
+            serde_json::json!({
+                "lint": "banned_chars",
+                "path": "docs/extra.md",
+                "line": line,
+                "reason": "a table",
+            })
+        };
+        let with = |line: &str| {
+            let mut data = data.clone();
+            data["md"]["allow"]
+                .as_array_mut()
+                .expect("a list")
+                .push(entry(line));
+            data
+        };
+        let said = check_copy(
+            &copy,
+            schema,
+            &with("a | b").to_string(),
+            ConfigFormat::Yaml,
+        )
+        .expect_err("a longer list");
+        assert!(
+            said.iter()
+                .any(|line| line.starts_with("md.allow: at schema 2 it adds ")
+                    && line.contains("a | b")),
+            "{said:#?}"
+        );
+        // The same entry in both, a `line` that differs only in the new, is named as a difference
+        // when the copy also holds one.
+        let json = std::fs::read_to_string(format!("{directory}config.json")).expect("a copy");
+        let mut old: Value = serde_json::from_str(&json).expect("a copy is data");
+        old["md"]["allow"]
+            .as_array_mut()
+            .expect("a list")
+            .push(entry("a | b"));
+        let said = check_copy(
+            &old.to_string(),
+            schema,
+            &with("a | c").to_string(),
+            ConfigFormat::Json,
+        )
+        .expect_err("a line that differs");
+        assert!(
+            said.iter().any(|line| line.starts_with("md.allow[")
+                && line.contains(".line: ")
+                && line.contains("a | b")
+                && line.contains("a | c")),
+            "{said:#?}"
+        );
+    }
+
+    #[test]
+    fn an_allow_entry_added_to_the_frozen_config_is_named_as_added() {
+        let directory = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/configs/0.0.3/");
+        let copy = std::fs::read_to_string(format!("{directory}config.yaml")).expect("a copy");
+        let data = std::fs::read_to_string(format!("{directory}config.migrated.toml"))
+            .expect("a migrated config");
+        let mut data: Value = toml::from_str(&data).expect("a migrated config is data");
+        data["md"]["allow"]
+            .as_array_mut()
+            .expect("a list")
+            .push(serde_json::json!({ "lint": "not_at_all", "path": "docs/extra.md" }));
+        let schema = NonZeroU32::new(1).expect("one");
+        let said = check_copy(&copy, schema, &data.to_string(), ConfigFormat::Yaml)
+            .expect_err("a longer list");
+        assert!(
+            said.iter()
+                .any(|line| line.starts_with("md.allow: at schema 2 it adds ")
+                    && line.contains("docs/extra.md")
+                    && !line.contains("drops")),
+            "{said:#?}"
+        );
+    }
+
+    #[test]
+    fn two_long_values_are_cut_where_they_differ() {
+        let long = |end: &str| Value::String(format!("{}{end}", "a".repeat(100)));
+        let (old, new) = shown_apart(&long("x"), &long("y"));
+        assert_ne!(old, new);
+        assert!(old.contains('x') && new.contains('y'), "{old} {new}");
+        assert!(old.len() < 100, "{old}");
+    }
+
+    #[test]
+    fn dropping_a_key_that_holds_its_default_is_no_difference() {
+        let copy = "schema_version: 1\nmd:\n  exclude: []\n  globs: [\"*.md\"]\n  overrides:\n    - \
+                    globs: [\"a/**\"]\n      exclude: []\n";
+        let current = "schema_version: 2\nmd:\n  globs: [\"*.md\"]\n  overrides:\n    - \
+                       globs: [\"a/**\"]\n";
+        let schema = NonZeroU32::new(1).expect("one");
+        check_copy(copy, schema, current, ConfigFormat::Yaml).expect("it means what it meant");
+
+        // A key that is not at its default is a difference when it goes.
+        let copy = copy.replace("exclude: []", "exclude: [\"b.md\"]");
+        let said = check_copy(&copy, schema, current, ConfigFormat::Yaml).expect_err("it differs");
+        assert!(
+            said.iter().any(|line| line.starts_with("md.exclude: ")),
+            "{said:#?}"
+        );
+    }
+
+    /// What `check_copy` says of the YAML `copy` of schema 1 against the YAML `current`.
+    fn said_of_yaml(copy: &str, current: &str) -> Vec<String> {
+        let schema = NonZeroU32::new(1).expect("one");
+        match check_copy(copy, schema, current, ConfigFormat::Yaml) {
+            Ok(()) => Vec::new(),
+            Err(said) => said,
+        }
+    }
+
+    #[test]
+    fn a_pure_reordering_of_a_list_is_no_difference() {
+        let copy = "schema_version: 1\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                    quote: \"a\", reason: r}\n    - {lint: banned_chars, path: q.md, line: \"a | b\", \
+                    reason: r}\n  globs: [\"x/*.md\", \"y/*.md\"]\n";
+        let current = "schema_version: 2\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                       line: \"a | b\", reason: r}\n    - {lint: banned_chars, path: q.md, quote: \
+                       \"a\", reason: r}\n  globs: [\"y/*.md\", \"x/*.md\"]\n";
+        assert_eq!(said_of_yaml(copy, current), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_reordering_with_one_entry_changed_reports_that_entry_only() {
+        let copy = "schema_version: 1\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                    quote: \"a\", reason: r}\n    - {lint: banned_chars, path: q.md, line: \"a | b\", \
+                    reason: r}\n";
+        let current = "schema_version: 2\nmd:\n  allow:\n    - {lint: banned_chars, path: q.md, \
+                       line: \"a | b\", reason: r}\n    - {lint: banned_chars, path: q.md, quote: \
+                       \"z\", reason: r}\n";
+        assert_eq!(
+            said_of_yaml(copy, current),
+            ["md.allow[0].quote: it is \"a\" at schema 1 and \"z\" at schema 2"]
+        );
+    }
+
+    #[test]
+    fn overrides_are_still_compared_in_order() {
+        let copy = "schema_version: 1\nmd:\n  overrides:\n    - globs: [\"a/**\"]\n    - globs: \
+                    [\"b/**\"]\n";
+        let current = "schema_version: 2\nmd:\n  overrides:\n    - globs: [\"b/**\"]\n    - globs: \
+                       [\"a/**\"]\n";
+        assert!(!said_of_yaml(copy, current).is_empty());
+    }
+
+    #[test]
+    fn a_default_written_on_one_side_is_said_to_be_the_default() {
+        let copy = "schema_version: 1\nmd:\n  globs: [\"*.md\"]\n  overrides:\n    - globs: \
+                    [\"a/**\"]\n      exclude: []\n";
+        let current = "schema_version: 2\nmd:\n  globs: [\"y/*.md\"]\n  overrides:\n    - globs: \
+                       [\"a/**\"]\n      exclude: [\"z\"]\n";
+        assert_eq!(
+            said_of_yaml(copy, current),
+            [
+                "md.globs: it is [\"*.md\"], the default, at schema 1 and [\"y/*.md\"] at schema 2",
+                "md.overrides[0].exclude: it is [], the default, at schema 1 and [\"z\"] at schema 2",
+            ]
+        );
+        // And the other way round.
+        let copy = copy.replace("[\"*.md\"]", "[\"y/*.md\"]");
+        let current = current.replace("[\"y/*.md\"]", "[\"*.md\"]");
+        assert_eq!(
+            said_of_yaml(&copy, &current)[0],
+            "md.globs: it is [\"y/*.md\"] at schema 1 and [\"*.md\"], the default, at schema 2"
         );
     }
 
@@ -794,5 +1484,159 @@ mod tests {
         let text = migrated(&text);
         let ban = ban(&text, "md", None).expect("a ban");
         assert!(ban.contains_key("in order to") && ban.contains_key("load-bearing"));
+    }
+
+    /// A config of schema 1 that sets one of everything `means_what_one_meant` compares.
+    const WHOLE: &str = "schema_version = 1\ndeslag_version = \"0.0.3\"\n\
+        [md]\nglobs = [\"*.md\"]\n\
+        [md.lints.banned_phrases]\nallow = [\"not silently ignored\"]\nmessage = \"{path}: phrase\"\n\
+        [md.lints.banned_phrases.ban]\n\"in order to\" = \"use to\"\n\
+        [md.lints.banned_chars]\nmessage = \"{path}: char\"\n\
+        [md.lints.density]\nmax_paragraph_chars = 500\n\
+        [[md.overrides]]\nglobs = [\"a/**\"]\n\
+        [md.overrides.lints.banned_chars.groups]\ndashes = false\n";
+
+    /// `old`, of schema 1, migrated as data, for a test to change by hand.
+    fn migrated_data(old: &str) -> Value {
+        toml::from_str(&migrated(old)).expect("the migrated text is data")
+    }
+
+    /// Each way `new`, read as JSON, does not mean what `old`, TOML of schema 1, meant.
+    fn wrong(old: &str, new: &Value) -> Vec<String> {
+        match means_what_one_meant(
+            old,
+            ConfigFormat::Toml,
+            &new.to_string(),
+            ConfigFormat::Json,
+        ) {
+            Ok(()) => Vec::new(),
+            Err(why) => why.lines().map(str::to_string).collect(),
+        }
+    }
+
+    #[test]
+    fn the_migration_of_a_config_means_what_it_meant() {
+        assert_eq!(wrong(WHOLE, &migrated_data(WHOLE)), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_bare_bump_of_the_schema_names_the_group_and_the_phrase_it_loses() {
+        let mut bare = migrated_data(WHOLE);
+        bare["md"]["lints"]["banned_phrases"]
+            .as_object_mut()
+            .expect("a table")
+            .remove("ban");
+        bare["md"]["lints"]["banned_chars"]
+            .as_object_mut()
+            .expect("a table")
+            .remove("groups");
+        let said = wrong(WHOLE, &bare);
+        assert!(
+            said.contains(
+                &"md.lints: banned_phrases: \"load-bearing\" is banned at schema 1 only"
+                    .to_string()
+            ),
+            "{said:#?}"
+        );
+        assert!(
+            said.contains(
+                &"md.lints: banned_chars: the group `dashes` is at schema 1 only".to_string()
+            ),
+            "{said:#?}"
+        );
+    }
+
+    #[test]
+    fn one_difference_of_each_kind_is_named_with_its_table_and_its_lint() {
+        let change = |edit: fn(&mut Value)| {
+            let mut new = migrated_data(WHOLE);
+            edit(&mut new);
+            wrong(WHOLE, &new)
+        };
+        assert_eq!(
+            change(|new| {
+                new["md"]["lints"]["banned_phrases"]["ban"]["in order to"] = "x".into();
+            }),
+            [
+                "md.lints: banned_phrases: the advice for \"in order to\" is \"use to\" at schema 1 \
+              and \"x\" at schema 2"
+            ]
+        );
+        assert_eq!(
+            change(|new| {
+                new["md"]["lints"]["banned_phrases"]["ban"]["extra one"] = "y".into();
+            }),
+            ["md.lints: banned_phrases: \"extra one\" is banned at schema 2 only"]
+        );
+        assert_eq!(
+            change(|new| {
+                new["md"]["lints"]["banned_phrases"]["allow"] = Value::Array(Vec::new());
+            }),
+            [
+                "md.lints: banned_phrases: the allowed phrase \"not silently ignored\" is at schema \
+              1 only"
+            ]
+        );
+        assert_eq!(
+            change(|new| {
+                new["md"]["lints"]["banned_chars"]["message"] = "other".into();
+            }),
+            [
+                "md.lints: banned_chars: the message is \"{path}: char\" at schema 1 and \"other\" at \
+              schema 2"
+            ]
+        );
+        assert_eq!(
+            change(|new| {
+                new["md"]["lints"]["density"]["max_paragraph_chars"] = 400.into();
+            }),
+            [
+                "md.lints: the other lints: `density` is set differently at schema 2 than at schema 1"
+            ]
+        );
+        assert_eq!(
+            change(|new| {
+                new["md"]["overrides"][0]["lints"]["banned_chars"]["groups"]["dashes"] =
+                    true.into();
+            }),
+            ["md.overrides[0].lints: banned_chars: the group `dashes` is at schema 2 only"]
+        );
+        assert_eq!(
+            change(|new| {
+                new["md"]["globs"] = serde_json::json!(["*.md", "x/*.md"]);
+            }),
+            // The old text wrote the default itself, so it is not "not set".
+            [
+                "md.globs: it is [\"*.md\"], the default, at schema 1 and [\"*.md\",\"x/*.md\"] \
+                 at schema 2"
+            ]
+        );
+        assert_eq!(
+            change(|new| {
+                new["md"]["overrides"][0]["globs"] = serde_json::json!(["b/**"]);
+            }),
+            ["md.overrides[0].globs[0]: it is \"a/**\" at schema 1 and \"b/**\" at schema 2"]
+        );
+    }
+
+    #[test]
+    fn the_schema_and_the_stamp_are_not_compared() {
+        let mut new = migrated_data(WHOLE);
+        new["deslag_version"] = "0.0.5".into();
+        assert_eq!(wrong(WHOLE, &new), Vec::<String>::new());
+        new["schema_version"] = 1.into();
+        assert_eq!(wrong(WHOLE, &new), ["its schema_version is not 2"]);
+    }
+
+    #[test]
+    fn a_config_written_as_a_list_by_position_cannot_be_compared() {
+        let said = means_what_one_meant(
+            "schema_version = 1\n",
+            ConfigFormat::Toml,
+            "[2]",
+            ConfigFormat::Json,
+        );
+        let said = said.expect_err("it is refused");
+        assert!(said.contains("list by position"), "{said}");
     }
 }

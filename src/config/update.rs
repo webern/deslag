@@ -5,6 +5,16 @@
 //! not load, for a fault it had at the old schema too, nothing is written: the fault is the error,
 //! to fix by hand before `update` can rewrite the config.
 //!
+//! A migration deslag cannot write, which it refuses with the edits to make by hand (a YAML or JSON
+//! config, or a TOML one the editor cannot take), leaves the config as it is and saves its old text
+//! beside it as `<config>.schema<N>`, `N` being the schema it was. The person makes the edits and
+//! runs `update` again, which finds a config of this schema and the copy, and holds the config to
+//! what the copy meant: it says what it checked and removes the copy, or refuses and names each
+//! difference, and the copy stays. While the copy is there, `check`, `fix` and `explain` refuse the
+//! config (`Config::load_text_at`), so that a bare bump of `schema_version` cannot pass unchecked.
+//! A refusal with no edits to list does not save a copy: no text could pass. A dry run neither
+//! saves nor removes a copy. The copy of a config that is still of its old schema is saved again.
+//!
 //! It loads the config as `check` would, but says nothing of what it loads: the warnings it would
 //! print are the edits it is about to make. It then asks [`edit::edit`] for the text with every
 //! redirect the file uses made and the stamp moved, and replaces the file with that text through
@@ -19,13 +29,14 @@
 //! git, and does not set a lint or a group itself.
 
 use std::fs;
+use std::num::NonZeroU32;
 use std::path::Path;
 
 use semver::Version;
 
 use crate::Error;
 use crate::config::edit::{self, Checked, Edit, Edited, Refusal};
-use crate::config::{self, Config, migrate, search};
+use crate::config::{self, Config, ConfigFormat, migrate, search};
 use crate::news::Known;
 use crate::{version, write};
 
@@ -40,6 +51,30 @@ pub struct Update {
     pub edits: Vec<Edit>,
     /// Set when the stamp was left because something arrived after it that the running version has.
     pub held: Option<Held>,
+    /// Set when the config was held to what its old text meant, and did.
+    pub verified: Option<Verified>,
+}
+
+/// The old text a config was held to, and passed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Verified {
+    /// What to call the old text: the copy beside the config, or for a migration deslag wrote, the
+    /// config as it was.
+    pub against: String,
+    /// The schema the old text was of.
+    pub from: NonZeroU32,
+}
+
+impl Verified {
+    /// The line that says so.
+    fn line(&self) -> String {
+        format!(
+            "checked against {}: it means at schema {} what it meant at schema {}",
+            self.against,
+            config::SCHEMA_VERSION,
+            self.from
+        )
+    }
 }
 
 /// A stamp that stays, because the person has not read what is new.
@@ -62,6 +97,15 @@ impl Update {
             .iter()
             .map(|edit| edit.report(&self.path, self.dry_run))
             .collect();
+        // After the migration's edits, which are the table edits, and before the rest.
+        let migrated = self
+            .edits
+            .iter()
+            .rposition(|edit| matches!(edit, Edit::Table { .. }))
+            .map_or(0, |at| at + 1);
+        if let Some(verified) = &self.verified {
+            lines.insert(migrated, verified.line());
+        }
         match &self.held {
             Some(Held {
                 stamp,
@@ -89,7 +133,7 @@ impl Update {
 }
 
 /// The command a person runs again after making by hand the edits a refusal lists.
-fn rerun(explicit: Option<&Path>, to: Option<&Version>) -> String {
+pub(super) fn rerun(explicit: Option<&Path>, to: Option<&Version>) -> String {
     let mut command = String::from("deslag update");
     if let Some(path) = explicit {
         command.push_str(&format!(" --config-path {}", path.display()));
@@ -132,6 +176,132 @@ fn is_read_only(metadata: &fs::Metadata) -> bool {
     }
 }
 
+/// The schema `text`, the config at `found`, is written for.
+fn schema_of(text: &str, found: &Path) -> Option<NonZeroU32> {
+    config::schema_of(text, ConfigFormat::of(found)?)
+}
+
+/// The error for a migration deslag refused. When the refusal lists edits to make by hand, the old
+/// text is saved beside the config first, so that the run after them has something to hold the
+/// result to; with a dry run it says it would.
+fn refused_migration(
+    found: &Path,
+    path: &str,
+    read: &str,
+    refusal: Refusal,
+    dry_run: bool,
+    rerun: &str,
+) -> Error {
+    let copy = schema_of(read, found)
+        .filter(|_| !refusal.todo.is_empty())
+        .map(|schema| migrate::copy_path(found, schema));
+    let Some(copy) = copy else {
+        return refusal.into_error(path, rerun);
+    };
+    let name = shown_beside(path, &copy);
+    let note = if dry_run {
+        format!(
+            "without --dry-run, deslag saves the old text as {name}, and the run after these \
+             edits checks that the config means what it did"
+        )
+    } else if copy.is_dir() {
+        // The edits are listed first: the person has them to make whether or not the copy is saved.
+        format!(
+            "deslag cannot save the old text as {name}, which is a directory; remove it by hand, \
+             or the run after these edits cannot check them"
+        )
+    } else {
+        let saved = if copy.is_file() {
+            write::replace(&copy, read.as_bytes())
+        } else {
+            write::create(&copy, read.as_bytes())
+        };
+        match saved {
+            Ok(()) => format!(
+                "deslag saved the old text as {name}; the run after these edits checks that the \
+                 config means what it did, and removes the copy; until then check refuses the \
+                 config"
+            ),
+            Err(error) => format!(
+                "deslag could not save the old text as {name}: {}; without it the run after these \
+                 edits cannot check them",
+                error.chain()
+            ),
+        }
+    };
+    match refusal.into_error(path, rerun) {
+        Error::Update { path, problem } => Error::Update {
+            path,
+            problem: format!("{problem}\n{note}"),
+        },
+        other => other,
+    }
+}
+
+/// The copy `copy` of the config called `path`, named as `path` is.
+fn shown_beside(path: &str, copy: &Path) -> String {
+    let name = copy.file_name().unwrap_or_default().to_string_lossy();
+    match Path::new(path).parent() {
+        Some(parent) if !parent.as_os_str().is_empty() => parent.join(&*name).display().to_string(),
+        _ => name.into_owned(),
+    }
+}
+
+/// Holds the config `read`, at `found`, to what `copy`, its old text of schema `from`, meant. The
+/// error names each difference and the copy as the way back; the copy stays.
+fn check_against_copy(
+    copy: &Path,
+    from: NonZeroU32,
+    read: &str,
+    found: &Path,
+    path: &str,
+    rerun: &str,
+) -> Result<Verified, Error> {
+    let name = shown_beside(path, copy);
+    // The same refusal as `check` gives: a directory is not a copy to restore.
+    if copy.is_dir() {
+        return Err(Error::CopyIsDirectory {
+            path: path.to_string(),
+            copy: name,
+            found: from,
+            rerun: rerun.to_string(),
+        });
+    }
+    let old = fs::read_to_string(copy).map_err(|source| Error::Update {
+        path: path.to_string(),
+        problem: format!(
+            "cannot read {name}, the text {path} had at schema {from}: {source}; restore it, or \
+             remove it by hand and deslag will not check {path} against it"
+        ),
+    })?;
+    let format = ConfigFormat::of(found).ok_or_else(|| Error::ConfigFormat {
+        path: path.to_string(),
+    })?;
+    match migrate::check_copy(&old, from, read, format) {
+        Ok(()) => Ok(Verified {
+            against: name,
+            from,
+        }),
+        Err(differences) => {
+            let mut problem = format!(
+                "{path} does not mean at schema {} what {name} meant at schema {from}:",
+                config::SCHEMA_VERSION
+            );
+            for line in differences {
+                problem.push_str(&format!("\n  {line}"));
+            }
+            problem.push_str(&format!(
+                "\nnothing was written; make it mean what it meant, and change it after; {name} \
+                 is the way back to the old text; then run `{rerun}`"
+            ));
+            Err(Error::Update {
+                path: path.to_string(),
+                problem,
+            })
+        }
+    }
+}
+
 /// Updates the config of the repo rooted at `root`, found as `check` finds it: the redirects it
 /// uses are made, and the stamp moves as the module says. `running` is the release of deslag that
 /// is updating it, and `to`, when given, is that release. `known` says whether anything arrived
@@ -155,11 +325,30 @@ pub fn update(
     // A config of an older schema is rewritten first, and the rest is done to the rewritten text;
     // one from a later deslag is refused before anything is rewritten.
     config::refuse_later(&read, &found, running)?;
-    let migrated = migrate::migrate(&read, &path)
-        .map_err(|refusal| refusal.into_error(&path, &rerun(explicit, to)))?;
+    let migrated = migrate::migrate(&read, &path).map_err(|refusal| {
+        refused_migration(&found, &path, &read, refusal, dry_run, &rerun(explicit, to))
+    })?;
+    let copy = migrate::copy_beside(&found);
     let (text, mut edits) = match &migrated {
         Some(migrated) => (migrated.text.as_str().to_string(), migrated.edits.clone()),
-        None => (read, Vec::new()),
+        None => (read.clone(), Vec::new()),
+    };
+    // What the config is held to: for a migration deslag wrote, the text it had; for a config of
+    // this schema with a copy beside it, the copy.
+    let verified = match (&migrated, &copy) {
+        (Some(_), _) => schema_of(&read, &found).map(|from| Verified {
+            against: format!("{path} as it was"),
+            from,
+        }),
+        (None, Some((copy, from))) => Some(check_against_copy(
+            copy,
+            *from,
+            &read,
+            &found,
+            &path,
+            &rerun(explicit, to),
+        )?),
+        (None, None) => None,
     };
     let config = match Config::parse_at(&text, found.clone(), source, running) {
         Ok(config) => config,
@@ -211,11 +400,19 @@ pub fn update(
             write_checked(config.path(), &edited.text)?;
         }
     }
+    // The copy has done its work: the config means what it meant, or deslag rewrote the config.
+    if let (Some((copy, _)), false) = (&copy, dry_run) {
+        fs::remove_file(copy).map_err(|source| Error::Write {
+            path: copy.display().to_string(),
+            source,
+        })?;
+    }
     Ok(Update {
         path,
         dry_run,
         edits: edited.edits,
         held,
+        verified,
     })
 }
 
@@ -460,6 +657,7 @@ mod tests {
                 taken: Version::new(0, 0, 1),
                 running: Version::new(0, 0, 2),
             }),
+            verified: None,
         };
         let lines = held.lines();
         assert_eq!(lines.len(), 1);
@@ -605,5 +803,183 @@ mod tests {
         fs::set_permissions(&path, fs::Permissions::from_mode(0o444)).expect("permissions");
         let done = run(&dir, false, None, &news()).expect("an update");
         assert!(done.edits.is_empty());
+    }
+
+    /// `{"schema_version":1,"md":{"lints":{"banned_phrases":{}}}}`, which `update` cannot rewrite
+    /// as JSON, and what it means at schema 2, written as JSON.
+    const OLD_JSON: &str = "{\"schema_version\":1,\"md\":{\"lints\":{\"banned_phrases\":{}}}}";
+
+    fn by_hand() -> String {
+        let migrated =
+            migrate::migrate("schema_version = 1\n[md.lints.banned_phrases]\n", "d.toml")
+                .expect("it migrates")
+                .expect("it is older");
+        let value: serde_json::Value =
+            toml::from_str(migrated.text.as_str()).expect("a migrated config is data");
+        value.to_string()
+    }
+
+    fn copy_of(path: &std::path::Path) -> std::path::PathBuf {
+        path.with_file_name("deslag.json.schema1")
+    }
+
+    #[test]
+    fn a_refused_migration_saves_the_old_text_and_a_dry_run_saves_none() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        let copy = copy_of(&path);
+        let error = run(&dir, true, None, &nothing_new()).expect_err("a refusal");
+        let said = error.to_string();
+        assert!(
+            said.contains("without --dry-run, deslag saves the old text as deslag.json.schema1")
+        );
+        assert!(!copy.exists());
+
+        let error = run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        assert!(
+            error
+                .to_string()
+                .contains("deslag saved the old text as deslag.json.schema1")
+        );
+        assert_eq!(fs::read_to_string(&copy).expect("a copy"), OLD_JSON);
+        assert_eq!(fs::read_to_string(&path).expect("a config"), OLD_JSON);
+    }
+
+    #[test]
+    fn a_config_that_means_what_the_copy_meant_passes_and_the_copy_goes_but_not_in_a_dry_run() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        let copy = copy_of(&path);
+        run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        fs::write(&path, by_hand()).expect("a config");
+
+        let dry = run(&dir, true, None, &nothing_new()).expect("it passes");
+        assert!(
+            dry.lines()[0].starts_with("checked against deslag.json.schema1: it means at schema 2")
+        );
+        assert!(copy.exists());
+
+        let done = run(&dir, false, None, &nothing_new()).expect("it passes");
+        assert_eq!(
+            done.lines()[0],
+            "checked against deslag.json.schema1: it means at schema 2 what it meant at schema 1"
+        );
+        assert!(!copy.exists());
+        assert!(
+            run(&dir, false, None, &nothing_new())
+                .expect("an update")
+                .verified
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn a_config_that_means_less_than_the_copy_is_refused_and_the_copy_stays() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        let copy = copy_of(&path);
+        run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        let bare = "{\"schema_version\":2,\"md\":{\"lints\":{\"banned_phrases\":{}}}}";
+        fs::write(&path, bare).expect("a config");
+
+        let error = run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        let said = error.to_string();
+        assert!(
+            said.contains("md.lints: banned_phrases: \"load-bearing\" is banned at schema 1 only")
+                && said.contains("deslag.json.schema1 is the way back"),
+            "{said}"
+        );
+        assert!(copy.exists());
+        assert_eq!(fs::read_to_string(&path).expect("a config"), bare);
+    }
+
+    #[test]
+    fn the_refusal_while_a_copy_sits_beside_a_config_names_its_config_path() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        fs::write(&path, by_hand()).expect("a config");
+        let error = Config::load(dir.path(), Some(&path)).expect_err("a copy beside it");
+        let said = error.to_string();
+        assert!(
+            said.contains(&format!(
+                "run `deslag update --config-path {}`",
+                path.display()
+            )),
+            "{said}"
+        );
+    }
+
+    #[test]
+    fn a_directory_where_the_copy_goes_is_refused_by_name_as_a_directory() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        fs::create_dir(copy_of(&path)).expect("a directory");
+
+        // The edits are listed and the directory is named, with nothing written.
+        let said = run(&dir, false, None, &nothing_new())
+            .expect_err("a refusal")
+            .to_string();
+        assert!(
+            said.contains("make these edits")
+                && said.contains("deslag.json.schema1, which is a directory"),
+            "{said}"
+        );
+        assert_eq!(fs::read_to_string(&path).expect("a config"), OLD_JSON);
+
+        fs::write(&path, by_hand()).expect("a config");
+        let error = Config::load(dir.path(), None).expect_err("a directory beside it");
+        assert!(matches!(error, Error::CopyIsDirectory { .. }), "{error}");
+        assert!(error.to_string().contains("is a directory"), "{error}");
+
+        // `update` of the edited config gives the same refusal, not one about reading a copy.
+        let updated = run(&dir, false, None, &nothing_new()).expect_err("a directory beside it");
+        assert!(
+            matches!(updated, Error::CopyIsDirectory { .. }),
+            "{updated}"
+        );
+        assert!(updated.to_string().contains("is a directory"), "{updated}");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_copy_that_cannot_be_written_still_lists_the_edits_before_the_write_error() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        // A link to nowhere where the copy goes: it is not there, and it cannot be made.
+        std::os::unix::fs::symlink("nowhere", copy_of(&path)).expect("a link");
+
+        let said = run(&dir, false, None, &nothing_new())
+            .expect_err("a refusal")
+            .to_string();
+        let edits = said.find("make these edits").expect("the edits are listed");
+        let failure = said
+            .find("could not save the old text as deslag.json.schema1")
+            .expect("the write error is said");
+        assert!(edits < failure, "{said}");
+        assert_eq!(fs::read_to_string(&path).expect("a config"), OLD_JSON);
+    }
+
+    #[test]
+    fn a_copy_that_cannot_be_read_says_what_to_do() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        fs::write(&path, by_hand()).expect("a config");
+        // Bytes that are not text cannot be read as a copy.
+        fs::write(copy_of(&path), [0xff, 0xfe, 0xfd]).expect("a copy");
+
+        let said = run(&dir, false, None, &nothing_new())
+            .expect_err("a refusal")
+            .to_string();
+        assert!(
+            said.contains("cannot read deslag.json.schema1")
+                && said.contains("restore it, or remove it by hand"),
+            "{said}"
+        );
+    }
+
+    #[test]
+    fn a_config_is_not_loaded_while_a_copy_sits_beside_it() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        fs::write(&path, by_hand()).expect("a config");
+        let error = Config::load(dir.path(), None).expect_err("a copy beside it");
+        assert!(matches!(error, Error::UncheckedCopy { .. }), "{error}");
+        fs::remove_file(copy_of(&path)).expect("a copy");
+        Config::load(dir.path(), None).expect("it loads without the copy");
     }
 }

@@ -445,7 +445,9 @@ fn line_pieces<'a>(source: &'a str, text: Range<usize>, pieces: &mut Vec<Piece<'
 
 /// The code spans of `line`, as the range of each with its backticks and the range of its text.
 /// A run of backticks opens a span that the next run of the same length closes. A run that nothing
-/// closes is text.
+/// closes is text. A backtick after an odd number of backslashes is text, and the rest of its run
+/// is a run of its own, as in Markdown. Inside a span a backslash is text, so it does not keep a
+/// run from closing.
 fn code_spans(line: &str) -> Vec<(Range<usize>, Range<usize>)> {
     let bytes = line.as_bytes();
     // The end of the run of backticks that starts at `at`.
@@ -454,7 +456,19 @@ fn code_spans(line: &str) -> Vec<(Range<usize>, Range<usize>)> {
     let mut spans = Vec::new();
     let mut at = 0;
     while let Some(found) = next(at) {
-        let open = at + found;
+        let mut open = at + found;
+        let slashes = bytes[..open]
+            .iter()
+            .rev()
+            .take_while(|b| **b == b'\\')
+            .count();
+        if slashes % 2 == 1 {
+            open += 1;
+            if bytes.get(open) != Some(&b'`') {
+                at = open;
+                continue;
+            }
+        }
         let after = run_end(open);
         let mut search = after;
         let mut closed = None;

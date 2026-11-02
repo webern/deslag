@@ -283,6 +283,18 @@ fn a_double_backtick_span_holds_a_backtick() {
 }
 
 #[test]
+fn an_escaped_backtick_is_text() {
+    // It opens no span, and it closes none: the backslash is text inside a span.
+    assert_eq!(pieces(r"a \`b\` c"), [r"t:a \`b\` c"]);
+    assert_eq!(pieces(r"a \`b` c"), [r"t:a \`b` c"]);
+    assert_eq!(pieces(r"`a\` b"), [r"c:`a\`=a\", "t: b"]);
+    // The rest of an escaped run is a run of its own.
+    assert_eq!(pieces(r"\``a` b"), [r"t:\`", "c:`a`=a", "t: b"]);
+    // A pair of backslashes escapes nothing.
+    assert_eq!(pieces(r"\\`a` b"), [r"t:\\", "c:`a`=a", "t: b"]);
+}
+
+#[test]
 fn a_span_in_a_list_item_is_a_code_piece() {
     assert_eq!(
         pieces("- use `a`\n  and `b`"),
@@ -304,11 +316,40 @@ fn a_raw_run_with_backticks_is_text() {
 
 #[test]
 fn a_span_agrees_with_markdown() {
-    for text in ["a `b` c", "`a` `bc`", "- a `b`\n- `c`\n", "a ``b ` c`` d"] {
+    let texts = [
+        "a `b` c",
+        "`a` `bc`",
+        "- a `b`\n- `c`\n",
+        "a ``b ` c`` d",
+        "a `` b ` c `` d",
+        "a `  ` b",
+        "a ` b ` c",
+        "- `a b` c\n- d `e` f\n",
+    ];
+    for text in texts {
         let plain = Document::plain(text);
         let markdown = Document::markdown(text);
         assert_eq!(plain.pieces, markdown.pieces, "{text:?}");
         assert_eq!(plain.tokens, markdown.tokens, "{text:?}");
+    }
+    // Markdown drops the backslash of an escape and splits the text there, so only the code
+    // pieces are compared.
+    let escapes = [r"a \`b\` c", r"a \`b` c", r"`a\` b", r"\``a` b", r"\\`a` b"];
+    for text in escapes {
+        let code = |document: Document| {
+            let code: Vec<_> = document
+                .pieces
+                .iter()
+                .filter(|piece| piece.kind == PieceKind::Code)
+                .map(|piece| (piece.range.clone(), piece.text.to_string()))
+                .collect();
+            code
+        };
+        assert_eq!(
+            code(Document::plain(text)),
+            code(Document::markdown(text)),
+            "{text:?}"
+        );
     }
 }
 

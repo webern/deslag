@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::document::{Token, TokenKind};
-use crate::lint::Lint;
+use crate::lint::{self, Lint};
 
 /// Laying a more specific set of settings over a less specific one.
 pub trait Merge {
@@ -110,6 +110,84 @@ impl Lints {
                     .and_then(BannedPhrases::invalid)
             })
             .or_else(|| self.density.as_ref().and_then(Density::invalid))
+            .or_else(|| self.unknown_placeholder())
+    }
+
+    /// Why a `message` is unusable: it holds a `{name}` its lint does not fill, which a report
+    /// would print as written. The refusal names the placeholders the lint takes. The same lists
+    /// fill the reports, so the two cannot differ.
+    fn unknown_placeholder(&self) -> Option<String> {
+        let messages: [(&str, Option<&String>, &[&str]); 10] = [
+            (
+                "max_size_bytes",
+                self.max_size_bytes
+                    .as_ref()
+                    .and_then(|s| s.message.as_ref()),
+                lint::max_size_bytes::PLACEHOLDERS,
+            ),
+            (
+                "max_emphasis",
+                self.max_emphasis.as_ref().and_then(|s| s.message.as_ref()),
+                lint::max_emphasis::PLACEHOLDERS,
+            ),
+            (
+                "repo_layout",
+                self.repo_layout.as_ref().and_then(|s| s.message.as_ref()),
+                lint::repo_layout::PLACEHOLDERS,
+            ),
+            (
+                "banned_chars",
+                self.banned_chars.as_ref().and_then(|s| s.message.as_ref()),
+                lint::banned_chars::PLACEHOLDERS,
+            ),
+            (
+                "banned_phrases",
+                self.banned_phrases
+                    .as_ref()
+                    .and_then(|s| s.message.as_ref()),
+                lint::banned_phrases::PLACEHOLDERS,
+            ),
+            (
+                "density",
+                self.density.as_ref().and_then(|s| s.message.as_ref()),
+                lint::density::PLACEHOLDERS,
+            ),
+            (
+                "verbs_no_nouns",
+                self.verbs_no_nouns
+                    .as_ref()
+                    .and_then(|s| s.message.as_ref()),
+                lint::verbs_no_nouns::PLACEHOLDERS,
+            ),
+            (
+                "not_at_all",
+                self.not_at_all.as_ref().and_then(|s| s.message.as_ref()),
+                lint::not_at_all::PLACEHOLDERS,
+            ),
+            (
+                "verbs_nothing",
+                self.verbs_nothing.as_ref().and_then(|s| s.message.as_ref()),
+                lint::verbs_nothing::PLACEHOLDERS,
+            ),
+            (
+                "possessive_own",
+                self.possessive_own
+                    .as_ref()
+                    .and_then(|s| s.message.as_ref()),
+                lint::possessive_own::PLACEHOLDERS,
+            ),
+        ];
+        messages.into_iter().find_map(|(lint, message, names)| {
+            let unknown = lint::unknown_placeholder(message?, names)?;
+            let takes = names
+                .iter()
+                .map(|name| format!("{{{name}}}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            Some(format!(
+                "{lint}.message holds {{{unknown}}}, which the lint does not fill; it takes {takes}"
+            ))
+        })
     }
 
     /// Why these settings, resolved for one file, contradict each other, or `None` when they do
@@ -835,6 +913,53 @@ impl Merge for PossessiveOwn {
     fn merge(&mut self, over: &Self) {
         if over.message.is_some() {
             self.message.clone_from(&over.message);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde::Deserialize;
+
+    use super::Lints;
+    use crate::lint;
+
+    /// Every lint with a `message`, with the names it fills.
+    const LINTS: [(&str, &[&str]); 10] = [
+        ("max_size_bytes", lint::max_size_bytes::PLACEHOLDERS),
+        ("max_emphasis", lint::max_emphasis::PLACEHOLDERS),
+        ("repo_layout", lint::repo_layout::PLACEHOLDERS),
+        ("banned_chars", lint::banned_chars::PLACEHOLDERS),
+        ("banned_phrases", lint::banned_phrases::PLACEHOLDERS),
+        ("density", lint::density::PLACEHOLDERS),
+        ("verbs_no_nouns", lint::verbs_no_nouns::PLACEHOLDERS),
+        ("not_at_all", lint::not_at_all::PLACEHOLDERS),
+        ("verbs_nothing", lint::verbs_nothing::PLACEHOLDERS),
+        ("possessive_own", lint::possessive_own::PLACEHOLDERS),
+    ];
+
+    /// The settings of `lint` holding only `message`.
+    fn with_message(lint: &str, message: &str) -> Lints {
+        let table = toml::toml! { message = message };
+        let mut lints = toml::Table::new();
+        lints.insert(lint.to_string(), toml::Value::Table(table));
+        Lints::deserialize(toml::Value::Table(lints)).expect("settings of a lint")
+    }
+
+    /// Each lint accepts every name it lists, and refuses any other, naming what it takes.
+    #[test]
+    fn a_message_may_hold_only_the_names_its_lint_fills() {
+        for (lint, names) in LINTS {
+            let all: String = names.iter().map(|name| format!("{{{name}}} ")).collect();
+            assert_eq!(with_message(lint, &all).invalid(), None, "{lint}");
+
+            let refused = with_message(lint, &format!("{all}{{no_such_name}}"))
+                .invalid()
+                .unwrap_or_else(|| panic!("{lint} accepted {{no_such_name}}"));
+            assert!(refused.starts_with(&format!("{lint}.message holds {{no_such_name}}")));
+            for name in names {
+                assert!(refused.contains(&format!("{{{name}}}")), "{refused}");
+            }
         }
     }
 }

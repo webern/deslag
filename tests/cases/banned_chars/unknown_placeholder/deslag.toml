@@ -1,0 +1,5 @@
+schema_version = 2
+
+[md.lints.banned_chars]
+groups = { dashes = true }
+message = "Fix {path}: it holds {count} banned characters."

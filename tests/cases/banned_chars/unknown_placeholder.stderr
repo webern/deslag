@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: banned_chars.message holds {count}, which the lint does not fill; it takes {path}

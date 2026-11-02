@@ -205,10 +205,13 @@ fn is_a_label_or_marks(before: &[Token<'_>]) -> bool {
         && rest[label + 1..].iter().all(is_a_mark)
 }
 
+/// The names a `message` may put in braces, which the report fills.
+pub const PLACEHOLDERS: &[&str] = &["path"];
+
 /// The report for one file at `path` that holds the construction, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     let advice = match &over.message {
-        Some(message) => message.replace("{path}", path),
+        Some(message) => super::fill(message, PLACEHOLDERS, |_| path.to_string()),
         None => DEFAULT_ADVICE.to_string(),
     };
     let listed: String = over

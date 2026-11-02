@@ -427,6 +427,53 @@ impl Finding {
     }
 }
 
+/// Where a `{name}` stands in a lint's `message`: the byte range of the braces and the name between
+/// them. A name is letters and `_`.
+fn placeholders(message: &str) -> impl Iterator<Item = (std::ops::Range<usize>, &str)> {
+    let mut from = 0;
+    std::iter::from_fn(move || {
+        while let Some(open) = message[from..].find('{').map(|at| from + at) {
+            let name = message[open + 1..]
+                .split(|ch: char| !(ch.is_ascii_alphabetic() || ch == '_'))
+                .next()
+                .unwrap_or_default();
+            let end = open + 1 + name.len();
+            if !name.is_empty() && message[end..].starts_with('}') {
+                from = end + 1;
+                return Some((open..from, name));
+            }
+            from = open + 1;
+        }
+        None
+    })
+}
+
+/// `message` with each `{name}` that `names` lists replaced by `value(name)`. Any other `{name}`
+/// stays as written; the config refuses one at load ([`unknown_placeholder`]).
+///
+/// A lint lists its names in one constant, and this is how it reads them, so what a config may
+/// write and what a report fills cannot differ.
+pub(crate) fn fill(message: &str, names: &[&str], value: impl Fn(&str) -> String) -> String {
+    let mut filled = String::with_capacity(message.len());
+    let mut done = 0;
+    for (range, name) in placeholders(message) {
+        if names.contains(&name) {
+            filled.push_str(&message[done..range.start]);
+            filled.push_str(&value(name));
+            done = range.end;
+        }
+    }
+    filled.push_str(&message[done..]);
+    filled
+}
+
+/// The first `{name}` in `message` that `names` does not list.
+pub(crate) fn unknown_placeholder<'m>(message: &'m str, names: &[&str]) -> Option<&'m str> {
+    placeholders(message)
+        .map(|(_, name)| name)
+        .find(|name| !names.contains(name))
+}
+
 /// What one run of `deslag check` found.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Report {
@@ -806,8 +853,37 @@ mod tests {
     use std::fs;
     use std::path::Path;
 
-    use super::{Lint, decode};
+    use super::{Lint, decode, fill, unknown_placeholder};
     use crate::document::{Fences, Reader, Stack};
+
+    /// A name in braces is a placeholder when it is letters and `_`; the other braces are text.
+    #[test]
+    fn fill_replaces_the_listed_names_and_leaves_the_rest() {
+        let value = |name: &str| name.to_uppercase();
+        let names = ["path", "max_size_bytes"];
+        let cases = [
+            (
+                "Cut {path} to {max_size_bytes}.",
+                "Cut PATH to MAX_SIZE_BYTES.",
+            ),
+            ("{size_bytes} stays", "{size_bytes} stays"),
+            ("{{path}}", "{PATH}"),
+            ("{ path } {} {pa th} {path", "{ path } {} {pa th} {path"),
+            ("a {b} {path} c", "a {b} PATH c"),
+        ];
+        for (message, expected) in cases {
+            assert_eq!(fill(message, &names, value), expected, "{message}");
+        }
+    }
+
+    /// The first name a lint does not list is the one named; a message of listed names is fine.
+    #[test]
+    fn unknown_placeholder_names_the_first_unlisted_name() {
+        let names = ["path"];
+        assert_eq!(unknown_placeholder("{path} {x_y} {z}", &names), Some("x_y"));
+        assert_eq!(unknown_placeholder("{path} {path}", &names), None);
+        assert_eq!(unknown_placeholder("{} { a } {1}", &names), None);
+    }
 
     /// A valid file reads as it is. An invalid byte is one `$` wherever it falls, so the text is
     /// as long as the bytes: alone, in front of a multi-byte character, cut off at the end, or

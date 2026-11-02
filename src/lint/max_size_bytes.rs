@@ -110,6 +110,9 @@ pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
     kept.then(|| over.clone())
 }
 
+/// The names a `message` may put in braces, which the report fills.
+pub const PLACEHOLDERS: &[&str] = &["path", "max_size_bytes"];
+
 /// The report for one finding at `path`, with no trailing newline.
 pub fn render(path: &str, over: &Over) -> String {
     match over {
@@ -153,9 +156,11 @@ fn render_bloat(path: &str, over: &Bloat) -> String {
     let size_bytes = over.size_bytes;
     let over_amount = over.size_bytes - over.budget;
     let advice = match &over.message {
-        Some(message) => message
-            .replace("{path}", path)
-            .replace("{max_size_bytes}", &budget.to_string()),
+        Some(message) => super::fill(message, PLACEHOLDERS, |name| match name {
+            "path" => path.to_string(),
+            "max_size_bytes" => budget.to_string(),
+            _ => unreachable!("{name} is not in PLACEHOLDERS"),
+        }),
         None => default_advice(budget),
     };
     format!(

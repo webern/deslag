@@ -180,7 +180,7 @@ pub struct Corpus {
     pub repos: Vec<String>,
     /// Every prose token.
     pub vocab: Vocab,
-    /// The fixtures left out: the tree's `core/`, which is hand-picked and carries no label.
+    /// The fixtures left out: the tree's `core/`, which is hand-picked and does not carry a label.
     pub left_out: usize,
 }
 

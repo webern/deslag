@@ -144,7 +144,7 @@ pub struct PatternRow {
 pub struct Patterns {
     /// What was measured.
     pub header: Header,
-    /// The files whose sidecar names no language, which are left out.
+    /// The files whose sidecar does not name a language, which are left out.
     pub no_language: u64,
     /// Each pattern asked for.
     pub patterns: Vec<PatternRow>,
@@ -168,7 +168,7 @@ struct Held {
     words: HashSet<String>,
 }
 
-/// Runs `patterns` for the patterns `names` names, or every one when it names none.
+/// Runs `patterns` for the patterns `names` names, or every one when it does not name one.
 pub fn patterns(corpus: &Corpus, filters: &Filters, names: &[String]) -> Result<Patterns, Problem> {
     for name in names {
         if !known().any(|(known, _, _)| known == name) {

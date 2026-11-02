@@ -16,7 +16,7 @@ mod select;
 mod walk;
 
 pub use select::{Globs, Selection};
-pub use walk::{RepoFile, find, relative_slash_path, walk};
+pub use walk::{RepoFile, Skipped, Walked, find, relative_slash_path, walk};
 
 use globset::{GlobBuilder, GlobMatcher};
 

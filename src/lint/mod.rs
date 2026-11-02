@@ -33,7 +33,7 @@ use crate::change::{self, Change};
 use crate::config::paths::SINCE;
 use crate::config::{Allow, Config, Lints, Section};
 use crate::document::{Document, Edit, Location, Need};
-use crate::glob::{self, RepoFile};
+use crate::glob::{self, RepoFile, Skipped, Walked};
 use crate::version::Version;
 
 pub use allow::Exemption;
@@ -444,6 +444,8 @@ pub struct Report {
     pub exemptions: Vec<Exemption>,
     /// The config's path as a report names it: relative to the repo root when it is under it.
     pub config: String,
+    /// Each directory the walk could not read and so did not check. Nothing in it was linted.
+    pub skipped: Vec<Skipped>,
 }
 
 /// The base a run read a change from, given with `--base` or `--diff`.
@@ -470,6 +472,19 @@ impl Report {
     /// Whether nothing failed: no file fails a lint, and every `allow` entry holds.
     pub fn is_clean(&self) -> bool {
         self.findings.is_empty() && !self.exemptions.iter().any(Exemption::failed)
+    }
+
+    /// A line for each directory the walk skipped, to print before the findings.
+    pub fn warnings(&self) -> Vec<String> {
+        self.skipped
+            .iter()
+            .map(|skipped| {
+                format!(
+                    "deslag: warning: cannot read {}, skipped: {}",
+                    skipped.path, skipped.error
+                )
+            })
+            .collect()
     }
 
     /// The entries that did not hold.
@@ -590,6 +605,7 @@ impl Report {
             }),
             exemptions,
             config: self.config.clone(),
+            skipped: self.skipped.clone(),
         }
     }
 }
@@ -610,7 +626,11 @@ pub fn check_repo(root: &Path, config: &Config, change: Option<&Change>) -> Resu
         ..Report::default()
     };
 
-    let walked = glob::walk(root)?;
+    let Walked {
+        files: walked,
+        skipped,
+    } = glob::walk(root)?;
+    report.skipped = skipped;
     let known: BTreeSet<String> = match config.has_allow() {
         true => walked.iter().map(|file| file.relative.clone()).collect(),
         false => BTreeSet::new(),
@@ -640,7 +660,7 @@ pub(crate) fn selected<'c>(
     root: &Path,
     config: &'c Config,
 ) -> Result<Vec<(RepoFile, &'c Section)>, Error> {
-    select(glob::walk(root)?, config)
+    select(glob::walk(root)?.files, config)
 }
 
 /// The `files` that the config selects, each with the section that selects it.

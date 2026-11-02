@@ -20,8 +20,28 @@ pub struct RepoFile {
     pub relative: String,
 }
 
-/// Every regular file under `root` that is not ignored, sorted by relative path.
-pub fn walk(root: &Path) -> Result<Vec<RepoFile>, Error> {
+/// A directory the walk could not read, and so did not enter.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Skipped {
+    /// The directory, relative to the repo root, `/`-separated.
+    pub path: String,
+    /// Why it could not be read, such as `Permission denied (os error 13)`.
+    pub error: String,
+}
+
+/// What a walk found.
+#[derive(Debug, Clone, Default)]
+pub struct Walked {
+    /// Every regular file under the root that is not ignored, sorted by relative path.
+    pub files: Vec<RepoFile>,
+    /// Each directory under the root that could not be read, in the order the walk met them.
+    pub skipped: Vec<Skipped>,
+}
+
+/// Every regular file under `root` that is not ignored, and each directory below `root` that could
+/// not be read. An unreadable `root`, or a broken ignore file, is an error: the walk reports a
+/// directory it cannot read and goes on, so one path does not hide every finding.
+pub fn walk(root: &Path) -> Result<Walked, Error> {
     let walker = WalkBuilder::new(root)
         // `.github`, `.agents` and the like hold Markdown too.
         .hidden(false)
@@ -36,11 +56,26 @@ pub fn walk(root: &Path) -> Result<Vec<RepoFile>, Error> {
         .build();
 
     let mut found = Vec::new();
+    let mut skipped = Vec::new();
     for entry in walker {
-        let entry = entry.map_err(|source| Error::Walk {
-            root: root.display().to_string(),
-            source,
-        })?;
+        let entry = match entry {
+            Ok(entry) => entry,
+            Err(source) => match unreadable(&source, None) {
+                Some((path, error)) if path != root => {
+                    skipped.push(Skipped {
+                        path: relative_slash_path(root, path),
+                        error,
+                    });
+                    continue;
+                }
+                _ => {
+                    return Err(Error::Walk {
+                        root: root.display().to_string(),
+                        source,
+                    });
+                }
+            },
+        };
         if !entry
             .file_type()
             .is_some_and(|file_type| file_type.is_file())
@@ -56,7 +91,26 @@ pub fn walk(root: &Path) -> Result<Vec<RepoFile>, Error> {
     }
 
     found.sort_by(|left, right| left.relative.cmp(&right.relative));
-    Ok(found)
+    Ok(Walked {
+        files: found,
+        skipped,
+    })
+}
+
+/// The path and the reason of a walk error that is a path that could not be read, and nothing
+/// else: not a broken ignore file.
+fn unreadable<'e>(error: &'e ignore::Error, path: Option<&'e Path>) -> Option<(&'e Path, String)> {
+    match error {
+        ignore::Error::WithDepth { err, .. } => unreadable(err, path),
+        ignore::Error::WithPath { path, err } => unreadable(err, Some(path)),
+        ignore::Error::Io(io) => {
+            // The walker wraps the operating system's error in its own, which repeats the path.
+            let cause = io.get_ref().and_then(|inner| inner.source());
+            let reason = cause.map_or_else(|| io.to_string(), ToString::to_string);
+            Some((path?, reason))
+        }
+        _ => None,
+    }
 }
 
 /// The file that `path`, given relative to the canonical repo root `root`, names, with any link and

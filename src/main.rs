@@ -222,6 +222,9 @@ fn check(
     if let (Some(change), true) = (change, narrowed) {
         report = report.within(change);
     }
+    for warning in report.warnings() {
+        eprintln!("{warning}");
+    }
     for finding in &report.findings {
         eprintln!("{}\n", finding.render());
     }

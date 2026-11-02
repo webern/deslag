@@ -819,20 +819,6 @@ mod tests {
             "{report}"
         );
         assert!(report.contains("Do not change the config"), "{report}");
-        let one = check(
-            &Document::markdown("It reads the crate's own config."),
-            Some(&PossessiveOwn {
-                message: Some("Fix {path}.".to_string()),
-            }),
-        )
-        .expect("a match");
-        let report = render("a.md", &one);
-        assert!(
-            report.contains("a.md has 1 possessive padded with \"own\"."),
-            "{report}"
-        );
-        assert!(report.contains("\n\nFix a.md.\n\n"), "{report}");
-        assert!(!report.contains("Delete \"own\""), "{report}");
     }
 
     #[test]

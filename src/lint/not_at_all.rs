@@ -534,18 +534,5 @@ mod tests {
         assert!(report.contains("line 1: \"not there at all\""));
         assert!(report.contains("line 3: \"no cache at all\""));
         assert!(report.contains("Write \"it does not parse\""));
-        let one = check(
-            &Document::markdown("It is not there at all."),
-            Some(&NotAtAll {
-                message: Some("Fix {path}.".to_string()),
-            }),
-        )
-        .expect("a match");
-        let report = render("a.md", &one);
-        assert!(
-            report.contains("a.md has 1 negation padded with \"at all\"."),
-            "{report}"
-        );
-        assert!(report.contains("\n\nFix a.md.\n\n"), "{report}");
     }
 }

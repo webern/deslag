@@ -218,8 +218,9 @@ fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
 ///   sentence opens with a preposition read at `Likely` or above, after at most one conjunction,
 ///   then at most one determiner, then only adjectives, numerals and nouns up to the word, none of
 ///   them a word the tagger does not know;
-/// - a label: the word lies in strong or emphasized text that starts at the sentence's first
-///   token and ends before the match's next token.
+/// - a label: the word ends strong or emphasized text that opens the sentence or follows a comma
+///   or a semicolon and ends before the match's next token, in which no word is a determiner or
+///   read as a verb or an auxiliary.
 ///
 /// Both lints of the construction filter their matches on it.
 pub fn heads_a_noun(document: &Document<'_>, found: &Range<usize>) -> bool {
@@ -296,24 +297,58 @@ fn fronted(tokens: &[Token<'_>], start: usize) -> bool {
         })
 }
 
-/// Whether the token `start` of the sentence that begins at token `first` of the document lies
-/// in strong or emphasized text that starts at the sentence's first token and ends before the
-/// next token.
+/// Whether the token `start` of the sentence that begins at token `first` of the document is the
+/// last word of a label: strong or emphasized text that ends before the next token and opens the
+/// sentence or follows a comma or a semicolon. Any determiner (`a`, `an`, `the`, `this`, `that`,
+/// `these`, `those`, `its`, `our`, `your`) in the span, or any word whose first reading is a verb
+/// or an auxiliary at any confidence, makes it text.
 fn labelled(document: &Document<'_>, first: usize, start: usize) -> bool {
     let word = &document.tokens[first + start];
     let Some(next) = document.tokens.get(first + start + 1) else {
         return false;
     };
-    let opening = &document.tokens[first];
     // The end of the token before the sentence, which the text must not reach back past.
     let floor = first
         .checked_sub(1)
         .map_or(0, |before| document.tokens[before].range.end);
     document.spans_over(word.range.clone()).any(|span| {
-        matches!(span.kind, SpanKind::Strong | SpanKind::Emphasis)
-            && span.range.start >= floor
-            && span.range.start <= opening.range.start
-            && span.range.end <= next.range.start
+        if !matches!(span.kind, SpanKind::Strong | SpanKind::Emphasis)
+            || span.range.start < floor
+            || span.range.end > next.range.start
+        {
+            return false;
+        }
+        let inside = |token: &&Token<'_>| {
+            token.kind == TokenKind::Word
+                && token.range.start >= span.range.start
+                && token.range.end <= span.range.end
+        };
+        let Some(lead) = document.tokens[first..]
+            .iter()
+            .position(|token| token.range.start >= span.range.start)
+        else {
+            return false;
+        };
+        let lead = first + lead;
+        let opens = lead == first || matches!(document.tokens[lead - 1].text.as_ref(), "," | ";");
+        opens
+            && document.tokens[lead..=first + start]
+                .iter()
+                .filter(inside)
+                .all(|token| {
+                    !matches!(
+                        token.folded().as_str(),
+                        "a" | "an"
+                            | "the"
+                            | "this"
+                            | "that"
+                            | "these"
+                            | "those"
+                            | "its"
+                            | "our"
+                            | "your"
+                    ) && !matches!(tag_of(token), Some(Tag::Verb | Tag::Auxiliary))
+                })
     })
 }
 
@@ -679,7 +714,8 @@ mod tests {
         assert_eq!(found("In cases, ships no binary."), ["ships no binary"]);
         assert_eq!(found("In 7 cases ships no binary."), ["ships no binary"]);
         assert_eq!(found("In `x` cases ships no binary."), ["ships no binary"]);
-        // A word the tagger does not know is no evidence of a phrase.
+        // The tagger reads `reports` as a verb here, so no cue fires. The guard on unknown words in
+        // the run is pinned in `verbs_nothing`.
         assert_eq!(
             found("With this flag deslag reports no changes."),
             ["reports no changes"]
@@ -694,12 +730,26 @@ mod tests {
     #[test]
     fn a_label_is_a_noun() {
         for text in [
-            "**GIVEN** no compatible driver, it stops.",
             "- **Warnings** no more than three.",
             "*Findings* no one reads.",
             "- **Open warnings** no one reads.",
+            "**Errors** no one reads, **warnings** no one reads.",
         ] {
             assert!(found(text).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn a_label_has_no_determiner_and_no_verb() {
+        // A determiner or a verb reading in the span makes it text.
+        for text in [
+            "**The tool ships** no binary.",
+            "- **The linter reports** no binary.",
+            "**This flag disables** no binary.",
+            "**Ships** no binary.",
+            "**GIVEN** no compatible driver, it stops.",
+        ] {
+            assert!(!found(text).is_empty(), "{text}");
         }
     }
 

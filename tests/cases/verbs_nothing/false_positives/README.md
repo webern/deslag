@@ -25,3 +25,9 @@ The ones nothing reaches stay. An accept nothing sends to the queue is dropped.
 
 - **Warnings** none
 - **Errors** none
+
+**Warnings** none
+
+**Errors** none, **warnings** none.
+
+**Caches** nothing

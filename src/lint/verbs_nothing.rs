@@ -730,9 +730,28 @@ mod tests {
             "An accept nothing sends to the queue.",
             "In most runs nothing happens.",
             "In most cases nothing is needed.",
+            "**Warnings** none",
             "- **Warnings** none",
             "**Errors** none.",
+            "**Errors** none, **warnings** none.",
+            "**Caches** nothing",
         ]);
+    }
+
+    #[test]
+    fn a_label_has_no_determiner_and_no_verb() {
+        for text in [
+            "**Does** nothing",
+            "**Finds** nothing here.",
+            "*Finds* nothing.",
+            "- **The linter reports** nothing.",
+            "**This flag disables** nothing.",
+            "It **does** nothing",
+        ] {
+            assert!(!found(text).is_empty(), "{text}");
+        }
+        // Not a match on main either.
+        passes(&["**Note**: nothing is cached", "*Returns* nothing"]);
     }
 
     #[test]

@@ -344,11 +344,22 @@ impl Config {
         // A copy of the old text beside a config of this schema is there because `deslag update`
         // could not rewrite the config, and nothing has checked the edits made by hand.
         if let Some((copy, found)) = migrate::copy_beside(&path) {
-            return Err(Error::UncheckedCopy {
-                path: path.display().to_string(),
-                copy: copy.display().to_string(),
-                found,
-                rerun: update::rerun(explicit, None),
+            let (path, copy) = (path.display().to_string(), copy.display().to_string());
+            let rerun = update::rerun(explicit, None);
+            return Err(if std::path::Path::new(&copy).is_dir() {
+                Error::CopyIsDirectory {
+                    path,
+                    copy,
+                    found,
+                    rerun,
+                }
+            } else {
+                Error::UncheckedCopy {
+                    path,
+                    copy,
+                    found,
+                    rerun,
+                }
             });
         }
         Ok((config, text))

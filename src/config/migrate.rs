@@ -97,13 +97,14 @@ pub(crate) fn copy_path(config: &Path, schema: NonZeroU32) -> PathBuf {
 }
 
 /// The copy of an older schema that sits beside the config at `config`, with its schema; the newest
-/// when there are several.
+/// when there are several. A directory of that name counts: it is not a copy, but nothing has
+/// checked the config against one either.
 pub(crate) fn copy_beside(config: &Path) -> Option<(PathBuf, NonZeroU32)> {
     (1..SCHEMA_VERSION.get())
         .rev()
         .filter_map(NonZeroU32::new)
         .map(|schema| (copy_path(config, schema), schema))
-        .find(|(copy, _)| copy.is_file())
+        .find(|(copy, _)| copy.exists())
 }
 
 /// Whether `current`, a config of [`SCHEMA_VERSION`] written in `format`, means what `copy`, the

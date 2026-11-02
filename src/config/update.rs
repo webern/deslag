@@ -204,19 +204,30 @@ fn refused_migration(
             "without --dry-run, deslag saves the old text as {name}, and the run after these \
              edits checks that the config means what it did"
         )
+    } else if copy.is_dir() {
+        // The edits are listed first: the person has them to make whether or not the copy is saved.
+        format!(
+            "deslag cannot save the old text as {name}, which is a directory; remove it by hand, \
+             or the run after these edits cannot check them"
+        )
     } else {
         let saved = if copy.is_file() {
             write::replace(&copy, read.as_bytes())
         } else {
             write::create(&copy, read.as_bytes())
         };
-        if let Err(error) = saved {
-            return error;
+        match saved {
+            Ok(()) => format!(
+                "deslag saved the old text as {name}; the run after these edits checks that the \
+                 config means what it did, and removes the copy; until then check refuses the \
+                 config"
+            ),
+            Err(error) => format!(
+                "deslag could not save the old text as {name}: {}; without it the run after these \
+                 edits cannot check them",
+                error.chain()
+            ),
         }
-        format!(
-            "deslag saved the old text as {name}; the run after these edits checks that the \
-             config means what it did, and removes the copy; until then check refuses the config"
-        )
     };
     match refusal.into_error(path, rerun) {
         Error::Update { path, problem } => Error::Update {
@@ -247,9 +258,12 @@ fn check_against_copy(
     rerun: &str,
 ) -> Result<Verified, Error> {
     let name = shown_beside(path, copy);
-    let old = fs::read_to_string(copy).map_err(|source| Error::Read {
-        path: copy.display().to_string(),
-        source,
+    let old = fs::read_to_string(copy).map_err(|source| Error::Update {
+        path: path.to_string(),
+        problem: format!(
+            "cannot read {name}, the text {path} had at schema {from}: {source}; restore it, or \
+             remove it by hand and deslag will not check {path} against it"
+        ),
     })?;
     let format = ConfigFormat::of(found).ok_or_else(|| Error::ConfigFormat {
         path: path.to_string(),
@@ -879,6 +893,65 @@ mod tests {
                 "run `deslag update --config-path {}`",
                 path.display()
             )),
+            "{said}"
+        );
+    }
+
+    #[test]
+    fn a_directory_where_the_copy_goes_is_refused_by_name_as_a_directory() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        fs::create_dir(copy_of(&path)).expect("a directory");
+
+        // The edits are listed and the directory is named, with nothing written.
+        let said = run(&dir, false, None, &nothing_new())
+            .expect_err("a refusal")
+            .to_string();
+        assert!(
+            said.contains("make these edits")
+                && said.contains("deslag.json.schema1, which is a directory"),
+            "{said}"
+        );
+        assert_eq!(fs::read_to_string(&path).expect("a config"), OLD_JSON);
+
+        fs::write(&path, by_hand()).expect("a config");
+        let error = Config::load(dir.path(), None).expect_err("a directory beside it");
+        assert!(matches!(error, Error::CopyIsDirectory { .. }), "{error}");
+        assert!(error.to_string().contains("is a directory"), "{error}");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_copy_that_cannot_be_written_still_lists_the_edits_before_the_write_error() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        // A link to nowhere where the copy goes: it is not there, and it cannot be made.
+        std::os::unix::fs::symlink("nowhere", copy_of(&path)).expect("a link");
+
+        let said = run(&dir, false, None, &nothing_new())
+            .expect_err("a refusal")
+            .to_string();
+        let edits = said.find("make these edits").expect("the edits are listed");
+        let failure = said
+            .find("could not save the old text as deslag.json.schema1")
+            .expect("the write error is said");
+        assert!(edits < failure, "{said}");
+        assert_eq!(fs::read_to_string(&path).expect("a config"), OLD_JSON);
+    }
+
+    #[test]
+    fn a_copy_that_cannot_be_read_says_what_to_do() {
+        let (dir, path) = repo_in("json", OLD_JSON);
+        run(&dir, false, None, &nothing_new()).expect_err("a refusal");
+        fs::write(&path, by_hand()).expect("a config");
+        // A directory cannot be read as text.
+        fs::remove_file(copy_of(&path)).expect("a copy");
+        fs::create_dir(copy_of(&path)).expect("a directory");
+
+        let said = run(&dir, false, None, &nothing_new())
+            .expect_err("a refusal")
+            .to_string();
+        assert!(
+            said.contains("cannot read deslag.json.schema1")
+                && said.contains("restore it, or remove it by hand"),
             "{said}"
         );
     }

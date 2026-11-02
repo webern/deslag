@@ -164,6 +164,23 @@ pub enum Error {
         rerun: String,
     },
 
+    /// Where deslag keeps the old text of a config there is a directory, so nothing can have checked
+    /// the edits made by hand, and none can be.
+    #[error(
+        "{path} has not been checked: {copy}, where deslag keeps the text it had at schema \
+         {found}, is a directory; remove it by hand, then run `{rerun}`"
+    )]
+    CopyIsDirectory {
+        /// The config file.
+        path: String,
+        /// The directory.
+        copy: String,
+        /// The schema the copy would be of.
+        found: NonZeroU32,
+        /// The command to run after.
+        rerun: String,
+    },
+
     /// The config was last updated by a later deslag than this one.
     #[error(
         "{path} was last updated by deslag {stamp}, and this is deslag {current}; upgrade deslag"

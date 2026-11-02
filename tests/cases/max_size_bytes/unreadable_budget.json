@@ -1,0 +1,41 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 2,
+  "findings": [
+    {
+      "path": "notes.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nnotes.md has 1 banned character.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 3: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 13,
+          "end": 16,
+          "line": 3,
+          "column": 5,
+          "end_line": 3,
+          "end_column": 6,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    },
+    {
+      "path": "vendored.md",
+      "lint": "max_size_bytes",
+      "report": "ERROR: deslag cannot read a max_size_bytes budget!\n\nvendored.md, line 2: the frontmatter says `max_size_bytes: lots`, which is not a whole number of bytes.\n\nWrite the budget as a whole number of bytes, such as `max_size_bytes: 16384`. A trailing comment after a space and a `#` is fine.\n\nYou must not:\n- delete the key so that the file escapes its budget\n- pick a very large number so that the file passes",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 4,
+          "end": 24,
+          "line": 2,
+          "column": 1,
+          "end_line": 2,
+          "end_column": 21,
+          "note": "max_size_bytes: lots"
+        }
+      ]
+    }
+  ]
+}

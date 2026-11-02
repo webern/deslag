@@ -579,8 +579,9 @@ mod tests {
     }
 
     /// The crates `make fetch-crates` vendors. A line the masks keep is the line it was, or what
-    /// follows a directive in it, a kept line holds a legal phrase only in a comment that is not licence text, and every region still
-    /// round-trips (the tests of the readers check that). The counts are printed for the record.
+    /// follows a directive in it, a kept line holds a legal phrase only in a comment that is not
+    /// licence text, and every region still round-trips (the tests of the readers check that). The
+    /// counts are printed for the record.
     #[test]
     #[ignore = "needs make fetch-crates"]
     fn the_vendored_crates_keep_every_line_whole_and_licence_text_out() {

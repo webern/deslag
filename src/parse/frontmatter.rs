@@ -1,15 +1,13 @@
 //! Reading top-level keys out of a Markdown file's YAML frontmatter.
 //!
-//! The frontmatter block is the leading `---` fence; inside it, a key is a top-level `key:` line
-//! and its value is the rest of that line. Everything else in the block, nested maps and lists
+//! The frontmatter block is the YAML block that opens the file, found by the same function the
+//! Markdown reader uses to hide it from the lints; inside it, a key is a top-level `key:` line and
+//! its value is the rest of that line. Everything else in the block, nested maps and lists
 //! included, is ignored: deslag does not parse YAML, and a file whose frontmatter is more exotic
-//! than this is not a file deslag understands.
-//!
-//! A block that is never closed by a second `---` is not frontmatter, and is ignored. That
-//! keeps a document that opens with a thematic break working.
+//! than this is not a file deslag understands. A TOML block is not read for keys.
 
 use crate::Error;
-use crate::document::text_start;
+use crate::document::frontmatter::{Form, locate};
 
 /// The key a Markdown file uses to declare its own byte budget.
 pub const MAX_SIZE_BYTES: &str = "max_size_bytes";
@@ -49,25 +47,8 @@ pub fn max_size_bytes(contents: &str, path: &str) -> Result<Option<u64>, Error> 
     Ok(Some(size))
 }
 
-/// The text between the opening and closing `---` fences, fences excluded.
+/// The text between the opening and closing fences of the YAML block that opens `contents`.
 fn block(contents: &str) -> Option<&str> {
-    let contents = &contents[text_start(contents)..];
-    let rest = contents.strip_prefix("---")?;
-    // A fence line is exactly `---`, so the character after it must end the line: an LF, a CRLF
-    // or a lone CR.
-    let rest = rest
-        .strip_prefix("\r\n")
-        .or_else(|| rest.strip_prefix(['\n', '\r']))?;
-
-    let mut offset = 0;
-    // A CRLF splits in two, and its LF alone is an empty line that is never a fence.
-    for line in rest.split_inclusive(['\n', '\r']) {
-        let trimmed = line.trim_end_matches(['\n', '\r']);
-        if trimmed == "---" || trimmed == "..." {
-            return Some(&rest[..offset]);
-        }
-        offset += line.len();
-    }
-
-    None
+    let found = locate(contents).filter(|found| found.form == Form::Yaml)?;
+    Some(&contents[found.body])
 }

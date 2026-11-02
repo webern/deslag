@@ -19,6 +19,7 @@ pub mod cpp;
 mod cpp_regions;
 mod edit;
 mod fence;
+pub(crate) mod frontmatter;
 mod lift;
 mod map;
 mod markdown;

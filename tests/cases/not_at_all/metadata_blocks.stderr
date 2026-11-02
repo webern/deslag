@@ -1,0 +1,144 @@
+ERROR: deslag detected negations padded with "at all"!
+
+mid_pair.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 8: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+mid_pair_cr.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 8: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+mid_pair_mark.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 8: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+mid_pair_mark_cr.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 8: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+mid_toml.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 6: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+mid_toml_cr.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 6: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+mid_toml_mark.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 6: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+mid_toml_mark_cr.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 6: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+top_toml.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 5: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+top_toml_cr.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 5: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+top_toml_mark.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 5: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+top_toml_mark_cr.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 5: "not at all"
+
+ERROR: deslag detected negations padded with "at all"!
+
+top_yaml.md has 1 negation padded with "at all".
+
+Delete "at all": the negation already says it. Write "it does not parse", not "it does not parse at all".
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 5: "not at all"
+
+deslag: 13 of 13 files with negations padded with "at all".

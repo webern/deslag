@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 495 of 1230: core 2, human 83, llm 244, mixed 166
+# fails 496 of 1230: core 2, human 83, llm 244, mixed 167
 
 [md.lints.max_emphasis]
 free_spans = 2
@@ -342,7 +342,7 @@ mixed/BabylonJS--Babylon.js/contributing.md spans:3 percent:1.06
 mixed/BigDataBiology--macrel/README.md spans:3 percent:1.53
 mixed/Brooooooklyn--canvas/README.md spans:21 percent:9.58
 mixed/ColorlibHQ--gentelella/changelog.md spans:144 percent:7.86
-mixed/ContextLab--storytelling-with-data/slides__data-viz.md spans:11 percent:13.00
+mixed/ContextLab--storytelling-with-data/slides__data-viz.md spans:26 percent:13.61
 mixed/ContextLab--storytelling-with-data/slides__pandas.md spans:31 percent:15.56
 mixed/Esperanto--kurso-zagreba-metodo/enhavo__tradukenda__en__gramatiko__05.md spans:85 percent:20.97
 mixed/Esperanto--kurso-zagreba-metodo/enhavo__tradukenda__en__gramatiko__07.md spans:50 percent:21.72
@@ -426,9 +426,9 @@ mixed/gitlab--gitlab-org--cluster-integration--gitlab-agent/doc__releases.md spa
 mixed/gitlab--gitlab-org--gitlab-qa/docs__what_tests_can_be_run.md spans:34 percent:2.99
 mixed/gookit--validate/CHANGELOG.md spans:24 percent:7.45
 mixed/graphql-java--graphql-java/CONTRIBUTING.md spans:3 percent:3.18
-mixed/habitat-sh--habitat/components__docs-chef-io__content__habitat__builder_profile.md spans:11 percent:4.03
+mixed/habitat-sh--habitat/components__docs-chef-io__content__habitat__builder_profile.md spans:11 percent:4.23
 mixed/homebridge--homebridge/CHANGELOG.md spans:15 percent:1.49
-mixed/huggingface--transformers/examples__pytorch__speech-recognition__README.md spans:35 percent:1.44
+mixed/huggingface--transformers/examples__pytorch__speech-recognition__README.md spans:39 percent:1.50
 mixed/i365dev--free4chat/README.md spans:18 percent:5.50
 mixed/johnpapa--vscode-peacock/docs__about__contributing.md spans:10 percent:6.45
 mixed/kampersanda--sucds/README.md spans:4 percent:3.81
@@ -485,6 +485,7 @@ mixed/sobolevbel--jdg/README.md spans:5 percent:6.12
 mixed/sorenlouv--backport/CONTRIBUTING.md spans:24 percent:10.55
 mixed/spree--spree/github__CONTRIBUTING.md spans:28 percent:2.23
 mixed/square--leakcanary/docs__releasing.md spans:5 percent:3.19
+mixed/square--workflow-kotlin/RELEASING.md spans:4 percent:1.77
 mixed/stripe--stripe-android/README.md spans:7 percent:2.01
 mixed/sveltejs--kit/CONTRIBUTING.md spans:7 percent:1.84
 mixed/tektoncd--pipeline/DEVELOPMENT.md spans:15 percent:1.39

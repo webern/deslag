@@ -935,7 +935,7 @@ impl Editor<'_> {
 }
 
 /// `path`, or the nearest place above it that is not inside an inline table: the key that holds
-/// the outermost inline table on the way, since an inline table is one line and takes no comment.
+/// the outermost inline table on the way, since an inline table is one line and cannot hold a comment line.
 /// `None` when there is no such place.
 fn outside_inline(root: &Table, path: &TablePath) -> Option<TablePath> {
     let all = steps(path);

@@ -150,7 +150,7 @@ pub(super) fn only_touched_lines_removed(
     let Err(why) = no_stray_removal(&old_lines, &new_lines, (&removed, &added), &may_remove) else {
         return Ok(());
     };
-    // A comment moved up past a line that has nothing after it to hold it in place can be paired
+    // A comment moved up past a line with no line after it to hold it in place can be paired
     // by the diff in the line's stead, so that the line reads as removed. When every comment line of
     // `old` is in `new`, the diff is made again without the comment lines, which the caller's check
     // of the comments judges.

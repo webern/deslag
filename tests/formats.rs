@@ -164,7 +164,7 @@ fn two_languages_at_one_location_are_an_error() {
 
     assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
-        stderr.contains("found more than one config at one location")
+        stderr.contains("found more than one config in one directory")
             && stderr.contains("deslag.toml")
             && stderr.contains("deslag.json"),
         "stderr: {stderr}"
@@ -172,7 +172,7 @@ fn two_languages_at_one_location_are_an_error() {
 }
 
 #[test]
-fn an_earlier_location_in_any_language_wins() {
+fn configs_at_two_locations_are_refused_whatever_their_language() {
     let repo = Repo::new();
     repo.write(".deslag/config.yml", &global_config_in("yml", 5));
     repo.write("deslag.toml", &global_config_in("toml", 100000));
@@ -181,8 +181,12 @@ fn an_earlier_location_in_any_language_wins() {
     let output = repo.check();
     let stderr = stderr(&output);
 
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
+    assert_eq!(code(&output), 2, "stderr: {stderr}");
+    assert!(
+        stderr.contains(".deslag/config.yml") && stderr.contains("deslag.toml"),
+        "stderr: {stderr}"
+    );
+    assert!(stderr.contains("more than one config"), "stderr: {stderr}");
 }
 
 #[test]

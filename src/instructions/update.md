@@ -30,4 +30,4 @@ Nothing is new in deslag {to} since {from}.
 ## No config
 
 No deslag config was found here, so this shows what is new since {from}, the release a config with
-no `deslag_version` is taken to be from. Run it at the root of the repository to read its config.
+no `deslag_version` is taken to be from. Run it in the repository to read its config.

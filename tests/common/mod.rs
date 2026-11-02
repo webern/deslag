@@ -85,6 +85,21 @@ impl Repo {
             .expect("deslag runs")
     }
 
+    /// Makes the root the top of a git work tree, with an empty `.git` directory: all deslag looks
+    /// for when it searches upward for a config.
+    pub fn mark_work_tree(&self) {
+        std::fs::create_dir_all(self.root.join(".git")).expect("a .git directory");
+    }
+
+    /// Runs `deslag` with `args`, from `relative`, a directory under the repo root.
+    pub fn run_in(&self, relative: &str, args: &[&str]) -> Output {
+        Command::new(env!("CARGO_BIN_EXE_deslag"))
+            .args(args)
+            .current_dir(self.root.join(relative))
+            .output()
+            .expect("deslag runs")
+    }
+
     /// Runs `deslag check`, from the repo root.
     pub fn check(&self) -> Output {
         self.run(&["check"])

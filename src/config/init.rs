@@ -1,18 +1,20 @@
 //! `deslag init`: the config for a repo that does not have a config, with everything on.
 //!
 //! The config names everything deslag fails on, so a repo starts from one that names it all. `init`
-//! does not read the repo. It writes `deslag.toml` at the root, or the file `--config-path`
-//! names, in TOML: `schema_version`, the running release as the stamp, and in every section every
-//! lint the section can run, each setting the schema gives a default written out, each switch
-//! `true`, and every phrase of the catalogue in `banned_phrases.ban` with its advice.
+//! does not read the repo. It writes `deslag.toml` at the top of the git work tree (the current
+//! directory outside one), or the canonical TOML location `--config-path` names, in TOML:
+//! `schema_version`, the running release as the stamp, and in every section every lint the section
+//! can run, each setting the schema gives a default written out, each switch `true`, and every
+//! phrase of the catalogue in `banned_phrases.ban` with its advice.
 //! `repo_layout` suits AGENTS.md alone, as its page says, so it goes in an override for
 //! `/AGENTS.md`. A setting that decides whether a lint checks anything and does not have a
 //! default takes the value the lint's page gives it, from `NEEDED`.
 //!
 //! The text comes from the schema and the catalogue, so a lint, setting or phrase that is added
 //! reaches it with no edit here; `tests/instructions.rs` holds it to the lints pages. The text is
-//! loaded before it is written. Where the config search finds a config, or two at one location,
-//! `init` refuses and does not write the file.
+//! loaded before it is written. Where the config search finds a config, or two in one directory,
+//! `init` refuses and does not write the file. A `--config-path` is held to the places `check`
+//! looks, so `check` from the same directory reads what `init` wrote.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -29,7 +31,7 @@ use crate::lint::Lint;
 use crate::lint::banned_phrases::CATALOGUE;
 use crate::write;
 
-/// Where `init` writes when no `--config-path` is given, from the repo root.
+/// Where `init` writes when no `--config-path` is given, from the top of the work tree.
 pub const DEFAULT_PATH: &str = "deslag.toml";
 
 /// The settings that decide whether a lint checks anything and have no default, each at the value
@@ -71,37 +73,59 @@ impl Init {
     }
 }
 
-/// Writes the config [`everything`] gives, for the release `running`, in the repo rooted at
-/// `root`: at `explicit`, a `--config-path`, when it is given, else at [`DEFAULT_PATH`].
-pub fn init(
-    root: &Path,
-    explicit: Option<&Path>,
-    running: &semver::Version,
-) -> Result<Init, Error> {
-    let found = match search::find(root, explicit) {
-        Ok((path, _)) => Some(update::shown(root, &path)),
+/// Writes the config [`everything`] gives, for the release `running`, from the directory `cwd`: at
+/// `explicit`, a `--config-path`, when it is given, else at [`DEFAULT_PATH`] in the top of the git
+/// work tree, or in `cwd` outside one.
+///
+/// It refuses where the search `check` makes from `cwd` finds a config. A `--config-path` must be
+/// one of the canonical TOML locations of `cwd` or of a directory above it within the work tree,
+/// so that `check` from `cwd` reads what `init` wrote. The one parent directory its stem needs is
+/// made.
+pub fn init(cwd: &Path, explicit: Option<&Path>, running: &semver::Version) -> Result<Init, Error> {
+    let found = match search::locate(cwd, None) {
+        Ok(located) => Some(update::shown(cwd, &located.config)),
         Err(Error::ConfigAmbiguous { paths }) => Some(paths),
-        Err(Error::ConfigNotFound { .. } | Error::ConfigPathNotFound { .. }) => None,
+        Err(Error::ConfigNotFound { .. }) => None,
         Err(error) => return Err(error),
     };
     if let Some(found) = found {
         return Err(Error::ConfigExists { found });
     }
     let (path, source) = match explicit {
-        Some(path) => (path.to_path_buf(), ConfigSource::Explicit),
-        None => (root.join(DEFAULT_PATH), ConfigSource::Canonical),
+        Some(path) => {
+            let asked = || path.display().to_string();
+            if ConfigFormat::of(path) != Some(ConfigFormat::Toml) {
+                return Err(Error::InitFormat { path: asked() });
+            }
+            let Some((_, wanted)) = search::init_root(cwd, path) else {
+                return Err(Error::InitPath {
+                    path: asked(),
+                    allowed: search::canonical_config_paths()
+                        .into_iter()
+                        .filter(|path| path.ends_with(".toml"))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                });
+            };
+            (wanted, ConfigSource::Explicit)
+        }
+        None => {
+            let top = search::work_tree_top(cwd).unwrap_or(cwd);
+            (top.join(DEFAULT_PATH), ConfigSource::Canonical)
+        }
     };
-    if ConfigFormat::of(&path) != Some(ConfigFormat::Toml) {
-        return Err(Error::InitFormat {
-            path: path.display().to_string(),
-        });
-    }
     let text = everything(running);
     // The text is the code's, so a config that does not load is a fault here, not the person's.
     Config::parse_at(&text, path.clone(), source, running)?;
+    if let Some(parent) = path.parent().filter(|parent| !parent.exists()) {
+        std::fs::create_dir(parent).map_err(|source| Error::Write {
+            path: parent.display().to_string(),
+            source,
+        })?;
+    }
     write::create(&path, text.as_bytes())?;
     Ok(Init {
-        path: update::shown(root, &path),
+        path: update::shown(cwd, &path),
     })
 }
 

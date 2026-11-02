@@ -26,13 +26,41 @@ fn main() -> ExitCode {
     }
 }
 
-/// Loads the config, saying on stderr what in it deslag ignores and, when an older deslag last
-/// updated it and a release since has something to tell, where to read what.
+/// The config's path as the note line shows it: from the root where it is under the root, else
+/// absolute. A `--config-path` is given from `cwd`, so the same path means different files in
+/// different notes unless it is resolved first.
+fn shown_config(cwd: &Path, root: &Path, config: &Path) -> std::path::PathBuf {
+    let joined = cwd.join(config);
+    let resolved = match (joined.parent(), joined.file_name()) {
+        (Some(dir), Some(name)) => dir.canonicalize().map_or(joined.clone(), |d| d.join(name)),
+        _ => joined.clone(),
+    };
+    match resolved.strip_prefix(root) {
+        Ok(under) => under.to_path_buf(),
+        Err(_) => resolved,
+    }
+}
+
+/// Finds the root and the config for a run in `cwd` and loads the config, returning the root.
+///
+/// It says on stderr where the root is when that is not `cwd`, what in the config deslag ignores
+/// and, when an older deslag last updated it and a release since has something to tell, where to
+/// read what.
 fn load_config(
-    root: &std::path::Path,
-    explicit: Option<&std::path::Path>,
-) -> anyhow::Result<deslag::Config> {
-    let config = deslag::Config::load(root, explicit)?;
+    cwd: &Path,
+    explicit: Option<&Path>,
+) -> anyhow::Result<(std::path::PathBuf, deslag::Config)> {
+    let located = deslag::config::locate(cwd, explicit)?;
+    let root = located.root;
+    let config = deslag::Config::load(&root, explicit)?;
+    if root != cwd {
+        let shown = shown_config(cwd, &root, config.path());
+        eprintln!(
+            "deslag: note: root {}, config {}",
+            root.display(),
+            shown.display()
+        );
+    }
     for warning in config.warnings() {
         eprintln!("deslag: warning: {warning}");
     }
@@ -41,17 +69,18 @@ fn load_config(
     if let Some(notice) = instructions::notice(&news, &stamp, &running) {
         eprintln!("deslag: note: {notice}");
     }
-    Ok(config)
+    Ok((root, config))
 }
 
 /// Runs the command line, returning the exit code the process should use.
 fn run() -> anyhow::Result<ExitCode> {
     let cli = Cli::parse();
+    // Read once, here; every path below is relative to a root found from it.
+    let cwd = std::env::current_dir().context("cannot read the current directory");
 
     match cli.command {
         Command::Check(args) => {
-            let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = load_config(&root, args.report.config_path.as_deref())?;
+            let (root, config) = load_config(&cwd?, args.report.config_path.as_deref())?;
             // clap refuses --diff with --base, so there is one base at most.
             let base = args.diff.as_deref().or(args.report.base.as_deref());
             let change = changed(&root, base)?;
@@ -65,8 +94,7 @@ fn run() -> anyhow::Result<ExitCode> {
             )
         }
         Command::Fix(args) => {
-            let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = load_config(&root, args.report.config_path.as_deref())?;
+            let (root, config) = load_config(&cwd?, args.report.config_path.as_deref())?;
             let base = args.report.base.as_deref();
             // A base git cannot read stops the run before fix writes anything.
             changed(&root, base)?;
@@ -82,15 +110,13 @@ fn run() -> anyhow::Result<ExitCode> {
             check(&root, &config, args.report.format, change.as_ref(), false)
         }
         Command::Explain(args) => {
-            let root = std::env::current_dir().context("cannot read the current directory")?;
-            let config = load_config(&root, args.config_path.as_deref())?;
+            let (root, config) = load_config(&cwd?, args.config_path.as_deref())?;
             write_stdout(&deslag::explain(&root, &config, &args.paths)?)?;
             Ok(ExitCode::SUCCESS)
         }
         Command::Init(args) => {
-            let root = std::env::current_dir().context("cannot read the current directory")?;
             let done = deslag::config::init::init(
-                &root,
+                &cwd?,
                 args.config_path.as_deref(),
                 &deslag::version::current_release(),
             )?;
@@ -100,9 +126,9 @@ fn run() -> anyhow::Result<ExitCode> {
             Ok(ExitCode::SUCCESS)
         }
         Command::Update(args) => {
-            let root = std::env::current_dir().context("cannot read the current directory")?;
+            let located = deslag::config::locate(&cwd?, args.config_path.as_deref())?;
             let done = deslag::config::update::update(
-                &root,
+                &located.root,
                 args.config_path.as_deref(),
                 args.dry_run,
                 args.to.as_ref(),
@@ -120,7 +146,7 @@ fn run() -> anyhow::Result<ExitCode> {
                 Some(Topic::Lints) => instructions::lints(),
                 Some(Topic::ConfigSchema) => format!("{:#}\n", deslag::config::schema()),
                 Some(Topic::OutputSchema) => format!("{:#}\n", json::schema()),
-                Some(Topic::Update(args)) => update(&args)?,
+                Some(Topic::Update(args)) => update(&cwd?, &args)?,
             };
             write_stdout(&text)?;
             Ok(ExitCode::SUCCESS)
@@ -134,7 +160,7 @@ fn run() -> anyhow::Result<ExitCode> {
 /// The config is found as `check` finds it, but not loaded through [`load_config`]: the notice
 /// would point at the command already running. Only a config that is not there falls back to the
 /// baseline, and the text says so; a `--config-path` that does not name a file is an error.
-fn update(args: &UpdateArgs) -> anyhow::Result<String> {
+fn update(cwd: &Path, args: &UpdateArgs) -> anyhow::Result<String> {
     /// Where the release the range starts from came from.
     enum Found {
         Config(deslag::Config),
@@ -145,8 +171,11 @@ fn update(args: &UpdateArgs) -> anyhow::Result<String> {
     let (from, found) = match &args.since {
         Some(since) => (Version::Release(since.clone()), Found::Since),
         None => {
-            let root = std::env::current_dir().context("cannot read the current directory")?;
-            match deslag::Config::load(&root, args.config_path.as_deref()) {
+            let found =
+                deslag::config::locate(cwd, args.config_path.as_deref()).and_then(|located| {
+                    deslag::Config::load(&located.root, args.config_path.as_deref())
+                });
+            match found {
                 Ok(config) => (config.deslag_version(), Found::Config(config)),
                 Err(deslag::Error::ConfigNotFound { .. }) => {
                     (Version::Release(BASELINE), Found::NoConfig)

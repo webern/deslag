@@ -78,7 +78,8 @@ pub struct FixArgs {
     /// Say what would be fixed and leave the files as they are
     #[arg(long)]
     pub dry_run: bool,
-    /// The files to fix, relative to the repo root; every file `deslag check` reads when none
+    /// The files to fix, relative to the root, the directory of the config; every file
+    /// `deslag check` reads when none
     #[arg(value_name = "PATH")]
     pub paths: Vec<PathBuf>,
 }
@@ -102,7 +103,7 @@ pub struct ExplainArgs {
     /// Read the config from this file instead of the canonical locations
     #[arg(long, value_name = "PATH")]
     pub config_path: Option<PathBuf>,
-    /// The files to explain, relative to the repo root
+    /// The files to explain, relative to the root, the directory of the config
     #[arg(required = true, value_name = "PATH")]
     pub paths: Vec<PathBuf>,
 }
@@ -151,7 +152,8 @@ pub struct UpdateArgs {
 /// Arguments to `deslag init`.
 #[derive(Debug, Args)]
 pub struct InitArgs {
-    /// Write the config to this file, which must end .toml, instead of deslag.toml at the repo root
+    /// Write the config to this file instead of deslag.toml at the top of the work tree: a
+    /// canonical .toml location of this directory or one above it, within the work tree
     #[arg(long, value_name = "PATH")]
     pub config_path: Option<PathBuf>,
 }

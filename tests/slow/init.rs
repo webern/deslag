@@ -86,20 +86,27 @@ fn it_refuses_two_configs_at_one_location() {
 }
 
 #[test]
-fn config_path_names_the_file_it_writes_which_must_be_toml() {
+fn config_path_names_the_file_it_writes_which_must_be_toml_and_where_check_looks() {
     let repo = Repo::new();
-    let output = repo.run(&["init", "--config-path", "lint.toml"]);
+    let refused = repo.run(&["init", "--config-path", "lint.toml"]);
+    assert_eq!(code(&refused), 2);
+    assert!(raw_stderr(&refused).contains("is not such a place"));
+    assert!(!repo.root().join("lint.toml").exists());
+
+    let output = repo.run(&["init", "--config-path", ".agents/deslag.toml"]);
     assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
     assert!(!repo.root().join("deslag.toml").exists());
-    let check = repo.run(&["check", "--config-path", "lint.toml"]);
+    // `check` reads what `init` wrote with no flag.
+    let check = repo.check();
     assert_eq!(code(&check), 0, "{}", raw_stderr(&check));
 
-    let again = repo.run(&["init", "--config-path", "lint.toml"]);
+    let again = repo.run(&["init", "--config-path", ".agents/deslag.toml"]);
     assert_eq!(code(&again), 2);
-    assert!(raw_stderr(&again).contains("found the config lint.toml"));
+    assert!(raw_stderr(&again).contains("found the config .agents/deslag.toml"));
 
-    let yaml = repo.run(&["init", "--config-path", "lint.yaml"]);
+    let fresh = Repo::new();
+    let yaml = fresh.run(&["init", "--config-path", "lint.yaml"]);
     assert_eq!(code(&yaml), 2);
     assert!(raw_stderr(&yaml).contains("deslag init writes TOML"));
-    assert!(!repo.root().join("lint.yaml").exists());
+    assert!(!fresh.root().join("lint.yaml").exists());
 }

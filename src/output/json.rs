@@ -68,7 +68,8 @@ pub struct Exemption {
 /// One file that a lint failed.
 #[derive(Debug, Clone, PartialEq, Serialize, JsonSchema)]
 pub struct Finding {
-    /// The file's path relative to the repo root, where deslag ran, `/`-separated.
+    /// The file's path relative to the config's directory, from wherever deslag ran,
+    /// `/`-separated.
     pub path: String,
     /// The lint that failed it.
     pub lint: Lint,

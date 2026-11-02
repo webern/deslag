@@ -125,6 +125,25 @@ fn only_what_the_change_added_is_reported() {
 }
 
 #[test]
+fn diff_from_a_subdirectory_measures_the_whole_repo_with_paths_from_the_root() {
+    let repo = repo(&[("docs/a.md", "# A\n\nold\n"), ("b.md", "# B\n\nold\n")]);
+    repo.write("docs/a.md", "# A\n\nold\n\nnew \u{2014} one\n");
+    repo.write("b.md", "# B\n\nold\n\nnew \u{2014} two\n");
+
+    let docs = repo.root().join("docs");
+    for base in ["--diff", "--base"] {
+        assert_eq!(
+            found(&docs, &["check", base, "main"]),
+            [
+                finding("b.md", "banned_chars", &[5]),
+                finding("docs/a.md", "banned_chars", &[5])
+            ],
+            "{base}"
+        );
+    }
+}
+
+#[test]
 fn a_committed_branch_is_measured_from_where_it_left_main() {
     let repo = repo(&[("a.md", "# A\n\nold \u{2014} one\n")]);
     git(repo.root(), &["switch", "-q", "-c", "feature"]);

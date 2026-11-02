@@ -57,21 +57,21 @@ pub use lint::{Finding, Lint, Report, Violation, check_file, check_repo};
 pub enum Error {
     /// No config file was found in any of the canonical locations.
     #[error(
-        "no deslag config found in {root}\n\
+        "no deslag config found in {searched}\n\
          looked for, in order: {looked_for}\n\
-         are you in the root of the repo?"
+         run `deslag init` to write one"
     )]
     ConfigNotFound {
-        /// The repo root that was searched.
-        root: String,
+        /// The directories that were searched, nearest first.
+        searched: String,
         /// The canonical relative paths that were tried.
         looked_for: String,
     },
 
-    /// One canonical location holds configs in more than one language.
-    #[error("found more than one config at one location: {paths}\nkeep one and delete the rest")]
+    /// One directory holds configs at more than one canonical location.
+    #[error("found more than one config in one directory: {paths}\nkeep one and delete the rest")]
     ConfigAmbiguous {
-        /// The files found, in the order their extensions are tried.
+        /// The files found, in the order the locations are tried.
         paths: String,
     },
 
@@ -208,14 +208,14 @@ pub enum Error {
         problem: String,
     },
 
-    /// `deslag init` found a config, or more than one at one location, and did not write a file.
+    /// `deslag init` found a config, or more than one in one directory, and did not write a file.
     #[error(
         "found the config {found}, and deslag init writes one only where there is none; run \
          `deslag instructions lints` for the lints it can turn on, `deslag explain <PATH>` for \
          what a file gets, and `deslag update` to bring it to this deslag"
     )]
     ConfigExists {
-        /// The config found, or the configs at one location.
+        /// The config found, or the configs in one directory.
         found: String,
     },
 
@@ -224,6 +224,19 @@ pub enum Error {
     InitFormat {
         /// The `--config-path` given.
         path: String,
+    },
+
+    /// `deslag init` was asked for a config where `deslag check` run from the same directory
+    /// would not look for it.
+    #[error(
+        "deslag init writes only where deslag check finds a config, and {path} is not such a \
+         place from here; use one of: {allowed}"
+    )]
+    InitPath {
+        /// The `--config-path` given.
+        path: String,
+        /// The paths that would do, from the current directory.
+        allowed: String,
     },
 
     /// A file could not be written.

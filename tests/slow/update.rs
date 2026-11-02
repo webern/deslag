@@ -705,11 +705,7 @@ fn every_frozen_config_updates_clean_in_toml_and_is_refused_with_its_edits_elsew
 fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() {
     for case in sample::cases() {
         let repo = Repo::copy_of(&case);
-        let name = case
-            .file_name()
-            .expect("a name")
-            .to_string_lossy()
-            .into_owned();
+        let name = case.display();
         let before = repo.check();
         let text = read(&repo, "toml");
         let output = repo.run(&["update", "--to", CURRENT]);

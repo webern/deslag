@@ -30,6 +30,11 @@ Once they have chosen, run `deslag update --to {to}`, adding your `--config-path
 `deslag_version` to "{to}", ending this list, and edits renamed or removed settings. If the person
 cannot be asked now, change nothing, not even `deslag_version`, and tell them what is new.
 
+## Closing update alone
+
+Run `deslag update --to {to}`, adding your `--config-path` if any. It sets `deslag_version` to
+"{to}", ending this list, and edits renamed or removed settings.
+
 ## Current
 
 Nothing is new in deslag {to} since {from}: the config is current.

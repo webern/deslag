@@ -255,10 +255,14 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
     .map(|(_, name)| words(name))
     .collect();
     text.push_str(&format!("\n## Finish\n\n{}\n\n", words("Closing")));
-    if !offers.is_empty() {
+    // When no kind of news is offered, "once they have chosen" would have no offer to refer to.
+    let last = if offers.is_empty() {
+        "Closing update alone"
+    } else {
         text.push_str(&format!("{}\n\n", offers.join("\n")));
-    }
-    text.push_str(&format!("{}\n", words("Closing update")));
+        "Closing update"
+    };
+    text.push_str(&format!("{}\n", words(last)));
     text
 }
 
@@ -931,6 +935,22 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         assert_eq!(offered(&settings, &phrases()), [false, true, true]);
     }
 
+    /// A range whose only news is a renamed or removed setting has nothing to choose, so its
+    /// closing says to run the update and does not say "once they have chosen".
+    #[test]
+    fn a_closing_with_only_redirects_does_not_wait_for_a_choice() {
+        let nothing = SchemaPaths::of(&json!({ "type": "object", "properties": {} }));
+        let (from, to) = (version("0.2.0"), Version::Next);
+        let (redirects, catalogue) = (redirects(), no_phrases());
+        let news = News::between(&nothing, &redirects, &catalogue, &from, &to);
+        let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
+        let finish = text.split("## Finish").nth(1).expect("a closing");
+        assert!(text.contains("## Renamed or removed settings"));
+        assert!(!finish.contains("Once they have chosen"), "{finish}");
+        assert!(!finish.contains("cannot be asked"), "{finish}");
+        assert!(finish.contains("deslag update --to"), "{finish}");
+    }
+
     #[test]
     fn update_md_has_each_piece_the_text_prints() {
         for name in [
@@ -940,6 +960,7 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
             "Closing phrases",
             "Closing settings",
             "Closing update",
+            "Closing update alone",
             "Current",
             "Nothing new",
             "No config",

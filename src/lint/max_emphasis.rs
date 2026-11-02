@@ -6,8 +6,9 @@
 //!   in it;
 //! - a run of two or more words in capitals, separated only by whitespace, outside any emphasis,
 //!   that holds at least one of the everyday words in [`SHOUTED_WORDS`]. A word is in capitals
-//!   when it has at least two letters and none of them is lower case. One word alone never counts,
-//!   and nor does a run of acronyms such as `JSON API`, so `DO NOT` is a span and `MX API` is not.
+//!   when it has at least two letters and every letter is upper case, so letters with no case, such
+//!   as CJK, are never capitals. One word alone never counts, and nor does a run of acronyms such
+//!   as `JSON API`, so `DO NOT` is a span and `MX API` is not.
 //!
 //! The **prose** is the text a reader sees: frontmatter, code blocks, code spans and HTML are not
 //! prose, except the comments of a code block in a language that `[md]` reads (`fences`), which
@@ -380,11 +381,9 @@ fn is_apostrophe(c: char) -> bool {
     c == '\'' || c == '\u{2019}'
 }
 
-/// Whether `word` is in capitals: two or more letters, no lower case, no digits.
-fn is_caps(word: &str) -> bool {
+/// Whether `word` is in capitals: two or more letters, each one upper case, no digits. A letter
+/// with no case, such as a CJK character, is not upper case.
+pub(super) fn is_caps(word: &str) -> bool {
     let letters = word.chars().filter(|c| c.is_alphabetic()).count();
-    letters >= 2
-        && word
-            .chars()
-            .all(|c| is_apostrophe(c) || (c.is_alphabetic() && !c.is_lowercase()))
+    letters >= 2 && word.chars().all(|c| is_apostrophe(c) || c.is_uppercase())
 }

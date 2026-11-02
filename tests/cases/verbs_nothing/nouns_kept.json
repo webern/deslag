@@ -1,0 +1,84 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "verbs_nothing",
+      "report": "ERROR: deslag detected verbs with nothing!\n\nREADME.md has 7 verbs with nothing.\n\nThis repo names what a verb did not find: write \"does not find a provider\", not \"finds nothing\". \"nothing\" and \"none\" hide the noun, so name it and negate the verb. Where the sentence has just named it, write \"does not have one\". Where there is no noun to name, as in \"does nothing\" or \"prints nothing\", write \"does not do anything\" or \"does not print anything\". Or drop the claim if it is not true. Swapping in \"zero\", \"nil\" or \"an empty result\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"reports nothing\"\n  line 5: \"does** nothing\"\n  line 7: \"Does** nothing\"\n  line 9: \"Finds** nothing\"\n  line 11: \"Finds* nothing\"\n  line 13: \"reports** nothing\"\n  line 15: \"Given** nothing\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 32,
+          "end": 47,
+          "line": 3,
+          "column": 23,
+          "end_line": 3,
+          "end_column": 38,
+          "note": "\"reports nothing\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 55,
+          "end": 69,
+          "line": 5,
+          "column": 6,
+          "end_line": 5,
+          "end_column": 20,
+          "note": "\"does** nothing\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 74,
+          "end": 88,
+          "line": 7,
+          "column": 3,
+          "end_line": 7,
+          "end_column": 17,
+          "note": "\"Does** nothing\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 92,
+          "end": 107,
+          "line": 9,
+          "column": 3,
+          "end_line": 9,
+          "end_column": 18,
+          "note": "\"Finds** nothing\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 116,
+          "end": 130,
+          "line": 11,
+          "column": 2,
+          "end_line": 11,
+          "end_column": 16,
+          "note": "\"Finds* nothing\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 148,
+          "end": 165,
+          "line": 13,
+          "column": 16,
+          "end_line": 13,
+          "end_column": 33,
+          "note": "\"reports** nothing\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 170,
+          "end": 185,
+          "line": 15,
+          "column": 3,
+          "end_line": 15,
+          "end_column": 18,
+          "note": "\"Given** nothing\""
+        }
+      ]
+    }
+  ]
+}

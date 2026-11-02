@@ -142,4 +142,4 @@ mixed/ruby-git--ruby-git/CONTRIBUTING.md matches:6
 mixed/scratchfoundation--scratch-blocks/README.md matches:1
 mixed/sebastienros--parlot/docs__parsers.md matches:2
 mixed/storybookjs--storybook/github__PULL_REQUEST_TEMPLATE.md matches:1
-mixed/zcash--librustzcash/zcash_client_sqlite__CHANGELOG.md matches:3
+mixed/zcash--librustzcash/zcash_client_sqlite__CHANGELOG.md matches:2

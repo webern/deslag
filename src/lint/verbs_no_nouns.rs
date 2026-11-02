@@ -12,6 +12,11 @@
 //! [`IDIOMS`], such as `make no sense`. The sets are Rust data, never config: a list a config
 //! grows is an allow-list an agent grows until the check passes.
 //!
+//! A match is not the tic when its first word heads a noun phrase, which [`heads_a_noun`] reads
+//! from the words around it: after an article, as in `the ones no real change reaches`; in a
+//! fronted phrase, as in `In most cases no action is needed`; or as the label of a sentence, as
+//! in `- **Warnings** none`. `It **does** nothing` is still flagged.
+//!
 //! A participle is told by the tagger's feature, which comes from the lexicon entry. A few rare
 //! `-ing` entries lack it (`recompiling`, `digitising`), and such a word before `no` is flagged.
 //!
@@ -24,8 +29,10 @@
 
 use std::ops::Range;
 
+use super::max_emphasis::is_caps;
+
 use crate::config::VerbsNoNouns;
-use crate::document::{Document, Location, TokenKind};
+use crate::document::{Document, Location, SpanKind, Token, TokenKind};
 use crate::lint::pattern::{Item, Pattern};
 use crate::lint::{Keep, Mark, MarkKind, quote};
 use crate::tag::{Confidence, Features, Tag, TagSet};
@@ -190,7 +197,11 @@ pub fn check(document: &Document<'_>, settings: Option<&VerbsNoNouns>) -> Option
 /// The token ranges of both patterns' matches, in the order of the file, with a match that
 /// overlaps an earlier one dropped.
 fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
-    let mut all: Vec<Range<usize>> = PATTERN.find(document).chain(FORMS.find(document)).collect();
+    let mut all: Vec<Range<usize>> = PATTERN
+        .find(document)
+        .chain(FORMS.find(document))
+        .filter(|found| !heads_a_noun(document, found))
+        .collect();
     all.sort_by_key(|found| found.start);
     let mut kept: Vec<Range<usize>> = Vec::with_capacity(all.len());
     for found in all {
@@ -199,6 +210,150 @@ fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
         }
     }
     kept
+}
+
+/// Whether the first word of the match at `found`, a range of the document's tokens, heads a noun
+/// phrase and so is no verb. Three cues, each read from its sentence:
+///
+/// - an article (`a`, `an` or `the`, read as a determiner) or `whose` right before it;
+/// - a fronted phrase: the tagger's best guess for the word is a noun or proper noun, and the
+///   sentence opens with a preposition read at `Likely` or above, after at most one conjunction,
+///   then at most one determiner, then only adjectives, numerals and nouns up to the word, none of
+///   them a word the tagger does not know;
+/// - a label: the word ends strong or emphasized text that opens the sentence or follows a comma
+///   or a semicolon and ends before the match's next token, in which no word is a determiner or
+///   read as a verb or an auxiliary.
+///
+/// Both lints of the construction filter their matches on it.
+pub fn heads_a_noun(document: &Document<'_>, found: &Range<usize>) -> bool {
+    let at = document
+        .sentences
+        .partition_point(|sentence| sentence.tokens.end <= found.start);
+    let Some(sentence) = document.sentences.get(at) else {
+        return false;
+    };
+    let tokens = &document.tokens[sentence.tokens.clone()];
+    let start = found.start - sentence.tokens.start;
+    after_an_article(tokens, start)
+        || fronted(tokens, start)
+        || labelled(document, sentence.tokens.start, start)
+}
+
+/// The tag of `token` if it is a word the tagger has read.
+fn tag_of(token: &Token<'_>) -> Option<Tag> {
+    token
+        .reading
+        .filter(|_| token.kind == TokenKind::Word)
+        .map(|reading| reading.tag)
+}
+
+/// Whether the token before `tokens[start]` is `a`, `an` or `the`, read as a determiner, or `whose`.
+fn after_an_article(tokens: &[Token<'_>], start: usize) -> bool {
+    start
+        .checked_sub(1)
+        .map(|before| &tokens[before])
+        .is_some_and(|token| {
+            token.kind == TokenKind::Word
+                && (token.folded() == "whose"
+                    || (matches!(token.folded().as_str(), "a" | "an" | "the")
+                        && tag_of(token) == Some(Tag::Determiner)))
+        })
+}
+
+/// Whether `tokens[start]`, read as a noun, follows a phrase that opens `tokens`, a sentence's: a
+/// preposition read at `Likely` or above, after at most one conjunction, then at most one
+/// determiner and then only words read as adjectives, numerals and nouns.
+fn fronted(tokens: &[Token<'_>], start: usize) -> bool {
+    if !matches!(tag_of(&tokens[start]), Some(Tag::Noun | Tag::ProperNoun)) {
+        return false;
+    }
+    let mut at = 0;
+    if tokens.get(at).and_then(tag_of) == Some(Tag::Conjunction) {
+        at += 1;
+    }
+    let opens = tokens.get(at).is_some_and(|token| {
+        tag_of(token) == Some(Tag::Adposition)
+            && token
+                .reading
+                .is_some_and(|reading| reading.confidence.at_least(Confidence::Likely))
+    });
+    if !opens {
+        return false;
+    }
+    at += 1;
+    if tokens.get(at).and_then(tag_of) == Some(Tag::Determiner) {
+        at += 1;
+    }
+    // A word in neither table reads as a noun by default, which is no evidence of a phrase: in
+    // `With this flag deslag reports`, `deslag` is a subject and `reports` its verb.
+    let known = |token: &Token<'_>| {
+        token
+            .reading
+            .is_some_and(|reading| reading.confidence != Confidence::Unknown)
+    };
+    at <= start
+        && tokens[at..start].iter().all(|token| {
+            known(token)
+                && matches!(
+                    tag_of(token),
+                    Some(Tag::Adjective | Tag::Numeral | Tag::Noun | Tag::ProperNoun)
+                )
+        })
+}
+
+/// Whether the token `start` of the sentence that begins at token `first` of the document is the
+/// last word of a label: strong or emphasized text that ends before the next token and opens the
+/// sentence or follows a comma or a semicolon. Any determiner (`a`, `an`, `the`, `this`, `that`,
+/// `these`, `those`, `its`, `our`, `your`) in the span, or any word whose first reading is a verb
+/// or an auxiliary at any confidence, makes it text, unless every word of the span is in capitals
+/// (`is_caps`), as in `**GIVEN**`: that is a label whatever the tagger reads.
+fn labelled(document: &Document<'_>, first: usize, start: usize) -> bool {
+    let word = &document.tokens[first + start];
+    let Some(next) = document.tokens.get(first + start + 1) else {
+        return false;
+    };
+    // The end of the token before the sentence, which the text must not reach back past.
+    let floor = first
+        .checked_sub(1)
+        .map_or(0, |before| document.tokens[before].range.end);
+    document.spans_over(word.range.clone()).any(|span| {
+        if !matches!(span.kind, SpanKind::Strong | SpanKind::Emphasis)
+            || span.range.start < floor
+            || span.range.end > next.range.start
+        {
+            return false;
+        }
+        let inside = |token: &&Token<'_>| {
+            token.kind == TokenKind::Word
+                && token.range.start >= span.range.start
+                && token.range.end <= span.range.end
+        };
+        let Some(lead) = document.tokens[first..]
+            .iter()
+            .position(|token| token.range.start >= span.range.start)
+        else {
+            return false;
+        };
+        let lead = first + lead;
+        let opens = lead == first || matches!(document.tokens[lead - 1].text.as_ref(), "," | ";");
+        let words = || document.tokens[lead..=first + start].iter().filter(inside);
+        opens
+            && (words().all(|token| is_caps(&token.text))
+                || words().all(|token| {
+                    !matches!(
+                        token.folded().as_str(),
+                        "a" | "an"
+                            | "the"
+                            | "this"
+                            | "that"
+                            | "these"
+                            | "those"
+                            | "its"
+                            | "our"
+                            | "your"
+                    ) && !matches!(tag_of(token), Some(Tag::Verb | Tag::Auxiliary))
+                }))
+    })
 }
 
 /// The report for one file at `path` that holds the construction, with no trailing newline.
@@ -496,5 +651,134 @@ mod tests {
         ] {
             assert!(found(text).is_empty(), "{text}");
         }
+    }
+
+    #[test]
+    fn a_word_after_an_article_is_a_noun() {
+        for text in [
+            "These are the ones no real change reaches.",
+            "He lists the members no position placed.",
+            "It takes an accept no queue sends to.",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
+        }
+        // A comma, a second word or no article before the word leaves it a verb.
+        assert_eq!(found("The tool, ships no binary."), ["ships no binary"]);
+        assert_eq!(found("The tool ships no binary."), ["ships no binary"]);
+        assert_eq!(found("The new tool ships no binary."), ["ships no binary"]);
+        // An article that ends the sentence before is no article of this one.
+        assert_eq!(found("It stops the. Ships no binary."), ["Ships no binary"]);
+    }
+
+    #[test]
+    fn a_word_after_whose_is_a_noun() {
+        assert!(found("Fix projects whose repositories no longer build.").is_empty());
+        assert!(found("Fix projects whose repositories no tool builds.").is_empty());
+        // Without `whose` the word is a verb again.
+        assert_eq!(
+            found("Fix projects, repositories no tool builds."),
+            ["repositories no tool"]
+        );
+    }
+
+    #[test]
+    fn a_fronted_phrase_makes_its_last_word_a_noun() {
+        for text in [
+            "In most cases no action is needed.",
+            "On the host OS no such flag exists.",
+            "And in most cases no action is needed.",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn a_fronted_phrase_needs_a_noun_reading_of_the_word() {
+        let with = |tag| {
+            let mut document = Document::markdown("In most cases no action is needed.");
+            for token in &mut document.tokens {
+                if token.text == "cases" {
+                    token.reading = Some(Reading {
+                        tag,
+                        features: Features::NONE,
+                        confidence: Confidence::Unsure,
+                        kept: TagSet::of(tag),
+                    });
+                }
+            }
+            heads_a_noun(&document, &(2..4))
+        };
+        assert!(with(Tag::Noun));
+        assert!(with(Tag::ProperNoun));
+        assert!(!with(Tag::Verb));
+    }
+
+    #[test]
+    fn a_fronted_phrase_has_limits() {
+        // Two determiners: the second opens a clause with its own subject.
+        assert_eq!(
+            found("With this flag the tool ships no binary."),
+            ["ships no binary"]
+        );
+        // A word that is no adjective, numeral or noun breaks the run.
+        assert_eq!(
+            found("In this case it ships no binary."),
+            ["ships no binary"]
+        );
+        // A mark, a number or code breaks the run.
+        assert_eq!(found("In cases, ships no binary."), ["ships no binary"]);
+        assert_eq!(found("In 7 cases ships no binary."), ["ships no binary"]);
+        assert_eq!(found("In `x` cases ships no binary."), ["ships no binary"]);
+        // The tagger reads `reports` as a verb here, so no cue fires. The guard on unknown words in
+        // the run is pinned in `verbs_nothing`.
+        assert_eq!(
+            found("With this flag deslag reports no changes."),
+            ["reports no changes"]
+        );
+        // The sentence must open with the preposition.
+        assert_eq!(
+            found("It fails in most cases, and in some cases ships no binary."),
+            ["ships no binary"]
+        );
+    }
+
+    #[test]
+    fn a_label_is_a_noun() {
+        for text in [
+            "- **Warnings** no more than three.",
+            "*Findings* no one reads.",
+            "- **Open warnings** no one reads.",
+            // A span in capitals is a label whatever the tagger reads.
+            "**GIVEN** no compatible driver, the build stops.",
+            "**Errors** no one reads, **warnings** no one reads.",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn a_label_has_no_determiner_and_no_verb() {
+        // A determiner or a verb reading in the span makes it text.
+        for text in [
+            "**The tool ships** no binary.",
+            "- **The linter reports** no binary.",
+            "**This flag disables** no binary.",
+            "**Ships** no binary.",
+        ] {
+            assert!(!found(text).is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn a_label_must_open_the_sentence_and_end_before_the_next_word() {
+        assert_eq!(found("It **ships** no binary."), ["ships** no binary"]);
+        assert_eq!(found("It ships **no** binary."), ["ships **no** binary"]);
+        // Bold that runs on past the next word.
+        assert_eq!(found("**Ships no** binary."), ["Ships no** binary"]);
+        // Bold that began in the sentence before.
+        assert_eq!(
+            found("**It stops. Ships** no binary."),
+            ["Ships** no binary"]
+        );
     }
 }

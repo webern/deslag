@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "max_emphasis",
+      "report": "ERROR: deslag detected over-emphasis!\n\nREADME.md has 1 emphasized span covering 7.90% of its prose. It may have none.\n\nBold, italics and ALL CAPS stop working when there is this much of them: the reader learns to skip them. Take the emphasis off all but the few words a reader would get wrong without it. Where something matters, say why in plain words instead of raising your voice.\n\nDo not move the emphasis into headings, code spans or other formatting to get past this check, and do not change the limits. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe emphasized spans:\n  line 5: DO NOT",
+      "marks": [
+        {
+          "kind": "evidence",
+          "start": 92,
+          "end": 98,
+          "line": 5,
+          "column": 24,
+          "end_line": 5,
+          "end_column": 30,
+          "note": "DO NOT"
+        }
+      ]
+    }
+  ]
+}

@@ -13,3 +13,14 @@ It reads `no` flags. It builds. No binary follows. It ships no `cache`.
 It builds
 
 no binary.
+
+In most cases no action is needed. On the host OS no such flag exists.
+
+The ones no real change reaches stay. The members no position placed stay. The outputs no account
+of the wallet received are listed.
+
+- **Open warnings** no one reads.
+
+**GIVEN** no compatible driver, the build stops.
+
+Fix projects whose repositories no tool builds.

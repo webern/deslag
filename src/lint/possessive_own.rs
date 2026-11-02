@@ -13,7 +13,8 @@
 //!   and `her`, which do not end in `'s`: `its own` and `your own` stand for a separate one, or the
 //!   reader's against the default;
 //! - coordinated possessors, as in `ccgo's and libc's own diagnostics`: another possessive precedes
-//!   the one before `own`, with only `and`, `or` or commas between, so the `own` contrasts;
+//!   the one before `own`, with only `and`, `or` or commas and then at most one determiner between,
+//!   so the `own` contrasts;
 //! - `own` with nothing after it, or before a function word, as in `is selfie's own` and `a place
 //!   of its own in production`, where deleting `own` breaks the sentence or it is an idiom;
 //! - `owns`, `owner`, `ownership`, and anything in code.
@@ -200,14 +201,23 @@ fn detached(tokens: &[Token<'_>], start: usize) -> bool {
 }
 
 /// Whether `before`, the tokens of a sentence ahead of a match, end in another possessive and then
-/// at least one of `and`, `or` and a comma, and nothing else between: `ccgo's and libc's own`.
+/// at least one of `and`, `or` and a comma, and at most one determiner after them, and nothing
+/// else between: `ccgo's and libc's own`, `ccgo's and the libc's own`.
 fn coordinated(before: &[Token<'_>]) -> bool {
+    // One determiner may stand between the connectors and the possessive: `and the libc's own`.
+    let article = before.last().is_some_and(|token| is_a_determiner(token));
+    let before = &before[..before.len() - usize::from(article)];
     let connectors = before
         .iter()
         .rev()
         .take_while(|token| is_a_connector(token))
         .count();
     connectors > 0 && ends_a_possessive(&before[..before.len() - connectors])
+}
+
+/// Whether `token` is a word of [`DETERMINERS`].
+fn is_a_determiner(token: &Token<'_>) -> bool {
+    token.kind == TokenKind::Word && DETERMINERS.contains(&token.folded().as_str())
 }
 
 /// Whether `token` is `and`, `or` or a comma.
@@ -506,6 +516,12 @@ mod tests {
             "It swallowed ccgo's, or libc's own diagnostics.",
             "It swallowed ccgo\u{2019}s and libc\u{2019}s own diagnostics.",
             "It swallowed the users' and clients' own diagnostics.",
+            "It swallowed the tool's and the crate's own diagnostics.",
+            "It swallowed ccgo's and the libc's own diagnostics.",
+            "It swallowed ccgo's and the clients' own diagnostics.",
+            "It swallowed ccgo's or an libc's own diagnostics.",
+            "It swallowed ccgo's, the libc's own diagnostics.",
+            "It swallowed the users' and the clients' own diagnostics.",
         ] {
             assert!(found(text).is_empty(), "{text}");
         }
@@ -522,19 +538,24 @@ mod tests {
             found("It swallowed ccgo's errors and libc's own diagnostics."),
             ["libc's own diagnostics"]
         );
-        assert_eq!(
-            found("It swallowed ccgo's and the libc's own diagnostics."),
-            ["libc's own diagnostics"]
-        );
-        assert_eq!(
-            found("It swallowed ccgo's and the clients' own diagnostics."),
-            ["clients' own diagnostics"]
-        );
         // The possessives follow one another with nothing between: the second is the possessor
         // of `own`, and nothing is coordinated.
         assert_eq!(
             found("It swallowed the crate's maintainer's own diagnostics."),
             ["maintainer's own diagnostics"]
+        );
+        // Two determiners, or a determiner and then another word, do not coordinate the possessives.
+        assert_eq!(
+            found("It swallowed ccgo's and the the libc's own diagnostics."),
+            ["libc's own diagnostics"]
+        );
+        assert_eq!(
+            found("It swallowed ccgo's and the tool and the libc's own diagnostics."),
+            ["libc's own diagnostics"]
+        );
+        assert_eq!(
+            found("It swallowed the ccgo and the libc's own diagnostics."),
+            ["libc's own diagnostics"]
         );
         // A connector with no possessive before it.
         assert_eq!(

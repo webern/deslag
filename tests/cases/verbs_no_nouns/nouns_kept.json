@@ -1,0 +1,64 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "verbs_no_nouns",
+      "report": "ERROR: deslag detected verbs with no-nouns!\n\nREADME.md has 5 verbs with no-nouns.\n\nThis repo negates the verb: write \"does not ship X\", not \"ships no X\". Negate the verb, or drop the absolute claim if it is not true. Swapping in \"zero\", \"without\", \"lacks\" or \"free of\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"grants no access\"\n  line 3: \"enforces no rules\"\n  line 5: \"emits no warnings\"\n  line 5: \"contains no type\"\n  line 7: \"ships** no binary\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 15,
+          "end": 31,
+          "line": 3,
+          "column": 6,
+          "end_line": 3,
+          "end_column": 22,
+          "note": "\"grants no access\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 53,
+          "end": 70,
+          "line": 3,
+          "column": 44,
+          "end_line": 3,
+          "end_column": 61,
+          "note": "\"enforces no rules\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 97,
+          "end": 114,
+          "line": 5,
+          "column": 25,
+          "end_line": 5,
+          "end_column": 42,
+          "note": "\"emits no warnings\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 127,
+          "end": 143,
+          "line": 5,
+          "column": 55,
+          "end_line": 5,
+          "end_column": 71,
+          "note": "\"contains no type\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 169,
+          "end": 186,
+          "line": 7,
+          "column": 12,
+          "end_line": 7,
+          "end_column": 29,
+          "note": "\"ships** no binary\""
+        }
+      ]
+    }
+  ]
+}

@@ -20,3 +20,5 @@ The place of its own is a room of one's own. A cache can hold its own. A replica
 runs on its own, and that is fine.
 
 The repo owns its config. Its owner reads it. Its ownership is clear.
+
+It reads the tool's and the crate's own versions.

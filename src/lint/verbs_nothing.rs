@@ -15,6 +15,10 @@
 //! sets `CLAUSE_FORMS` and `SAY`. Both patterns excuse the forms of `return` ([`RETURN`]): a
 //! function that returns nothing does not have a value to name.
 //!
+//! A word that heads a noun phrase is not a verb, as in `the ones nothing reaches`, `In most runs
+//! nothing happens` and `- **Warnings** none`; [`heads_a_noun`] decides it for both lints. A noun
+//! reading alone is no guard, since real tics such as `ships no` are read as nouns too.
+//!
 //! The verb must come right before the object: `nothing else matters`, `none of the above`, `if
 //! nothing else` and `next to nothing` have no verb there. One word may stand between them, a
 //! preposition the tagger reads at `Likely` or above, or `to`, as in `plays with nothing`, and
@@ -43,7 +47,7 @@ use std::ops::Range;
 use crate::config::VerbsNothing;
 use crate::document::{Document, Location, Token, TokenKind};
 use crate::lint::pattern::{Item, Pattern};
-use crate::lint::verbs_no_nouns::{CLAUSE_FORMS, CLAUSE_VERBS, FUNCTION_WORDS, SAY};
+use crate::lint::verbs_no_nouns::{CLAUSE_FORMS, CLAUSE_VERBS, FUNCTION_WORDS, SAY, heads_a_noun};
 use crate::lint::{Keep, Mark, MarkKind, quote};
 use crate::tag::{Confidence, Features, Tag, TagSet};
 
@@ -219,7 +223,7 @@ fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
     let mut all: Vec<Range<usize>> = PATTERN
         .find(document)
         .chain(FORMS.find(document))
-        .filter(|found| !excused(document, found))
+        .filter(|found| !heads_a_noun(document, found) && !excused(document, found))
         .collect();
     all.sort_by_key(|found| found.start);
     let mut kept: Vec<Range<usize>> = Vec::with_capacity(all.len());
@@ -717,5 +721,52 @@ mod tests {
             "It finds. Nothing follows.",
             "It finds\n\nnothing.",
         ]);
+    }
+
+    #[test]
+    fn a_noun_heading_a_phrase_is_not_a_verb() {
+        passes(&[
+            "The ones nothing reaches stay.",
+            "An accept nothing sends to the queue.",
+            "In most runs nothing happens.",
+            "In most cases nothing is needed.",
+            "**Warnings** none",
+            "- **Warnings** none",
+            "**Errors** none.",
+            "**Errors** none, **warnings** none.",
+            "**Caches** nothing",
+            "**WHEN** nothing matches",
+        ]);
+    }
+
+    #[test]
+    fn a_label_has_no_determiner_and_no_verb() {
+        for text in [
+            "**Does** nothing",
+            "**Finds** nothing here.",
+            "*Finds* nothing.",
+            "- **The linter reports** nothing.",
+            "**This flag disables** nothing.",
+            "It **does** nothing",
+            // Not every word is in capitals.
+            "**Given** nothing matches",
+        ] {
+            assert!(!found(text).is_empty(), "{text}");
+        }
+        // Not a match on main either.
+        passes(&["**Note**: nothing is cached", "*Returns* nothing"]);
+    }
+
+    #[test]
+    fn a_verb_is_still_a_match_where_the_cues_fail() {
+        assert_eq!(
+            found("With this flag deslag reports nothing."),
+            ["reports nothing"]
+        );
+        assert_eq!(found("It **does** nothing."), ["does** nothing"]);
+        assert_eq!(found("The tool, finds nothing."), ["finds nothing"]);
+        assert_eq!(found("In cases, finds nothing."), ["finds nothing"]);
+        assert_eq!(found("In 7 cases finds nothing."), ["finds nothing"]);
+        assert_eq!(found("The new tool finds nothing."), ["finds nothing"]);
     }
 }

@@ -25,6 +25,10 @@ pub(super) enum Mask {
     Lead(usize),
 }
 
+/// How many different entries of `[licence]` a comment holds before it is licence text. One entry
+/// is a sentence about a licence; the rest of a licence block is what makes it one.
+const LICENCE_ENTRIES: usize = 2;
+
 /// The words that the prose keeps. A directive may not be named like one.
 const LABELS: [&str; 5] = ["TODO", "FIXME", "XXX", "HACK", "SAFETY"];
 
@@ -105,6 +109,18 @@ impl SkipFile {
         {
             return Err(format!("{label:?} is a label, which is prose"));
         }
+        let holds = &file.licence.holds;
+        if let Some((inner, outer)) = holds.iter().enumerate().find_map(|(at, inner)| {
+            let outer = holds
+                .iter()
+                .enumerate()
+                .find(|&(other, outer)| other != at && outer.contains(inner.as_str()))?;
+            Some((inner, outer.1))
+        }) {
+            return Err(format!(
+                "{outer:?} holds {inner:?}, so one phrase would count twice"
+            ));
+        }
         file.licence.by_first_byte = vec![Vec::new(); 256];
         for (at, phrase) in file.licence.holds.iter().enumerate() {
             file.licence.by_first_byte[usize::from(phrase.as_bytes()[0])].push(at);
@@ -145,7 +161,9 @@ impl List {
 
     /// The mask of each of `lines`, the lines of a comment with their indent cut and `None` for a
     /// blank line. The licence rule is for plain text: a paragraph of Markdown can hold a fence or
-    /// a tight list, and masking it would unbalance the one and swallow the other.
+    /// a tight list, and masking it would unbalance the one and swallow the other. A comment is
+    /// licence text when it holds [`LICENCE_ENTRIES`] different entries, and then each paragraph
+    /// that holds one is masked whole; a comment with fewer is prose.
     pub(super) fn mask(&self, lines: &[Option<&str>]) -> Vec<Mask> {
         let mut masks: Vec<Mask> = lines
             .iter()
@@ -154,9 +172,20 @@ impl List {
         if self.markup != Markup::Plain {
             return masks;
         }
+        let paragraphs: Vec<&[Option<&str>]> = lines.split(Option::is_none).collect();
+        let found: Vec<Vec<usize>> = paragraphs
+            .iter()
+            .map(|paragraph| self.entries(paragraph))
+            .collect();
+        let mut all: Vec<usize> = found.iter().flatten().copied().collect();
+        all.sort_unstable();
+        all.dedup();
+        if all.len() < LICENCE_ENTRIES {
+            return masks;
+        }
         let mut at = 0;
-        for paragraph in lines.split(Option::is_none) {
-            if self.is_licence(paragraph) {
+        for (paragraph, found) in paragraphs.iter().zip(&found) {
+            if !found.is_empty() {
                 masks[at..at + paragraph.len()].fill(Mask::Gap);
             }
             at += paragraph.len() + 1;
@@ -164,21 +193,29 @@ impl List {
         masks
     }
 
-    /// Whether the lines of one paragraph are licence text.
-    fn is_licence(&self, paragraph: &[Option<&str>]) -> bool {
+    /// The different entries of `[licence]` that `lines` hold, sorted: an index into `starts`, or
+    /// `starts.len()` and the index into `holds`.
+    fn entries(&self, lines: &[Option<&str>]) -> Vec<usize> {
         let licence = &self.file.licence;
-        paragraph.iter().flatten().any(|text| {
+        let mut found = Vec::new();
+        for text in lines.iter().flatten() {
+            for (at, start) in licence.starts.iter().enumerate() {
+                if text.starts_with(start.as_str()) {
+                    found.push(at);
+                }
+            }
             let bytes = text.as_bytes();
-            licence
-                .starts
-                .iter()
-                .any(|start| text.starts_with(start.as_str()))
-                || bytes.iter().enumerate().any(|(at, &first)| {
-                    licence.by_first_byte[usize::from(first)]
-                        .iter()
-                        .any(|&phrase| bytes[at..].starts_with(licence.holds[phrase].as_bytes()))
-                })
-        })
+            for (at, &first) in bytes.iter().enumerate() {
+                for &phrase in &licence.by_first_byte[usize::from(first)] {
+                    if bytes[at..].starts_with(licence.holds[phrase].as_bytes()) {
+                        found.push(licence.starts.len() + phrase);
+                    }
+                }
+            }
+        }
+        found.sort_unstable();
+        found.dedup();
+        found
     }
 
     /// The mask of one line that is not blank, before the licence rule.
@@ -362,15 +399,62 @@ mod tests {
     }
 
     #[test]
-    fn a_paragraph_with_a_legal_phrase_is_a_gap() {
+    fn one_licence_entry_is_a_sentence_and_two_are_a_licence() {
         use Mask::{Gap, Prose};
-        let text = "Intro.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\".\nAnd more.\n\nBody.";
+        // One entry, however often, is prose: all of the comment.
+        for text in [
+            "Strip the copyright notice from each file before hashing it.\n\nThis cache is slow.",
+            "Parse the config under the terms of the schema. It is load-bearing.",
+            "Strip the copyright notice. This is load-bearing.",
+            "Copyright headers are parsed here.\nThis is load-bearing.",
+            "Copyright law\nsays this",
+            "Not Copyright here",
+            "copyright notice, then the copyright notice again.\n\ncopyright notice",
+        ] {
+            let lines = text.split('\n').count();
+            assert_eq!(cpp(text), vec![Prose; lines], "{text:?}");
+        }
+        // Two entries in one paragraph mask it, and the paragraph around it stays.
+        let text = "Intro.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\".\nAnd IN NO EVENT SHALL.\n\nBody.";
         assert_eq!(cpp(text), [Prose, Prose, Gap, Gap, Prose, Prose]);
-        assert_eq!(cpp("Copyright law\nsays this"), [Gap, Gap]);
-        assert_eq!(cpp("A line\nCopyright 2020 Someone"), [Gap, Gap]);
-        assert_eq!(cpp("Not Copyright here"), [Prose]);
-        // A directive's reason does not escape the paragraph it is in.
-        assert_eq!(cpp("NOLINT -- x\nAll rights reserved"), [Gap, Gap]);
+        // Two entries in two paragraphs mask both, and not a paragraph with none.
+        let text = "Copyright 2020 A.\n\nWhy it is here.\n\nAll rights reserved.";
+        assert_eq!(cpp(text), [Gap, Prose, Prose, Prose, Gap]);
+        // A line that opens `Copyright (c)` matches two entries, and is a notice on its own.
+        assert_eq!(cpp("Copyright (c) 2020 A"), [Gap]);
+        assert_eq!(cpp("A line\nCopyright (c) 2020 A"), [Gap, Gap]);
+        // A directive's reason does not escape a licence paragraph.
+        assert_eq!(
+            cpp("NOLINT -- x\nAll rights reserved\nCopyright 2020 A"),
+            [Gap, Gap, Gap]
+        );
+    }
+
+    #[test]
+    fn an_spdx_tag_is_a_gap_in_any_comment() {
+        use Mask::{Gap, Prose};
+        for markup in [Markup::Plain, Markup::Markdown] {
+            let masks = |text| masks(Language::Rust, markup, text);
+            assert_eq!(masks("SPDX-License-Identifier: MIT"), [Gap]);
+            assert_eq!(
+                masks("SPDX-License-Identifier: MIT\nA prose line."),
+                [Gap, Prose]
+            );
+        }
+        // Without the colon it names the tag and does not use it.
+        assert_eq!(cpp("The SPDX-License-Identifier tag"), [Prose]);
+    }
+
+    #[test]
+    fn a_phrase_that_holds_another_is_refused() {
+        let base = "[markers]\nholds = []\nrule = \"=\"\n";
+        let ok = format!("[licence]\nstarts = []\nholds = [\"IN NO EVENT\", \"as is\"]\n{base}");
+        assert!(SkipFile::parse(&ok).is_ok());
+        let bad = ok.replace("\"as is\"", "\"IN NO EVENT SHALL\"");
+        let message = SkipFile::parse(&bad).unwrap_err();
+        assert!(message.contains("count twice"), "{message}");
+        let bad = ok.replace("\"as is\"", "\"IN NO EVENT\"");
+        assert!(SkipFile::parse(&bad).is_err());
     }
 
     #[test]
@@ -436,7 +520,8 @@ mod tests {
     }
 
     /// Reads every file under `root` twice, with the skip list and with a list that does not mask
-    /// a line, and checks that the masks did only what they are for. Returns the counts of lines
+    /// a line, and checks that the masks did only what they are for: a kept line holds an entry of
+    /// `[licence]` only when its comment holds fewer than two. Returns the counts of lines
     /// kept, cut at the start, and cut whole, and of regions that are gone.
     fn read_twice(
         root: &str,
@@ -469,11 +554,17 @@ mod tests {
                 };
                 let list = skip(masked.surface);
                 let (was, now) = (region.inner.split('\n'), masked.inner.split('\n'));
+                let comment: Vec<Option<&str>> = was
+                    .clone()
+                    .map(|line| (!line.trim().is_empty()).then_some(line))
+                    .collect();
+                let is_licence = list.entries(&comment).len() >= LICENCE_ENTRIES;
                 assert_eq!(was.clone().count(), now.clone().count(), "{path:?}");
                 for (was, now) in was.zip(now) {
                     assert!(was.ends_with(now), "{path:?}: {was:?} became {now:?}");
-                    if list.markup == Markup::Plain {
-                        assert!(!list.is_licence(&[Some(now)]), "{path:?}: {now:?}");
+                    if list.markup == Markup::Plain && is_licence {
+                        let held = list.entries(&[Some(now)]);
+                        assert!(held.is_empty(), "{path:?}: {now:?}");
                     }
                     match (was == now, now.is_empty()) {
                         (true, _) => kept += 1,
@@ -488,8 +579,9 @@ mod tests {
     }
 
     /// The crates `make fetch-crates` vendors. A line the masks keep is the line it was, or what
-    /// follows a directive in it, no kept line holds a legal phrase, and every region still
-    /// round-trips (the tests of the readers check that). The counts are printed for the record.
+    /// follows a directive in it, a kept line holds a legal phrase only in a comment that is not
+    /// licence text, and every region still round-trips (the tests of the readers check that). The
+    /// counts are printed for the record.
     #[test]
     #[ignore = "needs make fetch-crates"]
     fn the_vendored_crates_keep_every_line_whole_and_licence_text_out() {

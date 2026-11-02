@@ -449,12 +449,19 @@ mod tests {
     #[test]
     fn licence_text_and_banners_are_cut_wherever_they_are() {
         assert_eq!(
-            texts("// Copyright 2020 A.\n//\n// Real text.\n// ====\n"),
-            [plain("\n\nReal text.\n")]
+            texts("// Copyright 2020 A.\n// All rights reserved.\n//\n// Real text.\n// ====\n"),
+            [plain("\n\n\nReal text.\n")]
+        );
+        // One phrase is a sentence about a licence, and is prose.
+        assert_eq!(
+            texts("// Copyright 2020 A.\n//\n// Real text.\n"),
+            [plain("Copyright 2020 A.\n\nReal text.")]
         );
         assert_eq!(
-            texts("int x;\n/* a\n * b\n *\n * All rights reserved\n * c */ int y;"),
-            [plain("a\nb\n\n\n")]
+            texts(
+                "int x;\n/* a\n * b\n *\n * All rights reserved\n * Copyright 2020 A\n * c */ int y;"
+            ),
+            [plain("a\nb\n\n\n\n")]
         );
     }
 

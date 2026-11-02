@@ -1,0 +1,91 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 2,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nsrc/lib.rs has 5 negations padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 1: \"not ship-ready at all\"\n  line 3: \"no schema at all\"\n  line 5: \"not rare at all\"\n  line 13: \"no other use at all\"\n  line 17: \"no tags at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 59,
+          "end": 80,
+          "line": 1,
+          "column": 60,
+          "end_line": 1,
+          "end_column": 81,
+          "note": "\"not ship-ready at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 141,
+          "end": 157,
+          "line": 3,
+          "column": 59,
+          "end_line": 3,
+          "end_column": 75,
+          "note": "\"no schema at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 207,
+          "end": 222,
+          "line": 5,
+          "column": 48,
+          "end_line": 5,
+          "end_column": 63,
+          "note": "\"not rare at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 366,
+          "end": 385,
+          "line": 13,
+          "column": 20,
+          "end_line": 13,
+          "end_column": 39,
+          "note": "\"no other use at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 456,
+          "end": 470,
+          "line": 17,
+          "column": 18,
+          "end_line": 17,
+          "end_column": 32,
+          "note": "\"no tags at all\""
+        }
+      ]
+    },
+    {
+      "path": "src/main.c",
+      "lint": "not_at_all",
+      "report": "ERROR: deslag detected negations padded with \"at all\"!\n\nsrc/main.c has 2 negations padded with \"at all\".\n\nDelete \"at all\": the negation already says it. Write \"it does not parse\", not \"it does not parse at all\".\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 3: \"not ship-ready at all\"\n  line 12: \"no other use at all\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 64,
+          "end": 85,
+          "line": 3,
+          "column": 45,
+          "end_line": 3,
+          "end_column": 66,
+          "note": "\"not ship-ready at all\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 239,
+          "end": 258,
+          "line": 12,
+          "column": 20,
+          "end_line": 12,
+          "end_column": 39,
+          "note": "\"no other use at all\""
+        }
+      ]
+    }
+  ]
+}

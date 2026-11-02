@@ -270,22 +270,78 @@ fn data_differences(path: &str, old: &Value, new: &Value, found: &mut Vec<String
                 data_differences(&format!("{path}[{index}]"), old, new, found);
             }
         }
-        (old, new) if old != new => found.push(format!(
-            "{path}: it is {} at schema 1 and {} at schema 2",
-            shown(old),
-            shown(new)
-        )),
+        (Value::Array(old), Value::Array(new)) if left_over(old, new) => {
+            let (dropped, added) = (not_in(old, new), not_in(new, old));
+            let list = |values: &[&Value]| {
+                values
+                    .iter()
+                    .map(|value| shown(value))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            let said = match (added.is_empty(), dropped.is_empty()) {
+                (false, false) => format!("adds {} and drops {}", list(&added), list(&dropped)),
+                (false, true) => format!("adds {}", list(&added)),
+                _ => format!("drops {}", list(&dropped)),
+            };
+            found.push(format!("{path}: at schema 2 it {said}"));
+        }
+        (old, new) if old != new => {
+            let (old, new) = shown_apart(old, new);
+            found.push(format!(
+                "{path}: it is {old} at schema 1 and {new} at schema 2"
+            ));
+        }
         _ => {}
     }
 }
 
 /// `value` as a short phrase of a report.
+/// The most characters of a value a difference shows.
+const SHOWN: usize = 60;
+
 fn shown(value: &Value) -> String {
     let text = value.to_string();
-    match text.char_indices().nth(60) {
+    match text.char_indices().nth(SHOWN) {
         Some((end, _)) => format!("{}...", &text[..end]),
         None => text,
     }
+}
+
+/// The elements of `from` that `other` does not hold.
+fn not_in<'a>(from: &'a [Value], other: &[Value]) -> Vec<&'a Value> {
+    from.iter().filter(|value| !other.contains(value)).collect()
+}
+
+/// Whether the lists differ in an element that one holds and the other does not.
+fn left_over(old: &[Value], new: &[Value]) -> bool {
+    !not_in(old, new).is_empty() || !not_in(new, old).is_empty()
+}
+
+/// Two different values as text, each cut so that it still shows where they differ: a side is cut
+/// at 60 characters, or, when they read the same until later, a little after the first difference.
+fn shown_apart(old: &Value, new: &Value) -> (String, String) {
+    let (old, new) = (old.to_string(), new.to_string());
+    let same = old
+        .chars()
+        .zip(new.chars())
+        .take_while(|(a, b)| a == b)
+        .count();
+    let (from, to) = if same < SHOWN {
+        (0, SHOWN)
+    } else {
+        (same - SHOWN / 3, same + SHOWN / 3)
+    };
+    let cut = |text: &str| {
+        let chars: Vec<char> = text.chars().collect();
+        let part: String = chars.iter().skip(from).take(to - from).collect();
+        format!(
+            "{}{part}{}",
+            if from > 0 { "..." } else { "" },
+            if chars.len() > to { "..." } else { "" }
+        )
+    };
+    (cut(&old), cut(&new))
 }
 
 /// What one section of schema 1 becomes: the edits, and the tables they make, the section's and
@@ -1067,6 +1123,38 @@ mod tests {
     }
 
     #[test]
+    fn an_allow_entry_added_to_the_frozen_config_is_named_as_added() {
+        let directory = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/configs/0.0.3/");
+        let copy = std::fs::read_to_string(format!("{directory}config.yaml")).expect("a copy");
+        let data = std::fs::read_to_string(format!("{directory}config.migrated.toml"))
+            .expect("a migrated config");
+        let mut data: Value = toml::from_str(&data).expect("a migrated config is data");
+        data["md"]["allow"]
+            .as_array_mut()
+            .expect("a list")
+            .push(serde_json::json!({ "lint": "not_at_all", "path": "docs/extra.md" }));
+        let schema = NonZeroU32::new(1).expect("one");
+        let said = check_copy(&copy, schema, &data.to_string(), ConfigFormat::Yaml)
+            .expect_err("a longer list");
+        assert!(
+            said.iter()
+                .any(|line| line.starts_with("md.allow: at schema 2 it adds ")
+                    && line.contains("docs/extra.md")
+                    && !line.contains("drops")),
+            "{said:#?}"
+        );
+    }
+
+    #[test]
+    fn two_long_values_are_cut_where_they_differ() {
+        let long = |end: &str| Value::String(format!("{}{end}", "a".repeat(100)));
+        let (old, new) = shown_apart(&long("x"), &long("y"));
+        assert_ne!(old, new);
+        assert!(old.contains('x') && new.contains('y'), "{old} {new}");
+        assert!(old.len() < 100, "{old}");
+    }
+
+    #[test]
     fn a_yaml_config_is_refused_with_every_edit() {
         let refusal = migrate(
             "schema_version: 1\nmd:\n  lints:\n    banned_phrases: {}\n",
@@ -1249,7 +1337,7 @@ mod tests {
             change(|new| {
                 new["md"]["globs"] = serde_json::json!(["*.md", "x/*.md"]);
             }),
-            ["md.globs: it is [\"*.md\"] at schema 1 and [\"*.md\",\"x/*.md\"] at schema 2"]
+            ["md.globs: at schema 2 it adds \"x/*.md\""]
         );
         assert_eq!(
             change(|new| {

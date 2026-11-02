@@ -1673,6 +1673,17 @@ mod tests {
     }
 
     #[test]
+    fn a_line_with_text_added_after_the_entry_does_not_match() {
+        // The entry is a prefix of the file's line, and a character added anywhere stales it.
+        let (exemption, kept) = run(
+            "<p>c \u{2014} d</p> tail\n",
+            &line_entry("<p>c \u{2014} d</p>"),
+        );
+        assert_eq!(exemption.status, Status::NoSuchLine);
+        assert_eq!(kept, [1]);
+    }
+
+    #[test]
     fn a_line_and_a_quote_of_the_same_text_are_not_the_same_entry() {
         assert!(!line_entry("A.").is_same_as(&entry("A.")));
         assert!(line_entry("A.  b").is_same_as(&line_entry("A. b")));

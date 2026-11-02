@@ -188,7 +188,8 @@ impl fmt::Display for Lint {
 /// How the tally describes a file over its byte budget.
 const OVER_BUDGET: &str = "over budget";
 
-/// How the tally describes a file whose frontmatter declares a byte budget that is not a byte count.
+/// The tally's words for a file whose frontmatter has a `max_size_bytes` value that is not a whole
+/// number, as in `1 of 2 files with an unreadable max_size_bytes budget`.
 const UNREADABLE_BUDGET: &str = "with an unreadable max_size_bytes budget";
 
 /// A place in a file that a finding points at.

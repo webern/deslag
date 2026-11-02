@@ -26,12 +26,12 @@ pub enum Declared {
     /// The key holds a whole number of bytes.
     Budget(u64),
     /// The key is there and its value is not a whole number of bytes.
-    Unreadable(Unreadable),
+    Unreadable(WrittenValue),
 }
 
-/// A budget in a file's frontmatter that is not a byte count.
+/// The text of a budget in a file's frontmatter that is not a byte count, and where it is.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Unreadable {
+pub struct WrittenValue {
     /// The value as the file writes it, quotes included, less any trailing comment and the blanks
     /// around it. Empty when the key is bare.
     pub written: String,
@@ -62,10 +62,11 @@ pub fn max_size_bytes(contents: &str) -> Declared {
         if name.trim() != MAX_SIZE_BYTES {
             continue;
         }
-        return match scalar(value).and_then(|text| text.parse::<u64>().ok()) {
+        let value = read(value);
+        return match value.text.and_then(|text| text.parse::<u64>().ok()) {
             Some(budget) => Declared::Budget(budget),
-            None => Declared::Unreadable(Unreadable {
-                written: written(value),
+            None => Declared::Unreadable(WrittenValue {
+                written: value.written.to_string(),
                 line: at..at + line.len(),
             }),
         };
@@ -74,29 +75,36 @@ pub fn max_size_bytes(contents: &str) -> Declared {
     Declared::Absent
 }
 
-/// The text of `value`, what follows a key's colon, as one scalar, or `None` when it is not one.
-fn scalar(value: &str) -> Option<&str> {
-    let value = value.trim_start_matches(BLANKS);
-    let Some(quote) = value.chars().next().filter(|c| QUOTES.contains(c)) else {
-        return Some(uncommented(value).trim_matches(BLANKS));
-    };
-    let inner = &value[1..];
-    let close = inner.find(quote)?;
-    let after = &inner[close + 1..];
-    let rest = after.trim_start_matches(BLANKS);
-    // A comment needs a blank before its `#`.
-    let comment = rest.starts_with('#') && rest.len() < after.len();
-    (rest.is_empty() || comment).then_some(&inner[..close])
+/// A value as read from the line: what the file wrote, and the text it holds when it is a scalar.
+struct Value<'a> {
+    /// The value as the file writes it, for a report: a quoted value is kept whole, an unquoted one
+    /// loses its comment.
+    written: &'a str,
+    /// The scalar's text, or `None` when the value is not one (an unclosed quote, or text after the
+    /// closing quote that is not a comment).
+    text: Option<&'a str>,
 }
 
-/// `value` as the file writes it, for a report: a quoted value is kept whole, an unquoted one
-/// loses its comment.
-fn written(value: &str) -> String {
+/// Reads `value`, what follows a key's colon, once, for both the budget and the report.
+fn read(value: &str) -> Value<'_> {
     let value = value.trim_start_matches(BLANKS);
-    if value.starts_with(QUOTES) {
-        return value.trim_end_matches(BLANKS).to_string();
-    }
-    uncommented(value).trim_matches(BLANKS).to_string()
+    let Some(quote) = value.chars().next().filter(|c| QUOTES.contains(c)) else {
+        let text = uncommented(value).trim_matches(BLANKS);
+        return Value {
+            written: text,
+            text: Some(text),
+        };
+    };
+    let written = value.trim_end_matches(BLANKS);
+    let inner = &value[1..];
+    let text = inner.find(quote).and_then(|close| {
+        let after = &inner[close + 1..];
+        let rest = after.trim_start_matches(BLANKS);
+        // A comment needs a blank before its `#`.
+        let comment = rest.starts_with('#') && rest.len() < after.len();
+        (rest.is_empty() || comment).then_some(&inner[..close])
+    });
+    Value { written, text }
 }
 
 /// `value` up to a comment: the first `#` that follows a space or a tab, or starts the value.

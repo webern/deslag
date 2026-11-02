@@ -2,7 +2,7 @@
 # A fixture that passes is not listed. Each is linted alone, in an empty directory.
 # tests/golden.rs writes this file with the settings below, from tests/golden/config.toml.
 # `make fix-golden` rewrites it; read the diff before committing it.
-# fails 283 of 1230: core 8, human 50, llm 103, mixed 122
+# fails 284 of 1230: core 8, human 50, llm 103, mixed 123
 
 [md.lints.density]
 max_item_chars = 300
@@ -279,6 +279,7 @@ mixed/sirixdb--sirix/ROADMAP.md item:319
 mixed/sorenlouv--backport/CONTRIBUTING.md item:378 item:336 item:348
 mixed/soutaro--steep/CHANGELOG.md item:308
 mixed/square--leakcanary/docs__releasing.md item:404
+mixed/square--workflow-kotlin/RELEASING.md item:412
 mixed/stripe--stripe-android/README.md item:477
 mixed/tamagui--tamagui/next.md item:430 item:351 item:593
 mixed/tektoncd--pipeline/DEVELOPMENT.md paragraph:612 item:335

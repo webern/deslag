@@ -1025,10 +1025,10 @@ fn the_corpus_banned_characters_agree_with_the_library() {
 }
 
 /// How many banned characters `deslag fix` fixes in the corpus, with the default groups.
-const FIXED: usize = 6469;
+const FIXED: usize = 6473;
 
 /// How many fixtures with banned characters it fixes whole.
-const FIXED_WHOLE: usize = 353;
+const FIXED_WHOLE: usize = 354;
 
 /// How many banned characters it leaves for each reason.
 const LEFT_BY_REASON: &[(&str, usize)] = &[
@@ -1038,7 +1038,7 @@ const LEFT_BY_REASON: &[(&str, usize)] = &[
     ),
     ("it is in HTML, which is not prose", 55),
     ("it is in a URL", 1),
-    ("it is in the frontmatter, which is not prose", 39),
+    ("it is in the frontmatter, which is not prose", 35),
     (
         "the edit changes how the file reads, as when a line comes to start a list or a code \
          block, so reword it",

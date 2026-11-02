@@ -219,6 +219,13 @@ const ROWS: [Row; 3] = [
     },
 ];
 
+/// The row of the section `name`.
+fn row(name: &str) -> &'static Row {
+    ROWS.iter()
+        .find(|row| row.name == name)
+        .unwrap_or_else(|| panic!("no row for {name}"))
+}
+
 fn load(extension: &str, text: &str) -> Result<Config, Error> {
     let path = PathBuf::from(format!("deslag.{extension}"));
     Config::parse(text, path, ConfigSource::Explicit)
@@ -492,7 +499,7 @@ fn a_file_that_two_sections_select_is_an_error_that_names_both() {
 #[test]
 fn the_rust_cpp_and_toml_sections_never_select_one_file() {
     let config = ["rust", "cpp", "toml"].map(chars).concat();
-    let repo = repo(&ROWS[1], &config);
+    let repo = repo(row("toml"), &config);
     for path in ["src/lib.rs", "src/lib.c"] {
         repo.write(path, "// A \u{2014} dash.\n");
     }
@@ -625,7 +632,7 @@ fn a_toml_file_has_no_doc_comment_so_the_surface_is_refused() {
 
 #[test]
 fn the_toml_section_reads_files_ending_in_toml_and_no_other() {
-    let repo = repo(&ROWS[1], &chars("toml"));
+    let repo = repo(row("toml"), &chars("toml"));
     for path in [
         "rust-toolchain.toml",
         "src/deep/a.toml",
@@ -669,7 +676,7 @@ fn fix_edits_a_toml_comment_and_leaves_a_string_alone_and_keeps_the_line_breaks(
 
 #[test]
 fn the_cpp_section_reads_the_eight_extensions_and_no_other() {
-    let repo = repo(&ROWS[2], &chars("cpp"));
+    let repo = repo(row("cpp"), &chars("cpp"));
     for extension in EXTENSIONS.into_iter().chain(["rs", "tcc"]) {
         repo.write(&format!("src/a.{extension}"), "// A \u{2014} dash.\n");
     }

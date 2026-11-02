@@ -79,6 +79,8 @@ pub fn lex(src: &str) -> Vec<Lexeme> {
         bytes: src.as_bytes(),
         no_close_before: 0,
         out: Vec::new(),
+        #[cfg(test)]
+        reads: std::cell::Cell::new(0),
     };
     scanner.scan();
     scanner.out
@@ -118,11 +120,16 @@ struct Scanner<'a> {
     /// looking for again.
     no_close_before: usize,
     out: Vec<Lexeme>,
+    /// The bytes the scan has read, for the test that it reads each one a bounded number of times.
+    #[cfg(test)]
+    reads: std::cell::Cell<usize>,
 }
 
 impl Scanner<'_> {
     /// The byte at `i`, if there is one.
     fn at(&self, i: usize) -> Option<u8> {
+        #[cfg(test)]
+        self.reads.set(self.reads.get() + 1);
         self.bytes.get(i).copied()
     }
 
@@ -428,7 +435,17 @@ impl Scanner<'_> {
         let delimiter = &self.bytes[delimiter..open];
         let mut close = open + 1;
         let end = loop {
-            let Some(found) = self.bytes[close..].iter().position(|&c| c == b')') else {
+            let found = self.bytes[close..].iter().position(|&c| c == b')');
+            // The search reads to the `)` or the end, and the check after it reads the delimiter
+            // and the quote.
+            #[cfg(test)]
+            self.reads.set(
+                self.reads.get()
+                    + found.map_or(self.bytes.len() - close, |found| found + 1)
+                    + delimiter.len()
+                    + 1,
+            );
+            let Some(found) = found else {
                 break None;
             };
             close += found;
@@ -872,22 +889,56 @@ mod tests {
         ]);
     }
 
+    /// The most reads the scan makes for each byte of the source, counting every call of `at` and
+    /// the searches of `raw_string`. It is argued from the code, not found by running it. A
+    /// lexeme start in `scan` makes at most 10 calls of `at` (the busiest is a `#` and the blanks
+    /// and word after it) and steps over at least one byte. Each loop in the body of a lexeme
+    /// (`word`, `number_end`, `literal`, the comments, `header_name`) makes at most 2 calls for
+    /// each byte it steps over. A blank after a backslash is read again by `splice_end` each time
+    /// `skip` is called on that backslash, which at most 6 callers do, so it costs at most 6 more. A
+    /// `<` with no `>` is read to its line end once, as `no_close_before` says, which is 2 more.
+    /// That is under 10 + 2 + 6 + 2 = 20 for a byte. In a raw string, `raw_string` counts its
+    /// search once for each byte, and the delimiter, at most 16 bytes, and the quote for each `)`,
+    /// so under 18. The bound of 32 is over both. A scan that reads the rest of the file again
+    /// for each directive reads on the order of the source length for each line, which is far
+    /// over any such constant.
+    const MOST_READS_PER_BYTE: usize = 32;
+
+    /// The lexemes of `src`, after checking that the scan read each byte of it a bounded number of
+    /// times.
+    fn lexed_in_linear_time(src: &str) -> Vec<Lexeme> {
+        let mut scanner = Scanner {
+            bytes: src.as_bytes(),
+            no_close_before: 0,
+            out: Vec::new(),
+            reads: std::cell::Cell::new(0),
+        };
+        scanner.scan();
+        let (reads, most) = (scanner.reads.get(), MOST_READS_PER_BYTE * src.len());
+        assert!(reads <= most, "{reads} reads of {} bytes", src.len());
+        scanner.out
+    }
+
     #[test]
     fn many_directives_that_open_a_raw_string_are_read_in_linear_time() {
         // The first raw string swallows the file, so there is one lexeme. A scan that gave up on
-        // each of these and went on to the next line would read the rest of the file 100,000 times.
-        let src = "#define X R\"(a\n".repeat(100_000);
-        let started = std::time::Instant::now();
-        let lexemes = lex(&src);
+        // each of these and went on to the next line would read the rest of the file once for each
+        // of the 10,000 lines.
+        let src = "#define X R\"(a\n".repeat(10_000);
         assert_eq!(
-            lexemes,
+            lexed_in_linear_time(&src),
             [Lexeme {
                 range: 10..src.len(),
                 kind: LexemeKind::Str { terminated: false }
             }]
         );
-        // Quadratic takes seconds. Linear takes a few milliseconds, so this bound is loose.
-        assert!(started.elapsed().as_secs() < 2, "{:?}", started.elapsed());
+    }
+
+    #[test]
+    fn many_plain_directives_are_read_in_linear_time() {
+        // A scan that read the rest of the file again for each directive would do so 10,000 times.
+        let src = "#define X 1\n".repeat(10_000);
+        assert_eq!(lexed_in_linear_time(&src), []);
     }
 
     #[test]

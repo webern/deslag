@@ -83,7 +83,7 @@ fn a_doc_comment_is_read_as_markdown_and_another_comment_as_plain_text() {
 }
 
 #[test]
-fn a_pair_of_dash_lines_in_a_doc_comment_is_a_rule_and_a_heading_and_not_frontmatter() {
+fn a_pair_of_dash_lines_below_the_top_is_a_rule_and_a_heading_in_a_doc_comment_and_a_file() {
     let kinds = |source: &str| -> Vec<String> {
         stack(&BOTH)
             .document(source)
@@ -102,14 +102,24 @@ fn a_pair_of_dash_lines_in_a_doc_comment_is_a_rule_and_a_heading_and_not_frontma
             "Paragraph",
         ]
     );
-    // A Markdown file keeps reading the pair as frontmatter.
+    // A Markdown file reads a pair that is not at its top the same way, and one at its top as
+    // frontmatter.
     let file = Stack::new(Reader::Markdown {
         fences: Fences::default(),
-    })
-    .document("para\n\n---\nfoo\n---\nafter\n");
-    assert!(
-        file.walk()
-            .any(|(block, _)| block.kind == BlockKind::Frontmatter)
+    });
+    let file_kinds = |source: &str| -> Vec<String> {
+        file.document(source)
+            .walk()
+            .map(|(block, _)| format!("{:?}", block.kind))
+            .collect()
+    };
+    assert_eq!(
+        file_kinds("para\n\n---\nfoo\n---\nafter\n"),
+        ["Paragraph", "Rule", "Heading { level: 2 }", "Paragraph"]
+    );
+    assert_eq!(
+        file_kinds("---\nfoo: 1\n---\nafter\n"),
+        ["Frontmatter", "Paragraph"]
     );
 }
 

@@ -216,24 +216,57 @@ fn means_what_one_meant(
     }
 }
 
-/// `file` without what a migration changes by design (the schema and the stamp) and without the
-/// `lints` of each section and override, which are compared as what they mean.
+/// `file` without what a migration changes by design (the schema and the stamp), without the
+/// `lints` of each section and override, which are compared as what they mean, and without a key
+/// that is set to its default, which means what leaving it out does.
 fn outside_lints(mut file: Value) -> Value {
+    let schema = crate::config::schema();
     let Some(top) = file.as_object_mut() else {
         return file;
     };
     top.remove("schema_version");
     top.remove("deslag_version");
-    for section in top.values_mut().filter_map(Value::as_object_mut) {
+    for (name, section) in top.iter_mut() {
+        let Some(section) = section.as_object_mut() else {
+            continue;
+        };
         section.remove("lints");
+        let definition = format!("{}File", capitalised(name));
+        without_defaults(section, &schema, &definition);
         let overrides = section.get_mut("overrides").and_then(Value::as_array_mut);
         for over in overrides.into_iter().flatten() {
             if let Some(over) = over.as_object_mut() {
                 over.remove("lints");
+                without_defaults(over, &schema, "OverrideFile");
             }
         }
     }
     file
+}
+
+/// `name` with its first letter capital: `md` is `Md`, as the schema names the definitions.
+fn capitalised(name: &str) -> String {
+    let mut letters = name.chars();
+    letters
+        .next()
+        .map(|first| first.to_uppercase().chain(letters).collect())
+        .unwrap_or_default()
+}
+
+/// Takes out of `table` each key that holds the default the schema gives it in `definition`.
+fn without_defaults(table: &mut serde_json::Map<String, Value>, schema: &Value, definition: &str) {
+    let Some(properties) = schema
+        .pointer(&format!("/definitions/{definition}/properties"))
+        .and_then(Value::as_object)
+    else {
+        return;
+    };
+    table.retain(|key, value| {
+        properties
+            .get(key)
+            .and_then(|property| property.get("default"))
+            != Some(&*value)
+    });
 }
 
 /// Adds to `found` a line for each place `old` and `new` differ, named by its path from the top
@@ -1156,6 +1189,24 @@ mod tests {
     }
 
     #[test]
+    fn dropping_a_key_that_holds_its_default_is_no_difference() {
+        let copy = "schema_version: 1\nmd:\n  exclude: []\n  globs: [\"*.md\"]\n  overrides:\n    - \
+                    globs: [\"a/**\"]\n      exclude: []\n";
+        let current = "schema_version: 2\nmd:\n  globs: [\"*.md\"]\n  overrides:\n    - \
+                       globs: [\"a/**\"]\n";
+        let schema = NonZeroU32::new(1).expect("one");
+        check_copy(copy, schema, current, ConfigFormat::Yaml).expect("it means what it meant");
+
+        // A key that is not at its default is a difference when it goes.
+        let copy = copy.replace("exclude: []", "exclude: [\"b.md\"]");
+        let said = check_copy(&copy, schema, current, ConfigFormat::Yaml).expect_err("it differs");
+        assert!(
+            said.iter().any(|line| line.starts_with("md.exclude: ")),
+            "{said:#?}"
+        );
+    }
+
+    #[test]
     fn a_yaml_config_is_refused_with_every_edit() {
         let refusal = migrate(
             "schema_version: 1\nmd:\n  lints:\n    banned_phrases: {}\n",
@@ -1338,7 +1389,8 @@ mod tests {
             change(|new| {
                 new["md"]["globs"] = serde_json::json!(["*.md", "x/*.md"]);
             }),
-            ["md.globs: at schema 2 it adds \"x/*.md\""]
+            // The old globs are the default, which is the same as none.
+            ["md.globs: it is not set at schema 1 and [\"*.md\",\"x/*.md\"] at schema 2"]
         );
         assert_eq!(
             change(|new| {

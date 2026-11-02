@@ -161,7 +161,7 @@ pub const FORMS: Pattern = Pattern {
 pub struct Match {
     /// Where it is, from the verb to the word after `no`.
     pub location: Location,
-    /// The sentence it is in, as a report quotes it.
+    /// The matched text, as a report quotes it.
     pub quote: String,
 }
 

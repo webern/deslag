@@ -6,11 +6,11 @@
 use std::borrow::Cow;
 use std::ops::Range;
 
-use super::markdown;
 use super::region::{Markup, Region};
 use super::{
     Block, BlockKind, Body, Document, Fences, Piece, Point, Reader, Span, SpanKind, Stack,
 };
+use super::{markdown, plain};
 
 /// The first layer of one region, in the coordinates of the file.
 pub(super) struct Layers<'a> {
@@ -38,7 +38,7 @@ pub(super) fn lift<'a>(source: &'a str, region: &Region, markup: Markup) -> Laye
             };
             markdown::read_doc(&Stack::new(reader), &region.inner)
         }
-        Markup::Plain => Stack::new(Reader::Plain).read(&region.inner),
+        Markup::Plain => plain::read_text(&Stack::new(Reader::Plain), &region.inner),
     };
     let lifter = Lifter { source, region };
     Layers {

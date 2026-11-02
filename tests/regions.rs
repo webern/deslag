@@ -154,6 +154,15 @@ fn a_comment_read_in_a_file_with_a_byte_order_mark_counts_columns_from_the_text(
     assert_eq!(scanned("\u{feff}/// a — b\n"), [(1, 7, '—')]);
 }
 
+#[test]
+fn a_byte_order_mark_after_a_comment_marker_is_a_character_of_the_comment() {
+    // The mark that opens the text of a comment is not the mark that opens the file.
+    assert_eq!(scanned("//\u{feff}A b\n"), [(1, 3, '\u{feff}')]);
+    assert_eq!(scanned("// x\u{feff}A b\n"), [(1, 5, '\u{feff}')]);
+    assert_eq!(scanned("\u{feff}//\u{feff}A b\n"), [(1, 3, '\u{feff}')]);
+    assert_eq!(scanned("\u{feff}// A b\n"), []);
+}
+
 /// The result of replacing the first `from` in `source` with `to`, as the document of `source`
 /// makes of it: the new text, and why it was refused if it was.
 fn replaced(source: &str, from: &str, to: &str) -> (String, Option<Refusal>) {

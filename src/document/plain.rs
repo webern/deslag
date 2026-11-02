@@ -16,6 +16,10 @@
 //! to its last that is not a space, tab or CR. No piece holds or touches a `\n` or a `\r\n`, which
 //! are the line endings. A lone `\r` is content. A tab counts to the next multiple of four columns.
 //! The baseline, the least indent of any line, is column zero.
+//!
+//! A byte order mark opens a file, not a comment, so [`read`], which is handed a file, skips one at
+//! its first byte, and [`read_text`], which is handed the text of a comment, keeps every U+FEFF as a
+//! character of the text.
 
 use std::borrow::Cow;
 use std::ops::Range;
@@ -29,9 +33,19 @@ const TAB: usize = 4;
 /// How far past its container a line is indented to be raw.
 const RAW: usize = 2;
 
-/// Reads `source` into blocks, pieces and points.
+/// Reads `source`, a file, into blocks, pieces and points.
 pub(super) fn read<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
-    let source_lines = lines(source);
+    read_from(stack, source, text_start(source))
+}
+
+/// Reads `source`, the text of a comment, into blocks, pieces and points. A U+FEFF at its start is
+/// text.
+pub(super) fn read_text<'a>(stack: &Stack, source: &'a str) -> Document<'a> {
+    read_from(stack, source, 0)
+}
+
+fn read_from<'a>(stack: &Stack, source: &'a str, start: usize) -> Document<'a> {
+    let source_lines = lines(source, start);
     let baseline = source_lines
         .iter()
         .filter(|line| !line.blank)
@@ -78,9 +92,8 @@ struct Line {
     blank: bool,
 }
 
-/// The lines of `source`, after a byte order mark.
-fn lines(source: &str) -> Vec<Line> {
-    let mut at = text_start(source);
+/// The lines of `source` from byte `at`.
+fn lines(source: &str, mut at: usize) -> Vec<Line> {
     let mut lines = Vec::new();
     for raw in source[at..].split_inclusive('\n') {
         let body = raw.strip_suffix('\n').unwrap_or(raw);

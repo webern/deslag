@@ -1,0 +1,6 @@
+schema_version = 2
+
+[rust.lints.banned_chars]
+
+[rust.lints.banned_chars.groups]
+invisible = true

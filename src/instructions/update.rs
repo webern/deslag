@@ -244,7 +244,21 @@ pub fn update_text(news: &News, from: &Version, to: &Version, start: Start<'_>) 
             text.push_str(&format!("{}\n", item.text));
         }
     }
-    text.push_str(&format!("\n## Finish\n\n{}\n", words("Closing")));
+    // One sentence for each kind of news the text printed a section for.
+    let offers: Vec<String> = [
+        (!news.lints().is_empty(), "Closing lints"),
+        (!news.phrases().is_empty(), "Closing phrases"),
+        (!news.settings().is_empty(), "Closing settings"),
+    ]
+    .into_iter()
+    .filter(|(printed, _)| *printed)
+    .map(|(_, name)| words(name))
+    .collect();
+    text.push_str(&format!("\n## Finish\n\n{}\n\n", words("Closing")));
+    if !offers.is_empty() {
+        text.push_str(&format!("{}\n\n", offers.join("\n")));
+    }
+    text.push_str(&format!("{}\n", words("Closing update")));
     text
 }
 
@@ -510,8 +524,8 @@ What rust leaves out.
 Nothing `check` finds depends on `deslag_version`.
 
 Offer each new lint to the person, with what it fails, and add the table of each they choose.
-Offer each new phrase too, and add its `ban` line to each table they choose. A new setting keeps
-its default until the config sets it; name it to the person, and set it only if they ask.
+A new setting keeps its default until the config sets it; name it to the person, and set it only if
+they ask.
 
 Once they have chosen, run `deslag update --to next`, adding your `--config-path` if any. It sets
 `deslag_version` to "next", ending this list, and edits renamed or removed settings. If the person
@@ -875,9 +889,61 @@ cannot be asked now, change nothing, not even `deslag_version`, and tell them wh
         assert_eq!(marked, ["never silently"]);
     }
 
+    /// The closing of the text for a range holding only lints, only phrases, or only settings: it
+    /// offers what the text lists and nothing else.
+    #[test]
+    fn the_closing_offers_only_the_kinds_of_news_the_text_lists() {
+        let lints = SchemaPaths::of(&json!({
+            "type": "object",
+            "properties": { "md": {
+                "type": "object", "since": "0.0.1",
+                "properties": { "lints": {
+                    "type": "object", "since": "0.0.1",
+                    "properties": { "not_at_all": {
+                        "type": "object", "since": "0.3.0", "properties": {},
+                    } },
+                } },
+            } },
+        }));
+        let settings = SchemaPaths::of(&json!({
+            "type": "object",
+            "properties": { "x": property("0.3.0", "An x.") },
+        }));
+        let nothing = SchemaPaths::of(&json!({ "type": "object", "properties": {} }));
+        let (from, to) = (version("0.2.0"), version("0.3.0"));
+        let offer = |name: &str| piece(name).to_string();
+        let (lint, phrase, setting) = (
+            offer("Closing lints"),
+            offer("Closing phrases"),
+            offer("Closing settings"),
+        );
+
+        // Which of the three sentences the closing holds, for each range.
+        let offered = |paths: &SchemaPaths, catalogue: &Catalogue| {
+            let news = News::between(paths, &[], catalogue, &from, &to);
+            let text = update_text(&news, &from, &to, Start::Config(&Reading::default()));
+            let finish = text.split("## Finish").nth(1).expect("a closing");
+            [&lint, &phrase, &setting].map(|sentence| finish.contains(sentence.as_str()))
+        };
+        assert_eq!(offered(&lints, &no_phrases()), [true, false, false]);
+        assert_eq!(offered(&nothing, &phrases()), [false, true, false]);
+        assert_eq!(offered(&settings, &no_phrases()), [false, false, true]);
+        assert_eq!(offered(&settings, &phrases()), [false, true, true]);
+    }
+
     #[test]
     fn update_md_has_each_piece_the_text_prints() {
-        for name in ["Heading", "Closing", "Current", "Nothing new", "No config"] {
+        for name in [
+            "Heading",
+            "Closing",
+            "Closing lints",
+            "Closing phrases",
+            "Closing settings",
+            "Closing update",
+            "Current",
+            "Nothing new",
+            "No config",
+        ] {
             assert!(!piece(name).is_empty(), "{name}");
         }
     }

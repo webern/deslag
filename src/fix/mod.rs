@@ -7,7 +7,8 @@
 //!
 //! A sentence that an `allow` entry for the file quotes is held: fix does not edit it for any lint,
 //! since an edit would stop the quote matching and fail the entry, which only a human may change.
-//! Each place there is left and reported, naming the entry.
+//! A line that an entry names by `line` is held the same way, whole: an edit anywhere on it would
+//! stop the line matching. Each place there is left and reported, naming the entry.
 //!
 //! A file is fixed in memory, in passes: it is read and linted as `check` would, the edits are
 //! applied, and the result is read again, until a pass does not make an edit. Each fixable lint's
@@ -64,7 +65,8 @@ pub enum Unfixed {
     Lint(&'static str),
     /// The document refused the lint's edit.
     Refused(Refusal),
-    /// The place is in a sentence that an `allow` entry quotes, which an edit would stop matching.
+    /// The place is in a sentence that an `allow` entry quotes, or on a line it names, which an
+    /// edit would stop matching.
     Held {
         /// The config's path, as a report names it.
         config: String,
@@ -72,6 +74,8 @@ pub enum Unfixed {
         section: &'static str,
         /// The entry's place in the section's `allow`.
         index: usize,
+        /// Whether the entry names a line, else a sentence.
+        line: bool,
     },
 }
 
@@ -84,11 +88,23 @@ impl fmt::Display for Unfixed {
                 config,
                 section,
                 index,
+                line: false,
             } => write!(
                 f,
                 "{config}'s {section}.allow[{index}] quotes this sentence, so an edit would stop \
                  the quote matching; do not edit it by hand either: the human changes the \
                  sentence and the entry together"
+            ),
+            Unfixed::Held {
+                config,
+                section,
+                index,
+                line: true,
+            } => write!(
+                f,
+                "{config}'s {section}.allow[{index}] names this line, so an edit would stop the \
+                 line matching; do not edit it by hand either: the human changes the line and \
+                 the entry together"
             ),
         }
     }
@@ -276,6 +292,7 @@ fn passes(
                             config: label.to_string(),
                             section: allow.section,
                             index: allow.index,
+                            line: allow.names.is_line(),
                         }),
                         None => Ok(edit),
                     },
@@ -320,15 +337,16 @@ fn passes(
     unreachable!("a pass past the bound returns an error")
 }
 
-/// The range of each sentence of `document` that one of `entries` quotes, with the entry. A quote
-/// two sentences equal is held in both, since an edit to either changes how the entry comes out.
+/// The range of each sentence of `document` that one of `entries` quotes, or line it names, with
+/// the entry. A quote two sentences equal is held in both, since an edit to either changes how the
+/// entry comes out. A line is held whole, for every lint, and so is each copy of it.
 fn held<'a>(
     document: &Document<'_>,
     entries: impl Iterator<Item = &'a Allow>,
 ) -> Vec<(Range<usize>, &'a Allow)> {
     entries
         .flat_map(|entry| {
-            allow::matching(document, &entry.quote)
+            allow::matching_entry(document, entry)
                 .into_iter()
                 .map(move |range| (range, entry))
         })
@@ -391,6 +409,7 @@ mod tests {
             config: "deslag.toml".to_string(),
             section: "md",
             index: 0,
+            line: false,
         };
 
         let text = format!("{quoted}\n\nOther \u{2014} text.\n");
@@ -436,5 +455,51 @@ mod tests {
         assert!(made.is_empty());
         assert_eq!(left.len(), 1);
         assert_eq!(left[0].1, held);
+    }
+
+    /// An entry that names a line holds the whole line for fix: a dash inside a sentence of it is
+    /// left, naming the entry, though the entry drops only what no sentence holds.
+    #[test]
+    fn an_edit_on_a_line_an_entry_names_is_left_for_the_human() {
+        let line = "First \u{2014} one.\u{a0}Second.";
+        let config = Config::parse(
+            "schema_version = 2\n\
+             [md.lints.banned_chars.groups]\ndashes = true\nspaces = true\n\
+             [[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\n\
+             line = \"First \\u2014 one.\\u00A0Second.\"\nreason = \"A kept line.\"\n",
+            PathBuf::from("deslag.toml"),
+            ConfigSource::Explicit,
+        )
+        .expect("a config deslag reads");
+        let section = config.section_to_read("a.md").expect("a section");
+        let text = format!("{line}\n\nOther \u{2014} text.\n");
+        let Outcome::Read {
+            text: after,
+            fixed,
+            left,
+        } = passes(
+            &config,
+            "deslag.toml",
+            section,
+            "a.md",
+            text,
+            Path::new("."),
+        )
+        .expect("fix runs")
+        else {
+            panic!("a UTF-8 text is read");
+        };
+        assert_eq!(after, format!("{line}\n\nOther - text.\n"));
+        assert_eq!(fixed.len(), 1);
+        assert_eq!(left.len(), 1);
+        assert_eq!(
+            left[0].1,
+            Unfixed::Held {
+                config: "deslag.toml".to_string(),
+                section: "md",
+                index: 0,
+                line: true,
+            }
+        );
     }
 }

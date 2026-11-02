@@ -9,6 +9,11 @@
 //! `AllowFile` is an entry as it is written; [`Allow`] is one that loading has checked. What an
 //! entry does to a run is in [`crate::lint::allow`].
 //!
+//! An entry names a sentence by its `quote`. `banned_chars` also reports characters that no
+//! sentence holds, in frontmatter, in HTML and between sentences; an entry for the lint may name
+//! the whole line such a character is on by `line`, in place of `quote`. No other lint takes a
+//! `line`: its findings are in sentences.
+//!
 //! A lint takes an entry only when its findings sit in one sentence. The rest are refused when the
 //! config loads, each with the setting that bounds it, and a `match` on [`Lint`] without a wildcard
 //! makes every new lint choose.
@@ -61,13 +66,27 @@ pub(super) struct AllowFile {
     /// sentence, which the file holds anyway. Reports, notices and `deslag explain` write each
     /// character that shows as nothing or acts on the reader as `<U+XXXX>`.
     #[schemars(extend("since" = "0.0.3"))]
-    quote: String,
+    #[serde(default)]
+    quote: Option<String>,
     /// Why the sentence must stay as it is. Required. A `path` or `reason` may not hold a
     /// character that shows as nothing or acts on the reader: a control or format character,
     /// another default-ignorable one, or a blank other than the ASCII space; a `reason` may hold a
     /// tab, CR or LF.
     #[schemars(extend("since" = "0.0.3"))]
     reason: String,
+    /// In place of `quote`, for a `banned_chars` finding that no sentence holds, such as one in
+    /// frontmatter or an HTML block, or a no-break space between two sentences: the whole text of
+    /// one line of the file. Spaces and tabs fold to one space and the ends are trimmed, so a line
+    /// that is indented differently still matches; any other character must match exactly, so a
+    /// character added anywhere on the line stops it matching. It is not a line number, which an
+    /// edit above would move. The file must hold the line once, and the line must hold a character
+    /// the lint finds outside every sentence, or the entry fails the run. The entry drops those
+    /// characters and no finding inside a sentence, which `quote` names. An entry holds a `quote`
+    /// or a `line`, never both, and only `banned_chars` takes a `line`. A `line` may not be empty,
+    /// and may not hold a control character other than a tab, since it is one line.
+    #[schemars(extend("since" = "next"))]
+    #[serde(default)]
+    line: Option<String>,
 }
 
 /// The schema of `lint`: the lints that take an entry, which are the ones [`takes`] does not refuse.
@@ -109,6 +128,47 @@ fn takes(lint: Lint) -> Result<(), &'static str> {
     }
 }
 
+/// Whether `lint` takes a `line` in place of a `quote`, else what to do instead, worded to follow
+/// "which does not take a `line`:". Only a finding that no sentence holds can be named by a line.
+fn takes_line(lint: Lint) -> Result<(), &'static str> {
+    match lint {
+        Lint::BannedChars => Ok(()),
+        Lint::BannedPhrases
+        | Lint::VerbsNoNouns
+        | Lint::NotAtAll
+        | Lint::VerbsNothing
+        | Lint::PossessiveOwn => {
+            Err("its findings are in sentences. Name the sentence with `quote`")
+        }
+        Lint::MaxSizeBytes | Lint::MaxEmphasis | Lint::RepoLayout | Lint::Density => {
+            Err("it takes no entry")
+        }
+    }
+}
+
+/// What an `allow` entry names.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Names {
+    /// One sentence, by its `quote`, as the config writes it.
+    Sentence(String),
+    /// One line, by its whole text, as the config writes it, for a finding that no sentence holds.
+    Line(String),
+}
+
+impl Names {
+    /// The text the entry gives, a quote or a line.
+    pub fn text(&self) -> &str {
+        match self {
+            Names::Sentence(text) | Names::Line(text) => text,
+        }
+    }
+
+    /// Whether the entry names a line.
+    pub fn is_line(&self) -> bool {
+        matches!(self, Names::Line(_))
+    }
+}
+
 /// An `allow` entry that loading has checked.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Allow {
@@ -120,8 +180,8 @@ pub struct Allow {
     pub path: String,
     /// The lint it exempts the sentence from.
     pub lint: Lint,
-    /// The sentence, as the config writes it.
-    pub quote: String,
+    /// The sentence or the line it names, as the config writes it.
+    pub names: Names,
     /// Why the sentence stays.
     pub reason: String,
 }
@@ -132,15 +192,18 @@ impl Allow {
         format!("{}.allow[{}]", self.section, self.index)
     }
 
-    /// Whether `other` is the same entry: the same section, file, lint and quote, whatever the
-    /// reason, and however the quote is wrapped. A lone CR is a character here, as a Rust comment
-    /// holds it, so two quotes that differ only by one are two entries. If both name one sentence
-    /// of Markdown, the second finds its finding already dropped, and fails the run.
+    /// Whether `other` is the same entry: the same section, file, lint and quote or line, whatever
+    /// the reason, and however the quote is wrapped. A lone CR is a character here, as a Rust
+    /// comment holds it, so two quotes that differ only by one are two entries. If both name one
+    /// sentence of Markdown, the second finds its finding already dropped, and fails the run. A
+    /// quote and a line of the same text are two entries, since one names a sentence and the other
+    /// a line.
     pub fn is_same_as(&self, other: &Allow) -> bool {
         self.section == other.section
             && self.path == other.path
             && self.lint == other.lint
-            && fold(&self.quote) == fold(&other.quote)
+            && self.names.is_line() == other.names.is_line()
+            && fold(self.names.text()) == fold(other.names.text())
     }
 }
 
@@ -163,11 +226,37 @@ pub(super) fn compile(
                 ".reason is empty; an exemption says why the sentence must stay".to_string(),
             ));
         }
+        let (quote, line) = match (file.quote, file.line) {
+            (Some(quote), None) => (Some(quote), None),
+            (None, Some(line)) => (None, Some(line)),
+            (Some(_), Some(_)) => {
+                return Err(refuse(
+                    " has a `quote` and a `line`; an entry names a sentence by `quote` or a line \
+                     by `line`, not both"
+                        .to_string(),
+                ));
+            }
+            (None, None) => {
+                return Err(refuse(
+                    " has neither a `quote` nor a `line`; an exemption names what it exempts"
+                        .to_string(),
+                ));
+            }
+        };
         // A lone CR counts as layout here, since no sentence is only that.
-        if fold_quote(&file.quote, false).is_empty() {
-            return Err(refuse(
-                ".quote is empty; an exemption names the sentence it exempts".to_string(),
-            ));
+        if let Some(quote) = &quote {
+            if fold_quote(quote, false).is_empty() {
+                return Err(refuse(
+                    ".quote is empty; an exemption names the sentence it exempts".to_string(),
+                ));
+            }
+        }
+        if let Some(line) = &line {
+            if fold(line).is_empty() {
+                return Err(refuse(
+                    ".line is empty; an exemption names the line it exempts".to_string(),
+                ));
+            }
         }
         if let Some(problem) = path_problem(&file.path) {
             return Err(refuse(format!(".path {:?} {problem}", file.path)));
@@ -186,6 +275,13 @@ pub(super) fn compile(
             return Err(refuse(format!(
                 ".lint is `{lint}`, which does not take an entry: {instead}"
             )));
+        }
+        if line.is_some() {
+            if let Err(instead) = takes_line(lint) {
+                return Err(refuse(format!(
+                    ".lint is `{lint}`, which does not take a `line`: {instead}"
+                )));
+            }
         }
         let hidden = [
             ("path", file.path.chars().find(|ch| invisible(*ch))),
@@ -206,9 +302,9 @@ pub(super) fn compile(
             }
         }
         // Any other character may be in a quote, since the sentence it must equal holds it too.
-        if let Some(ch) = file
-            .quote
-            .chars()
+        if let Some(ch) = quote
+            .iter()
+            .flat_map(|quote| quote.chars())
             .find(|ch| ch.is_control() && !layout(*ch))
         {
             return Err(refuse(format!(
@@ -217,17 +313,38 @@ pub(super) fn compile(
                 describe(ch)
             )));
         }
+        // A line is one line, so a CR or LF cannot be in it, and a control character other than a tab stays out too.
+        if let Some(ch) = line
+            .iter()
+            .flat_map(|line| line.chars())
+            .find(|ch| ch.is_control() && *ch != '\t')
+        {
+            return Err(refuse(format!(
+                ".line holds {}, a control character; a line may not hold one other than a tab",
+                describe(ch)
+            )));
+        }
+        let names = match (quote, line) {
+            (Some(quote), _) => Names::Sentence(quote),
+            (None, Some(line)) => Names::Line(line),
+            (None, None) => unreachable!("an entry with neither was refused"),
+        };
         let entry = Allow {
             section,
             index,
             path: file.path,
             lint,
-            quote: file.quote,
+            names,
             reason: file.reason,
         };
         if let Some(first) = entries.iter().find(|first| first.is_same_as(&entry)) {
+            let one = if entry.names.is_line() {
+                "line, since exempting every copy would let a line be pasted elsewhere"
+            } else {
+                "sentence"
+            };
             return Err(refuse(format!(
-                " repeats {}; one entry names one sentence",
+                " repeats {}; one entry names one {one}",
                 first.place()
             )));
         }
@@ -498,7 +615,7 @@ mod tests {
                 let quote = format!("A{ch}sentence.");
                 let config = load(&entry("a.md", lint, &quote, "R."))
                     .unwrap_or_else(|error| panic!("{lint} {ch:?}: {error}"));
-                assert_eq!(config.md().allow()[0].quote, quote, "{lint} {ch:?}");
+                assert_eq!(config.md().allow()[0].names.text(), quote, "{lint} {ch:?}");
             }
             for ch in ['\u{0}', '\u{7}', '\u{1b}', '\u{7f}', '\u{85}', '\u{9b}'] {
                 let quote = format!("A{ch}sentence.");
@@ -515,14 +632,14 @@ mod tests {
         // The escape of TOML is how the file names the character; the rule reads the value.
         let text = "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_phrases\"\nquote = \"A\\u200Dsentence.\"\nreason = \"R.\"\n";
         let config = load(text).expect("a config");
-        assert_eq!(config.md().allow()[0].quote, "A\u{200D}sentence.");
+        assert_eq!(config.md().allow()[0].names.text(), "A\u{200D}sentence.");
         let said = refused(&text.replace("u200D", "u001B"));
         assert!(said.contains("md.allow[0].quote holds U+001B"), "{said}");
         // Only spaces, tabs and line breaks fold, so a quote of another space is not empty.
         for ch in ['\u{00A0}', '\u{3000}', '\u{200B}'] {
             let config = load(&entry("a.md", "banned_chars", &ch.to_string(), "R."))
                 .unwrap_or_else(|error| panic!("{ch:?}: {error}"));
-            assert_eq!(config.md().allow()[0].quote, ch.to_string());
+            assert_eq!(config.md().allow()[0].names.text(), ch.to_string());
         }
     }
 
@@ -667,6 +784,112 @@ mod tests {
         ]
         .concat();
         assert!(refused(&text).contains("md.allow[1] repeats md.allow[0]"));
+    }
+
+    /// An `[[md.allow]]` entry that names a line, with the lint given.
+    fn line_entry(lint: &str, line: &str) -> String {
+        let written = |text: &str| toml::Value::String(text.to_string());
+        format!(
+            "[[md.allow]]\npath = \"a.md\"\nlint = {}\nline = {}\nreason = \"R.\"\n",
+            written(lint),
+            written(line)
+        )
+    }
+
+    #[test]
+    fn an_entry_names_a_line_or_a_quote_and_never_both_or_neither() {
+        let config = load(&line_entry("banned_chars", "<td>x</td>")).expect("a config");
+        let named = &config.md().allow()[0].names;
+        assert_eq!(*named, super::Names::Line("<td>x</td>".to_string()));
+        let both = "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\nquote = \"A.\"\nline = \"A.\"\nreason = \"R.\"\n";
+        let said = refused(both);
+        assert!(
+            said.contains("md.allow[0] has a `quote` and a `line`"),
+            "{said}"
+        );
+        let neither = "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\nreason = \"R.\"\n";
+        let said = refused(neither);
+        assert!(
+            said.contains("md.allow[0] has neither a `quote` nor a `line`"),
+            "{said}"
+        );
+    }
+
+    #[test]
+    fn a_line_that_is_empty_or_holds_a_control_character_but_a_tab_is_refused() {
+        for line in ["", "  \t ", " "] {
+            let said = refused(&line_entry("banned_chars", line));
+            assert!(
+                said.contains("md.allow[0].line is empty"),
+                "{line:?}: {said}"
+            );
+        }
+        for ch in ['\n', '\r', '\u{0}', '\u{1b}', '\u{7f}', '\u{85}'] {
+            let said = refused(&line_entry("banned_chars", &format!("a{ch}b")));
+            assert!(
+                said.contains(&format!("md.allow[0].line holds U+{:04X}", ch as u32)),
+                "{ch:?}: {said}"
+            );
+        }
+        // A tab folds, and any other character is the file's to hold: a line may be invisible.
+        for ch in ['\t', '\u{a0}', '\u{200b}', '\u{2028}'] {
+            let line = format!("a{ch}b");
+            let config = load(&line_entry("banned_chars", &line)).expect("a config");
+            assert_eq!(config.md().allow()[0].names.text(), line);
+        }
+    }
+
+    #[test]
+    fn only_banned_chars_takes_a_line() {
+        for lint in [
+            "banned_phrases",
+            "verbs_no_nouns",
+            "not_at_all",
+            "verbs_nothing",
+            "possessive_own",
+        ] {
+            let said = refused(&line_entry(lint, "A line."));
+            assert!(
+                said.contains(&format!("`{lint}`, which does not take a `line`"))
+                    && said.contains("Name the sentence with `quote`"),
+                "{lint}: {said}"
+            );
+        }
+        // A lint that does not take an entry says so first.
+        let said = refused(&line_entry("density", "A line."));
+        assert!(said.contains("which does not take an entry"), "{said}");
+    }
+
+    #[test]
+    fn the_same_line_twice_is_refused_and_a_quote_of_its_text_is_another_entry() {
+        let text = [
+            line_entry("banned_chars", "<td>x</td>"),
+            line_entry("banned_chars", "<td>x</td>"),
+        ]
+        .concat();
+        let said = refused(&text);
+        assert!(
+            said.contains("md.allow[1] repeats md.allow[0]; one entry names one line"),
+            "{said}"
+        );
+        let text = [
+            line_entry("banned_chars", "<td>x</td>"),
+            entry("a.md", "banned_chars", "<td>x</td>", "R."),
+        ]
+        .concat();
+        assert!(load(&text).is_ok());
+    }
+
+    #[test]
+    fn an_entry_written_as_a_json_array_may_name_a_line_after_its_reason() {
+        let config = Config::parse(
+            r#"[2, [null, {"banned_chars": {}}, [], [], [], [["a.md", "banned_chars", null, "R.", "<td>x</td>"]]]]"#,
+            PathBuf::from("deslag.json"),
+            ConfigSource::Explicit,
+        )
+        .expect("a config");
+        assert_eq!(config.md().allow()[0].names.text(), "<td>x</td>");
+        assert!(config.md().allow()[0].names.is_line());
     }
 
     #[test]

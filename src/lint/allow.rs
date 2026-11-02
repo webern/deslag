@@ -18,6 +18,15 @@
 //! run never read. `mark_added` compares the entries with the config at the base of a run, to show
 //! a reviewer each one the change adds or changes.
 //!
+//! An entry for `banned_chars` may name a line instead of a sentence. The lint also reports
+//! characters in frontmatter and HTML blocks, and a no-break space between two sentences, and no
+//! sentence holds those. A `line` is the whole text of one line, folded for spaces and tabs only,
+//! and the file must hold it once. The entry then drops each occurrence of the lint on that line
+//! that no sentence holds, and none inside a sentence: a finding has one way to be exempted. Its
+//! statuses are `no_such_line`, `two_lines` and `no_finding`. A report of a failed entry also lists
+//! the lines closest to the entry that hold such a finding, so that it never denies a finding the
+//! file has.
+//!
 //! Only a human writes an entry. A report of a failed entry says that an agent may delete one,
 //! which only tightens the check, and never writes or changes one.
 
@@ -31,9 +40,9 @@ use serde::Serialize;
 use crate::Error;
 use crate::change::Change;
 use crate::config::allow::invisible;
-use crate::config::{Allow, Config};
+use crate::config::{Allow, Config, Names};
 use crate::document::{Document, Location, PointKind, Sentence};
-use crate::lint::{Finding, Keep, MarkKind, QUOTE_CHARS, Violation, on_lines};
+use crate::lint::{Finding, Keep, Lint, MarkKind, QUOTE_CHARS, Violation, on_lines};
 
 /// The line every report of a failed entry opens with.
 pub const HEADING: &str = "ERROR: deslag detected an exemption that does not hold!";
@@ -58,8 +67,12 @@ pub enum Status {
     NoSuchSentence,
     /// The file holds the quote as two sentences or more.
     TwoSentences,
-    /// The one sentence does not hold a finding of the lint: it is off for the file, or the text
-    /// was fixed.
+    /// The file does not hold a line equal to the `line` of the entry.
+    NoSuchLine,
+    /// The file holds the `line` of the entry as two lines or more.
+    TwoLines,
+    /// The one sentence does not hold a finding of the lint, or the one line does not hold one
+    /// that no sentence holds: it is off for the file, or the text was fixed.
     NoFinding,
 }
 
@@ -88,12 +101,19 @@ pub struct Exemption {
     /// The part of the lint's finding it dropped: the occurrences inside the sentence. `Some`
     /// when [`Status::Applied`].
     pub dropped: Option<Violation>,
-    /// The line of each sentence the quote equals: one when applied, or when the lint does not
-    /// find a match in it, and every one when there are two or more.
+    /// The line of each sentence the quote equals, or each line the `line` equals: one when
+    /// applied, or when the lint does not find a match in it, and every one when there are two or
+    /// more.
     pub lines: Vec<usize>,
     /// The sentences of the file that hold a finding of the entry's lint, for a failed entry whose
     /// file was read.
     pub holding: Vec<Held>,
+    /// The lines of the file that hold a finding of the entry's lint that no sentence holds, for a
+    /// failed entry whose file was read. Such a finding is named by a `line`.
+    pub outside: Vec<Held>,
+    /// For a quote no sentence equals, the lines it equals that hold a finding no sentence holds:
+    /// the entry should name them by `line`.
+    pub as_line: Vec<usize>,
     /// Whether the change under judgment added the entry, or changed its reason. A run with no
     /// base does not say.
     pub added: bool,
@@ -125,6 +145,8 @@ impl Exemption {
             dropped: None,
             lines,
             holding: Vec::new(),
+            outside: Vec::new(),
+            as_line: Vec::new(),
             added: false,
             unselected: None,
         }
@@ -158,6 +180,29 @@ impl Exemption {
                     self.allow.section
                 ),
             },
+            Status::NoSuchSentence if !self.as_line.is_empty() => format!(
+                "{path} does not hold a sentence equal to the quote, but {} equals it and holds a \
+                 finding of `{lint}` that no sentence holds, as in frontmatter or HTML. An entry \
+                 names such a line by `line`, its whole line, in place of `quote`. Tell the human, \
+                 who changes the entry.",
+                on_lines(&self.as_line)
+            ),
+            Status::NoSuchLine => format!(
+                "{path} does not hold a line equal to the line of the entry, spaces and tabs aside. \
+                 The line was changed or removed."
+            ),
+            Status::TwoLines => format!(
+                "{path} holds the line as {} lines, on {}. An entry names one line, since \
+                 exempting every copy would let a line be pasted elsewhere.",
+                self.lines.len(),
+                on_lines(&self.lines)
+            ),
+            Status::NoFinding if self.allow.names.is_line() => format!(
+                "line {} of {path} does not hold a finding of `{lint}` that no sentence holds. The \
+                 lint may be off for the file, the text may have been fixed, or the finding is \
+                 inside a sentence, which `quote` names.",
+                self.lines.first().copied().unwrap_or_default()
+            ),
             Status::NoSuchSentence => format!(
                 "{path} does not hold a sentence equal to the quote, spaces and line breaks aside. \
                  The sentence was reworded, or moved out of the text deslag reads."
@@ -178,43 +223,52 @@ impl Exemption {
 
     /// The sentences of the file that hold a finding of the entry's lint, as a paragraph of the
     /// report: the [`QUOTED`] closest to the quote, each cut to [`QUOTE_CHARS`] characters, and
-    /// how many more there are. A file that was not read has none to quote.
+    /// how many more there are. Then the lines that hold a finding of the lint that no sentence
+    /// holds, the same way. A file that was not read has none to quote.
     fn held(&self) -> Option<String> {
         let read = matches!(
             self.status,
-            Status::NoSuchSentence | Status::TwoSentences | Status::NoFinding
+            Status::NoSuchSentence
+                | Status::TwoSentences
+                | Status::NoSuchLine
+                | Status::TwoLines
+                | Status::NoFinding
         );
         let (path, lint) = (&self.allow.path, self.allow.lint);
-        read.then(|| match self.holding.as_slice() {
-            [] => format!("No sentence of {path} holds a finding of `{lint}`.\n\n"),
-            holding => {
-                let (near, more) = closest(holding, &self.allow.quote);
-                let heading = if more == 0 {
-                    format!("The sentences of {path} that hold a finding of `{lint}`:")
+        let text = self.allow.names.text();
+        read.then(|| {
+            let sentences = if self.holding.is_empty() {
+                format!("No sentence of {path} holds a finding of `{lint}`.\n\n")
+            } else {
+                let sentences = |what| format!("{what} of {path}");
+                listing(
+                    &self.holding,
+                    text,
+                    &sentences("sentences"),
+                    &format!("that hold a finding of `{lint}`:",),
+                    "quote",
+                )
+            };
+            let lines = if self.outside.is_empty() {
+                String::new()
+            } else {
+                let noun = if self.allow.names.is_line() {
+                    "line"
                 } else {
-                    format!(
-                        "The {QUOTED} sentences of {path} closest to the quote that hold a finding \
-                         of `{lint}`:"
-                    )
+                    "quote"
                 };
-                let listed: String = near
-                    .iter()
-                    .map(|held| {
-                        let ellipsis = if held.cut { "..." } else { "" };
-                        format!(
-                            "\n  line {}: \"{}{ellipsis}\"",
-                            held.line,
-                            shown(&held.start)
-                        )
-                    })
-                    .collect();
-                let rest = if more == 0 {
-                    String::new()
-                } else {
-                    format!("\n  and {more} more.")
-                };
-                format!("{heading}{listed}{rest}\n\n")
-            }
+                listing(
+                    &self.outside,
+                    text,
+                    &format!("lines of {path}"),
+                    &format!(
+                        "that hold a finding of `{lint}` that no sentence holds, which an entry \
+                         names by `line`:"
+                    ),
+                    noun,
+                )
+            };
+            format!("{sentences}{lines}")
         })
     }
 
@@ -226,17 +280,27 @@ impl Exemption {
         Some(format!(
             "{HEADING}\n\
              \n\
-             {config} has {place}, which exempts a sentence of {path} from `{lint}`. It fails: \
+             {config} has {place}, which exempts a {noun} of {path} from `{lint}`. It fails: \
              {why}\n\
              \n\
-             The quote: \"{quote}\"\n\
+             The {given}: \"{quote}\"\n\
              The reason: \"{reason}\"\n\
              \n\
              {held}{ADVICE}",
             place = allow.place(),
             path = allow.path,
             lint = allow.lint,
-            quote = shown(&allow.quote),
+            noun = if allow.names.is_line() {
+                "line"
+            } else {
+                "sentence"
+            },
+            given = if allow.names.is_line() {
+                "line"
+            } else {
+                "quote"
+            },
+            quote = shown(allow.names.text()),
             reason = shown(&allow.reason),
             held = self.held().unwrap_or_default(),
         ))
@@ -256,15 +320,50 @@ impl Exemption {
     pub fn notice(&self, config: &str) -> String {
         let allow = &self.allow;
         format!(
-            "{config} adds or changes {place}, an exemption of `{lint}` in {path}. Quote: \"{quote}\" \
+            "{config} adds or changes {place}, an exemption of `{lint}` in {path}. {label}: \"{quote}\" \
              Reason: \"{reason}\" A reviewer decides whether it stands.",
             place = allow.place(),
             path = allow.path,
             lint = allow.lint,
-            quote = shown(&allow.quote),
+            label = if allow.names.is_line() {
+                "Line"
+            } else {
+                "Quote"
+            },
+            quote = shown(allow.names.text()),
             reason = shown(&allow.reason),
         )
     }
+}
+
+/// A paragraph of a report that lists `holding`, the [`QUOTED`] closest to `text`, each cut to
+/// [`QUOTE_CHARS`] characters, and how many more there are. `of` says what is listed, as "sentences
+/// of a.md", `that` what they hold, and `near` what the closest are closest to.
+fn listing(holding: &[Held], text: &str, of: &str, that: &str, near: &str) -> String {
+    let (nearest, more) = closest(holding, text);
+    let heading = if more == 0 {
+        format!("The {of} {that}")
+    } else {
+        let (what, place) = of.split_once(" of ").unwrap_or((of, ""));
+        format!("The {QUOTED} {what} of {place} closest to the {near} {that}")
+    };
+    let listed: String = nearest
+        .iter()
+        .map(|held| {
+            let ellipsis = if held.cut { "..." } else { "" };
+            format!(
+                "\n  line {}: \"{}{ellipsis}\"",
+                held.line,
+                shown(&held.start)
+            )
+        })
+        .collect();
+    let rest = if more == 0 {
+        String::new()
+    } else {
+        format!("\n  and {more} more.")
+    };
+    format!("{heading}{listed}{rest}\n\n")
 }
 
 /// How many sentences the report of a failed entry quotes: those closest to the quote.
@@ -377,6 +476,35 @@ impl Keep for Within {
     }
 }
 
+/// Keeps the occurrences on one line that no sentence holds, or all the others.
+struct OnLine<'d> {
+    line: Range<usize>,
+    sentences: &'d [Sentence],
+    inside: bool,
+}
+
+impl Keep for OnLine<'_> {
+    fn occurrence(&self, location: &Location) -> bool {
+        let selected = self.line.start <= location.start
+            && location.end <= self.line.end
+            && !held_by_sentence(self.sentences, location);
+        selected == self.inside
+    }
+
+    fn verdict(&self) -> bool {
+        !self.inside
+    }
+}
+
+/// Whether one of `sentences`, which are in the order of the file and do not overlap, holds the
+/// whole of `location`.
+fn held_by_sentence(sentences: &[Sentence], location: &Location) -> bool {
+    let before = sentences.partition_point(|sentence| sentence.range.start <= location.start);
+    before
+        .checked_sub(1)
+        .is_some_and(|last| location.end <= sentences[last].range.end)
+}
+
 /// The text of `sentence`, as an entry quotes it, before it is folded: what [`Document::text`]
 /// reads, less the markers that a block quote and a list item put at the start of the lines after
 /// the first. Those hold no text of the sentence, and they come with its wrapping. Any other
@@ -448,6 +576,64 @@ pub(crate) fn matching(document: &Document<'_>, quote: &str) -> Vec<Range<usize>
         .collect()
 }
 
+/// The range of each line of `document` equal to `line`, once both are folded: only spaces and
+/// tabs fold, since a line break is not in a line. A byte order mark that opens the file is no part
+/// of its first line.
+pub(crate) fn matching_lines(document: &Document<'_>, line: &str) -> Vec<Range<usize>> {
+    let line = fold(line);
+    document
+        .line_ranges()
+        .into_iter()
+        .filter(|range| fold(document.line_text(range)) == line)
+        .collect()
+}
+
+/// The range of each sentence or line of `document` that `allow` names.
+pub(crate) fn matching_entry(document: &Document<'_>, allow: &Allow) -> Vec<Range<usize>> {
+    match &allow.names {
+        Names::Sentence(quote) => matching(document, quote),
+        Names::Line(line) => matching_lines(document, line),
+    }
+}
+
+/// The lines of `document`, counted from 1, that hold an occurrence of `violation` that no
+/// sentence holds. Only `banned_chars` finds one. In the order of the file.
+fn outside_lines(document: &Document<'_>, violation: Option<&Violation>) -> Vec<usize> {
+    let Some(violation) = violation.filter(|violation| violation.lint() == Lint::BannedChars)
+    else {
+        return Vec::new();
+    };
+    let mut lines: Vec<usize> = violation
+        .marks()
+        .into_iter()
+        .filter(|mark| mark.kind == MarkKind::Occurrence)
+        .filter(|mark| !held_by_sentence(&document.sentences, &mark.location))
+        .map(|mark| mark.location.line)
+        .collect();
+    lines.sort_unstable();
+    lines.dedup();
+    lines
+}
+
+/// The lines of `document` that hold an occurrence of `violation` that no sentence holds, each as
+/// a report quotes it.
+fn held_lines(document: &Document<'_>, violation: Option<&Violation>) -> Vec<Held> {
+    let ranges = document.line_ranges();
+    outside_lines(document, violation)
+        .into_iter()
+        .map(|line| {
+            let text = fold(document.line_text(&ranges[line - 1]));
+            let start: String = text.chars().take(QUOTE_CHARS).collect();
+            Held {
+                line,
+                cut: start.len() < text.len(),
+                start,
+                comment: false,
+            }
+        })
+        .collect()
+}
+
 /// The sentences of `document` with an occurrence of `violation` inside, whole. The places and
 /// the sentences are both taken in the order of the file, so one pass over each finds them.
 fn held(document: &Document<'_>, violation: Option<&Violation>) -> Vec<Held> {
@@ -502,31 +688,46 @@ pub(crate) fn apply(
 ) -> (Vec<Finding>, Vec<Exemption>) {
     let mut exemptions = Vec::with_capacity(entries.len());
     for allow in entries {
-        let sentences = matching(document, &allow.quote);
-        let lines: Vec<usize> = sentences
+        let (ranges, none, two) = match &allow.names {
+            Names::Sentence(quote) => (
+                matching(document, quote),
+                Status::NoSuchSentence,
+                Status::TwoSentences,
+            ),
+            Names::Line(line) => (
+                matching_lines(document, line),
+                Status::NoSuchLine,
+                Status::TwoLines,
+            ),
+        };
+        let lines: Vec<usize> = ranges
             .iter()
             .map(|range| document.locate(range.clone()).line)
             .collect();
         let at = findings
             .iter()
             .position(|finding| finding.violation.lint() == allow.lint);
-        let exemption = match (sentences.as_slice(), at) {
-            ([], _) => Exemption::new(allow, Status::NoSuchSentence, lines),
-            ([_, _, ..], _) => Exemption::new(allow, Status::TwoSentences, lines),
-            ([range], at) => {
-                let dropped = at.and_then(|at| {
-                    findings[at].violation.retain(&Within {
-                        range: range.clone(),
-                        inside: true,
-                    })
-                });
+        let exemption = match ranges.as_slice() {
+            [] => Exemption::new(allow, none, lines),
+            [_, _, ..] => Exemption::new(allow, two, lines),
+            [range] => {
+                let keep = |inside| -> Box<dyn Keep + '_> {
+                    match allow.names {
+                        Names::Sentence(_) => Box::new(Within {
+                            range: range.clone(),
+                            inside,
+                        }),
+                        Names::Line(_) => Box::new(OnLine {
+                            line: range.clone(),
+                            sentences: &document.sentences,
+                            inside,
+                        }),
+                    }
+                };
+                let dropped = at.and_then(|at| findings[at].violation.retain(&*keep(true)));
                 match (at, dropped) {
                     (Some(at), Some(dropped)) => {
-                        let kept = findings[at].violation.retain(&Within {
-                            range: range.clone(),
-                            inside: false,
-                        });
-                        match kept {
+                        match findings[at].violation.retain(&*keep(false)) {
                             Some(kept) => findings[at].violation = kept,
                             None => {
                                 findings.remove(at);
@@ -544,8 +745,22 @@ pub(crate) fn apply(
         let violation = at
             .and_then(|at| findings.get(at))
             .map(|finding| &finding.violation);
+        // A quote that is no sentence may be a line, which names a finding no sentence holds.
+        let as_line = match (&allow.names, exemption.status) {
+            (Names::Sentence(quote), Status::NoSuchSentence) => {
+                let quote = fold_quote(quote, false);
+                let ranges = document.line_ranges();
+                outside_lines(document, violation)
+                    .into_iter()
+                    .filter(|line| fold(document.line_text(&ranges[line - 1])) == quote)
+                    .collect()
+            }
+            _ => Vec::new(),
+        };
         exemptions.push(Exemption {
             holding: held(document, violation),
+            outside: held_lines(document, violation),
+            as_line,
             ..exemption
         });
     }
@@ -664,7 +879,7 @@ mod tests {
     use super::*;
     use crate::config::{BannedChars, CharGroups};
     use crate::document::{Fences, Reader, Stack, Surface};
-    use crate::lint::{Lint, banned_chars};
+    use crate::lint::banned_chars;
 
     /// A place of `start..end` on one line.
     fn place(start: usize, end: usize) -> Location {
@@ -1136,7 +1351,7 @@ mod tests {
             index: 0,
             path: "a.md".to_string(),
             lint: Lint::BannedChars,
-            quote: quote.to_string(),
+            names: Names::Sentence(quote.to_string()),
             reason: "A quoted title.".to_string(),
         }
     }
@@ -1293,6 +1508,189 @@ mod tests {
         let source = "Same.\n\nOther.\n\nSame.\n";
         let document = Document::markdown(source);
         assert_eq!(matching(&document, "Same.").len(), 2);
+    }
+
+    /// An entry of `banned_chars` for `a.md` that names the line `line`.
+    fn line_entry(line: &str) -> Allow {
+        Allow {
+            names: Names::Line(line.to_string()),
+            ..entry("")
+        }
+    }
+
+    /// The finding of `banned_chars`, with its dashes and spaces on, in `document`.
+    fn banned_and_spaces(document: &Document<'_>) -> Option<Violation> {
+        let settings = BannedChars {
+            groups: CharGroups {
+                dashes: Some(true),
+                spaces: Some(true),
+                ..CharGroups::default()
+            },
+            ..BannedChars::default()
+        };
+        banned_chars::check(document, Some(&settings)).map(Violation::BannedChars)
+    }
+
+    /// The source of the repros: a dash in the frontmatter, one in an HTML block, a sentence with a
+    /// dash, and a no-break space between two sentences with a dash in the first.
+    const OUTSIDE: &str = "---\ntitle: a \u{2014} b\n---\n\n<p>c \u{2014} d</p>\n\nA \u{2014} b.\n\nOne \u{2014} x.\u{a0}Two.\n";
+
+    /// How the entry `allow` came out against `source`, with what it dropped and what stays.
+    fn run(source: &str, allow: &Allow) -> (Exemption, Vec<usize>) {
+        let document = Document::markdown(source);
+        let finding = Finding {
+            path: "a.md".to_string(),
+            violation: banned_and_spaces(&document).expect("a finding"),
+        };
+        let (kept, mut exemptions) = apply(&document, &[allow], vec![finding]);
+        let kept = kept
+            .iter()
+            .flat_map(|finding| finding.violation.marks())
+            .filter(|mark| mark.kind == MarkKind::Occurrence)
+            .map(|mark| mark.location.line)
+            .collect();
+        (exemptions.remove(0), kept)
+    }
+
+    #[test]
+    fn a_line_matches_with_spaces_and_tabs_folded_and_every_other_character_exact() {
+        let source = "---\ntitle:\ta  \u{2014} b \n---\n\n<p>c \u{2014} d</p>\r\n";
+        let document = Document::markdown(source);
+        let lines = |line: &str| -> Vec<usize> {
+            matching_lines(&document, line)
+                .into_iter()
+                .map(|range| document.locate(range).line)
+                .collect()
+        };
+        assert_eq!(lines("title: a \u{2014} b"), [2]);
+        assert_eq!(lines("  title:\t\ta \u{2014}   b\t"), [2]);
+        // The line break of a CRLF is no part of the line.
+        assert_eq!(lines("<p>c \u{2014} d</p>"), [5]);
+        // Any other character must match: a no-break space is no space, and a character added
+        // anywhere stops the match.
+        assert_eq!(lines("title:\u{a0}a \u{2014} b"), Vec::<usize>::new());
+        assert_eq!(lines("title: a \u{2014} b."), Vec::<usize>::new());
+        assert_eq!(lines("itle: a \u{2014} b"), Vec::<usize>::new());
+        // A part of a line is no line.
+        assert_eq!(lines("a \u{2014} b"), Vec::<usize>::new());
+    }
+
+    #[test]
+    fn the_byte_order_mark_that_opens_a_file_is_no_part_of_its_first_line() {
+        let source = "\u{feff}<p>a \u{2014} b</p>\n";
+        let document = Document::markdown(source);
+        assert_eq!(matching_lines(&document, "<p>a \u{2014} b</p>").len(), 1);
+    }
+
+    #[test]
+    fn a_line_entry_drops_the_findings_no_sentence_holds_on_its_line() {
+        let (exemption, kept) = run(OUTSIDE, &line_entry("title: a \u{2014} b"));
+        assert_eq!(exemption.status, Status::Applied);
+        assert_eq!(exemption.lines, [2]);
+        // The dash of the line is dropped, and every other finding stays.
+        assert_eq!(kept, [5, 7, 9, 9]);
+        let (exemption, kept) = run(OUTSIDE, &line_entry("<p>c \u{2014} d</p>"));
+        assert_eq!(exemption.status, Status::Applied);
+        assert_eq!(kept, [2, 7, 9, 9]);
+    }
+
+    #[test]
+    fn a_line_entry_never_drops_a_finding_a_sentence_holds() {
+        // The line holds a dash inside a sentence and a no-break space between two sentences.
+        let (exemption, kept) = run(OUTSIDE, &line_entry("One \u{2014} x.\u{a0}Two."));
+        assert_eq!(exemption.status, Status::Applied);
+        // The space between the sentences is dropped; the dash of the sentence stays.
+        assert_eq!(kept, [2, 5, 7, 9]);
+        let dropped = exemption.dropped.expect("a drop").marks();
+        assert_eq!(dropped.len(), 1);
+        assert!(dropped[0].note.contains("U+00A0"), "{}", dropped[0].note);
+    }
+
+    #[test]
+    fn a_line_whose_finding_is_in_a_sentence_has_no_finding() {
+        let (exemption, kept) = run(OUTSIDE, &line_entry("A \u{2014} b."));
+        assert_eq!(exemption.status, Status::NoFinding);
+        assert_eq!(exemption.lines, [7]);
+        assert_eq!(kept, [2, 5, 7, 9, 9]);
+        let report = exemption.render("deslag.toml").expect("a failed entry");
+        assert!(
+            report.contains(
+                "line 7 of a.md does not hold a finding of `banned_chars` that no sentence holds"
+            ),
+            "{report}"
+        );
+    }
+
+    #[test]
+    fn a_line_that_the_file_does_not_hold_or_holds_twice_fails() {
+        let (exemption, _) = run(OUTSIDE, &line_entry("<p>c \u{2014} gone</p>"));
+        assert_eq!(exemption.status, Status::NoSuchLine);
+        let twice = "<p>c \u{2014} d</p>\n\n<p>c \u{2014} d</p>\n";
+        let (exemption, kept) = run(twice, &line_entry("<p>c \u{2014} d</p>"));
+        assert_eq!(exemption.status, Status::TwoLines);
+        assert_eq!(exemption.lines, [1, 3]);
+        // Neither copy is exempt.
+        assert_eq!(kept, [1, 3]);
+        let report = exemption.render("deslag.toml").expect("a failed entry");
+        assert!(
+            report.contains("holds the line as 2 lines, on lines 1, 3"),
+            "{report}"
+        );
+    }
+
+    #[test]
+    fn a_line_and_a_quote_of_the_same_text_are_not_the_same_entry() {
+        assert!(!line_entry("A.").is_same_as(&entry("A.")));
+        assert!(line_entry("A.  b").is_same_as(&line_entry("A. b")));
+        assert!(entry("A.  b").is_same_as(&entry("A. b")));
+    }
+
+    #[test]
+    fn a_quote_that_equals_a_line_no_sentence_holds_is_told_to_use_a_line() {
+        let (exemption, _) = run(OUTSIDE, &entry("<p>c \u{2014} d</p>"));
+        assert_eq!(exemption.status, Status::NoSuchSentence);
+        assert_eq!(exemption.as_line, [5]);
+        let report = exemption.render("deslag.toml").expect("a failed entry");
+        assert!(
+            report.contains(
+                "but line 5 equals it and holds a finding of `banned_chars` that no sentence holds"
+            ) && report.contains("names such a line by `line`"),
+            "{report}"
+        );
+        assert!(report.contains("Tell the human"), "{report}");
+        // A quote that equals a line a sentence holds the finding of is just reworded.
+        let (exemption, _) = run(OUTSIDE, &entry("A \u{2014} gone."));
+        assert!(exemption.as_line.is_empty());
+        let report = exemption.render("deslag.toml").expect("a failed entry");
+        assert!(report.contains("was reworded"), "{report}");
+    }
+
+    #[test]
+    fn a_failed_entry_lists_the_lines_closest_to_it_that_hold_a_finding_no_sentence_holds() {
+        let (exemption, _) = run(OUTSIDE, &line_entry("<p>c \u{2014} gone</p>"));
+        let report = exemption.render("deslag.toml").expect("a failed entry");
+        assert!(
+            report.contains(
+                "The lines of a.md that hold a finding of `banned_chars` that no sentence holds, \
+                 which an entry names by `line`:\n  line 2: \"title: a \u{2014} b\"\n  \
+                 line 5: \"<p>c \u{2014} d</p>\"\n  line 9: \"One \u{2014} x.<U+00A0>Two.\"\n\n"
+            ),
+            "{report}"
+        );
+        // Past three, the closest three are listed, in the order of the file, and the rest counted.
+        let many = (1..=5)
+            .map(|n| format!("<p>{n} \u{2014} {n}</p>\n\n"))
+            .collect::<String>();
+        let (exemption, _) = run(&many, &line_entry("<p>5 \u{2014} 4</p>"));
+        let near: Vec<usize> = nearest(&exemption.outside, "<p>5 \u{2014} 4</p>").0;
+        assert_eq!(near.len(), 3);
+        assert_eq!(near[2], 9);
+        let report = exemption.render("deslag.toml").expect("a failed entry");
+        assert!(
+            report.contains("The 3 lines of a.md closest to the line"),
+            "{report}"
+        );
+        assert!(report.contains("and 2 more."), "{report}");
     }
 
     #[test]

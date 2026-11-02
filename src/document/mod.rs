@@ -460,6 +460,30 @@ impl<'a> Document<'a> {
         }
     }
 
+    /// The range of each line of the source, in order, without the line break that ends it. The
+    /// first line starts past a byte order mark that opens the file, as the text does. Line `n`, as
+    /// [`Location`] counts them, is the `n - 1`th.
+    pub(crate) fn line_ranges(&self) -> Vec<Range<usize>> {
+        let text = text_start(self.source);
+        self.lines
+            .iter()
+            .enumerate()
+            .map(|(at, start)| {
+                let end = self.lines.get(at + 1).copied().unwrap_or(self.source.len());
+                let raw = &self.source[*start..end];
+                let raw = raw.strip_suffix('\n').unwrap_or(raw);
+                let raw = raw.strip_suffix('\r').unwrap_or(raw);
+                (*start).max(text).min(*start + raw.len())..*start + raw.len()
+            })
+            .collect()
+    }
+
+    /// The text of `line`, a range [`Document::line_ranges`] gave, as the file holds it. A comment is
+    /// not read here: a line is the line of the file, markers and all.
+    pub(crate) fn line_text(&self, line: &Range<usize>) -> &str {
+        &self.source[line.clone()]
+    }
+
     /// The 1-based line holding byte `offset`.
     fn line(&self, offset: usize) -> usize {
         self.lines.partition_point(|start| *start <= offset)

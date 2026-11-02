@@ -1,6 +1,6 @@
 An `allow` entry exempts one sentence from one lint. Only a human writes or changes one. When a
-sentence must stay as written, such as a dated record or a quoted title, leave it, and give the
-human its text and a reason. Never reword it to pass a check.
+sentence must stay as written, leave it, and give the human its text and a reason. Never reword it
+to pass a check.
 
 ```toml
 [[md.allow]]
@@ -11,7 +11,7 @@ reason = "Why it stays."
 ```
 
 `lint` is `banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all`, `verbs_nothing` or
-`possessive_own`. The file must hold the quote as one sentence, and the lint must find something
-in it. Whitespace folds to one space, and a block quote's `>` and a byte order mark are left out;
-the rest must match, invisible characters too. An entry that stops holding fails the run; an agent
-may delete it.
+`possessive_own`. The file must hold the quote once, as a sentence the lint finds something in;
+whitespace folds, and the rest must match. A `banned_chars` finding outside every sentence, as in
+frontmatter or HTML, is named by `line`, its whole line, in place of `quote`. An entry that stops
+holding fails the run; an agent may delete it.

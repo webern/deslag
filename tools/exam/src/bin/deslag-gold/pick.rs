@@ -12,8 +12,8 @@
 //! A word below Likely is `Unsure` or `Unknown`, so an Unknown word is worth 2. The 4 keeps a
 //! two-word fragment from beating a sentence with real content. The `non_english` column (words
 //! whose origin is a symbol, command, path or flag) is shown and not scored: origin is
-//! step 0's work, and a word deslag commits to at Likely costs nothing however it is spelt. Ties
-//! go by id. The score only orders the list; the picking is an agent's, by the skill.
+//! step 0's work, and a word deslag commits to at Likely does not lower the score however it is
+//! spelt. Ties go by id. The score only orders the list; the picking is an agent's, by the skill.
 //!
 //! Rows that would only fill the head of the list are dropped before ranking, and `rank` prints
 //! how many of each kind (see [`Junk`]): sentences mostly not English (over half of the
@@ -33,7 +33,7 @@
 //! A queue is a skeleton the review opens, with `# tier`, `# source = <file> bytes a-b` (as
 //! `dev.conllu` has it), `# repo = owner/name`, `# pick_id` (the id the pick named) and
 //! `# license` per sentence. In the review, `x` twice marks a pick `# owner_rejected = <date>`:
-//! a bad pick (personal data, not English) that needs no tags. [`own`] turns a queue the owner
+//! a bad pick (personal data, not English) that does not need tags. [`own`] turns a queue the owner
 //! has finished into the text of `owner.conllu`: it leaves the rejected sentences out, gives the
 //! others ids `o0001` on, `exam.tier` for `tier`, and the file's header on the first sentence,
 //! keeping `source`, `repo` and `pick_id`. The owner's sentences are a stratum of hard

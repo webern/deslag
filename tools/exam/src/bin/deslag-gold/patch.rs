@@ -6,7 +6,7 @@
 //! It takes the text, the numbers of the lines to change and what to put in their UPOS, FEATS and
 //! MISC columns, and adds or replaces `# key = value` comments in a sentence. Each line keeps its
 //! own line ending, a file with no final newline keeps having none, a leading byte order mark stays
-//! first, and a patch that changes nothing returns the text it was given.
+//! first, and a patch that does not change a line returns the text it was given.
 
 use std::collections::BTreeMap;
 
@@ -50,7 +50,7 @@ pub fn apply(text: &str, patch: &Patch) -> Result<String, String> {
         None => ("", text),
     };
     let lines: Vec<(&str, &str)> = text.split_inclusive('\n').map(split_eol).collect();
-    // A comment edit is a replacement of the sentence's own line for that key, or a new line put
+    // A comment edit is a replacement of the sentence's line for that key, or a new line put
     // before the first line of the sentence that is no comment.
     let mut replace: BTreeMap<usize, String> = BTreeMap::new();
     let mut insert: BTreeMap<usize, Vec<String>> = BTreeMap::new();
@@ -99,7 +99,8 @@ pub fn apply(text: &str, patch: &Patch) -> Result<String, String> {
         }
         out.push_str(real_eol);
     }
-    // A sentence that ends the file has its new comments after its last line, which has none.
+    // A sentence that ends the file has its new comments after its last line, which does not have a
+    // line ending.
     if let Some(new) = insert.get(&lines.len()) {
         let eol = inserted_eol(&lines);
         if !text.is_empty() && !text.ends_with('\n') {
@@ -196,7 +197,7 @@ mod tests {
         }
         assert!(lines > 1000, "{lines} lines");
         assert_eq!(apply(&text, &patch).unwrap(), text, "every line rewritten");
-        // Every sentence's own comment set to the value it has.
+        // Every sentence's comment set to the value it has.
         let mut patch = Patch::default();
         for block in conllu::read(DEV, &text).unwrap() {
             patch.comments.push(Comment {

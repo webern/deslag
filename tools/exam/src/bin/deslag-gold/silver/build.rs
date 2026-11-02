@@ -91,10 +91,10 @@ fn lock_shown(value: Option<&serde_json::Value>) -> String {
 /// directory that holds `dir`), as `label.py` holds each run to it: a field the lock holds must
 /// have the part's value, every key of its `draw` among them, and a field it does not hold yet is
 /// written into it, so the first part to pass writes the lock if no run did. After a reset (the
-/// lock is gone and [`super::part::PARTS_LOCK_RESETS`] is beside it) it writes nothing: a part
-/// labelled before the reset would put its old values back as the new lock, and the next step on
-/// the new values would be refused; the next `label.py` step that counts writes it. A line for the
-/// report, or a problem naming each field, the lock's value and the part's.
+/// lock is gone and [`super::part::PARTS_LOCK_RESETS`] is beside it) it does not write the lock: a
+/// part labelled before the reset would put its old values back as the new lock, and the next step
+/// on the new values would be refused; the next `label.py` step that counts writes it. A line for
+/// the report, or a problem naming each field, the lock's value and the part's.
 fn hold_to_lock(dir: &Path, part: &Part) -> Result<String, Problems> {
     let path = dir
         .parent()

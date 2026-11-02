@@ -25,7 +25,7 @@
 //! is wrong and the corrections count the silver set's noise. `audit --blind` picks the same way
 //! from `silver.conllu` and writes the queue with every UPOS and FEATS blank and no `Prov=` or
 //! `Runs=`, so that nothing silver said anchors the owner, and silver's labels beside it in
-//! `labels.conllu`; the review pre-fills deslag's own readings at Likely and above, as for
+//! `labels.conllu`; the review pre-fills deslag's readings at Likely and above, as for
 //! `owner.conllu`. `audit --score` ([`crate::silver::score`]) compares the two once reviewed.
 
 use std::collections::BTreeMap;
@@ -56,7 +56,8 @@ struct Series {
     label: String,
     base_only: bool,
     said: Answers,
-    /// Whether a word it gave no answer for counts as wrong, not as outside what it is graded on.
+    /// Whether a word it did not give an answer for counts as wrong, not as outside what it is
+    /// graded on.
     strict: bool,
 }
 
@@ -84,8 +85,8 @@ pub struct Weighted {
     pub full: Estimate,
     /// Each context's weight, as a share of the draw's word tokens.
     pub weights: Vec<(String, f64)>,
-    /// The share of the draw's words in contexts the graded sample has no sentence of, which the
-    /// weights leave out.
+    /// The share of the draw's words in contexts the graded sample does not have a sentence of,
+    /// which the weights leave out.
     pub unseen: f64,
 }
 
@@ -173,8 +174,8 @@ fn tally(gold: &[Option<Code>], said: &[Option<Code>]) -> [u64; WIDTH] {
 }
 
 /// [`tally`] for labels that may leave a whole sentence out: a word the gold gives a code and the labels
-/// give none is graded, as wrong, so the sentences left out for an unsettled word are held against
-/// the pipeline and not dropped from what it is graded on.
+/// do not give one is graded, as wrong, so the sentences left out for an unsettled word are held
+/// against the pipeline and not dropped from what it is graded on.
 fn tally_strict(gold: &[Option<Code>], said: &[Option<Code>]) -> [u64; WIDTH] {
     let mut counts = [0; WIDTH];
     for (at, gold) in gold.iter().enumerate() {
@@ -637,7 +638,7 @@ pub fn context_mix(sample: &Sample) -> BTreeMap<String, f64> {
 }
 
 /// The sentences of `labelled`, the text of `labelled.conllu`, as the blocks of lines each begins
-/// at its `# sent_id`, with the file's own header left off.
+/// at its `# sent_id`, with the file's header left off.
 fn blocks(labelled: &str) -> Vec<Vec<&str>> {
     let mut out: Vec<Vec<&str>> = Vec::new();
     for line in labelled.lines() {
@@ -907,7 +908,7 @@ mod tests {
             old_merge: false,
         });
         let weighted = report.weighted.clone().unwrap();
-        // A context the sample has no sentence of is dropped and the rest renormalised.
+        // A context the sample does not have a sentence of is dropped and the rest renormalised.
         assert!((weighted.unseen - 0.2).abs() < 1e-12);
         let shares: BTreeMap<&str, f64> = weighted
             .weights
@@ -996,7 +997,7 @@ mod tests {
             "the file's header is not"
         );
         assert_eq!(queue, audit("l", LABELLED, 2, 7).unwrap());
-        // `pick_id` is the sentence's own id, before its text.
+        // `pick_id` is the sentence's id, before its text.
         let first = queue
             .lines()
             .nth(2)

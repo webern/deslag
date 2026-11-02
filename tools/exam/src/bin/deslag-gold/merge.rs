@@ -12,9 +12,9 @@
 //! - The three agree on a word when they name the same base (`N`, `V`, ...) and no feature
 //!   conflicts. The blind tagger is the reference for which features a word has, since it followed
 //!   the guide: where its code has a number or a verb form, a tagger that gives one must give the
-//!   same, and one that gives none abstains. Where the blind code has none (a pronoun with no
-//!   number) nothing is asked of the others. An agreed word stands, `Prov=agree`.
-//! - Harper's file holds a raw UPOS, `X` where Harper has no tag. An `X` from Harper is an
+//!   same, and one that does not give one abstains. Where the blind code does not have one (a
+//!   pronoun with no number) nothing is asked of the others. An agreed word stands, `Prov=agree`.
+//! - Harper's file holds a raw UPOS, `X` where Harper does not have a tag. An `X` from Harper is an
 //!   abstention, not an answer: Harper neither agrees nor disagrees on that word, and the word is
 //!   decided by the blind tagger and spaCy.
 //! - Every other word goes to the adjudication worklist, with the sentence, the three answers and
@@ -46,8 +46,8 @@ pub const NAMES: [&str; 3] = ["blind", "harper", "spacy"];
 pub struct Answers(pub Vec<Vec<Option<Code>>>);
 
 impl Answers {
-    /// Whether the tagger gave no answer for sentence `at`: a voter whose reply had no good line
-    /// for it, which [`load_voter`] reads as an empty row.
+    /// Whether the tagger gave no answer for sentence `at`: a voter whose reply did not have a good
+    /// line for it, which [`load_voter`] reads as an empty row.
     pub fn abstains(&self, at: usize) -> bool {
         self.0[at].is_empty()
     }
@@ -94,10 +94,10 @@ pub fn load_labelled(
     Ok(answers)
 }
 
-/// [`load_tagger`] for a voter of the labelling flow: a sentence the file has no block for is not
-/// an error but an abstention, the voter's row for it left empty. `read-tags --check` keeps only
-/// the sentences with a good line, so a sentence a model never got right is missing, and that must
-/// not stop the merge. A sentence that is there must still be right.
+/// [`load_tagger`] for a voter of the labelling flow: a sentence the file does not have a block for
+/// is not an error but an abstention, the voter's row for it left empty. `read-tags --check` keeps
+/// only the sentences with a good line, so a sentence a model never got right is missing, and that
+/// must not stop the merge. A sentence that is there must still be right.
 pub fn load_voter(
     name: &str,
     path: &str,
@@ -243,7 +243,7 @@ fn conflicts<T: PartialEq>(blind: Option<T>, other: Option<T>) -> bool {
     matches!((blind, other), (Some(b), Some(o)) if b != o)
 }
 
-/// Whether Harper abstains on a word: its file holds `X` where it has no tag.
+/// Whether Harper abstains on a word: its file holds `X` where it does not have a tag.
 pub fn harper_abstains(harper: Code) -> bool {
     harper.base == Base::X
 }
@@ -460,7 +460,7 @@ impl fmt::Display for Stats {
 /// and no `Prov=`.
 ///
 /// `runs`, when the voters have runs, is for each sentence the `Runs=` of its agreed words: the
-/// runs of the voters that answered it, all of which agreed. A gold flow merge passes none.
+/// runs of the voters that answered it, all of which agreed. A gold flow merge does not pass them.
 pub fn agreed_conllu(
     sample: &Sample,
     verdicts: &[Vec<Option<Verdict>>],
@@ -499,7 +499,7 @@ pub fn agreed_conllu(
 
 /// What a tagger said, as the worklist shows it: the code, with `.?` where the tagger gave no
 /// feature that the guide asks of the word, so that leaving one out cannot be read as a code, and
-/// `-` for a voter that gave no answer for the sentence.
+/// `-` for a voter that did not give an answer for the sentence.
 fn said(code: Option<Code>) -> String {
     let Some(code) = code else {
         return ABSTAINED.to_string();
@@ -1258,8 +1258,8 @@ const SETTLED_COLUMNS: [&str; 4] = ["item", "final", "reason", "run"];
 /// The answers of the earlier merge's log `text`, which came from `path`, for the items of `work`
 /// that the log answered, each keeping the run that answered it. A merge of the same sample with a
 /// voter more disputes mostly the same words; the adjudicator is asked about each only once, so
-/// the two merges differ in their voting alone. An item the log has no run for is an error, since
-/// the answer would lose its provenance.
+/// the two merges differ in their voting alone. An item the log does not have a run for is an
+/// error, since the answer would lose its provenance.
 pub fn settle_from_log(path: &str, text: &str, work: &[WorkItem]) -> Result<Vec<Answer>, Problems> {
     let mut lines = text.lines().enumerate();
     let head: Vec<&str> = lines
@@ -1952,7 +1952,7 @@ mod tests {
         assert_eq!(got.stray.len(), 2, "{:?}", got.stray);
         let tsv = open_tsv(&got.open);
         assert!(tsv.starts_with("item\tproblem\ns2.5\t"), "{tsv}");
-        // An item with no line at all is open too.
+        // An item with no line is open too.
         let none = check_answers(&work.items, &[("a.txt".to_string(), String::new())]);
         assert_eq!(
             none.open,

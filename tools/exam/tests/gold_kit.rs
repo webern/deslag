@@ -216,7 +216,8 @@ fn an_exclusion_list_keeps_its_fixtures_out_of_the_draw_and_its_hash_is_in_the_m
         );
     }
 
-    // An entry that names no fixture stops the draw, naming its line, and writes nothing.
+    // An entry that does not name a fixture stops the draw, naming its line, and does not write a
+    // file.
     fs::write(&list, format!("{text}human/nowhere/absent.md\n")).unwrap();
     let broken = tempfile::tempdir().unwrap();
     let stderr = gold_fails(broken.path(), &args);
@@ -377,7 +378,7 @@ fn pipeline() -> (tempfile::TempDir, PathBuf) {
 #[test]
 fn the_pipeline_ends_in_a_dev_and_a_holdout_file_the_exam_reads() {
     let (_dir, out) = pipeline();
-    // The kit writes no sidecar; `deslag-gold seen` does, from a fetched fixture.
+    // The kit does not write a sidecar; `deslag-gold seen` does, from a fetched fixture.
     let dev = Gold::read_bare(&out.join("dev.conllu")).unwrap();
     let holdout = Gold::read_bare(&out.join("holdout.conllu")).unwrap();
     assert_eq!(dev.sentences.len(), 300);

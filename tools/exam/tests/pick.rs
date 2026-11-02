@@ -1001,7 +1001,7 @@ fn a_draw_for_labelling_that_cannot_be_clear_or_would_land_in_the_gold_flow_is_e
     let out_arg = out.to_str().unwrap();
     assert!(run(ok_args(&small_args, out_arg)).status.success());
 
-    // A small tier that is missing or holds nothing is an error.
+    // A small tier that is missing or does not hold a fixture is an error.
     let none = work.path().join("none");
     let empty = work.path().join("empty");
     fs::create_dir(&empty).unwrap();

@@ -3,8 +3,8 @@
 //! NOTICE: this file is adapted from Harper, <https://github.com/Automattic/harper>,
 //! Copyright 2024 Automattic Inc., which is licensed under the Apache License, Version 2.0
 //! (<http://www.apache.org/licenses/LICENSE-2.0>). A copy of the licence, as Harper ships it, is
-//! `LICENSES/Apache-2.0-Harper.txt` at the root of this repository. Harper has no NOTICE file. This
-//! file is a modified version of Harper's code, and the changes are listed here.
+//! `LICENSES/Apache-2.0-Harper.txt` at the root of this repository. Harper does not have a NOTICE
+//! file. This file is a modified version of Harper's code, and the changes are listed here.
 //!
 //! It reimplements the tagging engine of Harper's `harper-pos-utils`
 //! crate (`tagger/brill_tagger/mod.rs`, `tagger/brill_tagger/patch.rs`, `tagger/freq_dict.rs`,
@@ -24,9 +24,9 @@
 //!
 //! A Brill tagger is a table and a list of patches. The table maps a lowercased word to one tag.
 //! The patches are ordered rules, each "change tag A to tag B when a criterion holds". A sentence
-//! is tagged by looking every word up (a word not in the table has no tag), then applying every
-//! patch in order, each one left to right over the whole sentence, so a later position sees the
-//! changes an earlier position just made. A word with no tag is never changed, and a patch that
+//! is tagged by looking every word up (a word not in the table does not have a tag), then applying
+//! every patch in order, each one left to right over the whole sentence, so a later position sees
+//! the changes an earlier position just made. A word with no tag is never changed, and a patch that
 //! asks about a neighbour's tag does not match a neighbour with none.
 //!
 //! The criteria are the six variants of [`Criterion`]. Two of them are looser than they read, and
@@ -35,7 +35,7 @@
 //! - `WordIs` compares only as far as the shorter of the two words reaches, so `to` matches
 //!   `too`, `today` and `t`.
 //! - `AnyWordIsTaggedWith { max_relative: n }` looks at the positions from this word up to but
-//!   not including `n` away. With `n` above zero that includes this word's own tag; with `n`
+//!   not including `n` away. With `n` above zero that includes this word's tag; with `n`
 //!   below zero it does not.
 //!
 //! # What the exam sees
@@ -221,7 +221,8 @@ impl Criterion {
                 let Some(far) = offset(index, *max_relative) else {
                     return false;
                 };
-                // Positions past the sentence have no tag, so stopping at its end changes nothing.
+                // Positions past the sentence have no tag, so stopping at its end does not change
+                // the result.
                 let (low, high) = (far.min(index), far.max(index).min(tags.len()));
                 (low..high).any(|at| tag_at(tags, at) == Some(*is_tagged))
             }

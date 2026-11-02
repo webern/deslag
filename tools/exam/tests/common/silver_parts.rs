@@ -101,9 +101,9 @@ pub fn sha256(bytes: &[u8]) -> String {
         .collect()
 }
 
-/// A tree for the pool, a small tier, a gold directory that reserves nothing, and `parts` parts of
-/// a draw that were labelled: with one merge, `merge`, that spaCy votes in, or with two as the run
-/// makes them, `merge` of the model voters and `merge-spacy` settled from it.
+/// A tree for the pool, a small tier, a gold directory that does not reserve a repository, and
+/// `parts` parts of a draw that were labelled: with one merge, `merge`, that spaCy votes in, or
+/// with two as the run makes them, `merge` of the model voters and `merge-spacy` settled from it.
 pub struct Made {
     _tmp: tempfile::TempDir,
     /// Where everything is; the commands run here.

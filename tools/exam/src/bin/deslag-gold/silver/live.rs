@@ -147,7 +147,8 @@ pub struct Live {
     pub retired: Vec<String>,
 }
 
-/// Every batch directory under `root`, sorted. A root that is not there holds none.
+/// Every batch directory under `root`, sorted. A root that is not there does not hold a batch
+/// directory.
 pub fn batches(root: &Path) -> Result<Vec<String>, Error> {
     let Ok(entries) = std::fs::read_dir(root) else {
         return Ok(Vec::new());
@@ -188,7 +189,7 @@ impl Live {
     }
 
     /// The repositories the live batches' manifests name. A live batch without a manifest is an
-    /// error: it would reserve nothing.
+    /// error: it would not reserve a repository.
     pub fn repos(&self) -> Result<Repos, Error> {
         let mut all = Repos::default();
         for name in &self.names {

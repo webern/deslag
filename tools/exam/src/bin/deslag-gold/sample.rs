@@ -1,6 +1,6 @@
 //! The sampler: 450 sentences from the corpus, 150 per tier, by a fixed seed.
 //!
-//! A sentence is what deslag's own reader finds: `Document::markdown` splits a file into blocks,
+//! A sentence is what deslag's reader finds: `Document::markdown` splits a file into blocks,
 //! tokens and sentences, so a list item, a heading and a table cell each yield sentences, and each
 //! sentence's tokens are the ones a gold file's lines name. The sentence is not re-split anywhere
 //! else, and a sentence whose tokens the exam would not read back as they are (a form that
@@ -626,7 +626,7 @@ pub fn capacity(files: &[File<'_>], settings: &Settings, mode: Mode<'_>) -> [[us
     out
 }
 
-/// The gold file the exam would read for `sents` if every word were a noun: the sample's own
+/// The gold file the exam would read for `sents` if every word were a noun: the sample's
 /// tokens, as lines. It exists to prove the exam reads them back.
 fn as_gold(sents: &[Sent]) -> String {
     let mut text = String::from("# exam.tokens = deslag\n");
@@ -1404,7 +1404,8 @@ Ok.
         );
         // The exam's skeleton adds only which gold it was made from.
         assert_eq!(with, exam.replace("# exam.from = the sample\n", ""));
-        // The bare mentions carry an origin; the code span is a kind of token and carries none.
+        // The bare mentions carry an origin; the code span is a kind of token and does not carry
+        // one.
         let line_of = |form: &str| {
             with.lines()
                 .find(|line| line.split('\t').nth(1) == Some(form))

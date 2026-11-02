@@ -4,9 +4,9 @@
 //! scored tokens in each sentence, or the exam cannot compare them. For `all` and each stratum it
 //! prints every metric's value in each run and the paired difference `after - before` with its
 //! interval, and a verdict by whether the interval is wholly above zero, wholly below it, or spans
-//! it (`same`). The verdict says `better` or `worse` by the metric's own sense, so a higher unknown
+//! it (`same`). The verdict says `better` or `worse` by the metric's sense, so a higher unknown
 //! rate is `worse`; a metric with no better direction, such as the share at `Sure`, says `higher`
-//! or `lower`. It prints aggregates only, whatever the gold: a holdout run holds no word.
+//! or `lower`. It prints aggregates only, whatever the gold: a holdout run does not hold a word.
 
 use std::fmt::Write;
 
@@ -135,7 +135,7 @@ pub fn render(
 
 /// What the paired difference of a metric of sense `sense` says: `n/a` when it is undefined,
 /// `same` when its interval spans zero, else `better` or `worse`, or `higher` or `lower` for a
-/// metric that has no better direction.
+/// metric that does not have a better direction.
 fn verdict(sense: Sense, defined: bool, above_zero: bool, below_zero: bool) -> &'static str {
     match (defined, above_zero, below_zero, sense) {
         (false, ..) => "n/a",

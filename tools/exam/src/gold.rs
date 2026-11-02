@@ -68,7 +68,7 @@ pub enum Tier {
 /// Who vouches for a label.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Prov {
-    /// The three taggers of the gold set's own build agreed.
+    /// The three taggers of the gold set's build agreed.
     Agree,
     /// A model decided between them.
     Adjudicated,
@@ -194,7 +194,7 @@ pub struct GoldSentence {
     /// big tier, and the byte range in it. `None` when the sentence says nothing.
     pub source: Option<(String, Range<usize>)>,
     /// The IDs of the words that the sentence's file writes in code, from the sidecar; empty when
-    /// the file has none.
+    /// the file does not have one.
     pub code_ids: Vec<usize>,
     /// The forms of those words: what [`deslag::tag::sentence_seen`] is given.
     pub code_words: CodeWords<'static>,
@@ -235,8 +235,8 @@ pub struct Unit {
 
 impl Gold {
     /// Reads and checks the gold file at `path`, and the sidecar beside it that names the words
-    /// each sentence's file writes in code (see [`crate::seen`]). A gold set that needs one and has
-    /// none, or has a stale one, is an error.
+    /// each sentence's file writes in code (see [`crate::seen`]). A gold set that needs one and
+    /// does not have one, or has a stale one, is an error.
     pub fn read(path: &Path) -> Result<Gold, Error> {
         let mut gold = Gold::read_file(path, false)?;
         crate::seen::attach(&mut gold)?;
@@ -321,7 +321,7 @@ impl Gold {
         Ok(gold)
     }
 
-    /// Whether it is holdout text, whose reports must name no word: the reader said so, or the
+    /// Whether it is holdout text, whose reports must not name a word: the reader said so, or the
     /// header does.
     pub fn holdout(&self) -> bool {
         self.forced_holdout || self.split == Some(Split::Holdout)
@@ -390,7 +390,7 @@ impl GoldSentence {
                 continue;
             }
             if !seen.insert(comment.key.as_str()) {
-                // Holdout text names no key: it may not be one of ours.
+                // Holdout text does not name a key: it may not be one of ours.
                 let message = if holdout {
                     "an `exam.` comment is given twice".to_string()
                 } else {

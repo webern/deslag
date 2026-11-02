@@ -9,7 +9,7 @@
 //! never `source[offset..]`. No sentence text is copied.
 //!
 //! [`cut`] makes the rows, [`List`] reads and writes them, [`score`] reports how a tagger reads
-//! them: how many are right (`VERB` at `Likely` or above, the lint's own predicate), how many are
+//! them: how many are right (`VERB` at `Likely` or above, the lint's predicate), how many are
 //! `VERB` below `Likely`, how many are another tag, and the reverse check, the places [`VARIANT`]
 //! matches that are not rows. [`corpus_skeleton`] writes the token skeleton of every sentence of
 //! the same fixtures, for a tagger outside deslag to fill.
@@ -39,7 +39,7 @@ use crate::tags::{Confidence, Tag, TagSet};
 pub const EXPECTED: &str = "VERB";
 
 /// The tags a row's word must be read as, and the confidence it must be read at or above: the
-/// predicate of the lint's own `Item::Tag`.
+/// predicate of the lint's `Item::Tag`.
 const VERB: TagSet = TagSet::of(Tag::Verb);
 const LEAST: Confidence = Confidence::Likely;
 
@@ -256,7 +256,7 @@ fn joined(source: &str, token: &Token<'_>, next: &Token<'_>) -> bool {
 }
 
 /// The FORM a skeleton writes for `token`: its text, or `_`, which CoNLL-U writes for a blank form,
-/// where an image has no description.
+/// where an image does not have a description.
 fn form(token: &Token<'_>) -> String {
     if token.text.is_empty() {
         "_".to_string()
@@ -286,7 +286,7 @@ pub fn corpus_skeleton(entries: &[Entry], tagged: bool) -> Result<(String, usize
 /// Who read the words of a skeleton.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Reader {
-    /// No one: the skeleton has no reading on any line.
+    /// No one: the skeleton does not have a reading on any line.
     Nobody,
     /// The rules alone, which is what a learner starts from.
     Rules,
@@ -312,9 +312,9 @@ pub fn core(root: &Path) -> Result<Vec<Entry>, Error> {
     Ok(entries)
 }
 
-/// Whether a sentence of tokens can be written to a skeleton as it is: no token has no text, or
-/// holds a newline, a carriage return or a tab. The golden file of the learned stage holds exactly
-/// the sentences for which this is true.
+/// Whether a sentence of tokens can be written to a skeleton as it is: every token has text, and
+/// none holds a newline, a carriage return or a tab. The golden file of the learned stage holds
+/// exactly the sentences for which this is true.
 pub fn writable(tokens: &[Token<'_>]) -> bool {
     tokens
         .iter()
@@ -395,7 +395,7 @@ pub fn write_skeleton(
 
 /// Where the readings come from.
 pub enum Source<'a> {
-    /// deslag's own tagger, which `Document::markdown` has already run.
+    /// deslag's tagger, which `Document::markdown` has already run.
     Deslag,
     /// The rules alone, with no learned stage: what a learner starts from.
     Rules,
@@ -424,7 +424,7 @@ pub struct Read {
     pub offset: usize,
     /// The row's word.
     pub word: String,
-    /// The tag code the tagger gave, or `None` where it gave no reading.
+    /// The tag code the tagger gave, or `None` where it did not give a reading.
     pub tag: Option<&'static str>,
     /// The confidence it gave.
     pub confidence: Option<&'static str>,

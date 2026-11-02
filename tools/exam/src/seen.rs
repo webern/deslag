@@ -1,4 +1,4 @@
-//! The sidecar of a gold set: which of its words the sentence's own file writes in code.
+//! The sidecar of a gold set: which of its words the sentence's file writes in code.
 //!
 //! A word that neither table holds, and that the file it was quoted from also writes in a code span
 //! or a fence, has the origin `Seen` (`deslag::tag::CodeWords`). A gold sentence is a few words of

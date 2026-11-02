@@ -84,7 +84,7 @@ fn a_failed_gate_exits_1_and_names_the_metric_and_the_words() {
     let out = text(&output.stdout);
     assert_eq!(output.status.code(), Some(1), "{out}");
     assert!(output.stderr.is_empty());
-    // The failed metrics, each with its block; the one that holds has none.
+    // The failed metrics, each with its block; the one that holds does not have one.
     assert!(out.contains("FAIL dev Best-guess accuracy: "), "{out}");
     assert!(out.contains("FAIL dev Sure accuracy: "), "{out}");
     assert!(!out.contains("FAIL dev Unknown rate"), "{out}");
@@ -281,8 +281,8 @@ fn a_panic_on_holdout_is_withheld() {
     assert!(again.is_err());
 }
 
-/// Checks that `output` is a refusal: exit 2, nothing on stdout, and one line on stderr that names
-/// no word. Returns the line.
+/// Checks that `output` is a refusal: exit 2, nothing on stdout, and one line on stderr that does
+/// not name a word. Returns the line.
 fn refused(output: &Output, what: &str) -> String {
     let err = text(&output.stderr);
     assert_eq!(output.status.code(), Some(2), "{what}: {err}");

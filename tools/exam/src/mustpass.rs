@@ -1,6 +1,6 @@
 //! The must-pass list: dev words that nobody doubts, which every tagger has to keep right.
 //!
-//! `mustpass --gold G --out F` cuts the list from deslag's own tagger: the words whose gold label
+//! `mustpass --gold G --out F` cuts the list from deslag's tagger: the words whose gold label
 //! has `Prov=agree` and that the tagger tags right at `Sure`. A row is `sent_id`, the gold's word
 //! ID, the form and the tag, tab-separated, keyed by word ID because it does not move when the
 //! tokenizer changes. The list is cut once and then frozen; regenerating it would ratchet it to
@@ -45,7 +45,7 @@ pub struct Miss {
 /// How a row failed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Failure {
-    /// The gold has no such sentence or word.
+    /// The gold does not have such a sentence or word.
     NotInGold,
     /// The gold's word has another form or tag than the row.
     GoldChanged {

@@ -1,8 +1,8 @@
 //! Everything a stage rejects, one line each.
 //!
 //! A bad line in a batch of fifty should cost one re-run of that batch, not fifty: a stage that
-//! reads a tagger's answers collects every problem before it stops, and writes nothing if there is
-//! one. Each is an [`Error`] naming the file and the sentence or the line.
+//! reads a tagger's answers collects every problem before it stops, and does not write its output
+//! if there is one. Each is an [`Error`] naming the file and the sentence or the line.
 
 use std::fmt;
 

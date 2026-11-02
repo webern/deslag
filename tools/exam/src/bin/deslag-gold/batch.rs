@@ -3,7 +3,7 @@
 //! The annotation guide fixes the shape. A sentence is an id, its context in parentheses unless it
 //! is plain prose, a colon, and its tokens in order. A token that is not a word is in brackets,
 //! with its kind where it is not a mark or a number: `[,]`, `[3.12]`, `[code: cargo build]`. The
-//! guide's examples carry no counts; every token here has its number in front, which is all the
+//! guide's examples do not carry counts; every token here has its number in front, which is all the
 //! numbering the tagger needs to answer with exactly one code per token:
 //!
 //! ```text
@@ -14,7 +14,7 @@
 //! skeleton's `Origin=`) has it in braces glued to it, `foo_bar{symbol}`, so a labeller can tell it
 //! from an ordinary word and the count of numbered tokens does not change. What the braces mean is
 //! told to the labeller once, in the preamble `scripts/label/prompts/preamble.md`, which the runner
-//! hashes with the guide. The gold sample has no origins, so its batches are as they were.
+//! hashes with the guide. The gold sample does not have origins, so its batches are as they were.
 //!
 //! A batch file is only these lines, with no header, no tier and no split, so it can be handed to
 //! a tagger as it is. The tagger answers one line per sentence in the compact form.
@@ -32,7 +32,7 @@ use crate::data::{Sent, Tok};
 const SHOWN: usize = 60;
 
 /// How a token is shown: a word as it is, with its origin in braces after it when that is not
-/// English, anything else in brackets. A `Seen` word is shown as it is: the file's own use of it is
+/// English, anything else in brackets. A `Seen` word is shown as it is: the file's use of it is
 /// no help to a reader of the sentence alone.
 pub fn show(tok: &Tok) -> String {
     let label = match tok.kind {

@@ -242,8 +242,8 @@ pub struct Checked {
 
 /// Reads every file of `files` as [`read_tags`] does, but keeps the good lines whatever else is
 /// wrong, and returns the faults instead of failing. A sentence is kept when one of its lines is
-/// good, even if another line for it is not; a line that names no sentence of the sample is a
-/// fault with no id. A sentence answered well in two files keeps the first.
+/// good, even if another line for it is not; a line that does not name a sentence of the sample is
+/// a fault with no id. A sentence answered well in two files keeps the first.
 pub fn check_tags(
     sample: &Sample,
     files: &[(String, String)],
@@ -280,7 +280,7 @@ pub fn check_tags(
 /// The columns of `<prov>.problems.tsv`, which `read-tags --check` writes.
 const PROBLEM_COLUMNS: [&str; 2] = ["sent_id", "problem"];
 
-/// The id column of a problem that names no sentence.
+/// The id column of a problem that does not name a sentence.
 pub const NO_ID: &str = "-";
 
 /// The faults as the machine-readable list the runner reads: a header, then one row per fault,

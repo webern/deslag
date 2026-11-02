@@ -134,7 +134,7 @@ fn the_load_errors_of_the_conventions() {
             sentence("a", "# exam.split = val\n"),
             "`exam.split` is `val`",
         ),
-        // A draw's manifest says "unlabelled"; the exam has no such split.
+        // A draw's manifest says "unlabelled"; the exam does not have such a split.
         (
             sentence("a", "# exam.split = unlabelled\n"),
             "`exam.split` is `unlabelled`",
@@ -228,8 +228,8 @@ fn forced_error(text: &str) -> String {
     }
 }
 
-/// The error for `text`, which has the holdout header when `headed` and is read plainly, and has
-/// none otherwise and is read as holdout by its reader.
+/// The error for `text`, which has the holdout header when `headed` and is read plainly, and does
+/// not have one otherwise and is read as holdout by its reader.
 fn holdout_error(headed: bool, text: &str) -> String {
     if headed {
         error(text)

@@ -7,7 +7,7 @@
 //! `SpaceAfter=No` where no space follows, and every other column is `_`. `import` ignores
 //! `Origin=`; it is for a person or a program that labels the words, and `readings --tokens` reads
 //! the `Seen` forms of each sentence back as the set its file wrote in code. The program fills
-//! `UPOS` on every `Word` line, so it grades on deslag's own tokens. The skeleton starts with
+//! `UPOS` on every `Word` line, so it grades on deslag's tokens. The skeleton starts with
 //! `# exam.tokens = deslag` and gives each sentence its `# exam.context`, so a file filled from it
 //! is read in the context each sentence was in, and as deslag's tokens. It never carries the tier
 //! or any gold label. It says two things of its gold: the stem of its file in `# exam.from`, so the
@@ -47,8 +47,8 @@ pub fn trains_line(trains: Trains) -> String {
 }
 
 /// The line a file adds to name the silver batch its source is of, with its newline; empty when the
-/// source names none. A training reader refuses a file of a retired batch, so the skeleton and the
-/// readings carry it as they carry `exam.trains`.
+/// source does not name one. A training reader refuses a file of a retired batch, so the skeleton
+/// and the readings carry it as they carry `exam.trains`.
 pub fn batch_line(batch: Option<&str>) -> String {
     batch.map_or_else(String::new, |name| format!("# {SILVER_BATCH} = {name}\n"))
 }

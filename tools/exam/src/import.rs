@@ -3,8 +3,8 @@
 //! `tokens` writes a skeleton, one CoNLL-U sentence per gold sentence and one line per deslag
 //! token. A program fills it, on every `Word` line: `UPOS` (UD codes, through the one mapping of
 //! [`crate::tags`]), and optionally `FEATS` (UD features) and the `MISC` keys `Conf=` (`Sure`,
-//! `Likely`, `Unsure` or `Unknown`, default `Likely`, since an outside tagger makes no claim to
-//! `Sure`'s meaning), `Score=` (0.0 to 1.0) and `Kept=` (deslag codes, comma-separated). `Sure`
+//! `Likely`, `Unsure` or `Unknown`, default `Likely`, since an outside tagger does not make a claim
+//! to `Sure`'s meaning), `Score=` (0.0 to 1.0) and `Kept=` (deslag codes, comma-separated). `Sure`
 //! with a `Kept=` tag other than the `UPOS` breaks the meaning of `Sure` and is an error. Lines
 //! that are not `Word` tokens are not read, whatever they hold.
 //!

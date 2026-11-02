@@ -1124,7 +1124,7 @@ fn a_batch_built_on_one_machine_passes_the_check_on_another() {
         let said = made.check_batch_with("one", env).ok();
         assert!(said.out.contains("one passes"), "{name}: {}", said.out);
     }
-    // The builder's own home is refused when the batch is built, so it never reaches a batch.
+    // The builder's home is refused when the batch is built, so it never reaches a batch.
     let made = Made::with(1);
     made.edit(
         1,

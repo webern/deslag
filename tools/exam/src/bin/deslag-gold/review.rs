@@ -21,7 +21,7 @@
 //! A pre-filled word the owner leaves as it is has no `Prov=` to keep, so it is saved
 //! `Prov=owner|Was=prefill`: the exam can tell how much of deslag's score on owner words rests on
 //! its own guesses. A word he typed has no `Was=`. `Gold::read` takes `Was=` as a free note (it
-//! reads the value, as `Word::was`, and grades nothing by it), so such a file loads as gold.
+//! reads the value, as `Word::was`, and does not grade a word by it), so such a file loads as gold.
 //!
 //! The file must be a `deslag`-token file: `# exam.tokens = deslag` in its first sentence and an
 //! `# exam.context` in every sentence, which the skeleton writers add, since deslag reads each
@@ -285,7 +285,7 @@ pub struct Session {
     pub cursor: usize,
     /// What the owner is doing.
     pub mode: Mode,
-    /// One line for the owner: what the last key did, or why it did nothing.
+    /// One line for the owner: what the last key did, or why it did not act.
     pub notice: String,
     /// Whether the last key asked to quit with unsaved tags, which the next quit confirms.
     quit_asked: bool,
@@ -525,8 +525,8 @@ impl Session {
                         self.set(code);
                         self.mode = Mode::Browse;
                         self.step(true);
-                        // `step` explains a stop at the last word; a tag that was set needs no
-                        // such nag.
+                        // `step` explains a stop at the last word; a tag that was set does not need
+                        // such a nag.
                         if self.notice.starts_with("the last word") {
                             self.notice = format!("set {code}");
                         }

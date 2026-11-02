@@ -100,8 +100,8 @@ pub fn wide_tree(root: &Path, per_tier: usize) -> Vec<(String, String, String)> 
     found
 }
 
-/// A gold directory that reserves nothing: dev and holdout manifests of one repository the trees
-/// do not have, and dev and holdout text no fixture holds.
+/// A gold directory that does not reserve a repository: dev and holdout manifests of one repository
+/// the trees do not have, and dev and holdout text no fixture holds.
 pub fn quiet_gold(work: &Path) -> PathBuf {
     let gold_dir = work.join("gold");
     fs::create_dir_all(&gold_dir).unwrap();

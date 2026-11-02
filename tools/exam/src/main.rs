@@ -53,7 +53,7 @@ enum Command {
         /// The gold file, CoNLL-U.
         #[arg(long)]
         gold: PathBuf,
-        /// A built-in tagger: `noun` tags every word a noun; `deslag` is deslag's own tagger as it
+        /// A built-in tagger: `noun` tags every word a noun; `deslag` is deslag's tagger as it
         /// stands; `mct` gives each word the tag it most often has in EWT train (run `make
         /// fetch-ewt` first), and is never shipped. `harper` is Harper's tagger, for study only,
         /// which reads the model `make fetch-harper` downloads.
@@ -71,9 +71,9 @@ enum Command {
         #[arg(long)]
         aggregate: bool,
         /// The gold is holdout text, whatever its header says, such as the holdout gold or the
-        /// treebank's test file, which has no header. It is read as holdout from its first byte,
-        /// and all the work is done under a guard: a panic exits 2 with one fixed line, and no
-        /// error names a word or a comment. It prints aggregates only, with or without
+        /// treebank's test file, which does not have a header. It is read as holdout from its first
+        /// byte, and all the work is done under a guard: a panic exits 2 with one fixed line, and
+        /// no error names a word or a comment. It prints aggregates only, with or without
         /// `--aggregate`. A header naming another split is refused.
         #[arg(long)]
         holdout: bool,
@@ -99,9 +99,9 @@ enum Command {
         /// The run after it.
         after: PathBuf,
     },
-    /// Judges deslag's own tagger, `noun` or an import file against the gates a file sets, one set of gold at a
-    /// time, and prints a table of counts for a set that may name words and a pass or fail for each
-    /// metric of a holdout set. Every named set is run, even after a failure.
+    /// Judges deslag's tagger, `noun` or an import file against the gates a file sets, one set of
+    /// gold at a time, and prints a table of counts for a set that may name words and a pass or
+    /// fail for each metric of a holdout set. Every named set is run, even after a failure.
     ///
     /// Exit 0 when every gate holds, 1 when one fails, 2 when it cannot run. A gate is a floor or a
     /// ceiling on a rate in per mille or on a count, judged on integer counts with no rounding.
@@ -138,7 +138,7 @@ enum Command {
     },
     /// Reads a gold file and prints how alignment treats its words: how many are punctuation, X
     /// or tagged, how many tagged words are scored, and why the rest are not. No tagger runs.
-    /// It names no word or sentence, so it is safe on holdout text.
+    /// It does not name a word or a sentence, so it is safe on holdout text.
     Words {
         /// The gold file, CoNLL-U.
         #[arg(long)]
@@ -169,7 +169,7 @@ enum Command {
         #[arg(long)]
         out: PathBuf,
     },
-    /// Writes deslag's own readings in the skeleton's format, for a learner that starts from them:
+    /// Writes deslag's readings in the skeleton's format, for a learner that starts from them:
     /// `tokens`, with `UPOS`, `Conf=` and `Kept=` on every `Word` line, and with `--gold` the key
     /// `Gold=`, the gold tag the exam aligned to the token, left out where none is. The rules
     /// alone read them, not the learned stage, so a learner never trains on its own kind of

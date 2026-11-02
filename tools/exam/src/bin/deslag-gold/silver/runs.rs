@@ -319,7 +319,7 @@ pub struct Listed {
     pub tags: Vec<String>,
     /// The quantisations, when the file pins them.
     pub quantizations: Option<Vec<String>>,
-    /// Whether a person's own harness makes the calls.
+    /// Whether a person's harness makes the calls.
     pub handoff: bool,
 }
 

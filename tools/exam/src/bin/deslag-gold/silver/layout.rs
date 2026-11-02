@@ -70,7 +70,7 @@ impl Batch {
     }
 
     /// Whether the batch holds the owner's acceptance of its audit: [ACCEPTED] with words in it.
-    /// An empty file accepts nothing.
+    /// An empty file does not accept the audit.
     pub fn accepted(&self) -> bool {
         self.get(ACCEPTED)
             .is_some_and(|text| !text.trim().is_empty())
@@ -119,7 +119,7 @@ impl Batch {
 
     /// Writes the files under `dir`, which must be empty or not there. They are written first to
     /// `NAME.partial` beside it, read back and compared with what was meant, and only then is that
-    /// renamed to `dir`, so a write that fails part way leaves no half batch under the name.
+    /// renamed to `dir`, so a write that fails part way does not leave a half batch under the name.
     pub fn write(&self, dir: &Path) -> Result<(), Error> {
         let io = |path: &Path, source| Error::Io {
             path: path.display().to_string(),

@@ -1,5 +1,5 @@
 //! `mct`, the most-common-tag baseline: each word gets the tag it most often has in EWT train, with
-//! no context at all. Everything a real tagger scores above it is what context buys.
+//! no context. Everything a real tagger scores above it is what context buys.
 //!
 //! It is built when it runs, from the treebank `make fetch-ewt` leaves in `.ewt/`. Nothing learned
 //! from EWT is written down anywhere, and nothing here enters the `deslag` binary: EWT is CC BY-SA,

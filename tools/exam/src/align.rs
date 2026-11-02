@@ -10,8 +10,8 @@
 //!    the text after the previous one, past whitespace. Every word gets its unit's span, so `do`
 //!    and `n't` both get the span of `don't`. A form that is not there, or anything but
 //!    whitespace left after the last unit, makes the sentence a *text mismatch*.
-//! 2. **Groups.** Units and tokens whose spans overlap, chained, form a group; one that overlaps
-//!    nothing is a group by itself.
+//! 2. **Groups.** Units and tokens whose spans overlap, chained, form a group; one that does not
+//!    overlap another is a group by itself.
 //! 3. **Classes.** `PUNCT` and `SYM` words are punctuation and `X` words are X: counted, never
 //!    scored, and never a reason a group fails. The rest are the group's tagged words, *G*; its
 //!    `Word` tokens are *W*. With *G* empty nothing happens. With *W* empty the words of *G* are

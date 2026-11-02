@@ -1,6 +1,6 @@
 //! What the review looks like: a [`Session`] as lines of text.
 //!
-//! Drawing reads the session and decides nothing. [`lines`] lays one screen out as plain lines,
+//! Drawing reads the session and does not change it. [`lines`] lays one screen out as plain lines,
 //! each with a look; [`text`] shows them as text, so a screen can be tested and printed with no
 //! terminal, and [`draw`] writes them to one.
 

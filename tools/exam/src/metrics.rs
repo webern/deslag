@@ -52,7 +52,7 @@ pub const RETAINED: usize = 4;
 pub const LEVEL: usize = 5;
 /// The first of four columns, one per [`Confidence`], counting right tokens at that level.
 pub const LEVEL_RIGHT: usize = 9;
-/// Sentences with at least one scored token (0 or 1 in a sentence's own tally).
+/// Sentences with at least one scored token (0 or 1 in a sentence's tally).
 pub const SENTENCES: usize = 13;
 /// Those of them with no committed token wrong.
 pub const CLEAN: usize = 14;

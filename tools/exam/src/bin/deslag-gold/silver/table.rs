@@ -84,7 +84,7 @@ impl Tsv {
             .map(|(_, value)| value.as_str())
     }
 
-    /// The cell of `row` in column `name`, empty when the table has no such column.
+    /// The cell of `row` in column `name`, empty when the table does not have such a column.
     pub fn cell<'a>(&self, row: &'a [String], name: &str) -> &'a str {
         self.column(name)
             .and_then(|at| row.get(at))

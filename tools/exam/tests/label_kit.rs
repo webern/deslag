@@ -318,7 +318,7 @@ fn the_pilot_runs_from_a_skeleton_to_a_report_with_provenance_at_every_step() {
     let tags = fs::read_to_string(dir.join("tags/three.conllu")).unwrap();
     assert!(tags.contains("Kind=Word|Prov=three|Runs=r3"), "{tags}");
 
-    // spaCy has no feature the guide would take, and votes on the base alone.
+    // spaCy does not have a feature the guide would take, and votes on the base alone.
     write(
         &dir.join("tags/spacy.conllu"),
         &outside_tagger("r4", &[("d2", 2, "N.s")]),
@@ -447,7 +447,7 @@ fn the_pilot_runs_from_a_skeleton_to_a_report_with_provenance_at_every_step() {
     assert_eq!(loaded.trains, Trains::No);
     let scored = exam_ok(&["score", "--gold", path(&gold), "--import", path(&labelled)]);
     assert!(!scored.is_empty());
-    // So is each voter's own file.
+    // So is each voter's file.
     exam_ok(&[
         "score",
         "--gold",
@@ -612,7 +612,7 @@ fn a_manifest_with_holdout_rows_under_label_is_refused_and_the_gold_flow_is_not(
     let error = gold_fails(&dir, &["batches"]);
     assert!(error.contains("holdout"), "{error}");
     assert!(!error.contains("Run it now"), "{error}");
-    // The gold flow's own directory may hold holdout rows: it is not under `.label`.
+    // The gold flow's directory may hold holdout rows: it is not under `.label`.
     let gold_dir = root.path().join("gold-flow");
     fs::create_dir_all(&gold_dir).unwrap();
     fs::copy(dir.join("sample.conllu"), gold_dir.join("sample.conllu")).unwrap();
@@ -756,7 +756,7 @@ fn finish_refuses_words_with_no_runs_and_a_training_mark_a_gold_sample_may_not_h
     let root = tempfile::tempdir().unwrap();
     let (dir, _) = setup(root.path());
     gold_ok(&dir, &["batches"]);
-    // Replies read without `--run` leave no provenance, and `finish` must not take that as none
+    // Replies read without `--run` do not leave provenance, and `finish` must not take that as none
     // to name.
     tag_as(&dir, "one", None, &lines(&[]));
     tag_as(&dir, "two", None, &lines(&[]));
@@ -1387,7 +1387,7 @@ fn trains_yes_needs_three_model_voters_at_the_merge_and_at_the_finish() {
     fs::write(draw.join("merge/voters.tsv"), headless).unwrap();
     let error = gold_fails(&draw, &["finish", "--trains", "yes"]);
     assert!(error.contains("min_voters unknown (old merge)"), "{error}");
-    // No voters.tsv at all.
+    // No voters.tsv.
     fs::remove_file(draw.join("merge/voters.tsv")).unwrap();
     let error = gold_fails(&draw, &["finish", "--trains", "yes"]);
     assert!(error.contains("needs the merge's voters.tsv"), "{error}");
@@ -1516,7 +1516,8 @@ fn a_report_versus_a_merge_of_another_rule_is_refused_unless_mixed_rules_is_give
     assert!(mixed.contains("pipeline less rival"), "{mixed}");
     let kept = fs::read_to_string(dir.join("merge/report.txt")).unwrap();
     assert!(kept.starts_with("warning: --mixed-rules:"), "{kept}");
-    // A rival with no minimum recorded is unknown, and so is the merge reported when it has none.
+    // A rival with no minimum recorded is unknown, and so is the merge reported when it does not
+    // have one.
     fs::write(dir.join("rival/voters.tsv"), with_min(&voters, "")).unwrap();
     let error = gold_fails(&dir, &versus);
     assert!(error.contains("rival has unknown (old merge)"), "{error}");

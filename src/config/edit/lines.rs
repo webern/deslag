@@ -6,7 +6,9 @@
 //! line ending is a changed line, and whether the file ends in a line ending is compared apart. A
 //! line that was removed must be a line an edit is for, a comment directly above one (no blank line
 //! between), or a blank line next to those; when the diff cannot tell which of two equal lines was
-//! removed, it is enough that removing the other one leaves the same text. The line of a table a
+//! removed, it is enough that removing the other one leaves the same text. A migration that moves
+//! a comment is judged again without the comment lines when it keeps them all, since a moved
+//! comment can be the line the diff pairs in place of the line it moved past. The line of a table a
 //! delete emptied is not one of these: it goes only as the line an added line is that line sealed.
 //! A line that was added must be one of these:
 //!
@@ -145,7 +147,50 @@ pub(super) fn only_touched_lines_removed(
         ));
     };
     let may_remove = removable(&old_lines, touched);
-    no_stray_removal(&old_lines, &new_lines, (&removed, &added), &may_remove)
+    let Err(why) = no_stray_removal(&old_lines, &new_lines, (&removed, &added), &may_remove) else {
+        return Ok(());
+    };
+    // A comment moved up past a line that has nothing after it to hold it in place can be paired
+    // by the diff in the line's stead, so that the line reads as removed. When every comment line of
+    // `old` is in `new`, the diff is made again without the comment lines, which the caller's check
+    // of the comments judges.
+    if !comment_lines_kept(&old_lines, &new_lines) {
+        return Err(why);
+    }
+    let apart = |lines: &[Line<'_>]| -> Vec<usize> {
+        (0..lines.len())
+            .filter(|&index| !is_comment(lines[index].content))
+            .collect()
+    };
+    let (old_at, new_at) = (apart(&old_lines), apart(&new_lines));
+    let old_bare: Vec<Line<'_>> = old_at.iter().map(|&index| old_lines[index]).collect();
+    let new_bare: Vec<Line<'_>> = new_at.iter().map(|&index| new_lines[index]).collect();
+    let may_bare: Vec<bool> = old_at.iter().map(|&index| may_remove[index]).collect();
+    let Some((removed, added)) = diff(&old_bare, &new_bare, MOST_CHANGED) else {
+        return Err(why);
+    };
+    no_stray_removal(&old_bare, &new_bare, (&removed, &added), &may_bare).map_err(|_| why)
+}
+
+/// Whether each comment line of `old` is a line of `new`, as many times over.
+fn comment_lines_kept(old: &[Line<'_>], new: &[Line<'_>]) -> bool {
+    let mut left: Vec<&str> = new
+        .iter()
+        .map(|line| line.content)
+        .filter(|content| is_comment(content))
+        .collect();
+    old.iter()
+        .map(|line| line.content)
+        .filter(|content| is_comment(content))
+        .all(
+            |content| match left.iter().position(|line| *line == content) {
+                Some(at) => {
+                    left.swap_remove(at);
+                    true
+                }
+                None => false,
+            },
+        )
 }
 
 /// Whether every line of `old` at `removed` is one that `may` go, or taking them out leaves the

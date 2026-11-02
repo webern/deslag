@@ -534,3 +534,25 @@ fn a_comment_of_a_key_deleted_in_an_inline_table_goes_above_the_key_that_holds_t
         assert_eq!(out, want);
     }
 }
+#[test]
+fn a_comment_moved_above_a_header_with_nothing_after_it_leaves_the_header_in_place() {
+    let text = "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\"a\", \"b\"]\n# why groups\n\
+                groups = { metaphors = false }\n";
+    let unlist = |item: &str| TableEdit::Unlist {
+        table: phrases(),
+        key: "allow".to_string(),
+        item: item.to_string(),
+    };
+    let edits = [
+        TableEdit::Delete {
+            table: phrases(),
+            key: "groups".to_string(),
+        },
+        unlist("a"),
+        unlist("b"),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n# why groups\n[md.lints.banned_phrases]\nallow = []\n"
+    );
+}

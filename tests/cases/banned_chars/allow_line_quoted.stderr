@@ -18,7 +18,7 @@ deslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_
 The quote: "title: a — b"
 The reason: "A title that quotes a source."
 
-No sentence of README.md holds a finding of `banned_chars`.
+No sentence of README.md holds a finding of `banned_chars`. The findings it has are outside every sentence.
 
 The lines of README.md that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:
   line 2: "title: a — b"
@@ -33,7 +33,7 @@ deslag.toml has md.allow[1], which exempts a sentence of README.md from `banned_
 The quote: "<p>c — d</p>"
 The reason: "Markup that the page needs as it is."
 
-No sentence of README.md holds a finding of `banned_chars`.
+No sentence of README.md holds a finding of `banned_chars`. The findings it has are outside every sentence.
 
 The lines of README.md that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:
   line 2: "title: a — b"

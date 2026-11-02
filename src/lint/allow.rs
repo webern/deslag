@@ -237,8 +237,13 @@ impl Exemption {
         let (path, lint) = (&self.allow.path, self.allow.lint);
         let text = self.allow.names.text();
         read.then(|| {
-            let sentences = if self.holding.is_empty() {
+            let sentences = if self.holding.is_empty() && self.outside.is_empty() {
                 format!("No sentence of {path} holds a finding of `{lint}`.\n\n")
+            } else if self.holding.is_empty() {
+                format!(
+                    "No sentence of {path} holds a finding of `{lint}`. The findings it has are \
+                     outside every sentence.\n\n"
+                )
             } else {
                 listing(
                     &self.holding,
@@ -285,7 +290,7 @@ impl Exemption {
              The {given}: \"{quote}\"\n\
              The reason: \"{reason}\"\n\
              \n\
-             {held}{ADVICE}",
+             {held}{advice}",
             place = allow.place(),
             path = allow.path,
             lint = allow.lint,
@@ -302,6 +307,11 @@ impl Exemption {
             quote = shown(allow.names.text()),
             reason = shown(&allow.reason),
             held = self.held().unwrap_or_default(),
+            advice = if allow.names.is_line() {
+                LINE_ADVICE
+            } else {
+                ADVICE
+            },
         ))
     }
 
@@ -456,6 +466,11 @@ const ADVICE: &str = "An entry that does not hold may be deleted; that only tigh
     Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, \
     and give the human its text and a reason. Rewording a sentence only to get past a lint is no \
     fix.";
+
+/// What a report of a failed entry that names a line ends with.
+const LINE_ADVICE: &str = "An entry that does not hold may be deleted; that only tightens the \
+    check. Never write or change an entry: only a human exempts a line. Leave the line as it is, \
+    and give the human its text and a reason. Editing a line only to get past a lint is no fix.";
 
 /// Keeps the occurrences inside a stretch of the file, or all the others, and never a verdict on
 /// the whole file when it keeps the inside.

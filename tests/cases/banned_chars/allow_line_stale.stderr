@@ -27,7 +27,7 @@ The 3 lines of README.md closest to the line that hold a finding of `banned_char
   line 9: "<td>—</td>"
   and 1 more.
 
-An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a line. Leave the line as it is, and give the human its text and a reason. Editing a line only to get past a lint is no fix.
 
 ERROR: deslag detected an exemption that does not hold!
 
@@ -45,7 +45,7 @@ The 3 lines of README.md closest to the line that hold a finding of `banned_char
   line 9: "<td>—</td>"
   and 1 more.
 
-An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a line. Leave the line as it is, and give the human its text and a reason. Editing a line only to get past a lint is no fix.
 
 ERROR: deslag detected an exemption that does not hold!
 
@@ -63,7 +63,7 @@ The 3 lines of README.md closest to the line that hold a finding of `banned_char
   line 7: "<td>—</td>"
   and 1 more.
 
-An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix.
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a line. Leave the line as it is, and give the human its text and a reason. Editing a line only to get past a lint is no fix.
 
 deslag: 1 of 1 files with banned characters.
 deslag: 3 of 3 exemptions did not hold.

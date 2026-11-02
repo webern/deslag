@@ -261,6 +261,7 @@ fn every_group_is_named_by_its_key_in_the_config() {
         box_drawing: Some(false),
         spaces: Some(false),
         invisible: Some(false),
+        bidi: Some(false),
         quotes: Some(false),
         emoji: Some(false),
     };
@@ -430,6 +431,15 @@ const COVERED: &[(&str, &[(u32, u32)])] = &[
             (0x2060, 0x2060),
             (0xFEFF, 0xFEFF),
             (0xE0000, 0xE007F),
+        ],
+    ),
+    (
+        "bidi",
+        &[
+            (0x061C, 0x061C),
+            (0x200E, 0x200F),
+            (0x202A, 0x202E),
+            (0x2066, 0x2069),
         ],
     ),
     (

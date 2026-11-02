@@ -20,7 +20,8 @@
 //! passes where the character was. A word such as `yes` or `section`, or the default of a rule for a
 //! range of characters, is a guess at meaning, and is left to the writer. A rule for a range of
 //! arrows does not get a default: its characters point every way, so the report names the
-//! character and leaves the choice of an ASCII arrow or words to the writer.
+//! character and leaves the choice of an ASCII arrow or words to the writer. A character of the
+//! `bidi` group is reported and never fixed: deleting one can reorder right-to-left text.
 
 use crate::config::{BannedChars, CharGroups};
 use crate::document::{BlockKind, Body, Document, Edit, Location, PieceKind};
@@ -41,7 +42,33 @@ pub struct Rule {
     /// What to write instead; empty means delete it, and `None` means that no one thing fits all
     /// of the characters, so the writer chooses.
     pub instead: Option<&'static str>,
+    /// What the report says of the characters when `instead` is `None`.
+    pub without: Option<&'static Without>,
 }
+
+/// What a report advises for characters that have no replacement, and why a fix leaves them.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Without {
+    /// The advice that follows the character in the list.
+    pub advice: &'static str,
+    /// Why a fix does not write one.
+    pub refusal: &'static str,
+}
+
+/// The arrows of a range, which point every way.
+const ARROW: Without = Without {
+    advice: "no one fits; write an ASCII arrow pointing the same way, or words",
+    refusal: "there is no replacement for it, since the arrows of its range point every way \
+              and only the writer knows which this one means",
+};
+
+/// The characters that set the direction of text. Deleting one can reorder right-to-left text,
+/// so a fix leaves it to the writer.
+const BIDI: Without = Without {
+    advice: "delete it, unless the text around it is right to left and needs it",
+    refusal: "deleting it can reorder right-to-left text, and only the writer knows whether the \
+              text needs it",
+};
 
 impl Rule {
     fn holds(&self, ch: char) -> bool {
@@ -65,6 +92,7 @@ const fn one(ch: char, name: &'static str, instead: &'static str) -> Rule {
         last: ch,
         name,
         instead: Some(instead),
+        without: None,
     }
 }
 
@@ -74,6 +102,7 @@ const fn range(first: char, last: char, name: &'static str, instead: &'static st
         last,
         name,
         instead: Some(instead),
+        without: None,
     }
 }
 
@@ -84,6 +113,18 @@ const fn choice(first: char, last: char, name: &'static str) -> Rule {
         last,
         name,
         instead: None,
+        without: Some(&ARROW),
+    }
+}
+
+/// A character that sets the direction of text, which a fix does not delete.
+const fn direction(ch: char, name: &'static str) -> Rule {
+    Rule {
+        first: ch,
+        last: ch,
+        name,
+        instead: None,
+        without: Some(&BIDI),
     }
 }
 
@@ -222,6 +263,24 @@ pub const GROUPS: &[Group] = &[
         rules: INVISIBLE,
     },
     Group {
+        name: "bidi",
+        switch: |groups| groups.bidi,
+        rules: &[
+            direction('\u{061C}', "arabic letter mark"),
+            direction('\u{200E}', "left-to-right mark"),
+            direction('\u{200F}', "right-to-left mark"),
+            direction('\u{202A}', "left-to-right embedding"),
+            direction('\u{202B}', "right-to-left embedding"),
+            direction('\u{202C}', "pop directional formatting"),
+            direction('\u{202D}', "left-to-right override"),
+            direction('\u{202E}', "right-to-left override"),
+            direction('\u{2066}', "left-to-right isolate"),
+            direction('\u{2067}', "right-to-left isolate"),
+            direction('\u{2068}', "first strong isolate"),
+            direction('\u{2069}', "pop directional isolate"),
+        ],
+    },
+    Group {
         name: "quotes",
         switch: |groups| groups.quotes,
         rules: &[
@@ -280,6 +339,8 @@ pub struct Banned {
     /// What to write instead; empty means delete it, and `None` means that the character has no
     /// one replacement, so the writer chooses.
     pub instead: Option<String>,
+    /// What the report and a fix say of it when `instead` is `None`.
+    pub without: Option<&'static Without>,
     /// Whether `instead` is the default of a rule for a range of characters, rather than named for
     /// this one.
     pub range_default: bool,
@@ -341,7 +402,12 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedChars>) -> Option<
     let mut banned: Vec<Banned> = Vec::new();
 
     for Found { location, ch } in scan(document) {
-        let Some((instead, range_default)) = verdict(settings, ch) else {
+        let Some(Verdict {
+            instead,
+            without,
+            range_default,
+        }) = verdict(settings, ch)
+        else {
             continue;
         };
         match banned.iter_mut().find(|seen| seen.ch == ch) {
@@ -350,6 +416,7 @@ pub fn check(document: &Document<'_>, settings: Option<&BannedChars>) -> Option<
                 ch,
                 name: name(ch),
                 instead,
+                without,
                 range_default,
                 locations: vec![location],
             }),
@@ -380,9 +447,19 @@ pub fn contradiction(settings: &BannedChars) -> Option<String> {
     })
 }
 
-/// What to write instead of `ch`, which is `None` when no one thing fits, and whether that is the
-/// default of a rule for a range of characters; `None` when `settings` do not ban it.
-fn verdict(settings: &BannedChars, ch: char) -> Option<(Option<String>, bool)> {
+/// What `settings` say of a banned character.
+struct Verdict {
+    /// What to write instead, which is `None` when no one thing fits.
+    instead: Option<String>,
+    /// What to say when `instead` is `None`.
+    without: Option<&'static Without>,
+    /// Whether `instead` is the default of a rule for a range of characters.
+    range_default: bool,
+}
+
+/// What to write instead of `ch`, and whether that is the default of a rule for a range of
+/// characters; `None` when `settings` do not ban it.
+fn verdict(settings: &BannedChars, ch: char) -> Option<Verdict> {
     let key = ch.to_string();
     if settings
         .allow
@@ -393,13 +470,21 @@ fn verdict(settings: &BannedChars, ch: char) -> Option<(Option<String>, bool)> {
         return None;
     }
     if let Some(instead) = settings.ban.as_ref().and_then(|ban| ban.get(&key)) {
-        return Some((Some(instead.clone()), false));
+        return Some(Verdict {
+            instead: Some(instead.clone()),
+            without: None,
+            range_default: false,
+        });
     }
     GROUPS
         .iter()
         .filter(|group| (group.switch)(&settings.groups).unwrap_or(false))
         .find_map(|group| rule(group.rules, ch))
-        .map(|rule| (rule.instead.map(str::to_string), rule.first != rule.last))
+        .map(|rule| Verdict {
+            instead: rule.instead.map(str::to_string),
+            without: rule.without,
+            range_default: rule.first != rule.last,
+        })
 }
 
 /// What the report calls `ch`, from the first rule of any group that holds it, on or off. `None`
@@ -499,10 +584,7 @@ pub fn retain(over: &Over, keep: &dyn Keep) -> Option<Over> {
 /// What a fix writes in place of `banned`, or why it may not write what the report says.
 fn replacement(banned: &Banned) -> Result<&str, &'static str> {
     let Some(instead) = &banned.instead else {
-        return Err(
-            "there is no replacement for it, since the arrows of its range point every way \
-             and only the writer knows which this one means",
-        );
+        return Err(banned.without.unwrap_or(&ARROW).refusal);
     };
     if banned.range_default {
         Err(
@@ -544,7 +626,7 @@ fn note(banned: &Banned) -> String {
         what.push_str(&format!(" \"{ch}\""));
     }
     let instead = match banned.instead.as_deref() {
-        None => "no one fits; write an ASCII arrow pointing the same way, or words".to_string(),
+        None => banned.without.unwrap_or(&ARROW).advice.to_string(),
         Some("") => "delete it".to_string(),
         Some(" ") => "write a plain space".to_string(),
         Some(instead) => format!("write `{instead}`"),

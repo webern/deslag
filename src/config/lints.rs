@@ -503,6 +503,12 @@ pub struct CharGroups {
     #[schemars(extend("default" = false))]
     #[schemars(extend("since" = "0.0.1"))]
     pub invisible: Option<bool>,
+    /// Characters that set the direction of text, such as the right-to-left override. They are
+    /// reported and never fixed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("default" = false))]
+    #[schemars(extend("since" = "next"))]
+    pub bidi: Option<bool>,
     /// Curly quotes and apostrophes, for `"` and `'`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = false))]
@@ -529,6 +535,7 @@ impl Merge for CharGroups {
             box_drawing,
             spaces,
             invisible,
+            bidi,
             quotes,
             emoji,
         } = over;
@@ -543,6 +550,7 @@ impl Merge for CharGroups {
             (&mut self.box_drawing, box_drawing),
             (&mut self.spaces, spaces),
             (&mut self.invisible, invisible),
+            (&mut self.bidi, bidi),
             (&mut self.quotes, quotes),
             (&mut self.emoji, emoji),
         ];

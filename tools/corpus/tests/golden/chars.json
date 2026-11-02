@@ -218,6 +218,26 @@
       ]
     },
     {
+      "group": "bidi",
+      "focus": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "reference": {
+        "files": 0,
+        "repos": 0,
+        "occurrences": 0,
+        "rate": 0.0
+      },
+      "ratio": 1.0,
+      "interval": [
+        1.0,
+        1.0
+      ]
+    },
+    {
       "group": "quotes",
       "focus": {
         "files": 0,

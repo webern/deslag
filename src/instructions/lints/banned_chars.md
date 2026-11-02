@@ -14,6 +14,7 @@ section = true
 box_drawing = true
 spaces = true
 invisible = true
+bidi = true
 quotes = true
 emoji = true
 ```

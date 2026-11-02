@@ -87,7 +87,7 @@ PYTHON_VERSION := 3.13
         test-spacy \
         test-ticlist-brill-deslag test-ticlist-brill-percept test-ticlist-percept test-tier test-time \
         test-tools \
-        check check-clippy check-deslag check-doc check-fmt check-publish check-release \
+        check check-clippy check-deslag check-doc check-fmt check-msrv check-publish check-release \
         check-typos \
         clean clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train \
         ci ci-fast \
@@ -106,7 +106,7 @@ help:
 	@echo "build-release    build with the release profile"
 	@echo "test             test-exam, test-product and test-tools: every Rust test that needs no network,"
 	@echo "                 doctests included, the exam's gates and the owner set's metrics; not test-python,"
-	@echo "                 which runs when the scripts it tests change"
+	@echo "                 which the python workflow runs on every pull request"
 	@echo "test-blobs       fetch the corpus's big tier, then test-silver, test-tier and test-time; needs the"
 	@echo "                 network, so not in test"
 	@echo "test-brill       train the Brill tagger on the treebank's train set, grade it on the dev and owner sets with"
@@ -144,7 +144,7 @@ help:
 	@echo "                 fast profile; run it before opening a PR; what CI's test job runs"
 	@echo "test-python      test how batches are built and published, how sentences are labelled with models, and"
 	@echo "                 the exam's trainers and run.sh; offline, local repositories, about two minutes, so not"
-	@echo "                 in test or ci: its own workflow runs it when they change"
+	@echo "                 in test or ci: its own workflow runs it on every pull request"
 	@echo "test-scanners    fetch the crates Cargo.lock names and those of $(CRATES)/c/Cargo.lock, then sweep deslag's"
 	@echo "                 src and tools and the Rust crates, and the C and C++ crates, with deslag-sweep, and fail"
 	@echo "                 on any non-zero exit; prints the sweep's TOML; also reads the comments of the Rust crates"
@@ -184,6 +184,8 @@ help:
 	@echo "check-deslag     run deslag on this repository's own Markdown"
 	@echo "check-doc        build the docs with warnings denied"
 	@echo "check-fmt        rustfmt in check mode"
+	@echo "check-msrv       cargo check on the rust-version in Cargo.toml, installing that toolchain with rustup if"
+	@echo "                 missing; a second toolchain, so not part of check or ci, and CI's msrv job runs it"
 	@echo "check-publish    cargo publish --dry-run; slow, so not part of check"
 	@echo "check-release    fail while a lint, setting, redirect or catalogue phrase has since \"next\", a"
 	@echo "                 since names a release above the crate version, the crate version is a"
@@ -203,7 +205,7 @@ help:
 	@echo "clean-train      remove what the generate-* targets for the learners and their tests wrote"
 	@echo "ci               preflight, check, build, test, test-blobs, test-scanners, with --locked; the ci"
 	@echo "                 workflow runs these parts as parallel jobs and the release runs this target; not"
-	@echo "                 test-python, which the python workflow runs"
+	@echo "                 test-python, which the python workflow runs on every pull request"
 	@echo "ci-fast          the gate to run before a push, about 40 seconds warm: preflight, check, test-exam"
 	@echo "                 and test-product; ci runs the rest"
 	@echo "fix              apply every automatic fix: fmt, clippy, golden set, test output"
@@ -423,9 +425,9 @@ test-shapes-milestone: preflight fetch-ewt
 # The scripts under scripts/blobstore, run against git repositories the tests
 # make, scripts/train, run with made-up sentences and stand-ins for cargo, and scripts/label,
 # run against a stand-in for OpenRouter and the real deslag-gold: no network, no login, no key,
-# no treebank. Minutes of git, so not in test or ci; the python workflow runs it, on Python 3.13,
-# when scripts/blobstore, scripts/label, scripts/llm-detection, scripts/train, tools/exam or
-# src/tag change.
+# no treebank. Minutes of git, so not in test or ci; the python workflow runs it, on Python 3.13, on
+# every pull request and push to main. The deslag-gold and deslag-exam it runs link most of the
+# repository, so a filter on paths drifts out of date; the repository is public and the minutes are free.
 # DESLAG_EXAM_REQUIRED makes a test that needs deslag-exam fail without it, where run by hand it skips.
 test-python: preflight-python
 	cargo build $(CARGO_FLAGS) --quiet -p deslag-exam --bin deslag-gold --bin deslag-exam
@@ -534,6 +536,12 @@ check-fmt: preflight
 	cargo fmt -- --check
 	cargo fmt $(SWEEP) -- --check
 
+# The floor Cargo.toml's rust-version declares, checked on that release: the one place the version is
+# written is Cargo.toml, and scripts/check-msrv.sh reads it. A second toolchain, so out of check, ci and
+# ci-fast; CI's msrv job runs it.
+check-msrv: preflight
+	@$(SCRIPTS)/check-msrv.sh
+
 # Builds from the packaged crate, which catches a file that `exclude` dropped
 # but the build needs. Too slow for `check`; the release workflow runs it.
 # deslag is the one package that publishes; the crates under tools/ never do.
@@ -556,6 +564,9 @@ check-typos: preflight
 # ---------------------------------------------------------------------------
 # clean
 
+# Left on purpose: .gold, .pool and .lexicon. No target writes them; deslag-gold and
+# scripts/lexicon/generate.sh do, run by hand, and .gold holds paid model replies and the adjudication,
+# which cannot be rebuilt for free.
 clean: clean-blobs clean-crates clean-ewt clean-harper clean-label clean-spacy clean-train
 	cargo clean
 

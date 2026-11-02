@@ -1,5 +1,9 @@
 //! The command-line entry point. The logic lives in the library.
 
+// Standard error and standard output are written only through `write_stderr` and `write_stdout`,
+// which survive a closed pipe. `eprintln!` and `println!` panic on one and exit 101.
+#![deny(clippy::print_stderr, clippy::print_stdout)]
+
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::ExitCode;

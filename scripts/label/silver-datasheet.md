@@ -58,7 +58,7 @@ with the gold push it up.
 ## What it is for, and what it is never for
 
 It is for training a tagger and for choosing its thresholds on the `tune` split, with the
-errors in the labels in mind: a label that is 96 or 97 percent right cannot by itself certify a
+label errors in mind: a label that is 96 or 97 percent right cannot by itself certify a
 97 percent gate, so refit on `tune` and confirm on gold.
 
 It is never for grading a tagger, and its sentences are never in the owner's stratum: the tools

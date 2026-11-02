@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "density",
+      "report": "ERROR: deslag detected dense text!\n\nsrc/lib.rs has 1 paragraph longer than 60 characters.\n\nA long paragraph is hard to read, for a person and for an agent. Break each of these up: give each idea its own paragraph, with a blank line between them, and cut what the reader does not need. Where the text walks through steps, options or cases, a list may read better, but keep each item short.\n\nA line break without a blank line does not end a paragraph. Do not change the limits to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe dense text:\n  line 4: a paragraph of 66 characters",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 87,
+          "end": 153,
+          "line": 4,
+          "column": 4,
+          "end_line": 4,
+          "end_column": 70,
+          "note": "a paragraph of 66 characters"
+        }
+      ]
+    }
+  ]
+}

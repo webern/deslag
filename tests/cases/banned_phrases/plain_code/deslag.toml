@@ -1,0 +1,13 @@
+schema_version = 2
+
+[rust.lints.banned_phrases.ban]
+"delve into" = "say what you found instead"
+load-bearing = "say what depends on it"
+
+[cpp.lints.banned_phrases.ban]
+"delve into" = "say what you found instead"
+load-bearing = "say what depends on it"
+
+[toml.lints.banned_phrases.ban]
+"delve into" = "say what you found instead"
+load-bearing = "say what depends on it"

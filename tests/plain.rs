@@ -231,6 +231,134 @@ fn unicode_and_a_byte_order_mark_keep_their_offsets() {
     assert_eq!(document.blocks[0].range, 3..text.len());
 }
 
+/// The pieces of `text` as `kind:range-text`, where a code piece shows its text after `=`.
+fn pieces(text: &str) -> Vec<String> {
+    let document = Document::plain(text);
+    document
+        .pieces
+        .iter()
+        .map(|piece| match piece.kind {
+            PieceKind::Text => format!("t:{}", &text[piece.range.clone()]),
+            PieceKind::Code => format!("c:{}={}", &text[piece.range.clone()], piece.text),
+            kind => panic!("{kind:?}"),
+        })
+        .collect()
+}
+
+#[test]
+fn a_backtick_span_is_a_code_piece() {
+    assert_eq!(
+        pieces("use `a b` here"),
+        ["t:use ", "c:`a b`=a b", "t: here"]
+    );
+    let document = Document::plain("use `a b` here");
+    assert_eq!(document.pieces[1].range, 4..9);
+}
+
+#[test]
+fn two_spans_on_a_line_are_two_pieces() {
+    assert_eq!(pieces("`a` and `b`"), ["c:`a`=a", "t: and ", "c:`b`=b"]);
+}
+
+#[test]
+fn an_unmatched_run_is_text() {
+    assert_eq!(pieces("a ` b"), ["t:a ` b"]);
+    assert_eq!(pieces("a `` b ` c"), ["t:a `` b ` c"]);
+    // A span does not run over a line break: each line is read on its own.
+    assert_eq!(pieces("a `b\nc` d"), ["t:a `b", "t:c` d"]);
+    // The first run that has a partner opens the span.
+    assert_eq!(pieces("`a ``b`` c`"), ["c:`a ``b`` c`=a ``b`` c"]);
+    assert_eq!(pieces("a ` b `c`"), ["t:a ", "c:` b `=b", "t:c`"]);
+}
+
+#[test]
+fn a_double_backtick_span_holds_a_backtick() {
+    assert_eq!(
+        pieces("a ``x ` y`` b"),
+        ["t:a ", "c:``x ` y``=x ` y", "t: b"]
+    );
+    // One space at each end is not part of the text, unless the span is only spaces.
+    assert_eq!(pieces("`` ` ``"), ["c:`` ` ``=`"]);
+    assert_eq!(pieces("`  `"), ["c:`  `=  "]);
+}
+
+#[test]
+fn an_escaped_backtick_is_text() {
+    // It opens no span, and it closes none: the backslash is text inside a span.
+    assert_eq!(pieces(r"a \`b\` c"), [r"t:a \`b\` c"]);
+    assert_eq!(pieces(r"a \`b` c"), [r"t:a \`b` c"]);
+    assert_eq!(pieces(r"`a\` b"), [r"c:`a\`=a\", "t: b"]);
+    // The rest of an escaped run is a run of its own.
+    assert_eq!(pieces(r"\``a` b"), [r"t:\`", "c:`a`=a", "t: b"]);
+    // A pair of backslashes escapes nothing.
+    assert_eq!(pieces(r"\\`a` b"), [r"t:\\", "c:`a`=a", "t: b"]);
+}
+
+#[test]
+fn a_span_in_a_list_item_is_a_code_piece() {
+    assert_eq!(
+        pieces("- use `a`\n  and `b`"),
+        ["t:use ", "c:`a`=a", "t:and ", "c:`b`=b"]
+    );
+}
+
+#[test]
+fn a_raw_run_with_backticks_is_text() {
+    let text = "a b\n\n    let x = `y`;\n    `z`";
+    assert_eq!(outline(text), "p a b\nraw let x = `y`; / `z`");
+    assert!(
+        Document::plain(text)
+            .pieces
+            .iter()
+            .all(|p| p.kind == PieceKind::Text)
+    );
+}
+
+#[test]
+fn a_span_agrees_with_markdown() {
+    let texts = [
+        "a `b` c",
+        "`a` `bc`",
+        "- a `b`\n- `c`\n",
+        "a ``b ` c`` d",
+        "a `` b ` c `` d",
+        "a `  ` b",
+        "a ` b ` c",
+        "- `a b` c\n- d `e` f\n",
+    ];
+    for text in texts {
+        let plain = Document::plain(text);
+        let markdown = Document::markdown(text);
+        assert_eq!(plain.pieces, markdown.pieces, "{text:?}");
+        assert_eq!(plain.tokens, markdown.tokens, "{text:?}");
+    }
+    // Markdown drops the backslash of an escape and splits the text there, so only the code
+    // pieces are compared.
+    let escapes = [r"a \`b\` c", r"a \`b` c", r"`a\` b", r"\``a` b", r"\\`a` b"];
+    for text in escapes {
+        let code = |document: Document| {
+            let code: Vec<_> = document
+                .pieces
+                .iter()
+                .filter(|piece| piece.kind == PieceKind::Code)
+                .map(|piece| (piece.range.clone(), piece.text.to_string()))
+                .collect();
+            code
+        };
+        assert_eq!(
+            code(Document::plain(text)),
+            code(Document::markdown(text)),
+            "{text:?}"
+        );
+    }
+}
+
+#[test]
+fn a_byte_order_mark_is_dropped_from_a_file_only() {
+    // `Document::plain` is handed a file.
+    assert_eq!(Document::plain("\u{FEFF}a b").pieces[0].range, 3..6);
+}
+
 #[test]
 fn nothing_in_a_text_without_content_is_found() {
     for text in ["", "\n", "  \n\t\n", "\r\n \r\n"] {
@@ -328,12 +456,36 @@ fn check(text: &str) {
     // Every piece is as written, one line's content, and borrowed.
     for piece in &parts.pieces {
         let written = &text[piece.range.clone()];
-        assert_eq!(written, piece.text, "{text:?}");
         assert!(matches!(piece.text, Cow::Borrowed(_)), "{text:?}");
-        assert_eq!(piece.kind, PieceKind::Text, "{text:?}");
+        match piece.kind {
+            PieceKind::Text => assert_eq!(written, piece.text, "{text:?}"),
+            // A span takes in its backticks, and its text lies between them.
+            PieceKind::Code => {
+                assert!(
+                    written.starts_with('`') && written.ends_with('`'),
+                    "{text:?}"
+                );
+                assert!(written.contains(piece.text.as_ref()), "{text:?}");
+            }
+            kind => panic!("{kind:?} in {text:?}"),
+        }
         assert!(!written.is_empty() && !written.contains('\n'), "{text:?}");
-        assert!(!written.starts_with([' ', '\t']), "{text:?}");
-        assert!(!written.ends_with([' ', '\t', '\r']), "{text:?}");
+        // The edges of a line are trimmed, not the edges a span makes inside it.
+        let touches = |at: usize, other: &&Piece| other.range.end == at || other.range.start == at;
+        if !parts
+            .pieces
+            .iter()
+            .any(|other| touches(piece.range.start, other) && other.range != piece.range)
+        {
+            assert!(!written.starts_with([' ', '\t']), "{text:?}");
+        }
+        if !parts
+            .pieces
+            .iter()
+            .any(|other| touches(piece.range.end, other) && other.range != piece.range)
+        {
+            assert!(!written.ends_with([' ', '\t', '\r']), "{text:?}");
+        }
     }
 
     // Pieces and points are in order and apart, and a point stands for whitespace.
@@ -368,6 +520,10 @@ fn check(text: &str) {
             let pieces = document.pieces_of(block);
             for pair in pieces.windows(2) {
                 let between = pair[0].range.end..pair[1].range.start;
+                // Pieces of one line touch.
+                if between.is_empty() {
+                    continue;
+                }
                 let inside = document.points_in(between.clone());
                 assert_eq!(inside.len(), 1, "{text:?}");
                 assert_eq!(inside[0].kind, PointKind::SoftBreak, "{text:?}");
@@ -443,8 +599,8 @@ impl Random {
 
 #[test]
 fn any_text_reads_into_layers_that_lead_back_to_it() {
-    const ALPHABET: [&str; 13] = [
-        " ", "\t", "\n", "\r", "-", "*", "+", "1", ".", ")", "a", "é", "\u{FEFF}",
+    const ALPHABET: [&str; 14] = [
+        " ", "\t", "\n", "\r", "-", "*", "+", "1", ".", ")", "a", "é", "\u{FEFF}", "`",
     ];
     let mut random = Random(0x2545_f491_4f6c_dd1d);
     for _ in 0..2000 {
@@ -455,8 +611,8 @@ fn any_text_reads_into_layers_that_lead_back_to_it() {
         check(&text);
     }
     // Lines with the shapes of the rules, which random bytes meet less often.
-    const LINES: [&str; 10] = [
-        "", "a b", "- a", "  - a", "1. a", "2) a", "  x", "    x", "\tx", "b",
+    const LINES: [&str; 12] = [
+        "", "a b", "- a", "  - a", "1. a", "2) a", "  x", "    x", "\tx", "b", "a `b` c", "`` ` ``",
     ];
     for _ in 0..2000 {
         let lines: Vec<&str> = (0..random.next() % 12)

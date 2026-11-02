@@ -1030,7 +1030,7 @@ fn an_audit_is_scored_into_the_batch_and_the_owners_rejections_come_out() {
     let said = check(&made, &dir).ok();
     assert!(
         said.out
-            .contains("52 sentences, 617 words, 2 parts, 9 runs, audited"),
+            .contains("52 sentences, 624 words, 2 parts, 9 runs, audited"),
         "{}",
         said.out
     );

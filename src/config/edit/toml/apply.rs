@@ -628,10 +628,10 @@ impl Editor<'_> {
             if bare(name.leaf_decor().prefix()) {
                 name.leaf_decor_mut().set_prefix("");
             }
-            if let Item::Value(value) = item {
-                if bare(value.decor().suffix()) {
-                    value.decor_mut().set_suffix("");
-                }
+            if let Item::Value(value) = item
+                && bare(value.decor().suffix())
+            {
+                value.decor_mut().set_suffix("");
             }
         }
         match form {

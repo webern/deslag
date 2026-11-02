@@ -1250,6 +1250,7 @@ mod tests {
                 ch: 't',
                 name: None,
                 instead: None,
+                without: None,
                 range_default: false,
                 locations: vec![across, inside],
             }],

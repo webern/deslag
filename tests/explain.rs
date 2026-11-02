@@ -104,6 +104,7 @@ const EXPECTED: &str = r#"# docs/guide.md
 
 [banned_chars.groups]
 arrows = false
+bidi = false
 box_drawing = false
 bullets = false
 checks = false

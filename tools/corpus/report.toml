@@ -13,7 +13,7 @@ free_spans = 2
 max_percent = 1
 
 [md.lints.banned_chars]
-groups = { emoji = true, dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, quotes = true }
+groups = { emoji = true, dashes = true, arrows = true, ellipsis = true, bullets = true, math = true, checks = true, section = true, box_drawing = true, spaces = true, invisible = true, bidi = true, quotes = true }
 
 [md.lints.banned_phrases]
 

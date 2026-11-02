@@ -126,6 +126,66 @@ fn an_edit_that_leaves_part_of_a_grapheme_is_refused() {
 }
 
 #[test]
+fn a_run_of_one_character_is_made_whole_or_refused_whole() {
+    // Each of these is refused as a whole: the first would underline the line above, the second
+    // is a run of `=`, and the third would indent the line into a code block.
+    for (text, from, to, run) in [
+        ("A line\n\u{2014}\u{2014}\u{2014}\n", "\u{2014}", "-", 3),
+        (
+            "A line\n\u{2550}\u{2550}\u{2550}\u{2550}\u{2550}\n",
+            "\u{2550}",
+            "=",
+            5,
+        ),
+        ("\u{00A0}\u{00A0}\u{00A0}\u{00A0}text\n", "\u{00A0}", " ", 4),
+    ] {
+        let (made, refused) = replace(text, from, to);
+        assert_eq!(made, text, "{text:?}");
+        assert_eq!(refused, vec![Some(Refusal::Structure); run], "{text:?}");
+    }
+
+    // A run beside a refused one on the same line is made, and the other runs of the line are not
+    // held back by it.
+    let text = "\u{00A0}\u{00A0}\u{00A0}\u{00A0}a \u{2014}\u{2014}\u{2014} b\n";
+    let (made, refused) = replace(text, "\u{2014}", "-");
+    assert_eq!(made, text.replace("\u{2014}\u{2014}\u{2014}", "---"));
+    assert!(refused.iter().all(Option::is_none), "{refused:?}");
+
+    // Runs apart stay independent.
+    let text = "A line\n\u{2014}\u{2014}\u{2014}\n\nB \u{2014}\u{2014}\u{2014} c\n";
+    let (made, refused) = replace(text, "\u{2014}", "-");
+    assert_eq!(made, "A line\n\u{2014}\u{2014}\u{2014}\n\nB --- c\n");
+    assert_eq!(refused[..3], [Some(Refusal::Structure); 3]);
+    assert_eq!(refused[3..], [None; 3]);
+}
+
+/// A run is of one character: a fixable edit beside a refused run of another character is not
+/// dragged down with it.
+#[test]
+fn edits_of_different_characters_side_by_side_are_not_a_run() {
+    let text = "\u{00A0}\u{00A0}\u{00A0}\u{00A0}\u{2014} text\n";
+    let edits: Vec<Edit> = text
+        .char_indices()
+        .map(|(at, ch)| Edit {
+            range: at..at + ch.len_utf8(),
+            replacement: match ch {
+                '\u{00A0}' => " ",
+                '\u{2014}' => "-",
+                _ => unreachable!(),
+            }
+            .to_string(),
+        })
+        .take(5)
+        .collect();
+    let applied = Document::markdown(text).apply(&edits).expect("edits apart");
+    assert_eq!(applied.text, "\u{00A0}\u{00A0}\u{00A0}\u{00A0}- text\n");
+    assert_eq!(
+        applied.refused,
+        [vec![Some(Refusal::Structure); 4], vec![None],].concat()
+    );
+}
+
+#[test]
 fn a_replacement_with_a_control_character_is_refused() {
     for to in ["\n", "\t", "a\u{7}"] {
         assert_eq!(

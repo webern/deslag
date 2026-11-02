@@ -6,6 +6,7 @@
 
 [md.lints.banned_chars.groups]
 arrows = true
+bidi = false
 box_drawing = true
 bullets = true
 checks = true

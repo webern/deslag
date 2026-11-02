@@ -39,6 +39,7 @@ the English llm files, against the English human files; rates per million prose 
 | box_drawing | 0 (0) | 0.0 | 0 (0) | 0.0 | 1.0 | 1.0 | 1.0 |
 | spaces | 0 (0) | 0.0 | 0 (0) | 0.0 | 1.0 | 1.0 | 1.0 |
 | invisible | 0 (0) | 0.0 | 0 (0) | 0.0 | 1.0 | 1.0 | 1.0 |
+| bidi | 0 (0) | 0.0 | 0 (0) | 0.0 | 1.0 | 1.0 | 1.0 |
 | quotes | 0 (0) | 0.0 | 40 (40) | 54394.1 | 0.0 | 0.0 | 0.0 |
 | emoji | 0 (0) | 0.0 | 0 (0) | 0.0 | 1.0 | 1.0 | 1.0 |
 | none | 0 (0) | 0.0 | 0 (0) | 0.0 | 1.0 | 1.0 | 1.0 |

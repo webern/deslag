@@ -35,6 +35,7 @@ section = true
 box_drawing = true
 spaces = true
 invisible = true
+bidi = true
 quotes = true
 
 # The phrases this repo bans. Only a phrase in ban fails a file.
@@ -129,6 +130,7 @@ section = true
 box_drawing = true
 spaces = true
 invisible = true
+bidi = true
 quotes = true
 
 [rust.lints.banned_phrases]
@@ -174,6 +176,7 @@ section = true
 box_drawing = true
 spaces = true
 invisible = true
+bidi = true
 quotes = true
 
 [toml.lints.banned_phrases]

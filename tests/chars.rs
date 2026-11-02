@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 use deslag::Document;
 use deslag::config::{BannedChars, CharGroups, Lints, Merge};
-use deslag::lint::banned_chars::{GROUPS, check, scan};
+use deslag::lint::banned_chars::{GROUPS, Outcome, check, scan};
 
 /// The characters `scan` finds in `text`, with their lines.
 fn found(text: &str) -> Vec<(usize, char)> {
@@ -261,6 +261,7 @@ fn every_group_is_named_by_its_key_in_the_config() {
         box_drawing: Some(false),
         spaces: Some(false),
         invisible: Some(false),
+        bidi: Some(false),
         quotes: Some(false),
         emoji: Some(false),
     };
@@ -282,7 +283,13 @@ fn the_tables_ban_no_ascii_and_suggest_only_ascii() {
         for rule in group.rules {
             assert!(rule.first <= rule.last, "{rule:?}");
             assert!(!rule.first.is_ascii(), "{rule:?}");
-            assert!(rule.instead.is_none_or(str::is_ascii), "{rule:?}");
+            assert!(
+                match rule.outcome {
+                    Outcome::Replace(instead) => instead.is_ascii(),
+                    Outcome::Refuse(_) => true,
+                },
+                "{rule:?}"
+            );
             assert!(rule.name.is_ascii(), "{rule:?}");
         }
     }
@@ -302,7 +309,7 @@ fn no_arrow_range_rule_names_a_replacement() {
         .collect();
     assert!(!ranges.is_empty());
     for rule in ranges {
-        assert_eq!(rule.instead, None, "{rule:?}");
+        assert!(matches!(rule.outcome, Outcome::Refuse(_)), "{rule:?}");
     }
 }
 
@@ -433,6 +440,15 @@ const COVERED: &[(&str, &[(u32, u32)])] = &[
         ],
     ),
     (
+        "bidi",
+        &[
+            (0x061C, 0x061C),
+            (0x200E, 0x200F),
+            (0x202A, 0x202E),
+            (0x2066, 0x2069),
+        ],
+    ),
+    (
         "quotes",
         &[
             (0x2018, 0x2019),
@@ -496,6 +512,29 @@ fn each_group_covers_the_characters_it_covered() {
              config that has the group on, and nothing says so. Make sure that is meant, then \
              change this pin. A rule inside a range does not move it.",
             group.name
+        );
+    }
+}
+
+/// A bidi control is reported with advice that is its own, and a fix never deletes one.
+#[test]
+fn a_bidi_character_is_reported_and_never_fixed() {
+    let group = GROUPS
+        .iter()
+        .find(|group| group.name == "bidi")
+        .expect("the bidi group");
+    let on = settings("groups = { bidi = true }");
+    for rule in group.rules {
+        assert!(matches!(rule.outcome, Outcome::Refuse(_)), "{rule:?}");
+        let text = format!("a {}b\n", rule.first);
+        let over = check(&Document::markdown(&text), Some(&on)).expect("a finding");
+        let edits = deslag::lint::banned_chars::edits(&over);
+        assert_eq!(edits.len(), 1, "{rule:?}");
+        assert!(edits[0].1.is_err(), "{rule:?} has a fix");
+        assert!(
+            edits[0].0.note.contains("right to left"),
+            "{}",
+            edits[0].0.note
         );
     }
 }

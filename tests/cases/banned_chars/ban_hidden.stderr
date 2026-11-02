@@ -1,0 +1,15 @@
+ERROR: deslag detected banned characters!
+
+README.md has 2 banned characters.
+
+This repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+
+Code is not checked, so a diagram may use these characters in a code block.
+
+Do not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The characters, and what to write instead:
+  line 3: U+202E right-to-left override; delete it
+  line 3: U+200D; delete it
+
+deslag: 1 of 1 files with banned characters.

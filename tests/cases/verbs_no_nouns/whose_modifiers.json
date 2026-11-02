@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "verbs_no_nouns",
+      "report": "ERROR: deslag detected verbs with no-nouns!\n\nREADME.md has 1 verb with a no-noun.\n\nThis repo negates the verb: write \"does not ship X\", not \"ships no X\". Negate the verb, or drop the absolute claim if it is not true. Swapping in \"zero\", \"without\", \"lacks\" or \"free of\" is the same sentence and does not fix it.\n\nDo not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe places:\n  line 5: \"ships no binary\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 95,
+          "end": 110,
+          "line": 5,
+          "column": 27,
+          "end_line": 5,
+          "end_column": 42,
+          "note": "\"ships no binary\""
+        }
+      ]
+    }
+  ]
+}

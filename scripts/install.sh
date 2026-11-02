@@ -31,4 +31,4 @@ if ! have typos; then
     cargo install typos-cli --locked
 fi
 
-exec "$(dirname "$0")/preflight.sh"
+DESLAG_FROM_INSTALL=1 exec "$(dirname "$0")/preflight.sh"

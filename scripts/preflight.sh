@@ -3,8 +3,10 @@
 # Runs before every build, so it only checks that tools exist, and with a
 # version, such as 3.13, that python3 is that version, for the targets that
 # need it. A C compiler and archiver are among them: tools/sweep builds
-# tree-sitter's C through cc, and the crates that compile C use the same one. rustup installs the toolchain and components rust-toolchain.toml
-# names on first use.
+# tree-sitter's C through cc, and the crates that compile C use the same one.
+# rustup installs the toolchain and components rust-toolchain.toml names on
+# first use. install.sh sets DESLAG_FROM_INSTALL when it runs this, so the
+# closing hint does not send the user back to make install.
 
 # No -e: a missing tool must not stop the scan.
 set -uo pipefail
@@ -50,6 +52,10 @@ if [ -n "$python_version" ] && command -v python3 >/dev/null 2>&1; then
 fi
 
 if [ "$missing" -ne 0 ]; then
-    echo "run make install to install what it can, or install what is listed above, then run make again" >&2
+    if [ -n "${DESLAG_FROM_INSTALL:-}" ]; then
+        echo "install what is listed above by hand, then run make again" >&2
+    else
+        echo "run make install to install what it can, or install what is listed above, then run make again" >&2
+    fi
     exit 1
 fi

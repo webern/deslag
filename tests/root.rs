@@ -145,3 +145,50 @@ fn two_stems_in_the_nearest_directory_are_refused_and_named() {
         );
     }
 }
+
+#[test]
+fn init_from_a_subdirectory_writes_at_the_top_and_check_then_reads_it() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("sub/a.md", "Clean.\n");
+    let output = repo.run_in("sub", &["init"]);
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
+    assert!(repo.root().join("deslag.toml").is_file());
+    assert!(!repo.root().join("sub/deslag.toml").exists());
+    let check = repo.run_in("sub", &["check"]);
+    assert_eq!(code(&check), 0, "{}", raw_stderr(&check));
+
+    let again = repo.run_in("sub", &["init"]);
+    assert_eq!(code(&again), 2);
+    assert!(raw_stderr(&again).contains("found the config"));
+}
+
+#[test]
+fn init_config_path_makes_its_parent_and_check_finds_the_file() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("sub/a.md", "Clean.\n");
+    let output = repo.run_in("sub", &["init", "--config-path", "../.agents/deslag.toml"]);
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
+    assert!(repo.root().join(".agents/deslag.toml").is_file());
+    let check = repo.run_in("sub", &["check"]);
+    assert_eq!(code(&check), 0, "{}", raw_stderr(&check));
+    assert!(raw_stderr(&check).contains(&note(&repo, "", ".agents/deslag.toml")));
+}
+
+#[test]
+fn init_refuses_a_config_path_check_would_not_look_at_and_writes_nothing() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("sub/a.md", "Clean.\n");
+    for path in ["lint/my.toml", "../x.toml", "../../x.toml", "deslag.yaml"] {
+        let output = repo.run_in("sub", &["init", "--config-path", path]);
+        assert_eq!(code(&output), 2, "{path}: {}", raw_stderr(&output));
+    }
+    let said = raw_stderr(&repo.run_in("sub", &["init", "--config-path", "lint/my.toml"]));
+    assert!(said.contains(".agents/deslag.toml"), "{said}");
+    assert!(!repo.root().join("sub/lint").exists());
+    assert!(!repo.root().join("x.toml").exists());
+    assert!(!repo.root().join("deslag.toml").exists());
+    assert!(!repo.root().join("sub/deslag.toml").exists());
+}

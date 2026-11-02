@@ -909,7 +909,7 @@ fn two_configs_at_one_location_stop_the_topic_with_the_message_check_prints() {
     }
     let said = stderr(&checked);
     assert!(
-        said.contains("found more than one config at one location"),
+        said.contains("found more than one config in one directory"),
         "{said}"
     );
 }

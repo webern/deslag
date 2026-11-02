@@ -219,14 +219,14 @@ pub enum Error {
         problem: String,
     },
 
-    /// `deslag init` found a config, or more than one at one location, and did not write a file.
+    /// `deslag init` found a config, or more than one in one directory, and did not write a file.
     #[error(
         "found the config {found}, and deslag init writes one only where there is none; run \
          `deslag instructions lints` for the lints it can turn on, `deslag explain <PATH>` for \
          what a file gets, and `deslag update` to bring it to this deslag"
     )]
     ConfigExists {
-        /// The config found, or the configs at one location.
+        /// The config found, or the configs in one directory.
         found: String,
     },
 

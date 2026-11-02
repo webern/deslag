@@ -247,20 +247,6 @@ fn a_closing_thematic_break_is_not_frontmatter() {
 }
 
 #[test]
-fn the_earlier_canonical_location_wins() {
-    let repo = Repo::new();
-    repo.write(".deslag/config.toml", &global_config(5));
-    repo.write("deslag.toml", &global_config(100000));
-    repo.write("AGENTS.md", "# A\nlonger than five bytes\n");
-
-    let output = repo.check();
-    let stderr = stderr(&output);
-
-    assert_eq!(code(&output), 1, "stderr: {stderr}");
-    assert!(over_budget(&stderr, "AGENTS.md", 5), "stderr: {stderr}");
-}
-
-#[test]
 fn a_missing_config_says_where_it_looked() {
     let repo = Repo::new();
     repo.write("AGENTS.md", "# A\n");

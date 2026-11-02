@@ -164,7 +164,7 @@ fn two_languages_at_one_location_are_an_error() {
 
     assert_eq!(code(&output), 2, "stderr: {stderr}");
     assert!(
-        stderr.contains("found more than one config at one location")
+        stderr.contains("found more than one config in one directory")
             && stderr.contains("deslag.toml")
             && stderr.contains("deslag.json"),
         "stderr: {stderr}"

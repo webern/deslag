@@ -25,7 +25,7 @@ A `relicense` row supersedes a live fixture whose licence its sidecar has wrong:
 the fixture and adds it again, with its bytes and its sidecar as they were except
 `source.license`, which is the row's.
 
-It does not ask the network for anything, so a manifest of `exclude`
+It does not send a request to the network, so a manifest of `exclude`
 and `relicense` rows alone does not have a source to resolve and is built from the fetched image.
 
 A row's
@@ -36,7 +36,7 @@ its author's claim. A fixture with no accepted licence is an `exclude` row inste
 
 The workflow completes a seed. Each `git` source gains `head`, the metadata GitHub gave for it, and
 `kept`, what the harvest kept by label; the manifest gains `expect`, the fixture count and a
-digest of every file in the batch. A completed manifest does not ask the network for anything, so building
+digest of every file in the batch. A completed manifest does not send a request to the network, so building
 it again gives the same batch or fails.
 
 ## What the workflow does
@@ -54,13 +54,13 @@ A manifest whose batch the image holds is only checked against it. A source that
 harvested at its `head`, a squash-merge GitHub could not be asked about, a pull request GitHub now
 describes another way, a fixture another batch now holds, or two builds that differ, fail the job.
 
-A pull request does not publish anything, so a seed is shown to build before it merges. A seed with no
+A pull request does not publish an image, so a seed is shown to build before it merges. A seed with no
 `head` publishes the tip at push time, which may be newer than the pull request run saw; naming
 `head` publishes exactly what that run proved.
 
 A pull request that adds a batch also measures it. The `harvest` job installs Rust and typos and
 runs `scripts/blobstore/remeasure.sh run` on the tier with the batch in it, as a publish would, but
-does not commit anything.
+does not commit the measurements.
 
 The step summary shows the diff of the files it rewrites, and a batch that breaks
 a floor of the catalogue or puts a `human` hit on a catalogue phrase fails its pull request.

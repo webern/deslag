@@ -1157,6 +1157,67 @@ mod tests {
     }
 
     #[test]
+    fn an_allow_entry_with_a_line_is_compared_like_one_with_a_quote() {
+        let directory = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/configs/0.0.3/");
+        let copy = std::fs::read_to_string(format!("{directory}config.yaml")).expect("a copy");
+        let data = std::fs::read_to_string(format!("{directory}config.migrated.toml"))
+            .expect("a migrated config");
+        let data: Value = toml::from_str(&data).expect("a migrated config is data");
+        let schema = NonZeroU32::new(1).expect("one");
+        let entry = |line: &str| {
+            serde_json::json!({
+                "lint": "banned_chars",
+                "path": "docs/extra.md",
+                "line": line,
+                "reason": "a table",
+            })
+        };
+        let with = |line: &str| {
+            let mut data = data.clone();
+            data["md"]["allow"]
+                .as_array_mut()
+                .expect("a list")
+                .push(entry(line));
+            data
+        };
+        let said = check_copy(
+            &copy,
+            schema,
+            &with("a | b").to_string(),
+            ConfigFormat::Yaml,
+        )
+        .expect_err("a longer list");
+        assert!(
+            said.iter()
+                .any(|line| line.starts_with("md.allow: at schema 2 it adds ")
+                    && line.contains("a | b")),
+            "{said:#?}"
+        );
+        // The same entry in both, a `line` that differs only in the new, is named as a difference
+        // when the copy also holds one.
+        let json = std::fs::read_to_string(format!("{directory}config.json")).expect("a copy");
+        let mut old: Value = serde_json::from_str(&json).expect("a copy is data");
+        old["md"]["allow"]
+            .as_array_mut()
+            .expect("a list")
+            .push(entry("a | b"));
+        let said = check_copy(
+            &old.to_string(),
+            schema,
+            &with("a | c").to_string(),
+            ConfigFormat::Json,
+        )
+        .expect_err("a line that differs");
+        assert!(
+            said.iter().any(|line| line.starts_with("md.allow[")
+                && line.contains(".line: ")
+                && line.contains("a | b")
+                && line.contains("a | c")),
+            "{said:#?}"
+        );
+    }
+
+    #[test]
     fn an_allow_entry_added_to_the_frozen_config_is_named_as_added() {
         let directory = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/configs/0.0.3/");
         let copy = std::fs::read_to_string(format!("{directory}config.yaml")).expect("a copy");

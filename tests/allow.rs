@@ -1,6 +1,7 @@
 //! Tests for the `allow` entry of a config, which exempts one sentence from one lint: how a run
 //! tells a reviewer about each entry (`--diff`, `--base`, `explain`, and the three formats), and
-//! the sections it works in. The cases in `tests/cases` hold what each outcome prints.
+//! the sections it works in. An entry that names a line, in place of a sentence, is tested here
+//! too. The cases in `tests/cases` hold what each outcome prints.
 
 mod common;
 
@@ -966,4 +967,306 @@ fn the_acknowledgements_credit_the_two_designs_the_entry_takes() {
         "{charcheck}"
     );
     assert!(charcheck.contains("ratchet"), "{charcheck}");
+}
+
+/// A file whose banned characters no sentence holds: a dash in the frontmatter and one in an HTML
+/// block, with a sentence of its own that has a dash.
+const OUTSIDE: &str =
+    "---\ntitle: a \u{2014} b\n---\n\n<p>c \u{2014} d</p>\n\nA sentence \u{2014} here.\n";
+
+/// An `[[md.allow]]` entry that names the line `line` in place of a quote.
+fn line_entry(path: &str, lint: &str, line: &str, reason: &str) -> String {
+    format!(
+        "\n[[md.allow]]\npath = \"{path}\"\nlint = \"{lint}\"\nline = \"{line}\"\nreason = \"{reason}\"\n"
+    )
+}
+
+/// The two entries that exempt every finding of [`OUTSIDE`] that no sentence holds.
+fn outside_entries() -> Vec<String> {
+    vec![
+        line_entry("a.md", "banned_chars", "title: a \u{2014} b", "A title."),
+        line_entry("a.md", "banned_chars", "<p>c \u{2014} d</p>", "Markup."),
+    ]
+}
+
+#[test]
+fn an_entry_that_names_a_line_exempts_the_findings_no_sentence_holds() {
+    let repo = repo(&config(&outside_entries()), &[("a.md", OUTSIDE)]);
+    let output = deslag(repo.root(), &["check"]);
+    let text = stderr(&output);
+    assert_eq!(code(&output), 1, "{text}");
+    // The dash of the sentence is still a finding, and the two entries hold.
+    assert!(text.contains("a.md has 1 banned character."), "{text}");
+    assert!(text.contains("  line 7: U+2014"), "{text}");
+    assert!(text.contains("deslag: 2 exemptions applied;"), "{text}");
+    assert!(!text.contains("did not hold"), "{text}");
+}
+
+#[test]
+fn a_line_entry_is_refused_at_load_unless_it_names_a_line_of_banned_chars() {
+    for (entries, said) in [
+        (
+            "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\nquote = \"A.\"\nline = \"A.\"\nreason = \"R.\"\n",
+            "has a `quote` and a `line`",
+        ),
+        (
+            "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\nreason = \"R.\"\n",
+            "has neither a `quote` nor a `line`",
+        ),
+        (
+            "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\nline = \" \"\nreason = \"R.\"\n",
+            ".line is empty",
+        ),
+        (
+            "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_chars\"\nline = \"a\\nb\"\nreason = \"R.\"\n",
+            ".line holds U+000A",
+        ),
+        (
+            "[[md.allow]]\npath = \"a.md\"\nlint = \"banned_phrases\"\nline = \"A.\"\nreason = \"R.\"\n",
+            "which does not take a `line`: its findings are in sentences. Name the sentence with `quote`",
+        ),
+    ] {
+        let repo = repo(&format!("{LINTS}\n{entries}"), &[("a.md", OUTSIDE)]);
+        let output = deslag(repo.root(), &["check"]);
+        assert_eq!(code(&output), 2, "{said}: {}", stderr(&output));
+        assert!(
+            stderr(&output).contains(said),
+            "{said}: {}",
+            stderr(&output)
+        );
+    }
+}
+
+#[test]
+fn a_line_with_a_character_added_fails_its_entry_and_brings_the_finding_back() {
+    let repo = repo(&config(&outside_entries()), &[("a.md", OUTSIDE)]);
+    repo.write("a.md", &OUTSIDE.replace("<p>c ", "<p>cc "));
+    let output = deslag(repo.root(), &["check"]);
+    let text = stderr(&output);
+    assert_eq!(code(&output), 1, "{text}");
+    assert!(text.contains("a.md has 2 banned characters."), "{text}");
+    assert!(
+        text.contains("md.allow[1], which exempts a line of a.md"),
+        "{text}"
+    );
+    assert!(
+        text.contains("does not hold a line equal to the line"),
+        "{text}"
+    );
+    // The report lists the lines that hold a finding no sentence holds, so it denies none.
+    assert!(text.contains("line 5: \"<p>cc \u{2014} d</p>\""), "{text}");
+}
+
+#[test]
+fn json_gives_a_line_entry_line_and_no_quote_and_a_quote_entry_no_line() {
+    let mut entries = outside_entries();
+    entries.push(entry(
+        "a.md",
+        "banned_chars",
+        "Gone sentence.",
+        "It was here.",
+    ));
+    entries.push(line_entry(
+        "a.md",
+        "banned_chars",
+        "no such line",
+        "It was here.",
+    ));
+    let repo = repo(&config(&entries), &[("a.md", OUTSIDE)]);
+    let run = run_json(repo.root(), &["check"]);
+    let schema = json::schema();
+    assert_eq!(misfit(&schema, &schema, &run, "the run"), None);
+    assert_eq!(run["format_version"], 1);
+    assert_eq!(
+        statuses(&run),
+        ["applied", "applied", "no_such_sentence", "no_such_line"]
+    );
+    let first = &run["exemptions"][0];
+    assert_eq!(first["line"], "title: a \u{2014} b");
+    assert!(first.get("quote").is_none(), "{first}");
+    assert_eq!(first["marks"].as_array().expect("marks").len(), 1);
+    let quoted = &run["exemptions"][2];
+    assert_eq!(quoted["quote"], "Gone sentence.");
+    assert!(quoted.get("line").is_none(), "{quoted}");
+    let failed = run["exemptions"][3]["report"].as_str().expect("a report");
+    assert!(failed.contains("The line: \"no such line\""), "{failed}");
+}
+
+#[test]
+fn sarif_and_github_show_a_line_entry_as_a_line() {
+    let repo = repo(&config(&[]), &[("a.md", OUTSIDE)]);
+    let mut entries = outside_entries();
+    entries.push(line_entry(
+        "a.md",
+        "banned_chars",
+        "no such line",
+        "It was here.",
+    ));
+    repo.write("deslag.toml", &config(&entries));
+
+    let output = deslag(repo.root(), &["check", "--format", "sarif"]);
+    let log: Value = serde_json::from_str(&stdout(&output)).expect("a SARIF log");
+    let results = log["runs"][0]["results"].as_array().expect("results");
+    let suppressed = results
+        .iter()
+        .filter(|result| result.get("suppressions").is_some())
+        .count();
+    assert_eq!(suppressed, 2, "{results:?}");
+    let failed: Vec<&Value> = results
+        .iter()
+        .filter(|result| result["ruleId"] == "allow")
+        .collect();
+    assert_eq!(failed.len(), 1, "{results:?}");
+    let message = failed[0]["message"]["text"].as_str().expect("a message");
+    assert!(
+        message.contains("exempts a line of a.md")
+            && message.contains("The line: \"no such line\""),
+        "{message}"
+    );
+
+    let output = deslag(
+        repo.root(),
+        &["check", "--base", "main", "--format", "github"],
+    );
+    let text = stdout(&output);
+    assert!(text.contains("title=allow::"), "{text}");
+    assert!(
+        text.contains("::notice file=deslag.toml,title=allow::")
+            && text.contains("Line: \"title: a \u{2014} b\""),
+        "{text}"
+    );
+    assert!(!text.contains("Quote:"), "{text}");
+}
+
+#[test]
+fn a_base_and_a_diff_mark_the_line_entries_the_change_adds() {
+    let repo = repo(&config(&[]), &[("a.md", OUTSIDE)]);
+    repo.write("deslag.toml", &config(&outside_entries()));
+    let output = deslag(repo.root(), &["check", "--base", "main"]);
+    let text = stderr(&output);
+    assert_eq!(notices(&text), 2, "{text}");
+    assert!(
+        text.contains("Line: \"title: a \u{2014} b\" Reason: \"A title.\""),
+        "{text}"
+    );
+    let run = run_json(repo.root(), &["check", "--base", "main"]);
+    assert_eq!(added(&run), [true, true]);
+
+    // Spaces and tabs fold, so the same line written another way is the same entry.
+    commit(repo.root(), "entries");
+    repo.write(
+        "deslag.toml",
+        &config(&[
+            line_entry("a.md", "banned_chars", "title:  a \u{2014}\\tb", "A title."),
+            line_entry(
+                "a.md",
+                "banned_chars",
+                "<p>c \u{2014} d</p>",
+                "Better markup.",
+            ),
+        ]),
+    );
+    let run = run_json(repo.root(), &["check", "--diff", "main"]);
+    assert_eq!(added(&run), [false, true]);
+}
+
+#[test]
+fn explain_lists_a_line_entry_with_its_line() {
+    let mut entries = outside_entries();
+    entries.push(line_entry(
+        "a.md",
+        "banned_chars",
+        "no such line",
+        "It was here.",
+    ));
+    let repo = repo(&config(&entries), &[("a.md", OUTSIDE)]);
+    let output = deslag(repo.root(), &["explain", "a.md"]);
+    assert_eq!(code(&output), 0, "{}", stderr(&output));
+    let text = stdout(&output);
+    assert!(text.contains("# allow: 3\n"), "{text}");
+    assert!(
+        text.contains("#   md.allow[0]: banned_chars, line 2: Line: \"title: a \u{2014} b\", because \"A title.\""),
+        "{text}"
+    );
+    assert!(
+        text.contains("#   md.allow[2]: banned_chars, no such line: Line: \"no such line\""),
+        "{text}"
+    );
+}
+
+#[test]
+fn fix_leaves_the_whole_line_a_line_entry_names() {
+    // The line holds a dash inside a sentence and a no-break space between two sentences. The
+    // entry exempts only the space, and fix leaves the dash because it would stop the line
+    // matching.
+    let line = "First \u{2014} one.\u{a0}Second.";
+    let source = format!("{line}\n\nOther \u{2014} text.\n");
+    let repo = repo(
+        &config(&[line_entry(
+            "a.md",
+            "banned_chars",
+            "First \u{2014} one.\\u00A0Second.",
+            "A kept line.",
+        )]),
+        &[("a.md", &source)],
+    );
+    let output = deslag(repo.root(), &["fix"]);
+    let text = stderr(&output);
+    assert_eq!(code(&output), 1, "{text}");
+    assert!(text.contains("md.allow[0] names this line"), "{text}");
+    let after = std::fs::read_to_string(repo.root().join("a.md")).expect("a.md");
+    assert_eq!(after, format!("{line}\n\nOther - text.\n"));
+    // A second run finds the line as it was.
+    let output = deslag(repo.root(), &["fix"]);
+    assert!(
+        stderr(&output).contains("md.allow[0] names this line"),
+        "{}",
+        stderr(&output)
+    );
+}
+
+#[test]
+fn a_line_of_a_rust_comment_is_the_whole_line_and_a_finding_in_its_sentence_is_the_quotes() {
+    let repo = Repo::new();
+    let settings = "schema_version = 2
+
+[rust.lints.banned_chars]
+groups = { dashes = true }
+";
+    let source = "/// A doc \u{2014} comment.\npub fn f() {}\n";
+    repo.write("src/lib.rs", source);
+    // The comment markers are part of the line, and the sentence holds the dash, so a line fails.
+    repo.write(
+        "deslag.toml",
+        &format!(
+            "{settings}
+[[rust.allow]]
+path = \"src/lib.rs\"
+lint = \"banned_chars\"
+line = \"///   A doc \u{2014} comment.\"
+reason = \"R.\"
+"
+        ),
+    );
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["no_finding"]);
+    assert_eq!(
+        run["exemptions"][0]["line"],
+        "///   A doc \u{2014} comment."
+    );
+    // The quote names the sentence.
+    repo.write(
+        "deslag.toml",
+        &format!(
+            "{settings}
+[[rust.allow]]
+path = \"src/lib.rs\"
+lint = \"banned_chars\"
+quote = \"A doc \u{2014} comment.\"
+reason = \"R.\"
+"
+        ),
+    );
+    let run = run_json(repo.root(), &["check"]);
+    assert_eq!(statuses(&run), ["applied"]);
 }

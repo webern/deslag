@@ -361,7 +361,7 @@ pub trait Keep {
 /// touched what the file says: renaming a file over its budget does not report it.
 impl Keep for change::File {
     fn occurrence(&self, location: &Location) -> bool {
-        self.touches(location.line..=location.end_line)
+        self.touches_bytes(location.start..location.end)
     }
 
     fn verdict(&self) -> bool {

@@ -5,6 +5,7 @@ use schemars::generate::SchemaSettings;
 use serde::Serialize;
 
 use crate::Report;
+use crate::config::Names;
 use crate::lint::allow::Status;
 use crate::lint::{self, Base, Lint, Mark, Narrowed};
 
@@ -46,11 +47,16 @@ pub struct Exemption {
     pub section: String,
     /// The file it names, relative to the repo root, `/`-separated.
     pub path: String,
-    /// The lint it exempts the sentence from.
+    /// The lint it exempts the sentence or line from.
     pub lint: Lint,
-    /// The sentence, as the config quotes it.
-    pub quote: String,
-    /// Why the sentence stays, as the config states it.
+    /// The sentence, as the config quotes it; an entry that names a line has `line` instead.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quote: Option<String>,
+    /// The line, as the config writes it, of an entry that names a line by `line` in place of a
+    /// quote.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line: Option<String>,
+    /// Why the sentence or line stays, as the config states it.
     pub reason: String,
     /// How it came out: `applied` when it dropped at least one occurrence, else why it did not
     /// hold.
@@ -105,7 +111,14 @@ impl Exemption {
             section: allow.section.to_string(),
             path: allow.path.clone(),
             lint: allow.lint,
-            quote: allow.quote.clone(),
+            quote: match &allow.names {
+                Names::Sentence(quote) => Some(quote.clone()),
+                Names::Line(_) => None,
+            },
+            line: match &allow.names {
+                Names::Line(line) => Some(line.clone()),
+                Names::Sentence(_) => None,
+            },
             reason: allow.reason.clone(),
             status: exemption.status,
             marks: exemption

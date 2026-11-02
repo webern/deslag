@@ -66,7 +66,7 @@ use crate::Error;
 use crate::glob::Pattern;
 use crate::version::{BASELINE, Version, current_release, parse_release};
 
-pub use allow::Allow;
+pub use allow::{Allow, Names};
 pub use lints::{
     BannedChars, BannedPhrases, CharGroups, Density, Lints, MaxEmphasis, MaxSizeBytes, Merge,
     NotAtAll, PossessiveOwn, RepoLayout, VerbsNoNouns, VerbsNothing,

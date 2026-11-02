@@ -18,28 +18,64 @@ use super::Repo;
 /// The sentence that each `allow` entry of `tests/configs/fill.toml` exempts.
 pub const FILL_QUOTE: &str = "It does not parse at all.";
 
+/// The line of `docs/note.md` that the `banned_chars` `line` entry of the `md` section of
+/// `tests/configs/fill.toml` names: HTML, which no sentence holds.
+pub const FILL_HTML_LINE: &str = "<td>\u{2714}\u{fe0f}</td>";
+
+/// The line that the `banned_chars` `line` entry of each other section names, with its comment
+/// marker: a no-break space between two sentences, which no sentence holds.
+pub const FILL_SPACE_LINE: &str = "One.\u{a0}Two.";
+
 /// A repo holding the frozen config at `path` as `deslag.<extension>`, and the files every frozen
 /// config selects: `docs/note.md`, a note every lint passes, and a file for each section, each
 /// holding [`FILL_QUOTE`], which the `allow` entries of a config frozen from
 /// `tests/configs/fill.toml` exempt. A config before those entries turns no lint on that finds it.
+/// A config with a `line` entry also gets the lines [`FILL_HTML_LINE`] and [`FILL_SPACE_LINE`]
+/// that its entries name; an older config would report their findings.
 pub fn repo(path: &Path, extension: &str) -> Repo {
     let repo = Repo::new();
     let text = std::fs::read_to_string(path).expect("a readable config");
     repo.write(&format!("deslag.{extension}"), &text);
+    let lines = names_a_line(&value(path));
+    let html = if lines {
+        format!("\n{FILL_HTML_LINE}\n")
+    } else {
+        String::new()
+    };
+    let space = |marker: &str| {
+        if lines {
+            format!("{marker} {FILL_SPACE_LINE}\n")
+        } else {
+            String::new()
+        }
+    };
     repo.write(
         "docs/note.md",
         &format!(
             "# Note\n\n## Layout\n\n```\nnote.md  <- this note\n```\n\nA short note.\n\n\
-             {FILL_QUOTE}\n"
+             {FILL_QUOTE}\n{html}"
         ),
     );
     repo.write(
         "src/lib.rs",
-        &format!("/// {FILL_QUOTE}\npub fn a() {{}}\n"),
+        &format!("/// {FILL_QUOTE}\n{}pub fn a() {{}}\n", space("///")),
     );
-    repo.write("src/a.c", &format!("/// {FILL_QUOTE}\nint a;\n"));
-    repo.write("Cargo.toml", &format!("# {FILL_QUOTE}\n"));
+    repo.write(
+        "src/a.c",
+        &format!("/// {FILL_QUOTE}\n{}int a;\n", space("///")),
+    );
+    repo.write("Cargo.toml", &format!("# {FILL_QUOTE}\n{}", space("#")));
     repo
+}
+
+/// Whether the config `value` has an `allow` entry that names a `line`.
+fn names_a_line(value: &serde_json::Value) -> bool {
+    value.as_object().into_iter().flatten().any(|(_, section)| {
+        section
+            .get("allow")
+            .and_then(serde_json::Value::as_array)
+            .is_some_and(|entries| entries.iter().any(|entry| entry.get("line").is_some()))
+    })
 }
 
 /// `tests/configs/`.

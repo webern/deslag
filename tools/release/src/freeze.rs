@@ -124,7 +124,17 @@ pub fn freeze(
 }
 
 /// Lays `fill` over `value` where `value` is silent: a key `value` lacks takes `fill`'s, a table
-/// both have is laid key by key, and so is the first item of a list both have.
+/// both have is laid key by key, and an item of a list is laid onto an item of the same kind,
+/// never onto one by its position.
+///
+/// The kind of an item of a list is the set of discriminating keys it carries, the keys that
+/// some items of the fill's list carry and others lack. An `allow` entry is a `quote` entry or a
+/// `line` entry, as the fill's two entries show, so each kind lays onto the config's entry of its
+/// own kind and a `quote` is never merged with a `line`. A list whose items all carry the same
+/// keys has one kind. Each item of `value` takes at most one item of `fill`, the first of its
+/// kind. A fill item with no item of its kind left is appended when it carries a key that no item
+/// of `value` has set; otherwise it is dropped. Only items that are tables are matched; the
+/// config's own values stay.
 fn overlay(value: &mut Value, fill: &Value) {
     match (value, fill) {
         (Value::Object(value), Value::Object(fill)) => {
@@ -138,12 +148,61 @@ fn overlay(value: &mut Value, fill: &Value) {
             }
         }
         (Value::Array(value), Value::Array(fill)) => {
-            if let (Some(to), Some(from)) = (value.first_mut(), fill.first()) {
-                overlay(to, from);
+            let fill: Vec<&Value> = fill.iter().filter(|item| item.is_object()).collect();
+            let kinds = Kinds::of(&fill);
+            let mut taken = vec![false; value.len()];
+            for from in fill {
+                let kind = kinds.of_item(from);
+                let found =
+                    (0..value.len()).find(|&at| !taken[at] && kinds.of_item(&value[at]) == kind);
+                match found {
+                    Some(at) => {
+                        taken[at] = true;
+                        overlay(&mut value[at], from);
+                    }
+                    None if brings_a_key(value, from) => value.push(from.clone()),
+                    None => {}
+                }
             }
         }
         _ => {}
     }
+}
+
+/// The keys that tell the kinds of the items of a fill list apart.
+struct Kinds(Vec<String>);
+
+impl Kinds {
+    /// The keys that some of `items` carry and others lack.
+    fn of(items: &[&Value]) -> Self {
+        let mut keys: Vec<String> = items
+            .iter()
+            .filter_map(|item| item.as_object())
+            .flat_map(|item| item.keys().cloned())
+            .collect();
+        keys.sort();
+        keys.dedup();
+        keys.retain(|key| items.iter().any(|item| item.get(key).is_none()));
+        Self(keys)
+    }
+
+    /// The discriminating keys `item` carries with a value.
+    fn of_item(&self, item: &Value) -> Vec<&str> {
+        self.0
+            .iter()
+            .filter(|key| item.get(key.as_str()).is_some_and(|value| !value.is_null()))
+            .map(String::as_str)
+            .collect()
+    }
+}
+
+/// Whether `item` has a key that no item of `items` has set.
+fn brings_a_key(items: &[Value], item: &Value) -> bool {
+    item.as_object().into_iter().flatten().any(|(key, _)| {
+        items
+            .iter()
+            .all(|have| have.get(key).is_none_or(Value::is_null))
+    })
 }
 
 /// The part of `leaf` after `<section>.lints.`, when it is a lint setting.

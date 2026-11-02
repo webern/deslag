@@ -1,0 +1,58 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 2 banned characters.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 2, 5: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 13,
+          "end": 16,
+          "line": 2,
+          "column": 10,
+          "end_line": 2,
+          "end_column": 11,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 29,
+          "end": 32,
+          "line": 5,
+          "column": 6,
+          "end_line": 5,
+          "end_column": 7,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "quote": "title: a — b",
+      "reason": "A title that quotes a source.",
+      "status": "no_such_sentence",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[0], which exempts a sentence of README.md from `banned_chars`. It fails: README.md does not hold a sentence equal to the quote, but line 2 equals it and holds a finding of `banned_chars` that no sentence holds, as in frontmatter or HTML. An entry names such a line by `line`, its whole line, in place of `quote`. Tell the human, who changes the entry.\n\nThe quote: \"title: a — b\"\nThe reason: \"A title that quotes a source.\"\n\nNo sentence of README.md holds a finding of `banned_chars`. The findings it has are outside every sentence.\n\nThe lines of README.md that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:\n  line 2: \"title: a — b\"\n  line 5: \"<p>c — d</p>\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    },
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "quote": "<p>c — d</p>",
+      "reason": "Markup that the page needs as it is.",
+      "status": "no_such_sentence",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[1], which exempts a sentence of README.md from `banned_chars`. It fails: README.md does not hold a sentence equal to the quote, but line 5 equals it and holds a finding of `banned_chars` that no sentence holds, as in frontmatter or HTML. An entry names such a line by `line`, its whole line, in place of `quote`. Tell the human, who changes the entry.\n\nThe quote: \"<p>c — d</p>\"\nThe reason: \"Markup that the page needs as it is.\"\n\nNo sentence of README.md holds a finding of `banned_chars`. The findings it has are outside every sentence.\n\nThe lines of README.md that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:\n  line 2: \"title: a — b\"\n  line 5: \"<p>c — d</p>\"\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    }
+  ]
+}

@@ -14,7 +14,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::Error;
-use crate::config::{Allow, Config};
+use crate::config::{Allow, Config, Names};
 use crate::document::Document;
 use crate::glob::{self, Pattern, RepoFile};
 use crate::lint::{self, allow, on_lines};
@@ -148,24 +148,26 @@ fn block(
 
 /// The `allow` entries of the file, as comments after the lint tables: a count, then a row per
 /// entry with its place in the config, its lint, the line of its sentence in `document` or "no such
-/// sentence", its quote and its reason. A file with no entries gets an empty
-/// string here.
+/// sentence", its quote and its reason. An entry that names a line has "no such line" and `Line:`
+/// before its text. A file with no entries gets an empty string here.
 fn exemptions(document: &Document<'_>, entries: &[&Allow]) -> String {
     if entries.is_empty() {
         return String::new();
     }
     let mut out = format!("\n# allow: {}\n", entries.len());
     for entry in entries {
-        let lines: Vec<usize> = allow::matching(document, &entry.quote)
+        let lines: Vec<usize> = allow::matching_entry(document, entry)
             .into_iter()
             .map(|range| document.locate(range).line)
             .collect();
-        let at = if lines.is_empty() {
-            "no such sentence".to_string()
-        } else {
+        let at = if !lines.is_empty() {
             on_lines(&lines)
+        } else if entry.names.is_line() {
+            "no such line".to_string()
+        } else {
+            "no such sentence".to_string()
         };
-        let quote = toml::Value::String(allow::shown(&entry.quote));
+        let quote = named(entry);
         let reason = toml::Value::String(allow::shown(&entry.reason));
         out.push_str(&format!(
             "#   {}: {}, {at}: {quote}, because {reason}\n",
@@ -207,11 +209,21 @@ fn unselected_exemptions(config: &Config, relative: &str) -> String {
             "#   {}: {}, {why}: {}, because {}\n",
             entry.place(),
             entry.lint,
-            toml::Value::String(allow::shown(&entry.quote)),
+            named(entry),
             toml::Value::String(allow::shown(&entry.reason)),
         ));
     }
     out
+}
+
+/// The quote or the line of `entry`, as a row shows it: a quote as a TOML string, a line after
+/// `Line:`.
+fn named(entry: &Allow) -> String {
+    let text = toml::Value::String(allow::shown(entry.names.text()));
+    match entry.names {
+        Names::Sentence(_) => text.to_string(),
+        Names::Line(_) => format!("Line: {text}"),
+    }
 }
 
 /// `patterns` as the TOML array they were written as.

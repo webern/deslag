@@ -1,0 +1,4 @@
+deslag: notice: deslag.toml adds or changes md.allow[0], an exemption of `banned_chars` in README.md. Line: "title: a — b" Reason: "A title that quotes a source." A reviewer decides whether it stands.
+deslag: notice: deslag.toml adds or changes md.allow[1], an exemption of `banned_chars` in README.md. Line: "<p>c — d</p>" Reason: "Markup that the page needs as it is." A reviewer decides whether it stands.
+deslag: notice: deslag.toml adds or changes md.allow[2], an exemption of `banned_chars` in README.md. Line: "One.<U+00A0>Two." Reason: "A record that keeps its no-break space." A reviewer decides whether it stands.
+deslag: 3 exemptions applied; deslag explain <PATH> lists a file's.

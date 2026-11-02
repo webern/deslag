@@ -331,8 +331,9 @@ fn fill_path() -> std::path::PathBuf {
 }
 
 /// The paths `value` sets, each as the schema writes it: a value that is not a table, or an empty
-/// table, with `[]` for each list on the way.
-fn set_paths(value: &Value, at: &str, out: &mut Vec<String>) {
+/// table, or a table that is a leaf of the schema, such as a map of characters, with `[]` for each
+/// list on the way.
+fn set_paths(value: &Value, at: &str, leaves: &SchemaPaths, out: &mut Vec<String>) {
     let join = |key: &str| {
         if at.is_empty() {
             key.to_string()
@@ -341,15 +342,17 @@ fn set_paths(value: &Value, at: &str, out: &mut Vec<String>) {
         }
     };
     match value {
-        Value::Object(object) if !object.is_empty() => {
+        Value::Object(object)
+            if !object.is_empty() && !leaves.leaves.contains(&SchemaPaths::fold(at)) =>
+        {
             for (key, child) in object {
                 match child {
                     Value::Array(items) if items.iter().all(Value::is_object) => {
                         for item in items {
-                            set_paths(item, &format!("{}[]", join(key)), out);
+                            set_paths(item, &format!("{}[]", join(key)), leaves, out);
                         }
                     }
-                    _ => set_paths(child, &join(key), out),
+                    _ => set_paths(child, &join(key), leaves, out),
                 }
             }
         }
@@ -367,7 +370,7 @@ fn the_fill_holds_the_leaves_with_no_default() {
     let text = std::fs::read_to_string(fill_path()).expect("tests/configs/fill.toml");
     let fill = frozen::value(&fill_path());
     let mut set = Vec::new();
-    set_paths(&fill, "", &mut set);
+    set_paths(&fill, "", &paths, &mut set);
     assert!(!set.is_empty());
     for path in &set {
         let folded = SchemaPaths::fold(path);
@@ -398,6 +401,28 @@ fn the_fill_holds_the_leaves_with_no_default() {
     let fragment = format!("schema_version = {SCHEMA_VERSION}\n{text}");
     Config::parse(&fragment, fill_path(), ConfigSource::Explicit)
         .unwrap_or_else(|error| panic!("tests/configs/fill.toml: {error:#?}"));
+}
+
+/// The `line` entry of each section of the fill names a line that `frozen::repo` writes, so that
+/// the entry holds in the release that freezes it.
+#[test]
+fn each_line_entry_of_the_fill_names_a_line_of_the_frozen_repo() {
+    let fill = frozen::value(&fill_path());
+    let line = |section: &str| {
+        fill[section]["allow"]
+            .as_array()
+            .and_then(|entries| entries.iter().find_map(|entry| entry.get("line")))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+    };
+    assert_eq!(line("md"), Some(frozen::FILL_HTML_LINE.to_string()));
+    for (section, marker) in [("rust", "///"), ("cpp", "///"), ("toml", "#")] {
+        assert_eq!(
+            line(section),
+            Some(format!("{marker} {}", frozen::FILL_SPACE_LINE)),
+            "{section}"
+        );
+    }
 }
 
 /// No directory of frozen configs is above the crate version.

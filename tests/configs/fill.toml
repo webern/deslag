@@ -5,6 +5,12 @@ lint = "not_at_all"
 quote = "It does not parse at all."
 reason = "A frozen config sets every setting."
 
+[[md.allow]]
+path = "docs/note.md"
+lint = "banned_chars"
+line = "<td>✔️</td>"
+reason = "A frozen config sets every setting."
+
 [md.lints.not_at_all]
 message = "{path} pads a negation"
 
@@ -20,6 +26,15 @@ lint = "not_at_all"
 quote = "It does not parse at all."
 reason = "A frozen config sets every setting."
 
+[[rust.allow]]
+path = "src/lib.rs"
+lint = "banned_chars"
+line = "/// One.\u00A0Two."
+reason = "A frozen config sets every setting."
+
+[rust.lints.banned_chars.ban]
+"\u00A0" = "use a plain space"
+
 [rust.lints.not_at_all]
 
 [rust.lints.verbs_nothing]
@@ -34,6 +49,15 @@ lint = "not_at_all"
 quote = "It does not parse at all."
 reason = "A frozen config sets every setting."
 
+[[cpp.allow]]
+path = "src/a.c"
+lint = "banned_chars"
+line = "/// One.\u00A0Two."
+reason = "A frozen config sets every setting."
+
+[cpp.lints.banned_chars.ban]
+"\u00A0" = "use a plain space"
+
 [cpp.lints.not_at_all]
 
 [cpp.lints.verbs_nothing]
@@ -47,6 +71,15 @@ path = "Cargo.toml"
 lint = "not_at_all"
 quote = "It does not parse at all."
 reason = "A frozen config sets every setting."
+
+[[toml.allow]]
+path = "Cargo.toml"
+lint = "banned_chars"
+line = "# One.\u00A0Two."
+reason = "A frozen config sets every setting."
+
+[toml.lints.banned_chars.ban]
+"\u00A0" = "use a plain space"
 
 [toml.lints.not_at_all]
 

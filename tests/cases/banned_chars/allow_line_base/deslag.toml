@@ -1,0 +1,25 @@
+schema_version = 2
+
+[md.lints.banned_chars]
+
+[md.lints.banned_chars.groups]
+dashes = true
+spaces = true
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+line = "title: a — b"
+reason = "A title that quotes a source."
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+line = "<p>c — d</p>"
+reason = "Markup that the page needs as it is."
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+line = "One.\u00A0Two."
+reason = "A record that keeps its no-break space."

@@ -1,0 +1,75 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [],
+  "base": {
+    "rev": "HEAD",
+    "merge_base": "[BASE]"
+  },
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "line": "title: a — b",
+      "reason": "A title that quotes a source.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 13,
+          "end": 16,
+          "line": 2,
+          "column": 10,
+          "end_line": 2,
+          "end_column": 11,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ],
+      "added": true
+    },
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "line": "<p>c — d</p>",
+      "reason": "Markup that the page needs as it is.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 29,
+          "end": 32,
+          "line": 5,
+          "column": 6,
+          "end_line": 5,
+          "end_column": 7,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ],
+      "added": true
+    },
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "line": "One. Two.",
+      "reason": "A record that keeps its no-break space.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 44,
+          "end": 46,
+          "line": 7,
+          "column": 5,
+          "end_line": 7,
+          "end_column": 6,
+          "note": "U+00A0 no-break space; write a plain space"
+        }
+      ],
+      "added": true
+    }
+  ]
+}

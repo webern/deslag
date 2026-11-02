@@ -1,0 +1,71 @@
+ERROR: deslag detected banned characters!
+
+README.md has 5 banned characters.
+
+This repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.
+
+Code is not checked, so a diagram may use these characters in a code block.
+
+Do not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The characters, and what to write instead:
+  lines 2, 5, 7, 9, 11: U+2014 em dash "—"; write `-`
+
+ERROR: deslag detected an exemption that does not hold!
+
+deslag.toml has md.allow[0], which exempts a line of README.md from `banned_chars`. It fails: README.md does not hold a line equal to the line of the entry, spaces and tabs aside. The line was changed or removed.
+
+The line: "<p>c — gone</p>"
+The reason: "A line that was reworded."
+
+The sentences of README.md that hold a finding of `banned_chars`:
+  line 11: "A dash — inside a sentence."
+
+The 3 lines of README.md closest to the line that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:
+  line 5: "<p>c — d</p>"
+  line 7: "<td>—</td>"
+  line 9: "<td>—</td>"
+  and 1 more.
+
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a line. Leave the line as it is, and give the human its text and a reason. Editing a line only to get past a lint is no fix.
+
+ERROR: deslag detected an exemption that does not hold!
+
+deslag.toml has md.allow[1], which exempts a line of README.md from `banned_chars`. It fails: README.md holds the line as 2 lines, on lines 7, 9. An entry names one line, since exempting every copy would let a line be pasted elsewhere.
+
+The line: "<td>—</td>"
+The reason: "A line that is in the file twice."
+
+The sentences of README.md that hold a finding of `banned_chars`:
+  line 11: "A dash — inside a sentence."
+
+The 3 lines of README.md closest to the line that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:
+  line 5: "<p>c — d</p>"
+  line 7: "<td>—</td>"
+  line 9: "<td>—</td>"
+  and 1 more.
+
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a line. Leave the line as it is, and give the human its text and a reason. Editing a line only to get past a lint is no fix.
+
+ERROR: deslag detected an exemption that does not hold!
+
+deslag.toml has md.allow[2], which exempts a line of README.md from `banned_chars`. It fails: line 11 of README.md does not hold a finding of `banned_chars` that no sentence holds. The lint may be off for the file, the text may have been fixed, or the finding is inside a sentence, which `quote` names.
+
+The line: "A dash — inside a sentence."
+The reason: "A finding that a sentence holds."
+
+The sentences of README.md that hold a finding of `banned_chars`:
+  line 11: "A dash — inside a sentence."
+
+The 3 lines of README.md closest to the line that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:
+  line 2: "title: a — b"
+  line 5: "<p>c — d</p>"
+  line 7: "<td>—</td>"
+  and 1 more.
+
+An entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a line. Leave the line as it is, and give the human its text and a reason. Editing a line only to get past a lint is no fix.
+
+deslag: 1 of 1 files with banned characters.
+deslag: 3 of 3 exemptions did not hold.
+deslag: only a human writes or changes an exemption; leave the sentence as it is, and give the human its text and a reason.
+deslag: 0 exemptions applied; deslag explain <PATH> lists a file's.

@@ -270,6 +270,21 @@ fn entries(dir: &Path) -> Vec<PathBuf> {
     entries
 }
 
+/// Runs `case`. A panic in it, such as deslag failing to run, becomes a failure that names the case,
+/// so it does not hide what the other cases found.
+fn run_or_name(case: &Case, fix: bool) -> Option<String> {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| case.run(fix))).unwrap_or_else(
+        |panic| {
+            let said = panic
+                .downcast_ref::<String>()
+                .map(String::as_str)
+                .or_else(|| panic.downcast_ref::<&str>().copied())
+                .unwrap_or("a panic with no message");
+            Some(format!("{}: panicked: {said}", case.name))
+        },
+    )
+}
+
 #[test]
 fn every_case_prints_its_stderr_file() {
     let fix = std::env::var(FIX).as_deref() == Ok("1");
@@ -279,7 +294,10 @@ fn every_case_prints_its_stderr_file() {
 
     // Every case runs deslag twice, so the cases run on every core.
     failures.extend(on_every_core(&cases, |chunk| {
-        chunk.iter().filter_map(|case| case.run(fix)).collect()
+        chunk
+            .iter()
+            .filter_map(|case| run_or_name(case, fix))
+            .collect()
     }));
 
     assert!(

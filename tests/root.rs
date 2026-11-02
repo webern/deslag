@@ -311,3 +311,43 @@ fn an_unreadable_directory_beside_clean_files_still_exits_zero() {
     assert_eq!(code(&output), 0, "{}", stderr(&output));
     assert!(stderr(&output).contains("cannot read locked, skipped"));
 }
+
+/// Runs `deslag check` in `repo` with standard error a pipe whose reader has already gone, and
+/// returns the exit code.
+fn check_into_a_closed_pipe(repo: &Repo) -> Option<i32> {
+    use std::process::{Command, Stdio};
+
+    let mut child = Command::new(env!("CARGO_BIN_EXE_deslag"))
+        .arg("check")
+        .current_dir(repo.root())
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("deslag runs");
+    drop(child.stderr.take());
+    child.wait().expect("deslag ends").code()
+}
+
+#[test]
+#[cfg(unix)]
+fn a_closed_stderr_pipe_does_not_change_the_exit_code_of_a_run_with_findings() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("deslag.toml", DASHES);
+    // A report well past the size of a pipe buffer.
+    for index in 0..400 {
+        repo.write(&format!("d/{index}.md"), DASHED);
+    }
+
+    assert_eq!(check_into_a_closed_pipe(&repo), Some(1));
+}
+
+#[test]
+#[cfg(unix)]
+fn a_closed_stderr_pipe_does_not_change_the_exit_code_of_a_run_that_fails() {
+    let repo = Repo::new();
+    repo.mark_work_tree();
+    repo.write("deslag.toml", "schema_version = 2\nnot_a_key = 1\n");
+
+    assert_eq!(check_into_a_closed_pipe(&repo), Some(2));
+}

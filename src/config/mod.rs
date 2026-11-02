@@ -340,7 +340,16 @@ impl Config {
             path: path.display().to_string(),
             source,
         })?;
-        let config = Config::parse_at(&text, path, source, running)?;
+        let config = Config::parse_at(&text, path.clone(), source, running)?;
+        // A copy of the old text beside a config of this schema is there because `deslag update`
+        // could not rewrite the config, and nothing has checked the edits made by hand.
+        if let Some((copy, found)) = migrate::copy_beside(&path) {
+            return Err(Error::UncheckedCopy {
+                path: path.display().to_string(),
+                copy: copy.display().to_string(),
+                found,
+            });
+        }
         Ok((config, text))
     }
 

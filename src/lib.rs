@@ -147,6 +147,21 @@ pub enum Error {
         supported: NonZeroU32,
     },
 
+    /// The old text of a config that `deslag update` could not rewrite sits beside it, so its edits
+    /// by hand have not been checked.
+    #[error(
+        "{path} has not been checked: {copy}, the text it had at schema {found}, sits beside it; \
+         run `deslag update`, which checks that {path} means what {copy} meant and removes the copy"
+    )]
+    UncheckedCopy {
+        /// The config file.
+        path: String,
+        /// The copy of its old text.
+        copy: String,
+        /// The schema the copy is of.
+        found: NonZeroU32,
+    },
+
     /// The config was last updated by a later deslag than this one.
     #[error(
         "{path} was last updated by deslag {stamp}, and this is deslag {current}; upgrade deslag"

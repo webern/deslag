@@ -11,14 +11,15 @@
 //! gets them. It compares everything outside the `lints` tables as data too, but for the schema and
 //! the stamp. Where they differ, the refusal names each table, lint and difference. Only text that
 //! passes is written. A YAML or JSON config is refused with every edit listed, as the editor
-//! refuses one.
+//! refuses one, and `deslag update` then saves its old text beside it. The next `update`, on the
+//! config the person edited, holds it to the same check against that copy ([`check_copy`]).
 //!
 //! The stamp is not moved here, and a phrase of the catalogue that the stamp had not reached is not
 //! written: it stays news, and `deslag instructions update` offers it.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::num::NonZeroU32;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde_json::Value;
 
@@ -85,6 +86,41 @@ pub fn migrate(text: &str, path: &str) -> Result<Option<Edited>, Refusal> {
         schema = schema.saturating_add(1);
     }
     Ok(made)
+}
+
+/// Where the copy of the config at `config`, of `schema`, is kept: beside it, with `.schema` and the
+/// number after its name, such as `deslag.yaml.schema1`.
+pub(crate) fn copy_path(config: &Path, schema: NonZeroU32) -> PathBuf {
+    let mut name = config.file_name().unwrap_or_default().to_os_string();
+    name.push(format!(".schema{schema}"));
+    config.with_file_name(name)
+}
+
+/// The copy of an older schema that sits beside the config at `config`, with its schema; the newest
+/// when there are several.
+pub(crate) fn copy_beside(config: &Path) -> Option<(PathBuf, NonZeroU32)> {
+    (1..SCHEMA_VERSION.get())
+        .rev()
+        .filter_map(NonZeroU32::new)
+        .map(|schema| (copy_path(config, schema), schema))
+        .find(|(copy, _)| copy.is_file())
+}
+
+/// Whether `current`, a config of [`SCHEMA_VERSION`] written in `format`, means what `copy`, the
+/// text it had at `schema`, meant; and if not, each way it does not, one to a line. It judges text
+/// deslag did not write, so it is the check a migration deslag cannot make is held to.
+pub fn check_copy(
+    copy: &str,
+    schema: NonZeroU32,
+    current: &str,
+    format: ConfigFormat,
+) -> Result<(), Vec<String>> {
+    let lines = |why: String| why.lines().map(str::to_string).collect::<Vec<_>>();
+    let migration = MIGRATIONS
+        .iter()
+        .find(|migration| migration.from == schema)
+        .ok_or_else(|| vec![format!("this deslag has no migration from schema {schema}")])?;
+    (migration.verify)(copy, format, current, format).map_err(lines)
 }
 
 /// The step from schema 1 to 2: each `banned_phrases` table bans in its `ban` what it banned, and

@@ -3,12 +3,16 @@
 #
 # Every entry matches text that real code holds. A phrase is matched as written, with its case.
 
-# A paragraph, the lines between two blank lines, that holds one of these is licence text, all of
-# it, wherever it is in the file. A line that starts with one of `starts` does the same.
+# A comment is licence text when it holds at least two different entries of this list: a `starts`
+# entry on a line that starts with it, a `holds` entry anywhere in it, counted over the whole
+# comment. Then each paragraph, the lines between two blank lines, that holds an entry is licence
+# text, all of it, and the comment's other paragraphs are prose. A comment with one entry, however
+# often it holds it, is prose: a sentence about a copyright is not a licence. A line that opens
+# `Copyright (c)` matches two entries, `Copyright ` and `Copyright (c)`, and is a notice on its own.
+# No `holds` entry contains another, so that one phrase never counts twice.
 [licence]
 starts = ["Copyright "]
 holds = [
-  "SPDX-License-Identifier",
   "Copyright (C)",
   "Copyright (c)",
   "Copyright ©",
@@ -23,7 +27,6 @@ holds = [
   "Licensed under the",
   "except in compliance with the License",
   "WITHOUT WARRANTY",
-  "WITHOUT WARRANTIES",
   "WITHOUT ANY WARRANTY",
   "\"AS IS\"",
   "'as-is'",
@@ -38,7 +41,6 @@ holds = [
   "copyright notice",
   "permission notice",
   "in the public domain",
-  "into the public domain",
   "to the public domain",
   "This notice may not be removed",
   "under the terms of the",
@@ -47,7 +49,7 @@ holds = [
 # A line that holds one of these anywhere in it is not prose, all of it, in every language. Unlike
 # a directive, which is matched at the start of a line, a marker is matched anywhere.
 [markers]
-holds = ["@generated", "DO NOT EDIT", "SPDX-FileCopyrightText:"]
+holds = ["@generated", "DO NOT EDIT", "SPDX-FileCopyrightText:", "SPDX-License-Identifier:"]
 # A line of three or more of one of these, and spaces, is a banner. It is plain text only, since
 # `---` and `***` are Markdown. The characters are ASCII: a rule drawn with box-drawing characters
 # is for `banned_chars`.

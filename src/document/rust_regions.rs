@@ -258,12 +258,17 @@ mod tests {
     #[test]
     fn licence_text_and_plain_banners_are_cut_and_a_directive_is_not_one() {
         assert_eq!(
-            texts("// Copyright (c) 2020 A\n//\n// Real text.\n// ====\n"),
-            [plain("\n\nReal text.\n")]
+            texts("// Copyright 2020 A.\n// All rights reserved.\n//\n// Real text.\n// ====\n"),
+            [plain("\n\n\nReal text.\n")]
         );
         assert_eq!(
-            texts("// Permission is hereby granted, free of charge.\n"),
+            texts("// Permission is hereby granted, free of charge.\n// All rights reserved.\n"),
             []
+        );
+        // One phrase is a sentence about a licence, and is prose.
+        assert_eq!(
+            texts("// Permission is hereby granted, free of charge.\n"),
+            [plain("Permission is hereby granted, free of charge.")]
         );
         assert_eq!(texts("/// ====\n/// a\n"), [doc("====\na")]);
         // A Markdown paragraph is not a licence paragraph: a fence, or a tight list, stays whole.

@@ -601,6 +601,18 @@ fn a_section_is_read_in_every_language_alike_and_the_schema_takes_it() {
             r#"{{"schema_version":2,"{name}":{{"globs":["{glob}"],"surfaces":["comment"],"lints":{{"density":{{}}}},"overrides":[{{"globs":["{over}"],"lints":{{"density":{{}}}}}}]}}}}"#
         );
         assert_eq!(toml_misfit(&toml_text), None, "{name}");
+        // Every surface the section reads, a table of banned characters and an override, as a
+        // real config has them.
+        let surfaces = match row.doc_only {
+            Some(_) => "\"doc_comment\", \"comment\"",
+            None => "\"comment\"",
+        };
+        let fits = format!(
+            "schema_version = 2\n[{name}]\nglobs = [\"{glob}\"]\nsurfaces = [{surfaces}]\n\
+             [{name}.lints.banned_chars]\n{GROUPS}\n[[{name}.overrides]]\nglobs = [\"{over}\"]\n\
+             lints.density = {{}}\n"
+        );
+        assert_eq!(toml_misfit(&fits), None, "{name}");
         let unknown = "schema_version = 2\n[{name}]\nsurfaces = [\"docstring\"]\n";
         assert!(
             toml_misfit(&unknown.replace("{name}", name)).is_some(),

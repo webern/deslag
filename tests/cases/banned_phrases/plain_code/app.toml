@@ -1,0 +1,4 @@
+# The `load-bearing` key stays quoted: no finding.
+# This load-bearing key is a finding.
+[package]
+name = "parse"

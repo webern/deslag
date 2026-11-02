@@ -11,11 +11,18 @@
 //! - A line indented two or more columns past its paragraph, or past its container after a blank
 //!   line, opens a raw run: code, a diagram or a table, which no lint reads. The run goes on over
 //!   lines indented as far, markers and interior blank lines included.
+//! - A run of backticks opens a code span that the next run of the same length, on the same line,
+//!   closes, as CommonMark has it. A run with no such partner is text. The span is a
+//!   [`PieceKind::Code`] piece, so no lint reads it, as in a doc comment. As in the Markdown
+//!   reader, its range takes in the backticks and its text is what lies between them, less one
+//!   space at each end if both ends have one. A span never runs over a line break, and a raw run
+//!   is not read for spans.
 //!
-//! Every piece is the content of one line, borrowed: from its first byte that is not a space or tab
-//! to its last that is not a space, tab or CR. No piece holds or touches a `\n` or a `\r\n`, which
-//! are the line endings. A lone `\r` is content. A tab counts to the next multiple of four columns.
-//! The baseline, the least indent of any line, is column zero.
+//! The text of a line is one piece, or, if it holds code spans, the pieces between them and the
+//! spans. Each is borrowed, and together they are the content of the line: from its first byte that
+//! is not a space or tab to its last that is not a space, tab or CR. No piece holds or touches a
+//! `\n` or a `\r\n`, which are the line endings. A lone `\r` is content. A tab counts to the next
+//! multiple of four columns. The baseline, the least indent of any line, is column zero.
 //!
 //! A byte order mark opens a file, not a comment, so [`read`], which is handed a file, skips one at
 //! its first byte, and [`read_text`], which is handed the text of a comment, keeps every U+FEFF as a
@@ -348,17 +355,22 @@ impl<'a> Reader<'a> {
         };
         let range = first.text.start..last.text.end;
         let source = self.source;
-        let piece = |line: &Line| Piece {
-            kind: PieceKind::Text,
-            range: line.text.clone(),
-            text: Cow::Borrowed(&source[line.text.clone()]),
-        };
         let (kind, body) = if leaf.raw {
-            let lines = leaf.lines.iter().map(piece).collect();
+            let lines = leaf
+                .lines
+                .iter()
+                .map(|line| Piece {
+                    kind: PieceKind::Text,
+                    range: line.text.clone(),
+                    text: Cow::Borrowed(&source[line.text.clone()]),
+                })
+                .collect();
             (BlockKind::Code { info: None }, Body::Raw(lines))
         } else {
             let first = self.pieces.len();
-            self.pieces.extend(leaf.lines.iter().map(piece));
+            for line in &leaf.lines {
+                line_pieces(source, line.text.clone(), &mut self.pieces);
+            }
             for pair in leaf.lines.windows(2) {
                 self.points.push(Point {
                     kind: PointKind::SoftBreak,
@@ -397,6 +409,77 @@ impl<'a> Reader<'a> {
         let body = Body::Blocks(list.items);
         add(&mut self.top, &mut self.points, Block { kind, range, body });
     }
+}
+
+/// Splits the content of one line, `text`, into text pieces and code pieces, and adds them to
+/// `pieces`.
+fn line_pieces<'a>(source: &'a str, text: Range<usize>, pieces: &mut Vec<Piece<'a>>) {
+    let mut from = text.start;
+    for (span, content) in code_spans(&source[text.clone()]) {
+        let (span, content) = (
+            span.start + text.start..span.end + text.start,
+            content.start + text.start..content.end + text.start,
+        );
+        if from < span.start {
+            pieces.push(Piece {
+                kind: PieceKind::Text,
+                range: from..span.start,
+                text: Cow::Borrowed(&source[from..span.start]),
+            });
+        }
+        pieces.push(Piece {
+            kind: PieceKind::Code,
+            text: Cow::Borrowed(&source[content]),
+            range: span.clone(),
+        });
+        from = span.end;
+    }
+    if from < text.end {
+        pieces.push(Piece {
+            kind: PieceKind::Text,
+            range: from..text.end,
+            text: Cow::Borrowed(&source[from..text.end]),
+        });
+    }
+}
+
+/// The code spans of `line`, as the range of each with its backticks and the range of its text.
+/// A run of backticks opens a span that the next run of the same length closes. A run that nothing
+/// closes is text.
+fn code_spans(line: &str) -> Vec<(Range<usize>, Range<usize>)> {
+    let bytes = line.as_bytes();
+    // The end of the run of backticks that starts at `at`.
+    let run_end = |at: usize| at + bytes[at..].iter().take_while(|byte| **byte == b'`').count();
+    let next = |from: usize| bytes[from..].iter().position(|byte| *byte == b'`');
+    let mut spans = Vec::new();
+    let mut at = 0;
+    while let Some(found) = next(at) {
+        let open = at + found;
+        let after = run_end(open);
+        let mut search = after;
+        let mut closed = None;
+        while let Some(found) = next(search) {
+            let close = search + found;
+            let end = run_end(close);
+            if end - close == after - open {
+                closed = Some((close, end));
+                break;
+            }
+            search = end;
+        }
+        let Some((close, end)) = closed else {
+            at = after;
+            continue;
+        };
+        let mut content = after..close;
+        let inner = &line[content.clone()];
+        if inner.starts_with(' ') && inner.ends_with(' ') && inner.bytes().any(|b| b != b' ') {
+            content = content.start + 1..content.end - 1;
+        }
+        spans.push((open..end, content));
+        at = end;
+    }
+    spans
 }
 
 /// Adds `block` to `siblings`, with a gap after the block before it.

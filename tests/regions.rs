@@ -163,6 +163,31 @@ fn a_byte_order_mark_after_a_comment_marker_is_a_character_of_the_comment() {
     assert_eq!(scanned("\u{feff}// A b\n"), []);
 }
 
+#[test]
+fn a_word_a_plain_comment_quotes_in_backticks_is_seen_in_the_file() {
+    use deslag::document::TokenKind;
+    use deslag::tag::Origin;
+    let origin = |source: &str| {
+        let document = stack(&BOTH).document(source);
+        let words: Vec<_> = document
+            .tokens
+            .iter()
+            .filter(|token| token.text == "frobnicator" && token.kind == TokenKind::Word)
+            .map(|token| token.origin)
+            .collect();
+        words
+    };
+    // Quoted, the word is code and so is the same word elsewhere in the file: only its origin moves.
+    assert_eq!(
+        origin("// Run `frobnicator` now.\n// Then the frobnicator stops.\n"),
+        [Origin::Seen]
+    );
+    assert_eq!(
+        origin("// Run frobnicator now.\n// Then the frobnicator stops.\n"),
+        [Origin::English, Origin::English]
+    );
+}
+
 /// The result of replacing the first `from` in `source` with `to`, as the document of `source`
 /// makes of it: the new text, and why it was refused if it was.
 fn replaced(source: &str, from: &str, to: &str) -> (String, Option<Refusal>) {

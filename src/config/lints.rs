@@ -743,6 +743,22 @@ impl BannedPhrases {
                     format!("banned_phrases.ban and banned_phrases.allow both hold {phrase:?}")
                 })
         })
+        // The matcher folds case and apostrophe style, so two keys that fold alike are one phrase,
+        // and the later one's advice would silently replace the earlier's.
+        .or_else(|| {
+            let mut seen: Vec<(Vec<String>, &String)> = Vec::new();
+            for (phrase, _) in self.ban.iter().flatten() {
+                let key: Vec<String> = Token::split(phrase).iter().map(Token::folded).collect();
+                if let Some((_, first)) = seen.iter().find(|(found, _)| *found == key) {
+                    return Some(format!(
+                        "banned_phrases.ban holds {first:?} and {phrase:?}, which the check reads \
+                         as one phrase; keep one"
+                    ));
+                }
+                seen.push((key, phrase));
+            }
+            None
+        })
     }
 }
 

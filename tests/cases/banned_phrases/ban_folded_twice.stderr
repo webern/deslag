@@ -1,0 +1,1 @@
+deslag: invalid setting in [ROOT]/deslag.toml: banned_phrases.ban holds "In Order To" and "in order to", which the check reads as one phrase; keep one

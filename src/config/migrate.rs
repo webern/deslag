@@ -848,7 +848,7 @@ fn compare(
         let mut differences = old.differences(&new);
         if chain.is_empty() {
             inherited = differences.clone();
-        } else if chain.len() == 1 {
+        } else {
             differences.retain(|difference| !inherited.contains(difference));
         }
         let place = |at: &usize| format!("{name}.overrides[{at}]");
@@ -1040,6 +1040,29 @@ mod tests {
             refusal.reason.contains("banned_phrases"),
             "{}",
             refusal.reason
+        );
+    }
+
+    #[test]
+    fn a_bare_bump_with_overlapping_overrides_reports_the_sections_differences_only() {
+        let overrides = "  overrides:\n    - globs: [\"a/**\"]\n      lints:\n        banned_phrases:\n          \
+                         ban: {\"foo\": \"bar\"}\n    - globs: [\"a/b/**\"]\n      lints:\n        \
+                         banned_phrases:\n          ban: {\"baz\": \"qux\"}\n";
+        let section =
+            "md:\n  globs: [\"*.md\"]\n  lints:\n    banned_phrases:\n      allow: [\"x y\"]\n";
+        let copy = format!("schema_version: 1\n{section}{overrides}");
+        let bare = format!("schema_version: 2\n{section}{overrides}");
+        let schema = NonZeroU32::new(1).expect("one");
+        let said = check_copy(&copy, schema, &bare, ConfigFormat::Yaml).expect_err("it means less");
+        assert!(
+            said.iter()
+                .any(|line| line.starts_with("md.lints: banned_phrases:")),
+            "{said:#?}"
+        );
+        assert!(
+            said.iter()
+                .all(|line| !line.contains("migrate these overrides by hand")),
+            "{said:#?}"
         );
     }
 

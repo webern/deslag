@@ -1,0 +1,47 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 1 banned character.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  line 1: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 6,
+          "end": 9,
+          "line": 1,
+          "column": 7,
+          "end_line": 1,
+          "end_column": 8,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "line": "First — one. Second.",
+      "reason": "A line that stays as written.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 14,
+          "end": 16,
+          "line": 1,
+          "column": 13,
+          "end_line": 1,
+          "end_column": 14,
+          "note": "U+00A0 no-break space; write a plain space"
+        }
+      ],
+      "added": false
+    }
+  ]
+}

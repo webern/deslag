@@ -1,0 +1,13 @@
+schema_version = 2
+
+[md.lints.banned_chars]
+
+[md.lints.banned_chars.groups]
+dashes = true
+spaces = true
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+line = "First — one.\u00A0Second."
+reason = "A line that stays as written."

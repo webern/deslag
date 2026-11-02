@@ -1,0 +1,99 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "banned_chars",
+      "report": "ERROR: deslag detected banned characters!\n\nREADME.md has 5 banned characters.\n\nThis repo writes in plain characters. The list gives a plain equivalent for each character, or says that none fits. Write it as listed, or reword: an em dash often reads better as a comma, a colon, parentheses or a new sentence.\n\nCode is not checked, so a diagram may use these characters in a code block.\n\nDo not write the characters as HTML entities, and do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.\n\nThe characters, and what to write instead:\n  lines 2, 5, 7, 9, 11: U+2014 em dash \"—\"; write `-`",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 13,
+          "end": 16,
+          "line": 2,
+          "column": 10,
+          "end_line": 2,
+          "end_column": 11,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 29,
+          "end": 32,
+          "line": 5,
+          "column": 6,
+          "end_line": 5,
+          "end_column": 7,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 44,
+          "end": 47,
+          "line": 7,
+          "column": 5,
+          "end_line": 7,
+          "end_column": 6,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 58,
+          "end": 61,
+          "line": 9,
+          "column": 5,
+          "end_line": 9,
+          "end_column": 6,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        },
+        {
+          "kind": "occurrence",
+          "start": 75,
+          "end": 78,
+          "line": 11,
+          "column": 8,
+          "end_line": 11,
+          "end_column": 9,
+          "note": "U+2014 em dash \"—\"; write `-`"
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "line": "<p>c — gone</p>",
+      "reason": "A line that was reworded.",
+      "status": "no_such_line",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[0], which exempts a line of README.md from `banned_chars`. It fails: README.md does not hold a line equal to the line of the entry, spaces and tabs aside. The line was changed or removed.\n\nThe line: \"<p>c — gone</p>\"\nThe reason: \"A line that was reworded.\"\n\nThe sentences of README.md that hold a finding of `banned_chars`:\n  line 11: \"A dash — inside a sentence.\"\n\nThe 3 lines of README.md closest to the line that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:\n  line 5: \"<p>c — d</p>\"\n  line 7: \"<td>—</td>\"\n  line 9: \"<td>—</td>\"\n  and 1 more.\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    },
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "line": "<td>—</td>",
+      "reason": "A line that is in the file twice.",
+      "status": "two_lines",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[1], which exempts a line of README.md from `banned_chars`. It fails: README.md holds the line as 2 lines, on lines 7, 9. An entry names one line, since exempting every copy would let a line be pasted elsewhere.\n\nThe line: \"<td>—</td>\"\nThe reason: \"A line that is in the file twice.\"\n\nThe sentences of README.md that hold a finding of `banned_chars`:\n  line 11: \"A dash — inside a sentence.\"\n\nThe 3 lines of README.md closest to the line that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:\n  line 5: \"<p>c — d</p>\"\n  line 7: \"<td>—</td>\"\n  line 9: \"<td>—</td>\"\n  and 1 more.\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    },
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "banned_chars",
+      "line": "A dash — inside a sentence.",
+      "reason": "A finding that a sentence holds.",
+      "status": "no_finding",
+      "marks": [],
+      "added": false,
+      "report": "ERROR: deslag detected an exemption that does not hold!\n\ndeslag.toml has md.allow[2], which exempts a line of README.md from `banned_chars`. It fails: line 11 of README.md does not hold a finding of `banned_chars` that no sentence holds. The lint may be off for the file, the text may have been fixed, or the finding is inside a sentence, which `quote` names.\n\nThe line: \"A dash — inside a sentence.\"\nThe reason: \"A finding that a sentence holds.\"\n\nThe sentences of README.md that hold a finding of `banned_chars`:\n  line 11: \"A dash — inside a sentence.\"\n\nThe 3 lines of README.md closest to the line that hold a finding of `banned_chars` that no sentence holds, which an entry names by `line`:\n  line 2: \"title: a — b\"\n  line 5: \"<p>c — d</p>\"\n  line 7: \"<td>—</td>\"\n  and 1 more.\n\nAn entry that does not hold may be deleted; that only tightens the check. Never write or change an entry: only a human exempts a sentence. Leave the sentence as it is, and give the human its text and a reason. Rewording a sentence only to get past a lint is no fix."
+    }
+  ]
+}

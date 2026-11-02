@@ -1,0 +1,25 @@
+schema_version = 2
+
+[md.lints.banned_chars]
+
+[md.lints.banned_chars.groups]
+dashes = true
+spaces = true
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+line = "<p>c — gone</p>"
+reason = "A line that was reworded."
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+line = "<td>—</td>"
+reason = "A line that is in the file twice."
+
+[[md.allow]]
+path = "README.md"
+lint = "banned_chars"
+line = "A dash — inside a sentence."
+reason = "A finding that a sentence holds."

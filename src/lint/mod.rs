@@ -944,4 +944,149 @@ mod tests {
             }
         }
     }
+
+    /// A message holding each of `names` in angle brackets, and what a report fills it to when
+    /// `value` gives the name's text.
+    fn message_of(names: &[&str], value: impl Fn(&str) -> String) -> (String, String) {
+        let message: String = names.iter().map(|name| format!("<{{{name}}}>")).collect();
+        let filled: String = names
+            .iter()
+            .map(|name| format!("<{}>", value(name)))
+            .collect();
+        (message, filled)
+    }
+
+    /// A `{name}` a lint lists that its render does not fill panics there, or prints as written.
+    /// Each test below renders a message holding every name the lint lists, so that shows here
+    /// and not in a report.
+    #[test]
+    fn max_size_bytes_fills_every_name_it_lists() {
+        use super::max_size_bytes::{Bloat, Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "max_size_bytes" => "10".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let bloat = Bloat {
+            size_bytes: 33,
+            budget: 10,
+            message: Some(message),
+        };
+        assert!(render("a.md", &Over::Bloat(bloat)).contains(&filled));
+    }
+
+    #[test]
+    fn max_emphasis_fills_every_name_it_lists() {
+        use super::max_emphasis::{Measure, Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "free_spans" => "3".to_string(),
+            "max_percent" => "5".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let over = Over {
+            measure: Measure::default(),
+            free_spans: 3,
+            max_percent: 5.0,
+            message: Some(message),
+        };
+        assert!(render("a.md", &over).contains(&filled));
+    }
+
+    #[test]
+    fn repo_layout_fills_every_name_it_lists() {
+        use super::repo_layout::{Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "heading" => "Layout".to_string(),
+            "min_entries" => "2".to_string(),
+            "max_entries" => "9".to_string(),
+            "max_width" => "80".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let over = Over {
+            heading: "Layout".to_string(),
+            min_entries: 2,
+            max_entries: 9,
+            max_width: 80,
+            problems: Vec::new(),
+            message: Some(message),
+        };
+        assert!(render("a.md", &over).contains(&filled));
+    }
+
+    #[test]
+    fn density_fills_every_name_it_lists() {
+        use super::density::{Over, PLACEHOLDERS, render};
+        let value = |name: &str| match name {
+            "path" => "a.md".to_string(),
+            "max_paragraph_chars" => "700".to_string(),
+            "max_item_chars" => "300".to_string(),
+            _ => panic!("{name} has no test value"),
+        };
+        let (message, filled) = message_of(PLACEHOLDERS, value);
+        let over = Over {
+            blocks: Vec::new(),
+            max_paragraph_chars: 700,
+            max_item_chars: 300,
+            message: Some(message),
+        };
+        assert!(render("a.md", &over).contains(&filled));
+    }
+
+    /// The lints whose message may hold `{path}` only.
+    #[test]
+    fn the_path_only_lints_fill_path() {
+        use super::{
+            banned_chars, banned_phrases, not_at_all, possessive_own, verbs_no_nouns, verbs_nothing,
+        };
+        let path_only = |names: &[&str]| {
+            assert_eq!(names, ["path"]);
+            message_of(names, |_| "a.md".to_string())
+        };
+        let (message, filled) = path_only(banned_chars::PLACEHOLDERS);
+        let over = banned_chars::Over {
+            banned: Vec::new(),
+            message: Some(message),
+        };
+        assert!(banned_chars::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(banned_phrases::PLACEHOLDERS);
+        let over = banned_phrases::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(banned_phrases::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(not_at_all::PLACEHOLDERS);
+        let over = not_at_all::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(not_at_all::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(possessive_own::PLACEHOLDERS);
+        let over = possessive_own::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(possessive_own::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(verbs_no_nouns::PLACEHOLDERS);
+        let over = verbs_no_nouns::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(verbs_no_nouns::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(verbs_nothing::PLACEHOLDERS);
+        let over = verbs_nothing::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(verbs_nothing::render("a.md", &over).contains(&filled));
+    }
 }

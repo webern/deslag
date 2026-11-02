@@ -670,7 +670,10 @@ mod tests {
                         group.name,
                         ch as u32
                     );
-                    assert!(said.starts_with(&format!("U+{:04X}", ch as u32)), "{said:?}");
+                    assert!(
+                        said.starts_with(&format!("U+{:04X}", ch as u32)),
+                        "{said:?}"
+                    );
                 }
             }
         }

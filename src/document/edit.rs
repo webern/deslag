@@ -9,15 +9,16 @@
 //!    In a comment of a code file the prefix of a line, the line break between two lines and the
 //!    close of a block comment are not text either, so an edit that reaches one is refused.
 //! 2. It covers whole grapheme clusters, alone or with the edits beside it, so it does not leave a
-//!    variation selector or combining mark behind.
+//!    variation selector or combining mark behind. Edits side by side, one ending where the next
+//!    starts, are one: a run is made whole or left whole.
 //! 3. Its replacement does not hold a control character, so no line starts or ends, and, in a block
 //!    comment, nothing that would read as `/*` or `*/`.
 //! 4. The document's reader, reading the result, finds the same blocks, spans, line breaks and
 //!    pieces, and the same text in them but for the edits. Tokens and sentences are made from
 //!    these, so they need not be compared.
 //!
-//! The edits are tried all at once and, when the fourth step fails, one at a time, each kept only
-//! if it passes with the ones kept before it.
+//! The edits are tried all at once and, when the fourth step fails, one run at a time, each kept
+//! only if it passes with the ones kept before it.
 
 use std::fmt;
 use std::ops::Range;
@@ -169,8 +170,9 @@ impl<'a> Document<'a> {
             })
             .collect();
 
-        // Edits side by side with no boundary between them, such as one to an emoji and one to
-        // its variation selector, stand or fall together.
+        // Edits side by side, one ending where the next starts, stand or fall together: those
+        // inside a grapheme cluster, such as an emoji and its variation selector, and a run of one
+        // character, such as a line of dashes, which would otherwise be converted in part.
         let boundaries: Vec<usize> = self
             .source
             .grapheme_indices(true)
@@ -182,11 +184,7 @@ impl<'a> Document<'a> {
         for &index in order.iter().filter(|&&index| refused[index].is_none()) {
             let start = edits[index].range.start;
             match units.last_mut() {
-                Some(unit)
-                    if edits[unit[unit.len() - 1]].range.end == start && !boundary(start) =>
-                {
-                    unit.push(index)
-                }
+                Some(unit) if edits[unit[unit.len() - 1]].range.end == start => unit.push(index),
                 _ => units.push(vec![index]),
             }
         }

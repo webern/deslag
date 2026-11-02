@@ -258,6 +258,15 @@ fn check_against_copy(
     rerun: &str,
 ) -> Result<Verified, Error> {
     let name = shown_beside(path, copy);
+    // The same refusal as `check` gives: a directory is not a copy to restore.
+    if copy.is_dir() {
+        return Err(Error::CopyIsDirectory {
+            path: path.to_string(),
+            copy: name,
+            found: from,
+            rerun: rerun.to_string(),
+        });
+    }
     let old = fs::read_to_string(copy).map_err(|source| Error::Update {
         path: path.to_string(),
         problem: format!(
@@ -917,6 +926,11 @@ mod tests {
         let error = Config::load(dir.path(), None).expect_err("a directory beside it");
         assert!(matches!(error, Error::CopyIsDirectory { .. }), "{error}");
         assert!(error.to_string().contains("is a directory"), "{error}");
+
+        // `update` of the edited config gives the same refusal, not one about reading a copy.
+        let updated = run(&dir, false, None, &nothing_new()).expect_err("a directory beside it");
+        assert!(matches!(updated, Error::CopyIsDirectory { .. }), "{updated}");
+        assert!(updated.to_string().contains("is a directory"), "{updated}");
     }
 
     #[cfg(unix)]
@@ -942,9 +956,8 @@ mod tests {
         let (dir, path) = repo_in("json", OLD_JSON);
         run(&dir, false, None, &nothing_new()).expect_err("a refusal");
         fs::write(&path, by_hand()).expect("a config");
-        // A directory cannot be read as text.
-        fs::remove_file(copy_of(&path)).expect("a copy");
-        fs::create_dir(copy_of(&path)).expect("a directory");
+        // Bytes that are not text cannot be read as a copy.
+        fs::write(copy_of(&path), [0xff, 0xfe, 0xfd]).expect("a copy");
 
         let said = run(&dir, false, None, &nothing_new())
             .expect_err("a refusal")

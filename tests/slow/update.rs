@@ -1180,3 +1180,23 @@ fn a_catalogue_phrase_reports_only_where_a_ban_names_it_whatever_the_stamp() {
     let topic = stdout(&repo.run(&["instructions", "update"]));
     assert!(!topic.contains("## New phrases"), "{topic}");
 }
+
+#[test]
+fn the_comments_of_what_the_migration_deletes_are_kept_and_the_copy_goes() {
+    let text = "schema_version = 1\ndeslag_version = \"0.0.1\"\n[md]\nglobs = [\"*.md\"]\n\
+                [md.lints.banned_phrases]\nallow = [\"x\", # about x\n  # above y\n  \"y\", # about y\n  \"z\"]\n\
+                [md.lints.banned_phrases.groups]\n# Metaphors.\nmetaphors = true # bad\n";
+    let repo = repo_with("toml", text);
+    let output = repo.run(&["update"]);
+    assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
+    let now = read(&repo, "toml");
+    for kept in [
+        "# Metaphors.",
+        "# metaphors = true # bad",
+        "\"x\", # about x",
+        "# above y",
+    ] {
+        assert!(now.contains(kept), "{kept}: {now}");
+    }
+    assert_eq!(code(&repo.check()), 0, "{now}");
+}

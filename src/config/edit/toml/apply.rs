@@ -28,8 +28,13 @@ use std::ops::{Range, RangeInclusive};
 
 use toml_edit::{Decor, Document, DocumentMut, InlineTable, Item, Table, TableLike, Value};
 
-use super::super::{Edit, Part, Plan, Refusal, Scalar, TableEdit, TablePath, Touch, TouchKind};
-use super::{Layout, Step, TableMut, cut, delete_value, line_of, seal, table_at, table_ref, take};
+use super::super::{
+    Edit, Part, Plan, Refusal, Scalar, TableEdit, TablePath, Touch, TouchKind, comments,
+};
+use super::{
+    Cut, Layout, Step, TableMut, cut, cut_value, line_of, opening_comments_stay, seal, table_at,
+    table_ref, take,
+};
 
 /// The key of the map of phrases a lint bans, which is written one phrase to a line.
 const BAN: &str = "ban";
@@ -94,6 +99,76 @@ struct Seen {
     line: Option<usize>,
     key: Option<RangeInclusive<usize>>,
     touched: Vec<Touch>,
+    /// For a delete, the comments that go with what it deletes.
+    rescue: Option<Rescue>,
+}
+
+/// The comments of what a delete takes away, which a migration keeps: it writes them above the
+/// first key it writes in the table the deleted key was in, else above that table. A line of the
+/// deleted text that ends in a comment is kept commented out, as a whole.
+#[derive(Debug, Clone, Default)]
+struct Rescue {
+    /// The comment lines right above what is deleted.
+    above: Vec<String>,
+    /// The comment lines between and around the deleted keys, and the deleted lines that end in a
+    /// comment, commented out.
+    inside: Vec<String>,
+    /// Whether the comment lines above stay where they are because the deleted key opens its table
+    /// and other keys follow it.
+    stay: bool,
+}
+
+/// The comments of the lines that `touched` are for, in `text`, which `stay` says whether the
+/// lines above them stay.
+fn rescue_of(text: &str, touched: &[Touch], stay: bool) -> Rescue {
+    let lines: Vec<&str> = text.lines().collect();
+    let keys: Vec<&Touch> = touched
+        .iter()
+        .filter(|touch| touch.kind == TouchKind::Key)
+        .collect();
+    let Some(first) = keys.iter().map(|touch| *touch.lines.start()).min() else {
+        return Rescue::default();
+    };
+    let is_comment = |number: usize| {
+        lines
+            .get(number.wrapping_sub(1))
+            .is_some_and(|line| line.trim_start().starts_with('#'))
+    };
+    // The comment lines directly above the line `start`.
+    let above = |start: usize| -> Vec<usize> {
+        let mut found = Vec::new();
+        let mut number = start;
+        while number > 1 && is_comment(number - 1) {
+            number -= 1;
+            found.push(number);
+        }
+        found.reverse();
+        found
+    };
+    let head = above(first);
+    let mut inside: std::collections::BTreeSet<usize> = std::collections::BTreeSet::new();
+    for touch in &keys {
+        inside.extend(touch.lines.clone());
+        inside.extend(above(*touch.lines.start()));
+    }
+    let said = |number: usize| -> Option<String> {
+        let line = lines.get(number.wrapping_sub(1))?;
+        let text = line.trim();
+        if text.starts_with('#') {
+            Some(text.to_string())
+        } else {
+            comments::trailing(line).map(|_| format!("# {text}"))
+        }
+    };
+    Rescue {
+        above: head.iter().filter_map(|&number| said(number)).collect(),
+        inside: inside
+            .into_iter()
+            .filter(|number| !head.contains(number))
+            .filter_map(said)
+            .collect(),
+        stay,
+    }
 }
 
 /// The lines, counting from 1, of the bytes `span` of `text`.
@@ -215,6 +290,7 @@ fn seen(root: &Table, text: &str, edit: &TableEdit) -> Seen {
                 line: lines.as_ref().map(|lines| *lines.start()),
                 key: lines,
                 touched,
+                ..Seen::default()
             }
         }
         TableEdit::Delete { key, .. } => {
@@ -235,10 +311,17 @@ fn seen(root: &Table, text: &str, edit: &TableEdit) -> Seen {
                     kind: TouchKind::Key,
                 })),
             }
+            let rows: Vec<&str> = text.lines().collect();
+            let stay = item.is_value()
+                && lines.as_ref().is_some_and(|lines| {
+                    opening_comments_stay(&rows, *lines.start(), *lines.end())
+                });
+            let rescue = Some(rescue_of(text, &touched, stay));
             Seen {
                 line: lines.as_ref().map(|lines| *lines.start()),
                 key: lines,
                 touched,
+                rescue,
             }
         }
         TableEdit::Unlist { key, item, .. } => {
@@ -268,6 +351,7 @@ fn seen(root: &Table, text: &str, edit: &TableEdit) -> Seen {
                 line,
                 key: lines,
                 touched,
+                ..Seen::default()
             }
         }
     }
@@ -367,7 +451,29 @@ struct Editor<'a> {
     made: Vec<TablePath>,
     /// The tables a delete may have left empty, with the decoration of the key that was deleted,
     /// to write as `{}` if they are still empty when every edit is made.
-    emptied: Vec<(TablePath, Decor)>,
+    emptied: Vec<Emptied>,
+    /// The comments of what deletes took away, to keep.
+    rescued: Vec<Rescued>,
+    /// The tables and keys the edits that changed something wrote, in order, each as the path to it.
+    written: Vec<Vec<Part>>,
+}
+
+/// A table a delete may have left empty.
+struct Emptied {
+    table: TablePath,
+    /// The decoration of the key that was deleted.
+    leaf: Decor,
+    /// The comments of the delete, in [`Editor::rescued`].
+    rescued: Option<usize>,
+}
+
+/// The comments of one delete, and the table it deleted from.
+struct Rescued {
+    table: TablePath,
+    rescue: Rescue,
+    /// Whether the comment lines above are kept in place by the table that took the deleted key's
+    /// place.
+    above_kept: bool,
 }
 
 /// The comments of an inline `ban` that was written out as a table, for the table that replaces it
@@ -382,13 +488,30 @@ struct Moved {
 impl Editor<'_> {
     /// Makes `edit`, whose key had the lines `at` in the text as it was. Whether it changed
     /// anything, or why it cannot be made.
-    fn apply(&mut self, edit: &TableEdit, at: Option<(usize, usize)>) -> Result<bool, String> {
-        match edit {
+    fn apply(
+        &mut self,
+        edit: &TableEdit,
+        at: Option<(usize, usize)>,
+        rescue: Option<Rescue>,
+    ) -> Result<bool, String> {
+        let changed = match edit {
             TableEdit::Create { table } => self.create(table),
             TableEdit::Set { table, key, value } => self.set(table, key, value),
-            TableEdit::Delete { table, key } => self.delete(table, key, at),
+            TableEdit::Delete { table, key } => self.delete(table, key, at, rescue),
             TableEdit::Unlist { table, key, item } => self.unlist(table, key, item),
+        }?;
+        if changed {
+            match edit {
+                TableEdit::Create { table } => self.written.push(table.0.clone()),
+                TableEdit::Set { table, key, .. } => {
+                    let mut path = table.0.clone();
+                    path.push(Part::Key(key.clone()));
+                    self.written.push(path);
+                }
+                TableEdit::Delete { .. } | TableEdit::Unlist { .. } => {}
+            }
         }
+        Ok(changed)
     }
 
     fn create(&mut self, path: &TablePath) -> Result<bool, String> {
@@ -599,21 +722,29 @@ impl Editor<'_> {
         path: &TablePath,
         key: &str,
         at: Option<(usize, usize)>,
+        rescue: Option<Rescue>,
     ) -> Result<bool, String> {
         let steps = steps(path);
         let again = || format!("cannot find `{key}` {} again", path.place());
         let Some(mut table) = table_at(self.root, &steps) else {
             return Ok(false);
         };
+        let rescue = rescue.unwrap_or_default();
         match table.like().get(key) {
             None | Some(Item::None) => Ok(false),
             Some(Item::Value(_)) => {
-                delete_value(self.root, &steps, key, at, self.lines, &mut self.marks)
+                let cut = cut_value(self.root, &steps, key, at, self.lines, &mut self.marks)
                     .ok_or_else(again)?;
+                let (above_kept, leaf) = match cut {
+                    Cut::Line => (rescue.stay, None),
+                    Cut::Key(leaf) => (false, (!steps.is_empty()).then_some(leaf)),
+                };
+                self.keep(path, rescue, above_kept, leaf);
                 Ok(true)
             }
             Some(_) => {
                 let taken = take(self.root, &steps, key).ok_or_else(again)?;
+                let mut above_kept = false;
                 if let Some(TableMut::Table(parent)) = table_at(self.root, &steps)
                     && parent.is_implicit()
                     && parent.is_empty()
@@ -624,13 +755,31 @@ impl Editor<'_> {
                     if let Item::Table(gone) = &taken.item {
                         parent.set_position(gone.position());
                         *parent.decor_mut() = gone.decor().clone();
+                        above_kept = true;
                     }
                 }
-                if !steps.is_empty() {
-                    self.emptied.push((path.clone(), taken.leaf));
-                }
+                let leaf = (!steps.is_empty()).then_some(taken.leaf);
+                self.keep(path, rescue, above_kept, leaf);
                 Ok(true)
             }
+        }
+    }
+
+    /// Notes the comments of a delete in the table at `path` to keep, and that the table may have
+    /// been left empty, in which case `leaf` is the decoration of the key deleted.
+    fn keep(&mut self, path: &TablePath, rescue: Rescue, above_kept: bool, leaf: Option<Decor>) {
+        let rescued = Some(self.rescued.len());
+        self.rescued.push(Rescued {
+            table: path.clone(),
+            rescue,
+            above_kept,
+        });
+        if let Some(leaf) = leaf {
+            self.emptied.push(Emptied {
+                table: path.clone(),
+                leaf,
+                rescued,
+            });
         }
     }
 
@@ -667,20 +816,56 @@ impl Editor<'_> {
             None => text.to_string(),
         };
         let gone = array.get(index).map(before).unwrap_or_default();
+        let (item_text, suffix) = array.get(index).map_or_else(Default::default, |value| {
+            let mut bare = value.clone();
+            let suffix = bare
+                .decor()
+                .suffix()
+                .and_then(|suffix| suffix.as_str())
+                .unwrap_or("")
+                .to_string();
+            bare.decor_mut().clear();
+            (bare.to_string(), suffix)
+        });
+        let next = array.get(index + 1).map(before);
+        let after = next
+            .clone()
+            .unwrap_or_else(|| array.trailing().as_str().unwrap_or("").to_string());
+        // The comment at the end of the item's line is kept, the item commented out with it.
+        let line_comment = suffix
+            .find('#')
+            .map(|at| suffix[at..].trim_end().to_string())
+            .or_else(|| {
+                let line = after.split('\n').next().filter(|_| after.contains('\n'))?;
+                line.find('#').map(|at| line[at..].trim_end().to_string())
+            });
+        let comma = next.is_some() || array.trailing_comma();
+        let commented = line_comment
+            .as_ref()
+            .map(|comment| format!("# {item_text}{} {comment}", if comma { "," } else { "" }));
+        let joined = if gone.contains('\n') {
+            // The comment lines above the item stay, and so does the one at the end of its line.
+            let above = tail(&gone);
+            let (lines, indent) = match above.rfind('\n') {
+                Some(at) => (&above[..=at], &above[at + 1..]),
+                None => ("", above.as_str()),
+            };
+            let line = commented
+                .map(|comment| format!("{indent}{comment}\n"))
+                .unwrap_or_default();
+            format!("{}{lines}{line}{}", head(&gone), tail(&after))
+        } else if commented.is_some() && after.contains('\n') {
+            format!("{gone}{after}")
+        } else if after.contains('\n') {
+            format!("{}{}", head(&gone), tail(&after))
+        } else {
+            gone.clone()
+        };
         match array.get_mut(index + 1) {
-            Some(next) => {
-                let after = before(next);
-                let joined = if gone.contains('\n') || after.contains('\n') {
-                    format!("{}{}", head(&gone), tail(&after))
-                } else {
-                    gone
-                };
-                next.decor_mut().set_prefix(joined);
-            }
+            Some(next) => next.decor_mut().set_prefix(joined),
             None => {
-                let trailing = array.trailing().as_str().unwrap_or("").to_string();
-                if gone.contains('\n') || trailing.contains('\n') {
-                    array.set_trailing(format!("{}{}", head(&gone), tail(&trailing)));
+                if gone.contains('\n') || after.contains('\n') {
+                    array.set_trailing(joined);
                 }
             }
         }
@@ -688,11 +873,55 @@ impl Editor<'_> {
         Ok(true)
     }
 
+    /// Writes the comments the deletes took away above what the edits wrote in their tables, else
+    /// above the table itself.
+    fn place_rescued(&mut self) -> Result<(), String> {
+        for Rescued {
+            table,
+            rescue,
+            above_kept,
+        } in std::mem::take(&mut self.rescued)
+        {
+            let mut lines = if above_kept { Vec::new() } else { rescue.above };
+            lines.extend(rescue.inside);
+            if lines.is_empty() {
+                continue;
+            }
+            let target = self
+                .written
+                .iter()
+                .find(|written| written.len() > table.0.len() && written.starts_with(&table.0))
+                .map_or_else(
+                    || table.0.clone(),
+                    |written| written[..=table.0.len()].to_vec(),
+                );
+            let target = TablePath(target);
+            if !lines_above(self.root, &target, &lines) {
+                return Err(format!(
+                    "cannot keep the comments of what is deleted from `{table}`: {}",
+                    lines.join(" ")
+                ));
+            }
+        }
+        Ok(())
+    }
+
     /// Writes each dotted table made or emptied and left empty by every edit as `{}`.
     fn seal_made(&mut self) -> Result<(), String> {
-        for (path, leaf) in std::mem::take(&mut self.emptied) {
-            seal(self.root, &steps(&path), leaf)
-                .ok_or_else(|| format!("cannot find `{path}` again"))?;
+        for Emptied {
+            table,
+            leaf,
+            rescued,
+        } in std::mem::take(&mut self.emptied)
+        {
+            let steps = steps(&table);
+            // The key that stands for the table now has the comment lines the deleted key had above.
+            let sealed = table_ref(self.root, &steps)
+                .is_some_and(|like| like.is_empty() && like.is_dotted());
+            seal(self.root, &steps, leaf).ok_or_else(|| format!("cannot find `{table}` again"))?;
+            if let (true, Some(rescued)) = (sealed, rescued) {
+                self.rescued[rescued].above_kept = true;
+            }
         }
         for path in std::mem::take(&mut self.made) {
             seal(self.root, &steps(&path), Decor::default())
@@ -700,6 +929,59 @@ impl Editor<'_> {
         }
         Ok(())
     }
+}
+
+/// Writes `lines` above the key or table at `path`, in its decoration. Whether there was a place.
+fn lines_above(root: &mut Table, path: &TablePath, lines: &[String]) -> bool {
+    let steps = steps(path);
+    let Some((Step::Key(name), above)) = steps.split_last() else {
+        return false;
+    };
+    let Some(mut parent) = table_at(root, above) else {
+        return false;
+    };
+    let like = parent.like();
+    let first = match like.get(name) {
+        Some(Item::Table(table)) if table.is_dotted() || table.is_implicit() => {
+            table.iter().next().map(|(first, _)| first.to_string())
+        }
+        Some(Item::Table(_) | Item::Value(_)) => None,
+        _ => return false,
+    };
+    if let Some(first) = first {
+        let mut deeper = path.clone();
+        deeper.0.push(Part::Key(first));
+        return lines_above(root, &deeper, lines);
+    }
+    let old = |decor: &Decor| {
+        decor
+            .prefix()
+            .and_then(|prefix| prefix.as_str())
+            .unwrap_or("")
+            .to_string()
+    };
+    let written = |old: String| {
+        let (head, indent) = match old.rfind('\n') {
+            Some(at) => (&old[..=at], &old[at + 1..]),
+            None => ("", old.as_str()),
+        };
+        let mut text = head.to_string();
+        for line in lines {
+            text.push_str(&format!("{indent}{line}\n"));
+        }
+        text.push_str(indent);
+        text
+    };
+    if let Some(Item::Table(table)) = like.get_mut(name) {
+        let text = written(old(table.decor()));
+        table.decor_mut().set_prefix(text);
+    } else if let Some(mut key) = like.key_mut(name) {
+        let text = written(old(key.leaf_decor()));
+        key.leaf_decor_mut().set_prefix(text);
+    } else {
+        return false;
+    }
+    true
 }
 
 /// `text` with each of `edits` made in order. The edits returned are those that changed something.
@@ -760,11 +1042,17 @@ pub(in crate::config::edit) fn migrate(
         marks: 0,
         made: Vec::new(),
         emptied: Vec::new(),
+        rescued: Vec::new(),
+        written: Vec::new(),
     };
     let (mut done, mut touched) = (Vec::new(), Vec::new());
     for (edit, seen) in edits.into_iter().zip(seen) {
         let changed = editor
-            .apply(&edit, seen.key.map(|lines| (*lines.start(), *lines.end())))
+            .apply(
+                &edit,
+                seen.key.map(|lines| (*lines.start(), *lines.end())),
+                seen.rescue,
+            )
             .map_err(|why| refuse(format!("cannot edit {path}: {why}")))?;
         if changed {
             done.push(Edit::Table {
@@ -776,6 +1064,7 @@ pub(in crate::config::edit) fn migrate(
     }
     editor
         .seal_made()
+        .and_then(|()| editor.place_rescued())
         .map_err(|why| refuse(format!("cannot edit {path}: {why}")))?;
     let marks = editor.marks;
     let written = cut(document.to_string(), marks)

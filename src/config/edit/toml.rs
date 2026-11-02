@@ -386,17 +386,27 @@ fn delete(root: &mut Table, found: &Found, lines: &[&str], marks: &mut usize) ->
     )
 }
 
+/// How [`cut_value`] deleted a value.
+enum Cut {
+    /// The line is marked to be cut from the text.
+    Line,
+    /// The key was taken out of the tree. Its decoration is what the table above it takes if it
+    /// is left empty and sealed.
+    Key(Decor),
+}
+
 /// Deletes the key `leaf` of the table at `steps`, which holds a value, and whose lines in the text
 /// as it was are `at`, when it has lines there. A key on its own line is not removed from the tree:
 /// it is marked, so that the line goes from the text and everything above it stays where it is.
-fn delete_value(
+/// A key taken out of the tree may leave its table empty, which is the caller's to seal.
+fn cut_value(
     root: &mut Table,
     steps: &[Step<'_>],
     leaf: &str,
     at: Option<(usize, usize)>,
     lines: &[&str],
     marks: &mut usize,
-) -> Option<()> {
+) -> Option<Cut> {
     let mut table = table_at(root, steps)?;
     let on_its_own_line = match &table {
         TableMut::Table(table) => !(table.is_dotted() && table.len() == 1),
@@ -429,14 +439,27 @@ fn delete_value(
             .unwrap_or("")
             .to_string();
         value.decor_mut().set_suffix(format!("{after}{end}"));
-        return Some(());
+        return Some(Cut::Line);
     }
 
-    let taken = take(root, steps, leaf)?;
-    if steps.is_empty() {
-        return Some(());
+    Some(Cut::Key(take(root, steps, leaf)?.leaf))
+}
+
+/// Deletes the key `leaf` of the table at `steps`, as [`cut_value`] does, and seals the table above
+/// it if the key was the last of a dotted table.
+fn delete_value(
+    root: &mut Table,
+    steps: &[Step<'_>],
+    leaf: &str,
+    at: Option<(usize, usize)>,
+    lines: &[&str],
+    marks: &mut usize,
+) -> Option<()> {
+    match cut_value(root, steps, leaf, at, lines, marks)? {
+        Cut::Line => Some(()),
+        Cut::Key(_) if steps.is_empty() => Some(()),
+        Cut::Key(leaf) => seal(root, steps, leaf),
     }
-    seal(root, steps, taken.leaf)
 }
 
 /// A key taken out of a table: its value, and its decoration, which is the space and the comment

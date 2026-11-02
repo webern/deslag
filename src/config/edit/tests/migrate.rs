@@ -249,16 +249,17 @@ fn a_deleted_table_takes_its_header_and_comments_and_leaves_its_parent_written()
         },
     ];
     // The rust table was written only through its groups, so it takes their header and comments.
+    // The comment of the groups of the md table, which has other keys, goes above the table.
     assert_eq!(
         migrated(text, &edits),
-        "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\"x\"]\n\n\
+        "schema_version = 1\n# Groups, which go.\n[md.lints.banned_phrases]\nallow = [\"x\"]\n\n\
          # Kept.\n[rust.lints.banned_phrases]\n\n\
          [[md.overrides]]\nglobs = [\"/a.md\"]\nlints.banned_phrases = {}\n"
     );
 }
 
 #[test]
-fn an_item_taken_out_of_a_list_takes_its_line_and_the_comments_on_it() {
+fn an_item_taken_out_of_a_list_leaves_its_comments_and_comments_itself_out() {
     let text = "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\n  \"a\", # about a\n  \
                 # above b\n  \"b\", # about b\n  \"c\",\n]\n[md.lints.banned_chars]\n\
                 allow = [\"x\", \"y\", \"z\"]\n";
@@ -276,7 +277,7 @@ fn an_item_taken_out_of_a_list_takes_its_line_and_the_comments_on_it() {
     assert_eq!(
         migrated(text, &edits),
         "schema_version = 1\n[md.lints.banned_phrases]\nallow = [\n  \"a\", # about a\n  \
-         \"c\",\n]\n[md.lints.banned_chars]\nallow = [\"y\"]\n"
+         # above b\n  # \"b\", # about b\n  \"c\",\n]\n[md.lints.banned_chars]\nallow = [\"y\"]\n"
     );
 }
 
@@ -430,4 +431,43 @@ fn a_yaml_or_json_config_is_refused_with_every_migration_edit_to_make_by_hand() 
             ]
         );
     }
+}
+
+#[test]
+fn the_comments_of_a_deleted_key_go_above_the_first_key_written_in_its_table() {
+    let text = "schema_version = 1\n[md.lints.banned_phrases]\n# About the groups.\n\
+                groups.metaphors = true # bad\n";
+    let edits = [
+        TableEdit::Delete {
+            table: phrases(),
+            key: "groups".to_string(),
+        },
+        TableEdit::Create {
+            table: phrases().key("ban"),
+        },
+        set(phrases().key("ban"), "delve", advice("delete it")),
+    ];
+    assert_eq!(
+        migrated(text, &edits),
+        "schema_version = 1\n[md.lints.banned_phrases]\n# About the groups.\n\
+         # groups.metaphors = true # bad\n[md.lints.banned_phrases.ban]\ndelve = \"delete it\"\n"
+    );
+}
+
+#[test]
+fn a_migration_that_drops_a_comment_no_edit_names_is_refused() {
+    let old = "schema_version = 1\n# keep me\nx = 1\n";
+    let plan = Plan {
+        text: "schema_version = 1\nx = 1\n".to_string(),
+        edits: Vec::new(),
+        touched: vec![Touch {
+            lines: 2..=2,
+            kind: TouchKind::Key,
+        }],
+    };
+    let refusal = checked::migrated(old, "deslag.toml", plan, reads).unwrap_err();
+    assert!(
+        refusal.reason.contains("it drops the comment `# keep me`"),
+        "{refusal:#?}"
+    );
 }

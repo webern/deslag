@@ -762,9 +762,9 @@ fn the_config_has_no_setting_for_a_change() {
     }
 }
 
-/// Every case of the sample, committed whole on top of an empty commit, is all change: `--diff` against the
-/// empty commit prints what a run of the whole tree from the same base prints, and a line on the
-/// change.
+/// Every case of the sample, committed whole on top of an empty commit, is all change: `--diff`
+/// against the empty commit prints what a run of the whole tree from the same base prints, and a
+/// line on the change.
 #[test]
 fn every_case_is_all_change_from_an_empty_commit() {
     let mut checks = Vec::new();

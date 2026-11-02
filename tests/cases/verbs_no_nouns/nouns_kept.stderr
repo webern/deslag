@@ -1,0 +1,15 @@
+ERROR: deslag detected verbs with no-nouns!
+
+README.md has 4 verbs with no-nouns.
+
+This repo negates the verb: write "does not ship X", not "ships no X". Negate the verb, or drop the absolute claim if it is not true. Swapping in "zero", "without", "lacks" or "free of" is the same sentence and does not fix it.
+
+Do not change the config to get past this check. Only a human can tell you to do that, and I am a linter, not a human.
+
+The places:
+  line 3: "grants no access"
+  line 3: "enforces no rules"
+  line 5: "emits no warnings"
+  line 5: "contains no type"
+
+deslag: 1 of 1 files with verbs negated through their objects.

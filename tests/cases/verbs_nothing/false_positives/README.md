@@ -18,3 +18,10 @@ It's nothing. It finds `nothing`. It finds. Nothing follows.
 Having nothing to show, it stops.
 
 He'll have none of it. The server knows nothing of the path. The account did nothing wrong.
+
+In most cases nothing is needed. In most runs nothing happens.
+
+The ones nothing reaches stay. An accept nothing sends to the queue is dropped.
+
+- **Warnings** none
+- **Errors** none

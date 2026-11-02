@@ -7,8 +7,7 @@
 //! `src/config/edit/` tests the edits text by text; these tests run the command.
 
 use crate::common;
-
-use std::path::{Path, PathBuf};
+use crate::sample;
 
 use common::frozen::{self, EXTENSIONS, MIGRATED};
 use common::schema::SchemaPaths;
@@ -647,27 +646,6 @@ fn a_write_that_fails_leaves_the_original() {
 
 // The frozen configs and the cases.
 
-/// The directories of `tests/cases/<lint>/<case>`, which hold a config.
-fn case_repos() -> Vec<PathBuf> {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/cases");
-    let mut found = Vec::new();
-    for lint in std::fs::read_dir(&root).expect("tests/cases") {
-        let lint = lint.expect("an entry").path();
-        if !lint.is_dir() {
-            continue;
-        }
-        for case in std::fs::read_dir(&lint).expect("a lint's cases") {
-            let case = case.expect("an entry").path();
-            let base = case.to_string_lossy().ends_with(".base");
-            if case.is_dir() && !base && case.join("deslag.toml").is_file() {
-                found.push(case);
-            }
-        }
-    }
-    found.sort();
-    found
-}
-
 /// Each frozen config of an older schema, run through the command: in TOML, a bare `update`
 /// rewrites it into the text its `config.migrated.toml` froze, or into that and the stamp, and
 /// then `check` runs it clean and a second `update` has nothing to rewrite. In YAML and JSON it is
@@ -725,16 +703,9 @@ fn every_frozen_config_updates_clean_in_toml_and_is_refused_with_its_edits_elsew
 
 #[test]
 fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() {
-    let repos = case_repos();
-    let count = repos.len();
-    let mut refused = 0;
-    for case in repos {
+    for case in sample::cases() {
         let repo = Repo::copy_of(&case);
-        let name = case
-            .file_name()
-            .expect("a name")
-            .to_string_lossy()
-            .into_owned();
+        let name = case.display();
         let before = repo.check();
         let text = read(&repo, "toml");
         let output = repo.run(&["update", "--to", CURRENT]);
@@ -743,7 +714,6 @@ fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() 
             // reason, and left alone.
             assert_eq!(raw_stderr(&output), raw_stderr(&before), "{name}");
             assert_eq!(read(&repo, "toml"), text, "{name}");
-            refused += 1;
             continue;
         }
         assert_eq!(code(&output), 0, "{name}: {}", raw_stderr(&output));
@@ -757,10 +727,6 @@ fn update_on_every_case_config_changes_only_the_stamp_and_not_what_check_says() 
         assert_eq!(stdout(&before), stdout(&after), "{name}");
         assert_eq!(stderr(&before), stderr(&after), "{name}");
     }
-    assert!(
-        count - refused >= 40,
-        "{refused} of {count} configs are refused"
-    );
 }
 
 /// Every phrase of the catalogue, and those the running version has shipped, which

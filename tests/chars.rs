@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 use deslag::Document;
 use deslag::config::{BannedChars, CharGroups, Lints, Merge};
-use deslag::lint::banned_chars::{GROUPS, check, scan};
+use deslag::lint::banned_chars::{GROUPS, Outcome, check, scan};
 
 /// The characters `scan` finds in `text`, with their lines.
 fn found(text: &str) -> Vec<(usize, char)> {
@@ -283,7 +283,13 @@ fn the_tables_ban_no_ascii_and_suggest_only_ascii() {
         for rule in group.rules {
             assert!(rule.first <= rule.last, "{rule:?}");
             assert!(!rule.first.is_ascii(), "{rule:?}");
-            assert!(rule.instead.is_none_or(str::is_ascii), "{rule:?}");
+            assert!(
+                match rule.outcome {
+                    Outcome::Replace(instead) => instead.is_ascii(),
+                    Outcome::Refuse(_) => true,
+                },
+                "{rule:?}"
+            );
             assert!(rule.name.is_ascii(), "{rule:?}");
         }
     }
@@ -303,7 +309,7 @@ fn no_arrow_range_rule_names_a_replacement() {
         .collect();
     assert!(!ranges.is_empty());
     for rule in ranges {
-        assert_eq!(rule.instead, None, "{rule:?}");
+        assert!(matches!(rule.outcome, Outcome::Refuse(_)), "{rule:?}");
     }
 }
 
@@ -519,7 +525,7 @@ fn a_bidi_character_is_reported_and_never_fixed() {
         .expect("the bidi group");
     let on = settings("groups = { bidi = true }");
     for rule in group.rules {
-        assert_eq!(rule.instead, None, "{rule:?}");
+        assert!(matches!(rule.outcome, Outcome::Refuse(_)), "{rule:?}");
         let text = format!("a {}b\n", rule.first);
         let over = check(&Document::markdown(&text), Some(&on)).expect("a finding");
         let edits = deslag::lint::banned_chars::edits(&over);

@@ -40,11 +40,17 @@ pub struct Rule {
     pub last: char,
     /// What the report calls them.
     pub name: &'static str,
-    /// What to write instead; empty means delete it, and `None` means that no one thing fits all
-    /// of the characters, so the writer chooses.
-    pub instead: Option<&'static str>,
-    /// What the report says of the characters when `instead` is `None`.
-    pub without: Option<&'static Without>,
+    /// What to write instead, or why nothing fits.
+    pub outcome: Outcome,
+}
+
+/// What a rule says to write for its characters.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Outcome {
+    /// Write this instead; empty means delete it.
+    Replace(&'static str),
+    /// No one thing fits all of the characters, so the writer chooses.
+    Refuse(&'static Without),
 }
 
 /// What a report advises for characters that have no replacement, and why a fix leaves them.
@@ -92,8 +98,7 @@ const fn one(ch: char, name: &'static str, instead: &'static str) -> Rule {
         first: ch,
         last: ch,
         name,
-        instead: Some(instead),
-        without: None,
+        outcome: Outcome::Replace(instead),
     }
 }
 
@@ -102,8 +107,7 @@ const fn range(first: char, last: char, name: &'static str, instead: &'static st
         first,
         last,
         name,
-        instead: Some(instead),
-        without: None,
+        outcome: Outcome::Replace(instead),
     }
 }
 
@@ -113,8 +117,7 @@ const fn choice(first: char, last: char, name: &'static str) -> Rule {
         first,
         last,
         name,
-        instead: None,
-        without: Some(&ARROW),
+        outcome: Outcome::Refuse(&ARROW),
     }
 }
 
@@ -124,8 +127,7 @@ const fn direction(ch: char, name: &'static str) -> Rule {
         first: ch,
         last: ch,
         name,
-        instead: None,
-        without: Some(&BIDI),
+        outcome: Outcome::Refuse(&BIDI),
     }
 }
 
@@ -482,8 +484,14 @@ fn verdict(settings: &BannedChars, ch: char) -> Option<Verdict> {
         .filter(|group| (group.switch)(&settings.groups).unwrap_or(false))
         .find_map(|group| rule(group.rules, ch))
         .map(|rule| Verdict {
-            instead: rule.instead.map(str::to_string),
-            without: rule.without,
+            instead: match rule.outcome {
+                Outcome::Replace(instead) => Some(instead.to_string()),
+                Outcome::Refuse(_) => None,
+            },
+            without: match rule.outcome {
+                Outcome::Replace(_) => None,
+                Outcome::Refuse(without) => Some(without),
+            },
             range_default: rule.first != rule.last,
         })
 }
@@ -663,7 +671,11 @@ mod tests {
         for group in GROUPS {
             for rule in group.rules {
                 for ch in (rule.first..=rule.last).filter(|ch| invisible(*ch)) {
-                    let said = noted(ch, rule.instead);
+                    let instead = match rule.outcome {
+                        Outcome::Replace(instead) => Some(instead),
+                        Outcome::Refuse(_) => None,
+                    };
+                    let said = noted(ch, instead);
                     assert!(
                         !said.contains(ch),
                         "{} prints U+{:04X} raw: {said:?}",

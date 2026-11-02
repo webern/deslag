@@ -9,15 +9,15 @@ would fail, and never raise one, or add an override or exclude, only to pass a c
 
 ## 1. Find the config
 
-deslag runs from the repository root. It reads the first of these paths that exists, each with one
-of the extensions {config_extensions}:
+deslag reads its config at one of these paths, each ending {config_extensions}, in the nearest
+directory at or above where it runs, up to the top of the git work tree:
 
 ```text
 {config_stems}
 ```
 
-If a config exists, read it. If not, run `deslag init`, which writes `deslag.toml` at the root, or
-the file `--config-path` names, with every lint on.
+That directory is the root; paths are from it. If a config exists, read it. If not, `deslag init`
+writes `deslag.toml` at the top, with every lint on.
 
 ## 2. Choose the files
 

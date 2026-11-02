@@ -22,7 +22,7 @@ needs to know in order to onboard your repo.
 
 ## Usage
 
-Run it from the root of the repository:
+Run it anywhere in the repository:
 
 ```sh
 deslag check
@@ -38,7 +38,7 @@ code and what fails stay the same.
 - `sarif`: a SARIF 2.1.0 log, which CI uploads to GitHub code scanning.
 - `github`: one workflow command per finding, which a GitHub Actions job shows as an annotation.
 
-Paths are relative to where deslag runs.
+Paths are relative to the root, the directory that holds the config.
 
 Sometimes you may want to lint what changed against the base (e.g. `main`). For that we have
 `deslag check --diff <BASE>`.

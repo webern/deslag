@@ -273,10 +273,7 @@ fn a_missing_config_says_where_it_looked() {
         stderr.contains("no deslag config found in"),
         "stderr: {stderr}"
     );
-    assert!(
-        stderr.contains("are you in the root of the repo?"),
-        "stderr: {stderr}"
-    );
+    assert!(stderr.contains("run `deslag init`"), "stderr: {stderr}");
     for stem in deslag::config::CANONICAL_CONFIG_STEMS {
         assert!(stderr.contains(stem), "stderr: {stderr}");
     }

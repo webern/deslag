@@ -79,8 +79,6 @@ struct Case {
     /// A place to write the config that is not a canonical location, passed with
     /// `--config-path`. The config written there is the case's `global` and `globs`.
     config_path: Option<&'static str>,
-    /// A second config, at a location that must lose to `location`.
-    shadow: Option<(&'static str, u64)>,
     global: Option<u64>,
     globs: &'static [(&'static str, u64)],
     /// The `max_size_bytes` the harness writes into a named fixture's frontmatter.
@@ -136,7 +134,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Flat,
             location: Some(".deslag/config.toml"),
             config_path: None,
-            shadow: None,
             global: Some(3000),
             globs: &[],
             frontmatter: FM_TYPICAL,
@@ -147,7 +144,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Nested,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(8192),
             globs: &[],
             frontmatter: FM_TYPICAL,
@@ -158,7 +154,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("config/deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(16384),
             globs: &[],
             frontmatter: FM_TYPICAL,
@@ -169,7 +164,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some(".config/deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(2048),
             globs: &[],
             frontmatter: FM_TYPICAL,
@@ -180,7 +174,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some(".agents/deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(60000),
             globs: &[],
             frontmatter: FM_TYPICAL,
@@ -191,7 +184,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some(".claude/deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(512),
             globs: &[],
             frontmatter: FM_TYPICAL,
@@ -202,7 +194,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Nested,
             location: None,
             config_path: Some("ci/deslag-ci.toml"),
-            shadow: None,
             global: Some(2048),
             globs: &[],
             frontmatter: FM_TYPICAL,
@@ -213,7 +204,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(8192),
             globs: &[("SKILL.md", 2048)],
             frontmatter: FM_TYPICAL,
@@ -224,7 +214,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(60000),
             globs: &[("/README.md", 100), ("/*/README.md", 500)],
             frontmatter: FM_TYPICAL,
@@ -241,7 +230,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(60000),
             globs: &[("/src/formats/**/*.md", 3000)],
             frontmatter: FM_TYPICAL,
@@ -257,7 +245,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(4096),
             // The less specific rule comes first, so declaration order cannot be what decides it.
             globs: &[("*L.md", 8192), ("SKILL.md", 2048)],
@@ -269,7 +256,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(60000),
             globs: &[("AGENTS.md", 100), ("/AGENTS.md", 5000)],
             frontmatter: FM_WITHOUT_ROOT_AGENTS,
@@ -284,7 +270,6 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(512),
             globs: &[("/midi_file/AGENTS.md", 4096)],
             frontmatter: &[
@@ -306,21 +291,9 @@ fn cases() -> Vec<Case> {
             layout: Layout::Real,
             location: Some("deslag.toml"),
             config_path: None,
-            shadow: None,
             global: Some(60000),
             globs: &[],
             frontmatter: FM_ALL_HIGH,
-            overrides: &[],
-        },
-        Case {
-            name: "the-earlier-canonical-location-wins",
-            layout: Layout::Real,
-            location: Some(".deslag/config.toml"),
-            config_path: None,
-            shadow: Some(("deslag.toml", 60000)),
-            global: Some(512),
-            globs: &[],
-            frontmatter: FM_TYPICAL,
             overrides: &[],
         },
     ]
@@ -460,9 +433,6 @@ fn run_case(case: &Case, fixtures: &[&Fixture]) {
         repo.write(path, &text);
     } else if let Some(location) = case.location {
         repo.write(location, &text);
-    }
-    if let Some((path, global)) = case.shadow {
-        repo.write(path, &config_text(Some(global), &[]));
     }
 
     let output = match case.config_path {

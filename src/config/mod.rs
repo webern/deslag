@@ -73,7 +73,8 @@ pub use lints::{
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{
-    CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, canonical_config_paths,
+    CANONICAL_CONFIG_STEMS, CONFIG_EXTENSIONS, ConfigFormat, ConfigSource, Located,
+    canonical_config_paths, locate,
 };
 pub use section::Section;
 

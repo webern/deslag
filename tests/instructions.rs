@@ -961,18 +961,24 @@ fn with_no_config_the_topic_says_so_and_prints_what_since_the_baseline_prints() 
     );
 }
 
-/// The topic reads the config as `check` does, from the root of the repo and nowhere else.
+/// The topic reads the config as `check` does: from the nearest directory at or above where it
+/// runs, up to the top of the work tree, and nowhere else.
 #[test]
-fn a_config_in_a_subdirectory_is_not_found_from_there() {
+fn a_config_above_a_subdirectory_is_found_from_there_within_a_work_tree() {
     let repo = stamped(OLDER);
     repo.write("docs/README.md", "A readme.\n");
-    let output = std::process::Command::new(env!("CARGO_BIN_EXE_deslag"))
-        .args(["instructions", "update"])
-        .current_dir(repo.root().join("docs"))
-        .output()
-        .expect("deslag runs");
-    assert_eq!(code(&output), 0);
-    assert!(stdout(&output).starts_with("No deslag config was found"));
+    let from_root = repo.run(&["instructions", "update"]);
+
+    // Without a work tree, only the directory deslag runs in is looked in.
+    let lone = repo.run_in("docs", &["instructions", "update"]);
+    assert_eq!(code(&lone), 0);
+    assert!(stdout(&lone).starts_with("No deslag config was found"));
+
+    repo.mark_work_tree();
+    let found = repo.run_in("docs", &["instructions", "update"]);
+    assert_eq!(code(&found), 0);
+    assert_eq!(stdout(&found), stdout(&from_root));
+    assert!(!stdout(&found).starts_with("No deslag config was found"));
 }
 
 /// `src/instructions/update.md` is held to the budget `.agents/deslag.toml` gives it, and to the

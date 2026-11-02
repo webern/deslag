@@ -18,3 +18,9 @@ bidi = true
 quotes = true
 emoji = true
 ```
+
+`bidi` holds the characters that set text direction, such as the right-to-left override. `fix`
+never deletes one, since that can reorder right-to-left text.
+
+No group holds U+200C, U+200D or U+3000, which scripts and emoji need. An English-only repo bans
+them with `ban`.

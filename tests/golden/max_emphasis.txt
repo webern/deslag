@@ -337,7 +337,7 @@ llm/xyTom--coding-tools-mcp/docs__plan-v0.5.md spans:63 percent:7.85
 llm/yamadashy--repomix/github__releases__v1.x__v1.17.0.md spans:3 percent:1.42
 llm/zexuanw958-svg--travel-plan-viz/travel-plan-viz__references__porting-to-other-agents.md spans:10 percent:9.55
 llm/zwave-js--zwave-js-ui/docs__usage__configuration-templates.md spans:22 percent:4.88
-mixed/BYVoid--OpenCC/NEWS.md spans:45 percent:2.09
+mixed/BYVoid--OpenCC/NEWS.md spans:44 percent:2.03
 mixed/BabylonJS--Babylon.js/contributing.md spans:3 percent:1.06
 mixed/BigDataBiology--macrel/README.md spans:3 percent:1.53
 mixed/Brooooooklyn--canvas/README.md spans:21 percent:9.58

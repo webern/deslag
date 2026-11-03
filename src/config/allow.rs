@@ -84,7 +84,7 @@ pub(super) struct AllowFile {
     /// characters and no finding inside a sentence, which `quote` names. An entry holds a `quote`
     /// or a `line`, never both, and only `banned_chars` takes a `line`. A `line` may not be empty,
     /// and may not hold a control character other than a tab, since it is one line.
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.6"))]
     #[serde(default)]
     line: Option<String>,
 }

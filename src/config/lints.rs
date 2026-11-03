@@ -76,7 +76,7 @@ pub struct Lints {
     pub verbs_nothing: Option<VerbsNothing>,
     /// That a possessive noun is not padded with `own`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.6"))]
     pub possessive_own: Option<PossessiveOwn>,
 }
 
@@ -585,7 +585,7 @@ pub struct CharGroups {
     /// reported and never fixed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("default" = false))]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.6"))]
     pub bidi: Option<bool>,
     /// Curly quotes and apostrophes, for `"` and `'`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -921,7 +921,7 @@ impl Merge for VerbsNothing {
 pub struct PossessiveOwn {
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.6"))]
     pub message: Option<String>,
 }
 

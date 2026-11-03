@@ -153,7 +153,7 @@ pub fn remove(value: &mut Value, path: &str) -> bool {
 
 /// Whether `value` names the schema leaf `leaf`: it sets it, or sets the old path of a redirect
 /// that moves to it. That lets the directory of a release before a rename keep its old key. It
-/// also lets a later directory set a removed or renamed name and pass; the redirect's own tests
+/// also lets a later directory set a removed or renamed name and pass; the redirect's tests
 /// are what hold the old name working, so this does not check for it.
 ///
 /// Every section takes the same `lints`, so a lint setting `<section>.lints.<rest>` is named when

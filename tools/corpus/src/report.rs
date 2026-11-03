@@ -17,7 +17,7 @@ use crate::summary::{Summary, summary};
 const CHARS: usize = 20;
 
 /// The config `report` runs the lints at unless given one, from the repository's root: it selects
-/// every file, where the repository's own selects only its own files.
+/// every file, where the repository's config selects only its own files.
 pub const DEFAULT_CONFIG: &str = "tools/corpus/report.toml";
 
 /// What `report` finds: each command's output, with its defaults.

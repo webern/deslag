@@ -1,4 +1,4 @@
-//! deslag-gold: the tools that make deslag's own part-of-speech gold set. `--help` lists them.
+//! deslag-gold: the tools that make deslag's part-of-speech gold set. `--help` lists them.
 //!
 //! The gold set is 450 sentences quoted from the test corpus, tagged by a blind model, Harper and
 //! spaCy, and settled by an adjudicator where they differ. This binary does every step that is not
@@ -89,16 +89,17 @@ enum Command {
         /// The big tier, unpacked by `make fetch-blobs`.
         #[arg(long, default_value = ".blobs/unpacked/corpus")]
         corpus: PathBuf,
-        /// Draw from the small tier at this path instead, `tests/corpus`, which needs no fetch.
+        /// Draw from the small tier at this path instead, `tests/corpus`, which does not need a
+        /// fetch.
         #[arg(long)]
         tree: Option<PathBuf>,
-        /// A list of fixtures to draw nothing from, one per line: a sha256 or a path as the
+        /// A list of fixtures to leave out of the draw, one per line: a sha256 or a path as the
         /// manifest's `file` column has it, then an optional note. Blank lines and lines that
         /// start with `#` are skipped. The sha256 of the list goes in the manifest header, so the
-        /// draw can be repeated. An entry that names no fixture is an error.
+        /// draw can be repeated. An entry that does not name a fixture is an error.
         #[arg(long)]
         exclude: Option<PathBuf>,
-        /// Files naming repositories to draw nothing from: a manifest (its `repo` column) or a
+        /// Files naming repositories to leave out of the draw: a manifest (its `repo` column) or a
         /// `.conllu` file (its `# repo = owner/name` comments), such as `owner.conllu`. Every file
         /// of such a repository is left out, however it is named. With `--reserved` these add to
         /// the reserved set.
@@ -153,9 +154,9 @@ enum Command {
     ///
     /// With `--check`, the good lines are kept whatever else is wrong: the CoNLL-U of the good
     /// sentences goes to `tags/<prov>.conllu`, a list of the rejected lines to
-    /// `tags/<prov>.problems.tsv` (`sent_id`, `problem`, `-` for a line that names no sentence),
-    /// and the sentences still without a good line, as batch lines ready to ask again, to
-    /// `tags/<prov>.retry.txt`. Exit 0 whatever was rejected.
+    /// `tags/<prov>.problems.tsv` (`sent_id`, `problem`, `-` for a line that does not name a
+    /// sentence), and the sentences still without a good line, as batch lines ready to ask again,
+    /// to `tags/<prov>.retry.txt`. Exit 0 whatever was rejected.
     ReadTags {
         /// Files of lines, one per batch.
         #[arg(long, required = true, num_args = 1..)]
@@ -180,8 +181,8 @@ enum Command {
     /// With `--voter`, compares any number of voters, two or more, instead: each is a name and
     /// the CoNLL-U of its tags, `tags/<name>.conllu` unless `NAME=PATH` says another. They agree
     /// on a word when they name the same part of speech and no feature clashes, a voter that
-    /// gives no feature abstaining on it. A voter named in `--base-only` votes on the part of
-    /// speech alone. The worklist shows the voters as A, B, C, in the order given; `voters.tsv`
+    /// does not give a feature abstaining on it. A voter named in `--base-only` votes on the part
+    /// of speech alone. The worklist shows the voters as A, B, C, in the order given; `voters.tsv`
     /// says which is which. Agreed words carry `Runs=`, the runs the voters' files name.
     Merge {
         /// The blind tagger's CoNLL-U, default `tags/blind.conllu`.
@@ -317,8 +318,8 @@ enum Command {
     /// labels, `Prov=` and `Runs=` are in the queue, and each sentence is its own `pick_id`.
     ///
     /// With `--blind --from silver.conllu --out DIR` the same draw is made from a silver batch's
-    /// file, and `DIR/queue.conllu` has no UPOS, FEATS, `Prov=` or `Runs=`, with silver's labels
-    /// of those sentences in `DIR/labels.conllu`. The review pre-fills deslag's readings at
+    /// file, and `DIR/queue.conllu` does not have UPOS, FEATS, `Prov=` or `Runs=`, with silver's
+    /// labels of those sentences in `DIR/labels.conllu`. The review pre-fills deslag's readings at
     /// Likely and above, as for `owner.conllu`. Its home is `.label/silver/audit/`, then `audit/`
     /// in the batch, and never the gold directory: the queues there reserve their repositories.
     /// It refuses a `DIR` that holds either file already, so a queue being reviewed is never
@@ -474,8 +475,8 @@ enum Command {
     },
     /// Moves the sentences of a queue the owner has reviewed into `owner.conllu`, with ids
     /// `o0001` on, leaving out those marked `# owner_rejected` in the review. Refuses a queue with
-    /// a sentence that has a blank word or no `owner_reviewed`, and changes nothing then. The file
-    /// is replaced whole or not at all.
+    /// a sentence that has a blank word or no `owner_reviewed`, and does not write a file then. The
+    /// file is replaced whole or not at all.
     Own {
         /// The queue, as the review saved it.
         queue: PathBuf,
@@ -488,11 +489,11 @@ enum Command {
     /// fence. The exam reads it to give those words the origin `Seen`.
     ///
     /// Each sentence is looked up in its fixture by `# source = <file> bytes <a>-<b>`, or by a
-    /// silver batch's `manifest.tsv` with `--manifest`, and checked against the gold file's own
+    /// silver batch's `manifest.tsv` with `--manifest`, and checked against the gold file's
     /// words. The sidecar holds numbers and never a word. This prints counts only, names a
     /// sentence of a holdout file by its position, and no error carries a form or a fixture's
-    /// path. `--check` writes nothing and fails if the sidecar on disk differs. `--empty` writes
-    /// one that names no word and reads no fixture, for a test's own gold file.
+    /// path. `--check` does not write a file and fails if the sidecar on disk differs. `--empty`
+    /// writes one that does not name a word or read a fixture, for a test's gold file.
     Seen {
         /// The gold file: `tests/gold/dev.conllu`, or a split of a silver batch.
         gold: PathBuf,
@@ -502,7 +503,7 @@ enum Command {
         /// The big tier, unpacked by `make fetch-blobs`.
         #[arg(long, default_value = ".blobs/unpacked/corpus")]
         corpus: PathBuf,
-        /// Compare the sidecar with what the fixtures give, and write nothing.
+        /// Compare the sidecar with what the fixtures give, and do not write the sidecar.
         #[arg(long)]
         check: bool,
         /// Name no word in any sentence, and read no fixture.
@@ -520,7 +521,7 @@ enum Command {
     /// n/p save and go to the next/previous sentence, x x (twice) reject the pick, q quit.
     ///
     /// A rejected pick (personal data, not English) is saved as `# owner_rejected = <date>`,
-    /// needs no tags and is left out by `own`. Delete that line to undo it.
+    /// does not need tags and is left out by `own`. Delete that line to undo it.
     Review {
         /// The file to review, edited in place.
         file: PathBuf,
@@ -640,7 +641,7 @@ struct Pool {
     #[arg(long, default_value = ".blobs/unpacked/corpus")]
     corpus: PathBuf,
     /// Read the small tier at this path, `tests/corpus`, instead; also the fallback when the big
-    /// tier is not there, for `rank` and `queue`. `draw` has no fallback.
+    /// tier is not there, for `rank` and `queue`. `draw` does not have a fallback.
     #[arg(long)]
     tree: Option<PathBuf>,
     /// The fixtures to leave out, as for `sample --exclude`.
@@ -648,7 +649,7 @@ struct Pool {
     exclude: PathBuf,
     /// The directory whose dev and holdout manifests, `owner.conllu` and `queue/*.conllu` name
     /// the reserved repositories, which are always left out. A manifest that is missing or
-    /// names no repository is an error.
+    /// does not name a repository is an error.
     #[arg(long, default_value = "tests/gold")]
     gold_dir: PathBuf,
     /// More files naming repositories to leave out, as for `sample --exclude-repos`. They add
@@ -1030,7 +1031,7 @@ pub(crate) fn corpus_files(
             Ok((kept(fixtures), "tests/corpus tree".to_string()))
         }
         None => {
-            // Said plainly even when fixtures are not named: this one names no fixture.
+            // Said plainly even when fixtures are not named: this one does not name a fixture.
             if !corpus.join("batches").is_dir() {
                 return Err(Error::load(
                     &corpus.display().to_string(),
@@ -1802,7 +1803,7 @@ struct Voting<'a> {
 
 /// The `adjudicated.tsv` of the earlier merge that `--settled` names, as a real path, after the
 /// checks that keep a merge from reading answers of another sample or of itself: it is the log of a
-/// merge directly under `dir`, the sample's own directory, and not the one written now (`into`).
+/// merge directly under `dir`, the sample's directory, and not the one written now (`into`).
 fn earlier_merge(dir: &Path, into: &str, settled: &Path) -> Result<PathBuf, Error> {
     let shown = settled.display().to_string();
     let refused = |why: &str| Error::load(&shown, Place::File, why);
@@ -2130,7 +2131,7 @@ fn runs_named(built: &assemble::Built) -> Vec<String> {
 /// that is not a labelling draw, since whatever was labelled over dev or owner sentences is silver
 /// of a gold set, and a draw with a sentence that has the text of one of dev or owner, under any
 /// case or punctuation. It is the last guard that dev or owner text never becomes trainable: the
-/// draw's own checks should have kept it out. Only dev and owner are opened, never holdout.
+/// draw's checks should have kept it out. Only dev and owner are opened, never holdout.
 fn refuse_untrainable(dir: &Path, sample: &Sample, trains: &str) -> Result<(), Problems> {
     if !sample.is_labelling_draw() {
         return Err(Error::load(

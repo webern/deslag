@@ -23,14 +23,14 @@
 //!   adjudicator's run that its part's `adjudicated.tsv` gives for an adjudicated one;
 //! - each part's tables name sentences of the manifest and runs of `runs.tsv`;
 //! - no file but the CoNLL-U text holds a path of the machine that made it: in a cell the kit
-//!   fills, no absolute path at all; in the words of a part's tables, a `form` or a `reason`,
+//!   fills, no absolute path; in the words of a part's tables, a `form` or a `reason`,
 //!   which may quote the corpus's paths (`/tmp/cache`, `/home/NAME/.cache`), none in a handoff's
 //!   working directory (`deslag-handoff-`) and none under the directories of the `machine` given
 //!   to [`check`]. The `silver check` command gives it none, so that a batch gets the same verdict
-//!   on every machine; the machine's own home, temp directory and checkout are refused where
+//!   on every machine; the machine's home, temp directory and checkout are refused where
 //!   the batch is made, by `silver build` and `silver build --check-part`;
 //! - the audit, when there is one, is scored again and equals `audit/score.tsv`, and its labels
-//!   are silver's own words; its bar is at least 95.0 and it holds at least 50 sentences, reviewed
+//!   are silver's words; its bar is at least 95.0 and it holds at least 50 sentences, reviewed
 //!   and rejected, unless `record/audit-accepted.txt` holds the owner's acceptance, in words (an
 //!   empty one is refused);
 //! - `record/datasheet.json` is computed again from these files and equals the file, and
@@ -163,8 +163,8 @@ fn allowed(path: &str, parts: &[usize]) -> bool {
 }
 
 /// Checks `batch`. `machine` holds the directories whose paths the words of a part's tables may not
-/// quote: the building machine's, from `silver build`. The `silver check` command passes none, so that
-/// the verdict on a published batch does not depend on the machine that checks it.
+/// quote: the building machine's, from `silver build`. The `silver check` command does not pass
+/// one, so that the verdict on a published batch does not depend on the machine that checks it.
 pub fn check(batch: &Batch, machine: &Machine) -> Result<Checked, Problems> {
     let mut problems: Vec<Error> = Vec::new();
     let parts = batch.part_numbers();
@@ -949,7 +949,7 @@ fn audit_rules(
         }
         Err(found) => problems.extend(found.0),
     }
-    // The labels are silver's own words.
+    // The labels are silver's words.
     let by_id: BTreeMap<String, &Block> = silver
         .iter()
         .filter_map(|block| Some((block.comment("sent_id")?.value.clone(), block)))

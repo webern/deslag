@@ -618,7 +618,7 @@ fn a_blind_audit_hides_silvers_labels_and_keeps_them_beside_the_queue() {
     );
     let queue = fs::read_to_string(out.join("queue.conllu")).unwrap();
     let labels = fs::read_to_string(out.join("labels.conllu")).unwrap();
-    // Both say they are silver, name the same eight sentences, and the queue has no label.
+    // Both say they are silver, name the same eight sentences, and the queue does not have a label.
     assert!(queue.contains("# exam.silver = yes\n") && labels.contains("# exam.silver = yes\n"));
     let ids = |text: &str| -> Vec<String> {
         text.lines()
@@ -676,7 +676,7 @@ fn a_blind_audit_hides_silvers_labels_and_keeps_them_beside_the_queue() {
     assert_eq!(run(&labels_only, "7").status.code(), Some(2));
     assert!(!labels_only.join("queue.conllu").exists());
 
-    // More sentences than the file has is an error and writes nothing.
+    // More sentences than the file has is an error and does not write a file.
     let none = work.path().join("none");
     let mut many = args(&none, "7");
     let at = many.iter().position(|arg| arg == "8").unwrap();

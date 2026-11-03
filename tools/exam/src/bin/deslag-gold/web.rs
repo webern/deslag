@@ -272,8 +272,8 @@ impl<S: Store> Review<S> {
     }
 }
 
-/// Answers one connection. A connection that sends nothing, as a browser's spare one does, is
-/// dropped when it times out.
+/// Answers one connection. A connection that does not send a request, as a browser's spare one does
+/// not, is dropped when it times out.
 fn serve<S: Store>(stream: &TcpStream, review: &Mutex<Review<S>>) {
     let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
     let response = match read_request(stream) {

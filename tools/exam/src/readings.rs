@@ -1,11 +1,11 @@
-//! deslag's own readings as a file: `deslag-exam readings`.
+//! deslag's readings as a file: `deslag-exam readings`.
 //!
 //! The skeleton of `tokens` with deslag's rules already run: on every `Word` line `UPOS` and the
 //! `MISC` keys `Conf=` and `Kept=`, and with a gold the key `Gold=`, the gold tag (a deslag code)
-//! the exam's own alignment ([`align_all`]) gives the token; a token no gold word is aligned to,
-//! such as one of several tokens for one word, has none. A learner starts from the readings, and
-//! reads `Gold=` as the label to learn. `score --import` of the file grades the same as
-//! `score --tagger deslag`, but for the feature metrics, which it carries no `FEATS` for.
+//! the exam's alignment ([`align_all`]) gives the token; a token no gold word is aligned to,
+//! such as one of several tokens for one word, does not have one. A learner starts from the
+//! readings, and reads `Gold=` as the label to learn. `score --import` of the file grades the same
+//! as `score --tagger deslag`, but for the feature metrics, which it carries no `FEATS` for.
 //! A gold file with `exam.split = holdout` is refused: the file names words and their tags.
 //! The first line is the comment `# deslag_rules_version = N`, the version of the rules the readings
 //! are of (`deslag::tag::RULES_VERSION`), then `# exam.tokens = deslag` and each sentence's
@@ -19,7 +19,7 @@
 //!
 //! [`of_skeleton`] writes the same file from a skeleton that `tokens` wrote, with no `Gold=` on
 //! any line: a set to be tagged is read this way, so no tagged file carries its answers, and a
-//! holdout skeleton is accepted since it names no gold. The file carries the skeleton's
+//! holdout skeleton is accepted since it does not name a gold. The file carries the skeleton's
 //! `exam.from`, `exam.split`, `exam.trains` and `silver.batch`.
 
 use std::collections::BTreeMap;

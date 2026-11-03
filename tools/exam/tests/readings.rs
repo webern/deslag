@@ -1,4 +1,4 @@
-//! `deslag-exam readings`: deslag's own readings as a file a learner starts from. The file imports
+//! `deslag-exam readings`: deslag's readings as a file a learner starts from. The file imports
 //! to the same grades as the tagger, carries the gold the exam aligned and nothing for a token it
 //! did not, and is never written from a holdout gold.
 
@@ -326,7 +326,7 @@ fn the_trains_header_passes_from_a_gold_to_its_skeleton_and_readings() {
             assert!(text.contains(line), "{}: {text}", file.display());
         }
     }
-    // A gold that decided nothing says nothing.
+    // A gold that did not set `exam.trains` does not pass it on.
     let skeleton = skeleton_of(dir.path(), &case("one-to-one.conllu"));
     let text = std::fs::read_to_string(skeleton).unwrap();
     assert!(!text.contains("exam.trains"));
@@ -362,7 +362,7 @@ fn the_silver_batch_passes_from_a_gold_to_its_skeleton_and_readings() {
             file.display()
         );
     }
-    // A gold that names no batch says nothing of one.
+    // A gold that does not name a batch says nothing of one.
     let skeleton = skeleton_of(dir.path(), &case("one-to-one.conllu"));
     let text = std::fs::read_to_string(skeleton).unwrap();
     assert!(!text.contains("silver.batch"));

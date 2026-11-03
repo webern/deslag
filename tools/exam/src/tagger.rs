@@ -73,7 +73,7 @@ impl Tagger for Noun {
     }
 }
 
-/// deslag's own tagger, [`deslag::tag::sentence`], as the exam grades it: what the shipped tagger
+/// deslag's tagger, [`deslag::tag::sentence`], as the exam grades it: what the shipped tagger
 /// reads from the sentence's tokens and context, the rules and then the learned stage, with no
 /// score.
 pub struct Deslag;

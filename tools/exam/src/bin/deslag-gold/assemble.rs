@@ -20,7 +20,7 @@
 //!   both, in counts and rates only.
 //!
 //! A word with neither an agreed nor an adjudicated tag, or an adjudicated one that was already
-//! agreed, is a problem and nothing is written. The files are read back with the exam's own loader
+//! agreed, is a problem and nothing is written. The files are read back with the exam's loader
 //! before assembly says it is done.
 
 use std::collections::BTreeMap;
@@ -86,7 +86,8 @@ pub struct Open {
 /// The gold sentences, in the order of the sample.
 #[derive(Debug, Clone)]
 pub struct Built {
-    /// One row of lines per sentence of the sample. A sentence with a word left open has no lines.
+    /// One row of lines per sentence of the sample. A sentence with a word left open does not have
+    /// lines.
     pub sentences: Vec<Vec<Filled>>,
     /// The words left open, which only [`build_leaving`] allows.
     pub open: Vec<Open>,
@@ -115,7 +116,7 @@ pub fn build(
 }
 
 /// [`build`], except that with `leave_open` a word with no decision is not an error: it is listed in
-/// [`Built::open`], and its sentence is given no lines, so that no file written from it has the
+/// [`Built::open`], and its sentence is not given lines, so that no file written from it has the
 /// sentence.
 pub fn build_leaving(
     sample: &Sample,
@@ -370,7 +371,7 @@ pub const LEFT_OUT: &str = "left_out";
 /// The labelled sentences of `sample`, which is not the gold sample: `labelled.conllu`, every
 /// sentence of the sample with its final tags, `Prov=` and the `Runs=` of the runs that vouch for
 /// each word. `trains` is its `exam.trains`: `no` for a pilot run over gold sentences, which must
-/// never train anything. The exam's own loader reads it, and so does `score --import`.
+/// never train anything. The exam's loader reads it, and so does `score --import`.
 pub fn labelled_file(sample: &Sample, built: &Built, trains: &str) -> String {
     let source = sample.manifest.get("source").unwrap_or("a labelling draw");
     let mut out = format!(
@@ -475,7 +476,8 @@ fn percent(part: usize, whole: usize) -> String {
 }
 
 /// `accuracy.tsv`: for each of `taggers` (a name and its answers), its accuracy on dev, on
-/// holdout and on both. The numbers are counts and rates only, so the file names no holdout word.
+/// holdout and on both. The numbers are counts and rates only, so the file does not name a holdout
+/// word.
 pub fn accuracy_file(sample: &Sample, built: &Built, taggers: &[(&str, &Answers)]) -> String {
     let mut out = String::from(
         "tagger\tsplit\twords\tpart_of_speech\tpart_of_speech_pct\twith_features\twith_features_pct\n",

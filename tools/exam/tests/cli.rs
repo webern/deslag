@@ -547,7 +547,7 @@ fn score_holdout_import_errors_name_the_field_and_the_position_never_the_value()
         let plain = fails(&["score", "--gold", &dev, "--import", path(&filled)]);
         assert!(plain.contains("cats"), "{field}: {plain}");
 
-        // Holdout text, by the flag or by the gold's own header, names the field and the position.
+        // Holdout text, by the flag or by the gold's header, names the field and the position.
         let import = import_with_form_in(&holdout_skeleton, "cats", field);
         std::fs::write(&filled, &import).unwrap();
         let at = format!(

@@ -79,7 +79,7 @@ pub fn populations(sentences: &[SentenceTally]) -> Vec<Population<'_>> {
 }
 
 /// A population for each origin that has a scored token, in the order of [`Origin::ALL`], labelled
-/// `origin=symbol`, from `by_origin`, a tally per sentence for each origin. None at all when every
+/// `origin=symbol`, from `by_origin`, a tally per sentence for each origin. None when every
 /// scored token is English, since the split then says nothing.
 pub fn origin_populations(by_origin: &[Vec<SentenceTally>]) -> Vec<Population<'_>> {
     let has = |origin: Origin| {

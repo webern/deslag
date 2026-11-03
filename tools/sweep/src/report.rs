@@ -58,7 +58,7 @@ impl Report {
     }
 
     /// The exit code: 0 when the scanner and the oracle agree everywhere the oracle read cleanly,
-    /// 1 when they differ. A run that could not happen is exit code 2 and has no report.
+    /// 1 when they differ. A run that could not happen is exit code 2 and does not have a report.
     pub fn exit_code(&self) -> u8 {
         u8::from(self.tally.differences() > 0)
     }

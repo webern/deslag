@@ -59,7 +59,7 @@ fn exactly_at_budget_is_clean() {
 #[test]
 fn a_file_no_rule_claims_has_no_budget() {
     let repo = Repo::new();
-    // No global budget at all: only the one override gives anything a budget.
+    // No global budget: only the one override gives anything a budget.
     repo.write(
         ".deslag/config.toml",
         &config_text(None, &[("AGENTS.md", 1000)]),

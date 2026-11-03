@@ -247,7 +247,7 @@ fn a_default_wins_over_the_fill() {
     assert_eq!(value["rust"]["width"], json!(80));
 }
 
-/// The newest config's own values stay, whatever the fill says.
+/// The newest config's values stay, whatever the fill says.
 #[test]
 fn the_fill_is_laid_only_where_the_newest_is_silent() {
     let fill = json!({
@@ -686,7 +686,7 @@ fn a_release_that_has_a_frozen_directory_already_is_refused() {
 fn a_setting_that_cannot_be_filled_stops_prep_before_any_write() {
     let directory = tempfile::tempdir().expect("a directory");
     let root = directory.path();
-    // No fill, and `title` has no default.
+    // No fill, and `title` does not have a default.
     tree(root, "0.0.1", false);
     freeze_first(root);
     commit(root);

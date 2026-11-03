@@ -43,7 +43,7 @@ fn current(text: &str, path: &str) -> String {
 }
 
 /// The frozen config of `directory` in `extension` as the build loads it, and the language it is
-/// then in: a config of an older schema in TOML once rewritten, and in YAML or JSON not at all,
+/// then in: a config of an older schema in TOML once rewritten, and not in YAML or JSON,
 /// as `deslag update` rewrites only TOML. That the three languages say the same is
 /// `the_languages_of_a_release_say_the_same`.
 fn loadable(directory: &Path, extension: &str) -> Option<String> {

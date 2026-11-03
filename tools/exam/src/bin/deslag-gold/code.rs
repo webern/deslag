@@ -127,7 +127,7 @@ impl Base {
     }
 
     /// The UPOS of `form` tagged this way. `C` is `CCONJ` for the coordinators the guide lists and
-    /// `SCONJ` for the rest; the others are the exam's own code for the tag.
+    /// `SCONJ` for the rest; the others are the exam's code for the tag.
     pub fn upos(self, form: &str) -> &'static str {
         const COORDINATORS: [&str; 9] = [
             "and", "or", "but", "nor", "yet", "plus", "both", "either", "neither",
@@ -146,7 +146,7 @@ impl Base {
     }
 
     /// The base a UPOS stands for, by the exam's mapping. `PUNCT` and `SYM` on a word are `X`, since
-    /// the guide has no other code for a word that is not one of the thirteen.
+    /// the guide does not have another code for a word that is not one of the thirteen.
     pub fn from_upos(upos: &str) -> Option<Base> {
         Some(match map_upos(upos)? {
             Class::Tagged(tag) => Base::from_tag(tag),
@@ -333,7 +333,7 @@ impl Code {
         self.base.upos(form)
     }
 
-    /// The FEATS column: `_` when the code has no feature.
+    /// The FEATS column: `_` when the code does not have a feature.
     pub fn feats(&self) -> String {
         match (self.number, self.form) {
             (Some(Number::Sing), _) => "Number=Sing".to_string(),

@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn an_undefined_statistic_leaves_its_replicates_out_and_an_empty_population_is_na() {
-        // A quarter of the draws of (1,1),(0,0) have no trials at all.
+        // A quarter of the draws of (1,1),(0,0) have no trials.
         let units = units(&[(1, 1), (0, 0)]);
         let b = boot("all", &units);
         let estimate = b.estimate(&rate);

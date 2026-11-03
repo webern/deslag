@@ -295,7 +295,7 @@ fn the_tables_ban_no_ascii_and_suggest_only_ascii() {
     }
 }
 
-/// The arrows in a range point every way, so a rule for a range names no replacement.
+/// The arrows in a range point every way, so a rule for a range does not name a replacement.
 #[test]
 fn no_arrow_range_rule_names_a_replacement() {
     let arrows = GROUPS

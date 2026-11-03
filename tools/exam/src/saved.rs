@@ -2,8 +2,8 @@
 //!
 //! JSON with a format number, the tagger's name, the gold's path, its SHA-256 and split, the tally
 //! column names, and for each sentence its `sent_id`, tier, context and tally. For a holdout gold
-//! the `sent_id` is the sentence's position counted from 1, so the file names no sentence. The
-//! sentences are written one to a line.
+//! the `sent_id` is the sentence's position counted from 1, so the file does not name a sentence.
+//! The sentences are written one to a line.
 
 use std::path::Path;
 

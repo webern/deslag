@@ -349,7 +349,7 @@ fn an_override_shows_its_exclude_and_one_that_drops_the_file_says_so() {
         ),
         "{stdout}"
     );
-    // The excluded override lays nothing over the section's settings.
+    // The excluded override does not change the section's settings.
     assert!(
         stdout.contains("[max_size_bytes]\nvalue = 1000\n"),
         "{stdout}"
@@ -498,7 +498,7 @@ fn a_path_that_is_not_a_file_in_the_repo_is_an_error() {
         ("docs", "it is not a file"),
         (outside, "it is outside the repo"),
     ] {
-        // The good path before it prints nothing either.
+        // The good path before it does not print its explanation either.
         let (code, stdout, stderr) = explain(&repo, &["README.md", path]);
         assert_ne!(code, 0, "{path}");
         assert_eq!(stdout, "", "{path}");
@@ -521,7 +521,7 @@ fn explain_needs_a_path() {
 
 #[test]
 fn no_default_in_the_schema_is_a_table_of_nulls() {
-    // A lint or group left unset serializes to nothing, so a table's default is empty.
+    // A lint or group left unset is not serialized, so a table's default is empty.
     fn walk(schema: &Value, at: &str) {
         match schema {
             Value::Object(object) => {
@@ -747,8 +747,8 @@ fn the_reads_line_of_markdown_follows_the_fences_setting() {
         "{stdout}"
     );
 
-    // TOML has no doc comments, so a fence of it reads only the comment surface, and nothing for
-    // a config that asks for the doc comment alone.
+    // TOML does not have doc comments, so a fence of it reads only the comment surface, and nothing
+    // for a config that asks for the doc comment alone.
     repo.write(
         "deslag.toml",
         "schema_version = 2\n[md]\nfences = { languages = [\"toml\"], surfaces = [\"doc_comment\", \"comment\"] }\n",

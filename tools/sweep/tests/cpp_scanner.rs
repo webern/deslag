@@ -1,10 +1,10 @@
 //! deslag's C and C++ scanner against tree-sitter's C and C++ grammars, on a list of the traps of
 //! the lexing rules and on random strings of the characters that set them.
 //!
-//! The grammars are not lexers: they judge a whole file, and a file that does not parse has no
-//! verdict. So a case counts only where a grammar finds it clean, and every difference there is the
-//! scanner's mistake or a known limit of the grammars. The limits are asserted, not skipped; see
-//! [`KNOWN_DISAGREEMENTS`] and the `TreeSitter` doc in `src/ts.rs`.
+//! The grammars are not lexers: they judge a whole file, and a file that does not parse does not
+//! have a verdict. So a case counts only where a grammar finds it clean, and every difference there
+//! is the scanner's mistake or a known limit of the grammars. The limits are asserted, not skipped;
+//! see [`KNOWN_DISAGREEMENTS`] and the `TreeSitter` doc in `src/ts.rs`.
 
 use deslag_sweep::compare::compare;
 use deslag_sweep::cpp::DeslagCpp;
@@ -117,7 +117,7 @@ fn the_scanner_finds_what_the_grammars_find_on_every_trap() {
             unjudged.push(src);
         }
     }
-    // A trap that no grammar finds clean passes for nothing.
+    // A trap that no grammar finds clean does not test the scanner.
     assert!(unjudged.is_empty(), "no grammar judges {unjudged:?}");
     // Most traps are code that parses, to the C++ grammar at least.
     assert!(judged[0] > 15 && judged[1] > 30, "{judged:?}");
@@ -130,7 +130,7 @@ const KNOWN_DISAGREEMENTS: &[(&str, &str)] = &[
     ("a lone CR", "// a\rb\nint x;\n"),
     // A splice may be a backslash, blanks and a line end.
     ("a blank splice", "// a \\  \n;\nint x;\n"),
-    // tree-sitter reads no preprocessing number, so the `'` after `e+` is a number's.
+    // tree-sitter does not read a preprocessing number, so the `'` after `e+` is a number's.
     ("a number with a sign", "int x = 1e+'a'; // c\n"),
     // The second backslash splices, so the first escapes the quote and the string is cut short.
     ("two backslashes and a line end", "char *s = \"\\\\\n\";\n"),
@@ -144,7 +144,7 @@ const KNOWN_DISAGREEMENTS: &[(&str, &str)] = &[
         "a splice after a closer in a directive",
         "#pragma */\\\n///x\nint y;\n",
     ),
-    // The C grammar has no raw strings.
+    // The C grammar does not have raw strings.
     ("a raw string in C", "char *s = R\"x(a // b)x\";\n"),
 ];
 

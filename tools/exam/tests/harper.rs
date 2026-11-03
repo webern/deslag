@@ -97,7 +97,7 @@ fn any_word_is_tagged_with_counts_this_word_going_forward_but_not_going_back() {
     // This word is not its own witness going back, and 0 looks nowhere.
     assert_eq!(run(-2, "DET", &["d"]), ["DET"]);
     assert_eq!(run(0, "DET", &["d"]), ["DET"]);
-    // A far end before the sentence starts holds nothing.
+    // A far end before the sentence starts does not hold a tag.
     assert_eq!(run(-3, "NOUN", &["d", "n"]), ["DET", "NOUN"]);
     // Past the end of the sentence is simply not there.
     assert_eq!(run(5, "NOUN", &["n", "d"]), ["VERB", "DET"]);
@@ -192,7 +192,7 @@ fn patches_apply_in_order_and_each_sees_what_the_ones_before_it_did() {
     // NOUN -> ADJ first, and then ADJ -> VERB finds ADJs to change.
     let forward = chain(("NOUN", "ADJ"), ("ADJ", "VERB"));
     assert_eq!(tagged(&forward, &["x", "y"]), ["VERB", "VERB"]);
-    // The other way round, ADJ -> VERB runs when there are no ADJs yet and changes nothing.
+    // The other way round, ADJ -> VERB runs when there are no ADJs yet and does not change a tag.
     let reverse = model(
         &[("x", "NOUN"), ("y", "NOUN")],
         &format!(
@@ -235,7 +235,8 @@ fn a_word_with_no_tag_is_never_changed_and_never_matches_as_a_neighbour() {
             )
         ),
     );
-    // `unseen` has no tag, so it is no DET to change and no NOUN to be seen by the DET before it.
+    // `unseen` does not have a tag, so it is no DET to change and no NOUN to be seen by the DET
+    // before it.
     assert_eq!(tagged(&brill, &["d", "unseen"]), ["DET", "-"]);
     assert_eq!(tagged(&brill, &["unseen", "n"]), ["-", "NOUN"]);
     assert_eq!(tagged(&brill, &["d", "n"]), ["ADJ", "NOUN"]);
@@ -296,7 +297,7 @@ fn harper_tags_words_likely_and_words_it_lacks_noun_unknown() {
     );
     assert_eq!(harper.name(), "harper");
     use Confidence::{Likely, Unknown};
-    // The comma and the number are no words, so they have no reading at all.
+    // The comma and the number are no words, so they have no reading.
     assert_eq!(
         readings(&harper, "The run, and 2 zzyzx that oh"),
         [

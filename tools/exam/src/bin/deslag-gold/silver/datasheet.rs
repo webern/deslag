@@ -575,7 +575,7 @@ enum Open {
 }
 
 /// Reads `template` into nodes. `{{#if p}}`, `{{#unless p}}` and `{{#each p}}` close with
-/// `{{/if}}`, `{{/unless}}` and `{{/each}}`, and may nest. Inside `each` the item's own keys are
+/// `{{/if}}`, `{{/unless}}` and `{{/each}}`, and may nest. Inside `each` the item's keys are
 /// found first.
 fn parse_template(template: &str) -> Result<Vec<Node>, Error> {
     let bad = |message: String| Error::load(layout::TEMPLATE, Place::File, message);

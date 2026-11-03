@@ -284,13 +284,13 @@ fn a_double_backtick_span_holds_a_backtick() {
 
 #[test]
 fn an_escaped_backtick_is_text() {
-    // It opens no span, and it closes none: the backslash is text inside a span.
+    // It does not open a span, and it does not close one: the backslash is text inside a span.
     assert_eq!(pieces(r"a \`b\` c"), [r"t:a \`b\` c"]);
     assert_eq!(pieces(r"a \`b` c"), [r"t:a \`b` c"]);
     assert_eq!(pieces(r"`a\` b"), [r"c:`a\`=a\", "t: b"]);
     // The rest of an escaped run is a run of its own.
     assert_eq!(pieces(r"\``a` b"), [r"t:\`", "c:`a`=a", "t: b"]);
-    // A pair of backslashes escapes nothing.
+    // A pair of backslashes does not escape a backtick.
     assert_eq!(pieces(r"\\`a` b"), [r"t:\\", "c:`a`=a", "t: b"]);
 }
 

@@ -215,7 +215,8 @@ fn ranges(document: &Document<'_>) -> Vec<Range<usize>> {
 /// Whether the first word of the match at `found`, a range of the document's tokens, heads a noun
 /// phrase and so is no verb. Three cues, each read from its sentence:
 ///
-/// - an article (`a`, `an` or `the`, read as a determiner) or `whose` right before it;
+/// - an article (`a`, `an` or `the`, read as a determiner) right before it, or `whose` before it
+///   with at most adjectives and participles between;
 /// - a fronted phrase: the tagger's best guess for the word is a noun or proper noun, and the
 ///   sentence opens with a preposition read at `Likely` or above, after at most one conjunction,
 ///   then at most one determiner, then only adjectives, numerals and nouns up to the word, none of
@@ -247,17 +248,38 @@ fn tag_of(token: &Token<'_>) -> Option<Tag> {
         .map(|reading| reading.tag)
 }
 
-/// Whether the token before `tokens[start]` is `a`, `an` or `the`, read as a determiner, or `whose`.
+/// Whether the token before `tokens[start]` is `a`, `an` or `the`, read as a determiner, or
+/// `whose`; or, after `whose`, only words read as adjectives or participles (the `-ed` and `-ing`
+/// forms of a verb) come before it, as in `whose banned characters`.
 fn after_an_article(tokens: &[Token<'_>], start: usize) -> bool {
-    start
-        .checked_sub(1)
-        .map(|before| &tokens[before])
-        .is_some_and(|token| {
-            token.kind == TokenKind::Word
-                && (token.folded() == "whose"
-                    || (matches!(token.folded().as_str(), "a" | "an" | "the")
-                        && tag_of(token) == Some(Tag::Determiner)))
-        })
+    let Some(before) = start.checked_sub(1) else {
+        return false;
+    };
+    let token = &tokens[before];
+    if token.kind == TokenKind::Word
+        && matches!(token.folded().as_str(), "a" | "an" | "the")
+        && tag_of(token) == Some(Tag::Determiner)
+    {
+        return true;
+    }
+    let modifies = |token: &Token<'_>| {
+        tag_of(token) == Some(Tag::Adjective)
+            || token.reading.is_some_and(|reading| {
+                reading.tag == Tag::Verb
+                    && [
+                        Features::PAST,
+                        Features::PAST_PARTICIPLE,
+                        Features::PRESENT_PARTICIPLE,
+                    ]
+                    .into_iter()
+                    .any(|form| reading.features.contains(form))
+            })
+    };
+    tokens[..start]
+        .iter()
+        .rev()
+        .find(|token| !modifies(token))
+        .is_some_and(|token| token.kind == TokenKind::Word && token.folded() == "whose")
 }
 
 /// Whether `tokens[start]`, read as a noun, follows a phrase that opens `tokens`, a sentence's: a
@@ -681,6 +703,21 @@ mod tests {
         assert_eq!(
             found("Fix projects, repositories no tool builds."),
             ["repositories no tool"]
+        );
+    }
+
+    #[test]
+    fn a_word_after_whose_and_its_modifiers_is_a_noun() {
+        assert!(found("A file whose banned characters no sentence holds.").is_empty());
+        assert!(found("A file whose odd banned characters no sentence holds.").is_empty());
+        // A noun between `whose` and the word makes the word a verb again.
+        assert_eq!(
+            found("A file whose tool ships no binary."),
+            ["ships no binary"]
+        );
+        assert_eq!(
+            found("A file, banned characters no sentence holds."),
+            ["characters no sentence"]
         );
     }
 

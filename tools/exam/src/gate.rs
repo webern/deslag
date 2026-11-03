@@ -5,8 +5,9 @@
 //! move with the rounding of a report. A set is run by the same code as `score`, so its counts are
 //! the report's counts, and no bootstrap is drawn because only point counts are judged.
 //!
-//! A `mustpass` set has no metric: it names a list of words (`crate::mustpass`) and how many it may
-//! miss. `gate --import` runs the same sets on a file another program filled, never on holdout.
+//! A `mustpass` set does not have a metric: it names a list of words (`crate::mustpass`) and how
+//! many it may miss. `gate --import` runs the same sets on a file another program filled, never on
+//! holdout.
 //!
 //! The set called `holdout` is the holdout set, whatever its file says, and its output is a verdict
 //! per metric and nothing else. Its header must agree: the file of the `holdout` set says
@@ -212,7 +213,7 @@ impl Gates {
             let line = error
                 .span()
                 .map(|span| text[..span.start].matches('\n').count() + 1);
-            // The message alone: the error's own display quotes the line and runs over several.
+            // The message alone: the error's display quotes the line and runs over several.
             let message = error.message().replace('\n', " ");
             match line {
                 Some(line) => Error::Cannot(format!("{path}:{line}: {message}")),

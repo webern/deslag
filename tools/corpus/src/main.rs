@@ -121,8 +121,8 @@ enum Command {
     /// of one sentence in at most 1 s; the binary under 200 MB (200,000,000 bytes). When the first
     /// measurement is over a bound, everything is measured again, each file keeping its fastest of
     /// six passes and startup its fastest of ten runs, and only the second is judged. A debug
-    /// build prints the same lines and judges nothing. The bounds are judged on the big tier, so
-    /// --tier tree is refused.
+    /// build prints the same lines and does not judge a measurement. The bounds are judged on the
+    /// big tier, so --tier tree is refused.
     Time {
         /// Judge the bounds, in a release build.
         #[arg(long, requires = "deslag")]

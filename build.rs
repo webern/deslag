@@ -3,7 +3,7 @@
 //! the weights of the learned stage from `src/tag/weights.txt`, and the word table of the
 //! closed-class table and the lexicon, which holds each word's reading and what a possessive is
 //! read from. `src/tag/build_tables.rs` makes them and `src/tag/layout.rs` says what the bytes are;
-//! both are the crate's own source, included below. The lexicon's text is read here and is not in
+//! both are the crate's source, included below. The lexicon's text is read here and is not in
 //! the binary.
 
 use std::fs;

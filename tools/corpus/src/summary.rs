@@ -76,7 +76,7 @@ pub struct ToolRow {
 pub struct Summary {
     /// What was measured.
     pub header: Header,
-    /// The fixtures the tier holds that carry no label and are left out.
+    /// The fixtures the tier holds that do not carry a label and are left out.
     pub left_out: usize,
     /// Each label.
     pub labels: Vec<LabelRow>,

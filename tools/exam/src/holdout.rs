@@ -40,8 +40,8 @@ pub fn withholding<T>(work: impl FnOnce() -> Result<T, Error>) -> Result<T, Erro
 /// the scoring, the save and the report are all inside [`withholding`], so a panic anywhere is the
 /// one fixed line, and no error names a word or a comment.
 ///
-/// The gold may say `exam.split = holdout` or have no header, as the treebank's test file has none;
-/// one that names another split is the wrong file, and is refused.
+/// The gold may say `exam.split = holdout` or have no header, as the treebank's test file does not
+/// have one; one that names another split is the wrong file, and is refused.
 pub fn score_report(
     gold: &Path,
     disputes: Option<&Path>,

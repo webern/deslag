@@ -7,12 +7,12 @@
 //! as the guide's codes (`N.p`, `V.pp`). The voters agree on a word when:
 //!
 //! - they all name the same base (`N`, `V`, ...), and
-//! - no feature conflicts. A voter that gives no feature abstains on it, so `N.s`, `N.s` and a bare
-//!   `N` agree on `N.s`. A voter marked base-only, which is how spaCy votes, always abstains: its
-//!   feature conventions differ from the guide's, so only its part of speech counts. The one
-//!   exception to abstaining is a pronoun: the guide gives *you*, *who* and *which* no number, so
-//!   a voter that follows the guide and writes a bare `PR` has said something, and `PR` against
-//!   `PR.s` is a dispute and not an agreement on `PR.s`.
+//! - no feature conflicts. A voter that does not give a feature abstains on it, so `N.s`, `N.s` and
+//!   a bare `N` agree on `N.s`. A voter marked base-only, which is how spaCy votes, always
+//!   abstains: its feature conventions differ from the guide's, so only its part of speech counts.
+//!   The one exception to abstaining is a pronoun: the guide gives *you*, *who* and *which* no
+//!   number, so a voter that follows the guide and writes a bare `PR` has said something, and `PR`
+//!   against `PR.s` is a dispute and not an agreement on `PR.s`.
 //! - a word the guide asks a feature of (a number on `N` and `PN`, a verb form on `V` and `AX`)
 //!   has one: if every voter left it out, the word is disputed, since no one said it.
 //!
@@ -21,8 +21,8 @@
 //! `Prov=agree`, with `Runs=` naming the run of every voter that answered the sentence, since
 //! every one of them agreed.
 //!
-//! A voter that has no good line for a sentence after its retries abstains on all of it, and the
-//! merge goes on with the voters left, so one sentence a model cannot write never stops the
+//! A voter that does not have a good line for a sentence after its retries abstains on all of it,
+//! and the merge goes on with the voters left, so one sentence a model cannot write never stops the
 //! pilot. Agreement needs [`MIN_AGREEING_VOTERS`] model voters (three, unless `--min-voters` says
 //! otherwise): a word stands as agreed only when at least that many model voters answered its
 //! sentence and all agree. spaCy, which votes on the base alone, is a voter that never counts
@@ -74,8 +74,8 @@ pub fn judge_voters(said: &[Code], base_only: &[bool]) -> Verdict {
         .filter(|(_, only)| !**only)
         .map(|(code, _)| *code)
         .collect();
-    // A voter that gives no number abstains on it, except on a pronoun: the guide gives *you* and
-    // *who* none, so a bare `PR` is an answer.
+    // A voter that does not give a number abstains on it, except on a pronoun: the guide gives
+    // *you* and *who* none, so a bare `PR` is an answer.
     let numbers: Vec<Option<Number>> = giving
         .iter()
         .map(|code| code.number)
@@ -149,9 +149,9 @@ pub fn letter(index: usize) -> String {
 
 /// Compares the voters' answers on every word of `sample`. There must be at least
 /// [`FEWEST_TAGGERS`] voters, whose answers cover the sample as [`crate::merge::load_voter`] reads
-/// them: a sentence a voter has no answer for is an abstention. A word is agreed only when at
-/// least `min_voters` voters that are not base-only answered its sentence and all agree; for a
-/// sentence fewer answered, every word goes to the adjudicator.
+/// them: a sentence a voter does not have an answer for is an abstention. A word is agreed only
+/// when at least `min_voters` voters that are not base-only answered its sentence and all agree;
+/// for a sentence fewer answered, every word goes to the adjudicator.
 pub fn merge_voters(sample: &Sample, voters: &[Voter], min_voters: usize) -> Voted {
     assert!(
         voters.len() >= FEWEST_TAGGERS,
@@ -265,9 +265,9 @@ pub fn merge_voters(sample: &Sample, voters: &[Voter], min_voters: usize) -> Vot
 }
 
 /// The `Runs=` value of the agreed words of each sentence: the run of every voter that answered
-/// it, in order, as `r3,r4,r5`. A sentence's entry is `None` when a voter that answered it has no
-/// run, since a list with a gap would name fewer voters than agreed; `finish` then refuses the
-/// words, so provenance cannot go missing without an error.
+/// it, in order, as `r3,r4,r5`. A sentence's entry is `None` when a voter that answered it does not
+/// have a run, since a list with a gap would name fewer voters than agreed; `finish` then refuses
+/// the words, so provenance cannot go missing without an error.
 pub fn runs_by_sentence(voters: &[Voter], sentences: usize) -> Vec<Option<String>> {
     (0..sentences)
         .map(|at| {
@@ -547,7 +547,7 @@ mod tests {
             ),
             Verdict::Disputed { tags_differ: true }
         );
-        // And it supplies no feature when the others give none either.
+        // And it does not supply a feature when the others do not give one either.
         let bare = Code::from_conllu("NOUN", "_").unwrap();
         assert_eq!(
             judge_voters(&[bare, spacy], &[false, true]),
@@ -720,8 +720,8 @@ mod tests {
         assert!(report.contains("A   alpha"), "{report}");
     }
 
-    /// A voter whose reply had no good line for the sentences in `drop`: its file has no block
-    /// for them, as `read-tags --check` leaves it.
+    /// A voter whose reply did not have a good line for the sentences in `drop`: its file does not
+    /// have a block for them, as `read-tags --check` leaves it.
     fn voter_without(name: &str, run: &str, drop: &[&str]) -> Voter {
         let kept: Vec<String> = conllu_of(&SAME, Some(run))
             .split("\n\n")
@@ -810,7 +810,7 @@ mod tests {
         );
         let parts = worklist_parts(&sample, &voted.items, 60, &["A", "B", "C"]);
         assert!(parts[0].contains("1 Run: A V.fi, B -, C -"), "{}", parts[0]);
-        // The words an unvoted sentence has carry no voter's run.
+        // The words an unvoted sentence has do not carry a voter's run.
         let runs = runs_by_sentence(&voters, 2);
         assert_eq!(runs, [Some("r1".to_string()), Some("r1,r2".to_string())]);
     }

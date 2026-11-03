@@ -9,7 +9,7 @@ use crate::Error;
 use crate::lexer::{Kind, Lexed, Lexer, Span, bom_len, trim_carriage_return};
 
 /// The node kinds this adapter reads. A grammar that renames one would make the adapter silently
-/// find nothing, so [`TreeSitter::new`] checks that the grammar still has them.
+/// miss its nodes, so [`TreeSitter::new`] checks that the grammar still has them.
 const COMMENT: &str = "comment";
 const STRING: &str = "string_literal";
 const RAW_STRING: &str = "raw_string_literal";
@@ -61,14 +61,14 @@ impl Grammar {
 /// error is not `clean`. What the oracle gets wrong, which the sweep must not count as the
 /// scanner's mistake:
 ///
-/// - A directive that has a body is blind from its `#` to its end, and the oracle's own spans
+/// - A directive that has a body is blind from its `#` to its end, and the oracle's spans
 ///   inside it are dropped. The grammar reports a comment inside a quoted body, as in
 ///   `#define X "a/*b"`, where the string is the truth. It reads the name of an invalid directive
 ///   as an identifier, so in `#L"x"` the `L` is not a prefix to it, as it is to GCC. Starting at
-///   the `#` and not at the body costs no clean span on the gated corpus; it is there for `#L"x"`
-///   and `#u'a'`, which GCC rejects as directives. Because bodies are blind the oracle finds few
-///   strings and chars in header files, where most of them sit in macro bodies: cite agreement on
-///   strings and chars from source files, not headers.
+///   the `#` and not at the body does not cost a clean span on the gated corpus; it is there for
+///   `#L"x"` and `#u'a'`, which GCC rejects as directives. Because bodies are blind the oracle
+///   finds few strings and chars in header files, where most of them sit in macro bodies: cite
+///   agreement on strings and chars from source files, not headers.
 /// - A raw string in a body can run past the line, as in `#define X R"(a` and a later line
 ///   `b)"`, or, if it is never closed, to the end of the file, as GCC reads it. The grammar ends
 ///   the directive at its line and reads what follows as code. So a directive that opens a raw
@@ -89,8 +89,8 @@ impl Grammar {
 ///   it to GCC and the scanner, since the `*` and the `/` are then adjacent. The grammar closes it
 ///   at the last `*/`. And in `#pragma */\<newline>///x` the grammar ends the directive at the
 ///   splice after a `*/`, where GCC joins the lines and reads a comment from the `//`.
-/// - The C grammar has no raw strings, so in a `.c` or `.h` file it reads `R"x(a // b)x"` as the
-///   identifier `R` and an ordinary string, and the file can be clean to it. The scanner reads
+/// - The C grammar does not have raw strings, so in a `.c` or `.h` file it reads `R"x(a // b)x"` as
+///   the identifier `R` and an ordinary string, and the file can be clean to it. The scanner reads
 ///   raw strings in every file, as GCC does outside strict ISO C. `.h` is also swept by the C++
 ///   grammar, which reads it right.
 ///
@@ -222,7 +222,7 @@ fn reach_raw_strings(src: &str, blind: Vec<Range<usize>>) -> Vec<Range<usize>> {
                 range.end = src.len();
                 break;
             };
-            // The body of a raw string holds no other, so go on from its close.
+            // The body of a raw string does not hold another literal, so go on from its close.
             from = open + 1 + found + close.len();
             let end = src[from..]
                 .find(['\n', '\r'])

@@ -3,10 +3,10 @@
 //!
 //! The golden files hold what the sweep prints, less the `lock` and `oracles` lines at the top of
 //! the report, which say which lockfile and oracle versions printed it. The test strips them before
-//! it compares or writes, so a dependency update that changes no verdict fails nothing and touches
-//! no golden file. What stays says what was measured and what the oracle made of it, and an oracle
-//! that changes a count fails. Rerun with `DESLAG_FIX_GOLDEN=1`, or `make fix-golden`, to rewrite
-//! them, and read the diff.
+//! it compares or writes, so a dependency update that does not change a verdict does not fail a
+//! test and does not touch a golden file. What stays says what was measured and what the oracle
+//! made of it, and an oracle that changes a count fails. Rerun with `DESLAG_FIX_GOLDEN=1`, or
+//! `make fix-golden`, to rewrite them, and read the diff.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

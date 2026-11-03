@@ -103,24 +103,25 @@ impl Exclusion {
             .any(|(key, _)| key == sha256 || key == path)
     }
 
-    /// `files` without the listed ones, and how many were removed. An entry that names no file
-    /// is not a problem here: a list made for the whole corpus names fixtures a small tree lacks.
+    /// `files` without the listed ones, and how many were removed. An entry that does not name a
+    /// file is not a problem here: a list made for the whole corpus names fixtures a small tree
+    /// lacks.
     pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
         let (kept, dropped) = self.split(files);
         (kept, dropped.len())
     }
 
-    /// `files` as those the list does not name, then those it does. An entry that names no file
-    /// is not a problem here, as for [`Exclusion::drop`].
+    /// `files` as those the list does not name, then those it does. An entry that does not name a
+    /// file is not a problem here, as for [`Exclusion::drop`].
     pub fn split<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, Vec<File<'a>>) {
         files
             .into_iter()
             .partition(|file| !self.keys.iter().any(|(key, _)| Self::names(key, file)))
     }
 
-    /// `files` without the listed ones, and how many were removed. An entry that names no file
-    /// is a problem: the list was made for another corpus, and a draw that quietly keeps what it
-    /// meant to drop is the worse failure.
+    /// `files` without the listed ones, and how many were removed. An entry that does not name a
+    /// file is a problem: the list was made for another corpus, and a draw that quietly keeps what
+    /// it meant to drop is the worse failure.
     pub fn apply<'a>(
         &self,
         path: &str,
@@ -171,9 +172,9 @@ fn normal(repo: &str) -> Result<String, &'static str> {
 }
 
 impl Repos {
-    /// The repositories the `repo` column of the manifest `text` names. A manifest that names
-    /// none is an error, since it would exclude nothing. An error names the file and never a
-    /// line of it.
+    /// The repositories the `repo` column of the manifest `text` names. A manifest that does not
+    /// name one is an error, since it would not exclude a repository. An error names the file and
+    /// never a line of it.
     pub fn manifest(path: &str, text: &str) -> Result<Repos, Error> {
         let bad = |message: &str| Error::load(path, Place::File, message);
         let mut rows = text
@@ -201,7 +202,7 @@ impl Repos {
 
     /// The repositories the `# repo = owner/name` comments of the gold or queue `text` name. A
     /// sentence with no `repo`, such as one of `dev.conllu`, whose `source` names a file, is an
-    /// error: that file names no repository, and excluding nothing is never the answer.
+    /// error: that file does not name a repository, and excluding nothing is never the answer.
     pub fn gold(path: &str, text: &str) -> Result<Repos, Error> {
         let bad = |message: &str| Error::load(path, Place::File, message);
         let mut names = BTreeSet::new();
@@ -301,8 +302,8 @@ impl Repos {
     }
 
     /// The repositories of the fixtures under `root`, the small tier `tests/corpus`, read from
-    /// their sidecars. A root that is missing, does not load or holds no fixture is an error,
-    /// since it would exclude nothing.
+    /// their sidecars. A root that is missing, does not load or does not hold a fixture is an
+    /// error, since it would not exclude a repository.
     pub fn tests_corpus(root: &Path) -> Result<Repos, Error> {
         let shown = root.display().to_string();
         let bad = |message: &str| Error::load(&shown, Place::File, message);
@@ -675,7 +676,7 @@ mod tests {
         let queue = gold.join("queue/q2.conllu");
         let rebuilt = Repos::reserved(gold, &[queue.as_path()]).unwrap();
         assert!(!rebuilt.has("q/two") && rebuilt.has("q/one"));
-        // A queue that names nothing is an error too.
+        // A queue that does not name a repository is an error too.
         std::fs::write(gold.join("queue/q3.conllu"), "").unwrap();
         assert!(Repos::reserved(gold, &[]).is_err());
     }

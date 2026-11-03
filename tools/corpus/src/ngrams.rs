@@ -1,7 +1,7 @@
 //! `ngrams` and `candidates`: the phrases that set the focus side apart.
 //!
 //! An n-gram is a run of n prose tokens in one block, as `banned_phrases` matches a phrase: it
-//! starts and ends with a word or a number and holds no mark that ends a sentence. Split by
+//! starts and ends with a word or a number and does not hold a mark that ends a sentence. Split by
 //! `Token::split`, a phrase named here matches in exactly the files counted, which a test proves.
 //!
 //! Counting takes two passes. The first counts, length by length, the focus repositories each run
@@ -84,7 +84,8 @@ type FxMap<K, V> = HashMap<K, V, BuildHasherDefault<Fx>>;
 /// How n-grams are counted.
 #[derive(Debug, Clone, Serialize, clap::Args)]
 pub struct Counting {
-    /// The shortest n-gram listed, in tokens; a mark such as the hyphen of load-bearing is a token.
+    /// The shortest n-gram listed, in tokens; a mark such as the hyphen of `load-bearing` is a
+    /// token.
     #[arg(long, default_value_t = 1)]
     pub min_n: usize,
     /// The longest n-gram counted, in tokens; at most 6.

@@ -1,4 +1,4 @@
-//! The Rust oracle, `ra-ap-rustc_lexer`, the compiler's own lexer, and the adapter of deslag's
+//! The Rust oracle, `ra-ap-rustc_lexer`, the compiler's lexer, and the adapter of deslag's
 //! scanner.
 
 use crate::deslag_rust::{self, LexemeKind};
@@ -9,9 +9,9 @@ use crate::lexer::{Kind, Lexed, Lexer, Span, bom_len, trim_carriage_return};
 /// Reads Rust source with `ra-ap-rustc_lexer` and reports it to the contract of [`Lexer`].
 ///
 /// A byte order mark and a shebang line are skipped before tokenizing, as the compiler does, and
-/// the file is lexed whole, so a cargo-script frontmatter block is one token and holds no comments,
-/// strings or chars. A literal is cut at its suffix, so `"x"suffix` is the string `"x"`. The lexer never fails, so the
-/// result is always clean.
+/// the file is lexed whole, so a cargo-script frontmatter block is one token and does not hold
+/// comments, strings or chars. A literal is cut at its suffix, so `"x"suffix` is the string `"x"`.
+/// The lexer never fails, so the result is always clean.
 #[derive(Debug, Default)]
 pub struct RustOracle;
 

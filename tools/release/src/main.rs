@@ -33,8 +33,8 @@ enum Command {
         #[arg(long)]
         equal_crate: bool,
     },
-    /// Make every edit of the release change but the stamp of .agents/deslag.toml, and commit
-    /// nothing
+    /// Make every edit of the release change but the stamp of .agents/deslag.toml, and do not
+    /// commit the edits
     ///
     /// It refuses a tree with uncommitted changes, and reads all it needs before it writes.
     /// It sets the version in Cargo.toml and Cargo.lock, sets each `since` of `next` under src/

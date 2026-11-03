@@ -170,7 +170,7 @@ fn every_lint_is_a_table_of_the_config() {
 }
 
 /// `deslag instructions lints` has a section for every lint, in the order they run, so the guide
-/// names none of them.
+/// does not name them.
 #[test]
 fn the_lints_topic_covers_every_lint() {
     let output = Repo::new().run(&["instructions", "lints"]);
@@ -504,7 +504,7 @@ fn every_table_in_the_schema_refuses_unknown_keys() {
 }
 
 /// The schema names every group of characters, each off until the config switches it on, as the
-/// lint reads it; `banned_phrases` has no groups.
+/// lint reads it; `banned_phrases` does not have groups.
 #[test]
 fn the_schema_gives_each_group_of_characters_and_no_phrase_groups() {
     let root = schema();
@@ -742,8 +742,8 @@ fn the_json_holds_the_entries_of_the_text() {
     }
 }
 
-/// A stamp at the running version is current. `--since` it has read no config, so it calls none
-/// current.
+/// A stamp at the running version is current. `--since` it has not read a config, so it does not
+/// call a stamp current.
 #[test]
 fn a_stamp_or_a_since_at_the_running_version_prints_the_current_line() {
     let current = env!("CARGO_PKG_VERSION");
@@ -903,7 +903,7 @@ fn two_configs_at_one_location_stop_the_topic_with_the_message_check_prints() {
     );
 }
 
-/// With no config at all the topic starts from the baseline, as `--since` it does, and says so
+/// With no config the topic starts from the baseline, as `--since` it does, and says so
 /// first. The same text follows in both cases, and the JSON is that of a config with no stamp.
 #[test]
 fn with_no_config_the_topic_says_so_and_prints_what_since_the_baseline_prints() {
@@ -941,7 +941,7 @@ fn with_no_config_the_topic_says_so_and_prints_what_since_the_baseline_prints() 
     }
     assert!(!stdout(&no_stamp).contains("No deslag config"));
 
-    // The JSON has no note: it starts from the baseline either way.
+    // The JSON does not have a note: it starts from the baseline either way.
     let json = update(&none, &["--format", "json"]);
     assert_eq!(code(&json), 0);
     assert_eq!(
@@ -1016,7 +1016,7 @@ fn a_lint_the_config_already_turns_on_is_marked() {
         .collect();
     assert_eq!(set, marked);
 
-    // `--since` reads no config, so it marks nothing.
+    // `--since` does not read a config, so it does not mark an entry.
     let since = update(&repo, &["--since", OLDER]);
     assert_eq!(marks(&stdout(&since)), Vec::<&str>::new());
 }

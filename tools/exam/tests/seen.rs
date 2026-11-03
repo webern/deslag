@@ -1,7 +1,7 @@
 //! The sidecars of the gold sets and the `Seen` origin they give: the checked-in files load, the
-//! two ways a set reaches Python give one `Origin=` column, a sidecar error on holdout text names no
-//! silver batch, and, with the big tier fetched, each sidecar is what its fixtures give. No failure
-//! message here carries a word of a gold set.
+//! two ways a set reaches Python give one `Origin=` column, a sidecar error on holdout text does
+//! not name a silver batch, and, with the big tier fetched, each sidecar is what its fixtures give.
+//! No failure message here carries a word of a gold set.
 
 use std::path::{Path, PathBuf};
 

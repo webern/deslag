@@ -4,7 +4,7 @@
 //! `sample.conllu` is the token skeleton `deslag-exam tokens` writes for a gold file: `# exam.tokens
 //! = deslag` first, then for each sentence a `sent_id`, its `# exam.context`, a `# text` and one
 //! line per token, `FORM` and `MISC` filled (`Kind=`, `SpaceAfter=No`) and every other column `_`.
-//! It carries no tier or label, so it is what Harper and spaCy are run
+//! It does not carry a tier or label, so it is what Harper and spaCy are run
 //! over. `manifest.tsv` is the rest: split, tier, context and source file of each sentence.
 
 use std::borrow::Cow;
@@ -35,7 +35,7 @@ pub struct Tok {
     pub joined: bool,
     /// Where the word comes from, as the skeleton's `Origin=` says; English when it says none, and
     /// for every token that is not a word. A draw for labelling writes it, so the batches can show
-    /// a labeller that `foo_bar` is a name from code; the gold sample has none.
+    /// a labeller that `foo_bar` is a name from code; the gold sample does not have one.
     pub origin: Origin,
 }
 
@@ -140,7 +140,7 @@ pub fn tokens_of<'t>(joined: &'t str, sent: &Sent) -> Vec<Token<'t>> {
 /// The skeleton of `sents`, byte for byte what `deslag-exam tokens` writes for the same tokens
 /// when `with_origin` is given, and the same without its `Origin=` keys when it is not (a gold
 /// draw does not carry them). `context` gives each sentence's context by its `sent_id`; a
-/// sentence it names none for has no `# exam.context`, which a reader takes as prose.
+/// sentence it does not name a context for has no `# exam.context`, which a reader takes as prose.
 pub fn skeleton(
     sents: &[Sent],
     context: impl Fn(&str) -> Option<Context>,
@@ -180,11 +180,11 @@ pub fn skeleton(
 /// What the manifest records about one sentence.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Meta {
-    /// Dev or holdout; none for a sentence of a draw for labelling, written `unlabelled`. The exam's
-    /// own `Split` has no such value, so no gold file can say it.
+    /// Dev or holdout; none for a sentence of a draw for labelling, written `unlabelled`. The
+    /// exam's `Split` does not have such a value, so no gold file can say it.
     pub split: Option<Split>,
-    /// Who wrote the file it came from; none for a sentence of a bare skeleton, which has no
-    /// manifest to say.
+    /// Who wrote the file it came from; none for a sentence of a bare skeleton, which does not have
+    /// a manifest to say.
     pub tier: Option<Tier>,
     /// The block it was in.
     pub context: Context,
@@ -447,7 +447,7 @@ impl Sample {
     /// A copy of the gold flow's `.gold/sample.conllu`, which mixes holdout in and keeps its split
     /// only in its manifest, says neither and is refused. A skeleton that says
     /// `exam.split = holdout`, as `deslag-exam tokens` writes for a holdout gold, is refused
-    /// wherever it is. The gold flow's own `.gold` is not under `.label` and is read as before.
+    /// wherever it is. The gold flow's `.gold` is not under `.label` and is read as before.
     pub fn open(dir: &Path) -> Result<Sample, Problems> {
         Sample::open_in(dir, &gold_dir())
     }
@@ -784,7 +784,7 @@ pub fn parse_skeleton(path: &str, text: &str) -> Result<Vec<Sent>, Error> {
                 )
             })?;
             // Only a word has an origin; a skeleton that gives one to another token is read as
-            // English there, as the exam's own skeleton never writes it.
+            // English there, as the exam's skeleton never writes it.
             let origin = if kind == TokenKind::Word {
                 origin
             } else {

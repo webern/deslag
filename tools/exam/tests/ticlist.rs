@@ -178,7 +178,7 @@ fn the_skeleton_names_sentences_by_layout_path_and_byte_and_builds_its_text_from
     let forms: Vec<&str> = second.lines.iter().map(|l| l.form.as_str()).collect();
     assert_eq!(forms, ["It", "has", "no", "fix", ",", "really", "."]);
     // `Start=` is the token's byte, which for `really` sits on the `**`; no space where the source
-    // has none between tokens.
+    // does not have one between tokens.
     let miscs: Vec<&str> = second.lines.iter().map(|l| l.misc.as_str()).collect();
     assert_eq!(miscs[0], "Kind=Word|Start=9");
     assert_eq!(miscs[3], "Kind=Word|Start=19|SpaceAfter=No");

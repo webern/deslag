@@ -21,8 +21,8 @@ use crate::problems::Problems;
 use crate::review::{Key, Outcome, Session, Store, refusal, refuses_path};
 use crate::screen;
 
-/// Opens `file` for review. With `screen_only` it prints the first screen as text and changes
-/// nothing, which is how to see the review with no terminal.
+/// Opens `file` for review. With `screen_only` it prints the first screen as text and does not
+/// change the file, which is how to see the review with no terminal.
 pub fn run(file: &Path, screen_only: bool) -> Result<(), Problems> {
     let shown = file.display().to_string();
     // The path decides before the file is read; so does the canonical path, for a link.

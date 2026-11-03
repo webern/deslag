@@ -53,8 +53,8 @@ pub fn upos(tag: Tag) -> &'static str {
     }
 }
 
-/// The flags a UD `FEATS` column sets. `_` sets none. Keys outside the 14 flags are ignored;
-/// an entry with no `=` is an error, which the string names.
+/// The flags a UD `FEATS` column sets. `_` does not set a flag. Keys outside the 14 flags are
+/// ignored; an entry with no `=` is an error, which the string names.
 pub fn from_ud(feats: &str) -> Result<Features, String> {
     let entries = conllu::pairs(feats);
     if let Some((key, _)) = entries.iter().find(|(_, value)| value.is_empty()) {

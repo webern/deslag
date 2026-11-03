@@ -239,7 +239,7 @@ fn parts_become_a_batch_with_every_file_of_the_layout_and_it_checks() {
         "{kit}"
     );
     assert!(kit.contains("\narchive_sha256\t-\n"), "{kit}");
-    // The sheet names the batch and has no unfilled tag.
+    // The sheet names the batch and does not have an unfilled tag.
     let sheet = read(&dir, "DATASHEET.md");
     assert!(sheet.starts_with(&format!("# Silver set {NAME}\n")));
     assert!(!sheet.contains("{{"), "{sheet}");
@@ -279,8 +279,8 @@ fn parts_become_a_batch_with_every_file_of_the_layout_and_it_checks() {
 #[test]
 fn silver_conllu_is_read_by_the_exam_loader_and_by_readings() {
     let (made, batch) = built();
-    // A gold file that names a silver batch needs the sidecar of its seen words. The batch holds
-    // none, so a copy beside one that names no word is what the exam reads.
+    // A gold file that names a silver batch needs the sidecar of its seen words. The batch does not
+    // hold one, so a copy beside one that does not name a word is what the exam reads.
     let dir = made.root.join("with-sidecar");
     fs::create_dir_all(&dir).unwrap();
     fs::copy(batch.join("silver.conllu"), dir.join("silver.conllu")).unwrap();
@@ -440,8 +440,8 @@ fn a_reason_may_quote_a_path_of_the_corpus_but_the_preflight_refuses_one_of_this
     assert!(read(&dir, "parts/01/adjudicated.tsv").contains(quoted));
     check(&made, &dir).ok();
 
-    // The checkout's own path is refused at the preflight, where the part is made. The check of a
-    // built batch reads nothing of the machine, so it passes the same words, here and elsewhere.
+    // The checkout's path is refused at the preflight, where the part is made. The check of a
+    // built batch does not read the machine, so it passes the same words, here and elsewhere.
     let leaked = format!("{}/tests/gold/dev.conllu", checkout());
     made.edit(1, "merge/adjudicated.tsv", |text| {
         text.replacen(quoted, &leaked, 1)
@@ -926,7 +926,7 @@ fn audit_of(made: &Made, dir: &Path, reject: &[&str], disagree: bool) -> PathBuf
     .ok();
     let queue = read(&out, "queue.conllu");
     let labels = read(&out, "labels.conllu");
-    // Blind: the queue holds no label.
+    // Blind: the queue does not hold a label.
     assert!(
         !queue.contains("Prov=agree") && !queue.contains("Runs="),
         "{queue}"
@@ -1012,7 +1012,7 @@ fn an_audit_is_scored_into_the_batch_and_the_owners_rejections_come_out() {
             .count(),
         LEAST_SENTENCES - 1
     );
-    // Silver's labels of those sentences are silver's own words.
+    // Silver's labels of those sentences are silver's words.
     let silver = read(&dir, "silver.conllu");
     for line in read(&dir, "audit/labels.conllu")
         .lines()
@@ -1190,7 +1190,7 @@ fn an_audit_below_its_bar_needs_the_owners_acceptance() {
     let low = made.out("2026-10-08-low");
     assert!(read(&low, "audit/score.tsv").contains("# met = no\n"));
     assert!(!low.join("record/audit-accepted.txt").exists());
-    // The check passes, since it is the batch's own record; standing does not.
+    // The check passes, since it is the batch's record; standing does not.
     check(&made, &low).ok();
     make_live(&made, &low);
     standing(&made).refused(&[
@@ -1252,7 +1252,8 @@ fn a_small_audit_or_a_low_bar_needs_the_owners_acceptance() {
     check(&made, &small).ok();
     let live = make_live(&made, &small);
     standing(&made).ok();
-    // An empty acceptance accepts nothing: build refuses one, and check and standing an emptied file.
+    // An empty acceptance does not accept the audit: build refuses one, and check and standing an
+    // emptied file.
     build_audited(
         &made,
         "2026-10-08-empty",

@@ -134,7 +134,7 @@ pub fn freeze(
 /// keys has one kind. Each item of `value` takes at most one item of `fill`, the first of its
 /// kind. A fill item with no item of its kind left is appended when it carries a key that no item
 /// of `value` has set; otherwise it is dropped. Only items that are tables are matched; the
-/// config's own values stay.
+/// config's values stay.
 fn overlay(value: &mut Value, fill: &Value) {
     match (value, fill) {
         (Value::Object(value), Value::Object(fill)) => {

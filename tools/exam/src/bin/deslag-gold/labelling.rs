@@ -1,8 +1,8 @@
 //! `deslag-gold draw`: the sentences sent to labellers, which silver is made from.
 //!
 //! It is the gold draw's machinery (tier by context quotas, caps per file and per repository, a
-//! seed) with differences. It has no holdout, and its rows are `unlabelled`. Its ids are the
-//! draw's own prefix and four digits, never the gold flow's (see [`GOLD_PREFIXES`]), so no draw
+//! seed) with differences. It does not have a holdout, and its rows are `unlabelled`. Its ids are
+//! the draw's prefix and four digits, never the gold flow's (see [`GOLD_PREFIXES`]), so no draw
 //! shares an id with dev, holdout, owner or another draw. It leaves out the reserved
 //! repositories, to which it adds those of `tests/corpus/`; the sources whose declared generator
 //! is of a family the licence ban covers ([`banned_generator`]); and any sentence whose text
@@ -18,10 +18,10 @@
 //! With `--parts N` the one draw is dealt into `part-01` to `part-NN` under the working
 //! directory instead ([`deal`]): each part is a complete draw for labelling, with the draw's
 //! header and `part = k of N`, and the caps, the text checks and the selection are the one
-//! draw's, so `--parts` changes no sentence drawn. Every draw's header records `tag_version`, the
-//! tag VERSION the tokens and `Origin=` were made under, which a later preflight compares with
-//! the build that assembles the batch. It also leaves out the texts of live silver batches
-//! ([`Live`]), as it does those of an earlier draw, and records how many in the header.
+//! draw's, so `--parts` does not change a sentence drawn. Every draw's header records
+//! `tag_version`, the tag VERSION the tokens and `Origin=` were made under, which a later preflight
+//! compares with the build that assembles the batch. It also leaves out the texts of live silver
+//! batches ([`Live`]), as it does those of an earlier draw, and records how many in the header.
 //!
 //! What it says goes to stderr, as counts: the fixtures left out, each under the first reason
 //! that applies; what remained to draw from; what each tier could give at most under the caps
@@ -249,7 +249,7 @@ fn resolve(path: &Path) -> PathBuf {
 
 /// Whether `path` is, or is inside, `gold_dir`, compared after [`resolve`], other than under a
 /// `.label` directory directly in it. Silver's audit queue must never be written there:
-/// `Repos::reserved` reads every queue in the gold directory and would reserve silver's own
+/// `Repos::reserved` reads every queue in the gold directory and would reserve silver's
 /// repositories. (A checkout keeps `.label` beside `tests/gold`; the carve-out is for a gold
 /// directory that is a work directory, as the tests have it.)
 pub fn in_gold_dir(path: &Path, gold_dir: &Path) -> bool {

@@ -3,7 +3,7 @@
 //!
 //! `audit --blind` draws sentences of `silver.conllu` into a queue with no labels, which the
 //! owner reviews with deslag's readings pre-filled at Likely and above, as for `owner.conllu`.
-//! [`score`] compares the reviewed queue with silver's own labels of the same sentences
+//! [`score`] compares the reviewed queue with silver's labels of the same sentences
 //! (`labels.conllu`) on the part of speech and on the whole code, with the exam's sentence
 //! bootstrap ([`deslag_exam::stats`]), so no interval is computed anywhere else. It splits the
 //! words by how silver labelled them (agreed or adjudicated), by context, and by whether the
@@ -36,7 +36,7 @@ pub const LEAST_SENTENCES: usize = 50;
 
 /// What an audit against `bar` of `reviewed` and `rejected` sentences lacks of the rules a batch
 /// is held to without the owner's acceptance: a bar of at least [`LEAST_BAR`] and at least
-/// [`LEAST_SENTENCES`] sentences. Empty when it lacks nothing.
+/// [`LEAST_SENTENCES`] sentences. Empty when it does not lack a rule.
 pub fn short_of(bar: Option<f64>, reviewed: usize, rejected: usize) -> Vec<String> {
     let mut out = Vec::new();
     match bar {

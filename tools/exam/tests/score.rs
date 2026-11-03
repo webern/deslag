@@ -287,7 +287,8 @@ fn fixed() -> Fixed {
 /// - gold retained: all but The, since bark keeps Verb: 8/9.
 /// - levels: Sure 4 all right; Likely 2 (bark, cat) of which 1 right; Unsure 2 (loudly, helps)
 ///   both right; Unknown 1 (The) wrong.
-/// - clean: f1 has a wrong committed token (bark); f2's only miss is Unknown, f3 has none: 2/3.
+/// - clean: f1 has a wrong committed token (bark); f2's only miss is Unknown, f3 does not have one:
+///   2/3.
 /// - number (gold Noun with a number, tag right): Dogs right, cat Plur for Sing wrong: 1/2.
 /// - verb form (gold Verb, tag right): slept, Walking, helps all right: 3/3. bark is skipped
 ///   since its tag is wrong.

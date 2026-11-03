@@ -117,7 +117,7 @@ fn a_config_below_the_top_roots_a_run_at_or_below_it() {
     let repo = repo();
     repo.write("proj/deslag.toml", "schema_version = 2\n");
     repo.write("proj/src/b.md", DASHED);
-    // The nearer config bans nothing, and the one at the top is not read.
+    // The nearer config does not ban a dash, and the one at the top is not read.
     let nested = repo.run_in("proj/src", &["check"]);
     assert_eq!(code(&nested), 0, "{}", stderr(&nested));
     assert!(raw_stderr(&nested).contains(&note(&repo, "proj", "deslag.toml")));

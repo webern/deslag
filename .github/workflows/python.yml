@@ -34,7 +34,7 @@ jobs:
       # test-python builds deslag-gold, so it needs the toolchain rust-toolchain.toml names, and
       # the registry and target dir cached, as in ci.yml. Only main saves the cache.
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.0, 2026-09-07
         with:
           cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
@@ -48,7 +48,7 @@ jobs:
       # make preflight runs first here as in every gate, and it checks for typos, which this job
       # does not otherwise use. Keep it: it is how a machine learns what it lacks.
       - name: Install typos
-        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.29, 2026-10-16
+        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.87.29, 2026-10-16
         with:
           tool: typos
 

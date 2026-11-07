@@ -89,13 +89,13 @@ jobs:
       # failure are in the step summary. remeasure.sh says what it does.
       - name: Install Rust
         if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.0, 2026-09-07
         with:
           cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Install typos
         if: github.event_name == 'pull_request' && steps.bundle.outputs.new == 'true'
-        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.29, 2026-10-16
+        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.87.29, 2026-10-16
         with:
           tool: typos
 
@@ -146,13 +146,13 @@ jobs:
       # may stand between the image reaching the registry and the lock pinning it.
       # Installs what rust-toolchain.toml names and caches the registry and target dir.
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@ecabd13d1c56bd1345c230e542e9144811ad706f # v2.0.0, 2026-09-07
+        uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.0, 2026-09-07
         with:
           cache-save-if: ${{ github.ref == 'refs/heads/main' }}
 
       # make preflight asks for it, though nothing here spell checks. A prebuilt binary.
       - name: Install typos
-        uses: taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.29, 2026-10-16
+        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.87.29, 2026-10-16
         with:
           tool: typos
 

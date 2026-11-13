@@ -55,7 +55,7 @@ jobs:
       # make preflight runs first here as in every gate, and it checks for typos, which this job does
       # not otherwise use.
       - name: Install typos
-        uses: taiki-e/install-action@b80e2bb2635f28eb98b9fce1e2f0887e1535c6b2 # v2.87.29, 2026-10-16
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.87.29, 2026-10-16
         with:
           tool: typos
 

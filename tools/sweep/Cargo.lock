@@ -164,9 +164,9 @@ dependencies = [
 
 [[package]]
 name = "ra-ap-rustc_lexer"
-version = "0.182.0"
+version = "0.184.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1954f43324faca4bc919eb2c9d5d61668b2714341fb941ec6c4e8c89bd47303"
+checksum = "d1ee6759a85212aad34e041fca34642a27e4a0b9b4dd74154fbed844823f4cfa"
 dependencies = [
  "memchr",
  "unicode-ident",
@@ -282,9 +282,9 @@ dependencies = [
 
 [[package]]
 name = "tree-sitter"
-version = "0.27.1"
+version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5129de2ccc97808c4583d48f1fb44576d015cf241e432800572bda11ef30c3b"
+checksum = "37b2bed8f39a73439f3b0b7ed8f452be5d2911b5e9da69d352ef113bb7448fb8"
 dependencies = [
  "cc",
  "regex",

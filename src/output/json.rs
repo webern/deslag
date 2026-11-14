@@ -9,8 +9,7 @@ use crate::config::Names;
 use crate::lint::allow::Status;
 use crate::lint::{self, Base, Lint, Mark, Narrowed};
 
-/// The version of the document's shape. It goes up when a change could break a reader, not when
-/// a field is added.
+/// The version of the document's shape. It goes up when a change could break a reader. Adding a field leaves it as it is.
 pub const FORMAT_VERSION: u32 = 1;
 
 /// One run of `deslag check`.

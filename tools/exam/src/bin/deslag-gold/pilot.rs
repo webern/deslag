@@ -56,7 +56,7 @@ struct Series {
     label: String,
     base_only: bool,
     said: Answers,
-    /// Whether a word it did not give an answer for counts as wrong, not as outside what it is
+    /// Whether a word it did not give an answer for counts as wrong or is left out of what it is
     /// graded on.
     strict: bool,
 }
@@ -120,7 +120,7 @@ pub struct Report {
     /// How many model voters a word needed to count as agreed.
     pub min_voters: usize,
     /// The merge's `voters.tsv` records no `min_voters`: it was made before the minimum was
-    /// recorded, and `min_voters` is then the rule it was made under, not a number it recorded.
+    /// recorded, and `min_voters` is then the rule it was made under.
     pub old_merge: bool,
     /// The share of words the voters agreed on, so were not adjudicated.
     pub agreed_share: Estimate,
@@ -684,7 +684,7 @@ pub fn audit(path: &str, labelled: &str, count: usize, seed: u64) -> Result<Stri
     let mut picked = order[..count].to_vec();
     picked.sort_unstable();
     // The queue says it is silver, so `own` can refuse it: its labels are a model's, and
-    // whatever the owner corrects stays in this queue and is graded, never moved into owner.conllu.
+    // whatever the owner corrects stays in this queue and is graded.
     let mut out = format!("{}{SILVER}\n", skeleton::HEADER);
     for at in picked {
         let block = &blocks[at];

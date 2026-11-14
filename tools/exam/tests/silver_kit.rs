@@ -319,7 +319,7 @@ fn rank_and_queue_leave_out_the_repositories_of_live_silver_and_of_parts_being_l
         "{}",
         String::from_utf8_lossy(&run.stderr)
     );
-    // A part without its sample holds back nothing that can be checked: an error, not a pass.
+    // A part without its sample holds back nothing that can be checked: an error.
     fs::remove_file(parts.join("part-02/sample.conllu")).unwrap();
     assert_eq!(run_queue(&picks).status.code(), Some(2));
 }

@@ -47,7 +47,7 @@ pub const FUNCTION_WORDS: &[&str] = &[
     "yes", "always", "perhaps", "besides",
 ];
 
-/// Verbs whose `no` opens a clause, as in "this means no one can", not an object.
+/// Verbs whose `no` opens a clause, as in "this means no one can".
 pub const CLAUSE_VERBS: &[&str] = &[
     "means",
     "ensures",

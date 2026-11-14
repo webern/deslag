@@ -344,7 +344,7 @@ fn data_differences(
                 let at = enter(path, key);
                 match (old.get(key), new.get(key)) {
                     (Some(old), Some(new)) => data_differences(&at, old, new, below(key), found),
-                    // A default the text wrote is what it said, not "not set".
+                    // A default the text wrote is what it said.
                     (Some(old), None) => found.push(match defaults.1.and_then(|d| d.get(key)) {
                         Some(written) => format!(
                             "{at}: it is {} at schema 1 and {}, the default, at schema 2",

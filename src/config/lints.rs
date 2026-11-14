@@ -862,7 +862,7 @@ impl Merge for Density {
 /// `lints.verbs_no_nouns`: a file fails when a sentence negates a verb through its object, as in
 /// `bakes no cakes`.
 ///
-/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+/// The table itself turns the check on. The words it excuses belong to the lint.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct VerbsNoNouns {
@@ -884,7 +884,7 @@ impl Merge for VerbsNoNouns {
 /// parse at all`.
 ///
 /// The table itself turns the check on. The negators it reads and the places it excuses are the
-/// lint's, not the config's.
+/// lint's.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct NotAtAll {
@@ -905,7 +905,7 @@ impl Merge for NotAtAll {
 /// `lints.verbs_nothing`: a file fails when a sentence makes `nothing` or `none` the object of a
 /// verb, as in `finds nothing`.
 ///
-/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+/// The table itself turns the check on. The words it excuses belong to the lint.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct VerbsNothing {
@@ -926,7 +926,7 @@ impl Merge for VerbsNothing {
 /// `lints.possessive_own`: a file fails when a possessive noun is padded with `own`, as in `the
 /// crate's own version`.
 ///
-/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+/// The table itself turns the check on. The words it excuses belong to the lint.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct PossessiveOwn {

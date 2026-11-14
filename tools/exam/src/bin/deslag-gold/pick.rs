@@ -23,17 +23,17 @@
 //!
 //! `hesitates` lists the pairs of a word's best guess with each other tag deslag has not ruled
 //! out, as `N/V:2`, most common first. A reading's `kept` set is unordered: it says which tags
-//! are still possible, not which is likelier. So the column says what deslag cannot tell apart
+//! are still possible. So the column says what deslag cannot tell apart
 //! and never which alternative to prefer; a word with three kept tags gives two pairs.
 //!
 //! A sentence's id is `r` and sixteen hex digits of the sha256 of its file's sha256 and its byte
 //! range, so it names the same sentence in any copy of the corpus holding that file. Two
-//! sentences with one id are an error in `rank` and in `queue`, never a silent choice.
+//! sentences with one id are an error in `rank` and in `queue`.
 //!
 //! A queue is a skeleton the review opens, with `# tier`, `# source = <file> bytes a-b` (as
 //! `dev.conllu` has it), `# repo = owner/name`, `# pick_id` (the id the pick named) and
 //! `# license` per sentence. In the review, `x` twice marks a pick `# owner_rejected = <date>`:
-//! a bad pick (personal data, not English) that does not need tags. [`own`] turns a queue the owner
+//! a bad pick (personal data or another language) that does not need tags. [`own`] turns a queue the owner
 //! has finished into the text of `owner.conllu`: it leaves the rejected sentences out, gives the
 //! others ids `o0001` on, `exam.tier` for `tier`, and the file's header on the first sentence,
 //! keeping `source`, `repo` and `pick_id`. The owner's sentences are a stratum of hard
@@ -104,8 +104,7 @@ pub struct Ranked {
     /// The kinds of those origins, as `Command:2 Path:1`.
     pub origins: String,
     /// The pairs of a word's best guess and each other tag still possible, over the words below
-    /// Likely, most common first, as `N/V:2`. Unordered: it names what deslag cannot tell apart,
-    /// not which alternative is likelier.
+    /// Likely, most common first, as `N/V:2`. Unordered: it names what deslag cannot tell apart.
     pub hesitates: String,
     /// Where the sentence is in its file, in bytes.
     pub range: Range<usize>,
@@ -177,8 +176,8 @@ pub struct Facts {
     pub lorem: usize,
 }
 
-/// Why a sentence is left out of the ranking. The list needs the sentences deslag is unsure of
-/// as English, not ones it cannot read or ones that are no sentence.
+/// Why a sentence is left out of the ranking. The list needs only the sentences deslag is unsure of
+/// as English.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Junk {
     /// Lorem ipsum: two or more of its words, and at least half the sentence.

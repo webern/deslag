@@ -11,7 +11,7 @@ use sha2::{Digest, Sha256};
 
 use crate::{Error, digest};
 
-/// Files over this many bytes are skipped and counted: generated tables, not code anyone writes.
+/// Files over this many bytes are skipped and counted: generated tables.
 pub const MAX_FILE_BYTES: u64 = 1_500_000;
 
 /// Directories with these names are not entered.

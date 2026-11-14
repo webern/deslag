@@ -6,8 +6,8 @@
 //! the report's counts, and no bootstrap is drawn because only point counts are judged.
 //!
 //! A `mustpass` set does not have a metric: it names a list of words (`crate::mustpass`) and how
-//! many it may miss. `gate --import` runs the same sets on a file another program filled, never on
-//! holdout.
+//! many it may miss. `gate --import` runs the same sets on a file another program filled, and refuses
+//! the holdout set.
 //!
 //! The set called `holdout` is the holdout set, whatever its file says, and its output is a verdict
 //! per metric and nothing else. Its header must agree: the file of the `holdout` set says

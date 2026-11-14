@@ -9,7 +9,7 @@
 //! the rules read, so a change to that must raise `RULES_VERSION`, and the weights be trained
 //! again.
 //!
-//! The set is a snapshot, not a verdict. It says what deslag does today, so that a change to what a
+//! The set is a snapshot. It says what deslag does today, so that a change to what a
 //! lint finds shows in review, and a change not meant to move it must leave it as it is. Whether a
 //! lint is right about the corpus is for `tests/slow/corpus.rs` to say. The one verdict here is
 //! that the corpus holds fixtures on both sides of every lint.

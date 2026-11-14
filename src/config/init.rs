@@ -115,7 +115,7 @@ pub fn init(cwd: &Path, explicit: Option<&Path>, running: &semver::Version) -> R
         }
     };
     let text = everything(running);
-    // The text is the code's, so a config that does not load is a fault here, not the person's.
+    // The text is the code's, so a config that does not load is a fault here.
     Config::parse_at(&text, path.clone(), source, running)?;
     if let Some(parent) = path.parent().filter(|parent| !parent.exists()) {
         std::fs::create_dir(parent).map_err(|source| Error::Write {

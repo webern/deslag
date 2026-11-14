@@ -999,7 +999,7 @@ fn only_good_passes(extension: &str, old: &str, good: &str, bad: &[(&str, &str)]
 
 #[test]
 fn the_stamp_line_is_checked_like_every_other_line() {
-    // A stamp that was there: only its quoted value may change, not the comment or the spacing.
+    // A stamp that was there: only its quoted value may change.
     only_good_passes(
         "toml",
         "schema_version = 2\ndeslag_version = \"0.0.0\" # keep me\n[md.lints.density]\nmax_item_chars = 5\n",

@@ -28,7 +28,7 @@
 //! with one reading there first, so a cue here would never fire. The new cues are phrase boundary
 //! and coordination cues (a noun before no word or beside a conjunction, after a noun or a numeral;
 //! a verb after a pronoun; an adjective after an adverb or a determiner; an adverb before no
-//! word), which test only whether the lexicon lacks a reading, not which of several is right.
+//! word), which test only whether the lexicon lacks a reading.
 //! That is why a word with one reading does not need a dominance mark.
 //!
 //! Each cue was measured alone on EWT dev and the deslag dev gold set. Measured and dropped, under

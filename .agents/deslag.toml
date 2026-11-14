@@ -20,7 +20,7 @@ exclude = [
   # Printed by the tool, not written.
   "/tools/corpus/tests/golden/**",
   # The system prompt of every labelling run. Each run records its sha256, so a reword changes
-  # the instrument, not its prose.
+  # the instrument.
   "/tests/gold/annotation-guide.md",
   "/scripts/label/prompts/**",
 ]
@@ -62,7 +62,7 @@ load-bearing = "say what depends on it"
 [md.lints.density]
 max_paragraph_chars = 500
 
-# A taste lint, off by default: this repo negates the verb, not its object.
+# A taste lint, off by default: this repo negates the verb, as in `does not bake cakes`.
 [md.lints.verbs_no_nouns]
 
 # This repo writes the plain negation, `does not parse`.
@@ -73,6 +73,15 @@ max_paragraph_chars = 500
 
 # This repo writes the possessive alone, `the crate's version`.
 [md.lints.possessive_own]
+
+# This repo ends a sentence on what it says, with no denial after a comma.
+[md.lints.denial_tail]
+
+[[md.allow]]
+path = "src/instructions/lints/possessive_own.md"
+lint = "denial_tail"
+quote = "Where the contrast is the point, name it instead (\"deslag's config, not the user's\")."
+reason = "The sentence quotes a contrast as an example of what possessive_own passes."
 
 [[md.overrides]]
 globs = ["/AGENTS.md"]
@@ -187,6 +196,8 @@ load-bearing = "say what depends on it"
 
 [rust.lints.possessive_own]
 
+[rust.lints.denial_tail]
+
 # The comments of deslag's TOML outside tests/, and not the golden files of tools/sweep, which
 # the sweep prints. They are held to the same characters and phrases as the Rust comments.
 [toml]
@@ -234,3 +245,5 @@ load-bearing = "say what depends on it"
 [toml.lints.verbs_nothing]
 
 [toml.lints.possessive_own]
+
+[toml.lints.denial_tail]

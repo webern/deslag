@@ -124,8 +124,7 @@ pub fn freeze(
 }
 
 /// Lays `fill` over `value` where `value` is silent: a key `value` lacks takes `fill`'s, a table
-/// both have is laid key by key, and an item of a list is laid onto an item of the same kind,
-/// never onto one by its position.
+/// both have is laid key by key, and an item of a list is laid onto an item of the same kind.
 ///
 /// The kind of an item of a list is the set of discriminating keys it carries, the keys that
 /// some items of the fill's list carry and others lack. An `allow` entry is a `quote` entry or a

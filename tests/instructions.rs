@@ -417,7 +417,7 @@ fn every_config_deslag_accepts_fits_the_schema() {
         for case in std::fs::read_dir(lint.expect("a lint").path()).expect("a lint's cases") {
             let case = case.expect("a case").path();
             // A case with a .exit file is one deslag cannot run, such as one whose config it
-            // rejects. A base is the repo before a case's change, not a case.
+            // rejects. A base is the repo before a case's change.
             let base = case
                 .extension()
                 .is_some_and(|extension| extension == "base");

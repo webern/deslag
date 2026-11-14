@@ -560,7 +560,7 @@ fn the_write_keeps_the_permissions_and_a_symlink_stays_a_link() {
 
     let output = repo.run(&["update", "--to", CURRENT]);
     assert_eq!(code(&output), 0, "{}", raw_stderr(&output));
-    // The messages name the file that was written, not the link.
+    // The messages name the file that was written.
     assert!(
         raw_stderr(&output).contains("real/deslag.toml:10: took"),
         "{}",

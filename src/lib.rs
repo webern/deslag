@@ -100,7 +100,7 @@ pub enum Error {
     },
 
     /// The repo could not be walked: its root could not be read, or an ignore file is broken. A
-    /// directory below the root that could not be read is skipped, not an error.
+    /// directory below the root that could not be read is skipped.
     #[error("cannot walk {root}")]
     Walk {
         /// The repo root being walked.

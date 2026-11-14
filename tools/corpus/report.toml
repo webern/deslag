@@ -36,3 +36,5 @@ max_paragraph_chars = 500
 [md.lints.verbs_nothing]
 
 [md.lints.possessive_own]
+
+[md.lints.denial_tail]

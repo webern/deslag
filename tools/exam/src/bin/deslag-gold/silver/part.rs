@@ -804,7 +804,7 @@ impl Part {
     }
 
     /// The part's files as the batch ships them, under `parts/NN/`, with the rows of the
-    /// sentences in `keep` only. Unsettled words ship as counts, never with a form.
+    /// sentences in `keep` only. Unsettled words ship as counts alone.
     pub fn shipped(&self, keep: &BTreeSet<String>) -> BTreeMap<String, String> {
         let dir = layout::part(self.number);
         let mut out = BTreeMap::new();

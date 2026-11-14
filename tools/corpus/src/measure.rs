@@ -117,7 +117,7 @@ pub struct Doc {
     pub repo: u32,
     /// The agents whose marks its history carries.
     pub tools: Vec<String>,
-    /// Whether its label rests on its publisher's statement of the model, not on a history.
+    /// Whether its label rests on its publisher's statement of the model.
     pub declared: bool,
     /// What kind of file it is, such as `readme`.
     pub kind: String,

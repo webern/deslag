@@ -512,7 +512,7 @@ mod tests {
     }
 
     /// A section younger than the rename never had the old key, so there both keys set is the same
-    /// "unknown key" as the old key alone, not a both-set error.
+    /// "unknown key" as the old key alone.
     #[test]
     fn both_set_in_a_younger_section_is_an_unknown_key() {
         let text = "schema_version = 2\n\

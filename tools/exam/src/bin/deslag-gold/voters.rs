@@ -17,7 +17,7 @@
 //!   has one: if every voter left it out, the word is disputed, since no one said it.
 //!
 //! Everything else goes to the adjudication worklist as phase 1's merger does, with the voters
-//! shown as `A`, `B`, `C` in the order they were given, never by name. The agreed words stand,
+//! shown only as `A`, `B`, `C` in the order they were given. The agreed words stand,
 //! `Prov=agree`, with `Runs=` naming the run of every voter that answered the sentence, since
 //! every one of them agreed.
 //!

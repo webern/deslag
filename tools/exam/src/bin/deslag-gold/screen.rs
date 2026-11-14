@@ -39,7 +39,7 @@ pub enum Look {
     Reversed,
 }
 
-/// One line of the screen, never wider than the screen.
+/// One line of the screen, cut to its width.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Line {
     /// What it says.

@@ -10,8 +10,7 @@
 //! uppercase letter for the features of that guess: `runs<TAB>vZn` is a verb, finite present third
 //! person singular, that may also be a noun. The ranking comes from how often WordNet's
 //! senses of the lemma were met in SemCor, its sense-tagged corpus, for each part of speech (spread
-//! over the forms the part of speech has), then Moby's priority order and WordNet's sense counts,
-//! never from a treebank. A `!` last on a line marks a word whose best guess has nine tenths of its
+//! over the forms the part of speech has), then Moby's priority order and WordNet's sense counts. A `!` last on a line marks a word whose best guess has nine tenths of its
 //! counts and at least five of them (see `dominant`), which only the prior pass reads.
 //!
 //! - **Confidence.** Every word here is `Unsure`, whatever its tag count. The open class is open:

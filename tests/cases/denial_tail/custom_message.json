@@ -1,0 +1,24 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\nREADME.md has 1 sentence that ends in a denial.\n\nRewrite the sentences in README.md.\n\nThe places:\n  line 3: \", not duplicate their details\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 73,
+          "end": 102,
+          "line": 3,
+          "column": 64,
+          "end_line": 3,
+          "end_column": 93,
+          "note": "\", not duplicate their details\""
+        }
+      ]
+    }
+  ]
+}

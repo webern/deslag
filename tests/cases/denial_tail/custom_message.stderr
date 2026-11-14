@@ -1,0 +1,10 @@
+ERROR: deslag detected sentences that end in a denial!
+
+README.md has 1 sentence that ends in a denial.
+
+Rewrite the sentences in README.md.
+
+The places:
+  line 3: ", not duplicate their details"
+
+deslag: 1 of 1 files with sentences that end in a denial.

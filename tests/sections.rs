@@ -410,7 +410,8 @@ fn can_run(lint: Lint, surfaces: &[&str]) -> bool {
         | Lint::VerbsNoNouns
         | Lint::NotAtAll
         | Lint::VerbsNothing
-        | Lint::PossessiveOwn => !surfaces.is_empty(),
+        | Lint::PossessiveOwn
+        | Lint::DenialTail => !surfaces.is_empty(),
     }
 }
 

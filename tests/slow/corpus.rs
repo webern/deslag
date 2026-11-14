@@ -18,15 +18,15 @@ use common::corpus::corpus;
 use common::fixture::Fixture;
 use common::{Repo, code, config_text, on_every_core, stderr, stdout};
 use deslag::config::{BannedChars, BannedPhrases, Density, MaxEmphasis, RepoLayout};
-use deslag::config::{NotAtAll, PossessiveOwn, VerbsNoNouns, VerbsNothing};
+use deslag::config::{DenialTail, NotAtAll, PossessiveOwn, VerbsNoNouns, VerbsNothing};
 use deslag::document::{Fences, Location, Reader, Stack};
 use deslag::fix::{self, Outcome};
 use deslag::lint::banned_phrases::CATALOGUE;
 use deslag::lint::max_size_bytes;
 use deslag::lint::repo_layout::{self, Problem};
 use deslag::lint::{
-    Lint, banned_chars, banned_phrases, density, max_emphasis, not_at_all, possessive_own,
-    verbs_no_nouns, verbs_nothing,
+    Lint, banned_chars, banned_phrases, denial_tail, density, max_emphasis, not_at_all,
+    possessive_own, verbs_no_nouns, verbs_nothing,
 };
 use deslag::{Config, ConfigSource, Document, Violation, check_file};
 
@@ -878,6 +878,19 @@ fn the_corpus_locations_hold_what_they_point_at() {
                         );
                     }
                 }
+                Violation::DenialTail(over) => {
+                    for found in &over.matches {
+                        let held = held(&found.location);
+                        let first = held.chars().next();
+                        let lower = held.to_lowercase();
+                        assert!(
+                            held.split_whitespace().next() == found.quote.split_whitespace().next()
+                                && first.is_some_and(|mark| ",;-\u{2013}\u{2014}".contains(mark))
+                                && (lower.contains("not") || lower.contains("never")),
+                            "{context}: {held:?} for {found:?}"
+                        );
+                    }
+                }
                 Violation::Density(over) => {
                     for block in &over.blocks {
                         let held = held(&block.location);
@@ -1307,6 +1320,30 @@ fn possessive_own_flags_llm_text_more_than_human_text() {
     };
     let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
     eprintln!("flagged by possessive_own: human {human}, llm {llm}, mixed {mixed}");
+    assert!(llm > human, "human {human}, llm {llm}");
+}
+
+/// The tree is too small for the lint's 3 times claim, which `tools/corpus/tests/blobs.rs` checks
+/// on the big tier, so the tree asks only that `llm` files hold a denial tail more often than
+/// `human` files.
+#[test]
+fn denial_tail_flags_llm_text_more_than_human_text() {
+    let fixtures = corpus();
+    let settings = DenialTail::default();
+    let flagged = |category: &str| {
+        fixtures
+            .iter()
+            .filter(|fixture| fixture.category == category)
+            // Its words are English.
+            .filter(|fixture| fixture.sidecar.content.natural_language == "en")
+            .filter(|fixture| {
+                let text = String::from_utf8_lossy(&fixture.bytes);
+                denial_tail::check(&Document::markdown(&text), Some(&settings)).is_some()
+            })
+            .count()
+    };
+    let (human, llm, mixed) = (flagged("human"), flagged("llm"), flagged("mixed"));
+    eprintln!("flagged by denial_tail: human {human}, llm {llm}, mixed {mixed}");
     assert!(llm > human, "human {human}, llm {llm}");
 }
 

@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "src/lib.rs",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\nsrc/lib.rs has 3 sentences that end in a denial.\n\nTODO: matt writes the error message instructions!\n\nThe places:\n  line 1: \", not duplicate their details\"\n  line 4: \", never in plain storage\"\n  line 8: \", not the question\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 67,
+          "end": 96,
+          "line": 1,
+          "column": 68,
+          "end_line": 1,
+          "end_column": 97,
+          "note": "\", not duplicate their details\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 190,
+          "end": 214,
+          "line": 4,
+          "column": 46,
+          "end_line": 4,
+          "end_column": 70,
+          "note": "\", never in plain storage\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 316,
+          "end": 334,
+          "line": 8,
+          "column": 30,
+          "end_line": 8,
+          "end_column": 48,
+          "note": "\", not the question\""
+        }
+      ]
+    }
+  ]
+}

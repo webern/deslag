@@ -78,6 +78,10 @@ pub struct Lints {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("since" = "0.0.6"))]
     pub possessive_own: Option<PossessiveOwn>,
+    /// That a sentence does not end with a `not` or `never` tail.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[schemars(extend("since" = "next"))]
+    pub denial_tail: Option<DenialTail>,
 }
 
 impl Lints {
@@ -94,6 +98,7 @@ impl Lints {
             Lint::NotAtAll => self.not_at_all.is_some(),
             Lint::VerbsNothing => self.verbs_nothing.is_some(),
             Lint::PossessiveOwn => self.possessive_own.is_some(),
+            Lint::DenialTail => self.denial_tail.is_some(),
         }
     }
 
@@ -117,7 +122,7 @@ impl Lints {
     /// would print as written. The refusal names the placeholders the lint takes. The same lists
     /// fill the reports, so the two cannot differ.
     fn unknown_placeholder(&self) -> Option<String> {
-        let messages: [(&str, Option<&String>, &[&str]); 10] = [
+        let messages: [(&str, Option<&String>, &[&str]); 11] = [
             (
                 "max_size_bytes",
                 self.max_size_bytes
@@ -175,6 +180,11 @@ impl Lints {
                     .as_ref()
                     .and_then(|s| s.message.as_ref()),
                 lint::possessive_own::PLACEHOLDERS,
+            ),
+            (
+                "denial_tail",
+                self.denial_tail.as_ref().and_then(|s| s.message.as_ref()),
+                lint::denial_tail::PLACEHOLDERS,
             ),
         ];
         messages.into_iter().find_map(|(lint, message, names)| {
@@ -264,6 +274,7 @@ impl Merge for Lints {
         self.not_at_all.merge(&over.not_at_all);
         self.verbs_nothing.merge(&over.verbs_nothing);
         self.possessive_own.merge(&over.possessive_own);
+        self.denial_tail.merge(&over.denial_tail);
     }
 }
 
@@ -933,6 +944,27 @@ impl Merge for PossessiveOwn {
     }
 }
 
+/// `lints.denial_tail`: a file fails when a sentence ends in a `not` or `never` tail, as in `The
+/// contract is defined on the body, not on the transport coding.`
+///
+/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct DenialTail {
+    /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
+    #[serde(default)]
+    #[schemars(extend("since" = "next"))]
+    pub message: Option<String>,
+}
+
+impl Merge for DenialTail {
+    fn merge(&mut self, over: &Self) {
+        if over.message.is_some() {
+            self.message.clone_from(&over.message);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
@@ -941,7 +973,7 @@ mod tests {
     use crate::lint;
 
     /// Every lint with a `message`, with the names it fills.
-    const LINTS: [(&str, &[&str]); 10] = [
+    const LINTS: [(&str, &[&str]); 11] = [
         ("max_size_bytes", lint::max_size_bytes::PLACEHOLDERS),
         ("max_emphasis", lint::max_emphasis::PLACEHOLDERS),
         ("repo_layout", lint::repo_layout::PLACEHOLDERS),
@@ -952,6 +984,7 @@ mod tests {
         ("not_at_all", lint::not_at_all::PLACEHOLDERS),
         ("verbs_nothing", lint::verbs_nothing::PLACEHOLDERS),
         ("possessive_own", lint::possessive_own::PLACEHOLDERS),
+        ("denial_tail", lint::denial_tail::PLACEHOLDERS),
     ];
 
     /// The settings of `lint` holding only `message`.

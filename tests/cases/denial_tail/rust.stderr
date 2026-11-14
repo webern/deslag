@@ -1,0 +1,12 @@
+ERROR: deslag detected sentences that end in a denial!
+
+src/lib.rs has 3 sentences that end in a denial.
+
+TODO: matt writes the error message instructions!
+
+The places:
+  line 1: ", not duplicate their details"
+  line 4: ", never in plain storage"
+  line 8: ", not the question"
+
+deslag: 1 of 1 files with sentences that end in a denial.

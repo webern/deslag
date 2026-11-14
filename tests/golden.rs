@@ -92,6 +92,7 @@ fn record_of(violation: &Violation) -> Option<String> {
         Violation::NotAtAll(over) => format!("matches:{}", over.matches.len()),
         Violation::VerbsNothing(over) => format!("matches:{}", over.matches.len()),
         Violation::PossessiveOwn(over) => format!("matches:{}", over.matches.len()),
+        Violation::DenialTail(over) => format!("matches:{}", over.matches.len()),
     };
     Some(record)
 }

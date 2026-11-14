@@ -8,6 +8,7 @@
 pub mod allow;
 pub mod banned_chars;
 pub mod banned_phrases;
+pub mod denial_tail;
 pub mod density;
 pub mod max_emphasis;
 pub mod max_size_bytes;
@@ -63,11 +64,14 @@ pub enum Lint {
     VerbsNothing,
     /// `possessive_own`: a possessive noun padded with `own`, as in `the crate's own version`.
     PossessiveOwn,
+    /// `denial_tail`: a sentence that ends in a `not` or `never` tail, as in `defined on the body,
+    /// not on the transport coding`.
+    DenialTail,
 }
 
 impl Lint {
     /// Every lint, in the order they run on a file.
-    pub const ALL: [Lint; 10] = [
+    pub const ALL: [Lint; 11] = [
         Lint::MaxSizeBytes,
         Lint::MaxEmphasis,
         Lint::RepoLayout,
@@ -78,6 +82,7 @@ impl Lint {
         Lint::NotAtAll,
         Lint::VerbsNothing,
         Lint::PossessiveOwn,
+        Lint::DenialTail,
     ];
 
     /// Its name: the key of its table in the config, and its id wherever a run is reported.
@@ -93,6 +98,7 @@ impl Lint {
             Lint::NotAtAll => "not_at_all",
             Lint::VerbsNothing => "verbs_nothing",
             Lint::PossessiveOwn => "possessive_own",
+            Lint::DenialTail => "denial_tail",
         }
     }
 
@@ -123,9 +129,11 @@ impl Lint {
     pub(crate) fn needs(self) -> Need {
         match self {
             Lint::MaxSizeBytes | Lint::RepoLayout => Need::File,
-            Lint::VerbsNoNouns | Lint::NotAtAll | Lint::VerbsNothing | Lint::PossessiveOwn => {
-                Need::Sentences
-            }
+            Lint::VerbsNoNouns
+            | Lint::NotAtAll
+            | Lint::VerbsNothing
+            | Lint::PossessiveOwn
+            | Lint::DenialTail => Need::Sentences,
             Lint::MaxEmphasis | Lint::BannedChars | Lint::BannedPhrases | Lint::Density => {
                 Need::Text
             }
@@ -158,6 +166,10 @@ impl Lint {
                 "A possessive noun must not be padded with \"own\", as in \"the crate's own \
                  version\"."
             }
+            Lint::DenialTail => {
+                "A sentence must not end with a \"not\" or \"never\" tail, as in \"defined on the \
+                 body, not on the transport coding\"."
+            }
         }
     }
 
@@ -175,6 +187,7 @@ impl Lint {
             Lint::NotAtAll => &["with negations padded with \"at all\""],
             Lint::VerbsNothing => &["with verbs whose object is nothing"],
             Lint::PossessiveOwn => &["with possessives padded with \"own\""],
+            Lint::DenialTail => &["with sentences that end in a denial"],
         }
     }
 }
@@ -248,6 +261,8 @@ pub enum Violation {
     VerbsNothing(verbs_nothing::Over),
     /// The file pads a possessive noun with "own".
     PossessiveOwn(possessive_own::Over),
+    /// The file ends a sentence with a `not` or `never` tail.
+    DenialTail(denial_tail::Over),
 }
 
 impl Violation {
@@ -274,6 +289,7 @@ impl Violation {
             Violation::NotAtAll(_) => Lint::NotAtAll,
             Violation::VerbsNothing(_) => Lint::VerbsNothing,
             Violation::PossessiveOwn(_) => Lint::PossessiveOwn,
+            Violation::DenialTail(_) => Lint::DenialTail,
         }
     }
 
@@ -291,6 +307,7 @@ impl Violation {
             Violation::NotAtAll(over) => not_at_all::marks(over),
             Violation::VerbsNothing(over) => verbs_nothing::marks(over),
             Violation::PossessiveOwn(over) => possessive_own::marks(over),
+            Violation::DenialTail(over) => denial_tail::marks(over),
         }
     }
 
@@ -310,6 +327,7 @@ impl Violation {
             Violation::NotAtAll(_) => Vec::new(),
             Violation::VerbsNothing(_) => Vec::new(),
             Violation::PossessiveOwn(_) => Vec::new(),
+            Violation::DenialTail(_) => Vec::new(),
         }
     }
 
@@ -342,6 +360,9 @@ impl Violation {
             }
             Violation::PossessiveOwn(over) => {
                 possessive_own::retain(over, keep).map(Violation::PossessiveOwn)
+            }
+            Violation::DenialTail(over) => {
+                denial_tail::retain(over, keep).map(Violation::DenialTail)
             }
         }
     }
@@ -414,6 +435,7 @@ impl Finding {
             Violation::NotAtAll(over) => not_at_all::render(&self.path, over),
             Violation::VerbsNothing(over) => verbs_nothing::render(&self.path, over),
             Violation::PossessiveOwn(over) => possessive_own::render(&self.path, over),
+            Violation::DenialTail(over) => denial_tail::render(&self.path, over),
         }
     }
 
@@ -832,6 +854,9 @@ pub(crate) fn check_text<'a>(
                 .map(Violation::VerbsNothing),
             Lint::PossessiveOwn => possessive_own::check(&document, lints.possessive_own.as_ref())
                 .map(Violation::PossessiveOwn),
+            Lint::DenialTail => {
+                denial_tail::check(&document, lints.denial_tail.as_ref()).map(Violation::DenialTail)
+            }
         };
         findings.extend(violation.map(|violation| Finding {
             path: relative.to_string(),
@@ -1041,7 +1066,8 @@ mod tests {
     #[test]
     fn the_path_only_lints_fill_path() {
         use super::{
-            banned_chars, banned_phrases, not_at_all, possessive_own, verbs_no_nouns, verbs_nothing,
+            banned_chars, banned_phrases, denial_tail, not_at_all, possessive_own, verbs_no_nouns,
+            verbs_nothing,
         };
         let path_only = |names: &[&str]| {
             assert_eq!(names, ["path"]);
@@ -1074,6 +1100,13 @@ mod tests {
             message: Some(message),
         };
         assert!(possessive_own::render("a.md", &over).contains(&filled));
+
+        let (message, filled) = path_only(denial_tail::PLACEHOLDERS);
+        let over = denial_tail::Over {
+            matches: Vec::new(),
+            message: Some(message),
+        };
+        assert!(denial_tail::render("a.md", &over).contains(&filled));
 
         let (message, filled) = path_only(verbs_no_nouns::PLACEHOLDERS);
         let over = verbs_no_nouns::Over {

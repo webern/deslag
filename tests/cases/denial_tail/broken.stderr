@@ -1,0 +1,20 @@
+ERROR: deslag detected sentences that end in a denial!
+
+README.md has 11 sentences that end in a denial.
+
+TODO: matt writes the error message instructions!
+
+The places:
+  line 5: ", not duplicate their details"
+  line 9: ", never in plain storage"
+  line 13: "; never paper over it"
+  line 17: "— never leave it as a generic placeholder"
+  line 21: "- not on a parent element"
+  line 25: ", not a big-bang rewrite"
+  line 29: ", not the repo"
+  line 33: ", not the repository root"
+  line 35: ", not the above rule"
+  line 39: ", never `git add -A`"
+  line 43: ", not an IP and port"
+
+deslag: 1 of 1 files with sentences that end in a denial.

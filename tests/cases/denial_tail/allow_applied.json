@@ -1,0 +1,47 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\nREADME.md has 1 sentence that ends in a denial.\n\nTODO: matt writes the error message instructions!\n\nThe places:\n  line 5: \", never in plain storage\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 147,
+          "end": 171,
+          "line": 5,
+          "column": 42,
+          "end_line": 5,
+          "end_column": 66,
+          "note": "\", never in plain storage\""
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "denial_tail",
+      "quote": "Parent nodes should summarize their children's responsibilities, not duplicate their details.",
+      "reason": "A quotation from a style guide.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 74,
+          "end": 103,
+          "line": 3,
+          "column": 64,
+          "end_line": 3,
+          "end_column": 93,
+          "note": "\", not duplicate their details\""
+        }
+      ],
+      "added": false
+    }
+  ]
+}

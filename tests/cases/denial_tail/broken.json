@@ -1,0 +1,124 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\nREADME.md has 11 sentences that end in a denial.\n\nTODO: matt writes the error message instructions!\n\nThe places:\n  line 5: \", not duplicate their details\"\n  line 9: \", never in plain storage\"\n  line 13: \"; never paper over it\"\n  line 17: \"— never leave it as a generic placeholder\"\n  line 21: \"- not on a parent element\"\n  line 25: \", not a big-bang rewrite\"\n  line 29: \", not the repo\"\n  line 33: \", not the repository root\"\n  line 35: \", not the above rule\"\n  line 39: \", never `git add -A`\"\n  line 43: \", not an IP and port\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 83,
+          "end": 112,
+          "line": 5,
+          "column": 64,
+          "end_line": 5,
+          "end_column": 93,
+          "note": "\", not duplicate their details\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 178,
+          "end": 202,
+          "line": 9,
+          "column": 42,
+          "end_line": 9,
+          "end_column": 66,
+          "note": "\", never in plain storage\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 272,
+          "end": 293,
+          "line": 13,
+          "column": 54,
+          "end_line": 13,
+          "end_column": 75,
+          "note": "\"; never paper over it\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 377,
+          "end": 420,
+          "line": 17,
+          "column": 69,
+          "end_line": 17,
+          "end_column": 110,
+          "note": "\"— never leave it as a generic placeholder\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 500,
+          "end": 525,
+          "line": 21,
+          "column": 60,
+          "end_line": 21,
+          "end_column": 85,
+          "note": "\"- not on a parent element\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 596,
+          "end": 620,
+          "line": 25,
+          "column": 37,
+          "end_line": 25,
+          "end_column": 61,
+          "note": "\", not a big-bang rewrite\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 869,
+          "end": 883,
+          "line": 29,
+          "column": 141,
+          "end_line": 29,
+          "end_column": 155,
+          "note": "\", not the repo\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 1064,
+          "end": 1089,
+          "line": 33,
+          "column": 89,
+          "end_line": 33,
+          "end_column": 114,
+          "note": "\", not the repository root\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 1170,
+          "end": 1190,
+          "line": 35,
+          "column": 79,
+          "end_line": 35,
+          "end_column": 99,
+          "note": "\", not the above rule\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 1324,
+          "end": 1344,
+          "line": 39,
+          "column": 98,
+          "end_line": 39,
+          "end_column": 118,
+          "note": "\", never `git add -A`\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 1550,
+          "end": 1570,
+          "line": 43,
+          "column": 146,
+          "end_line": 43,
+          "end_column": 166,
+          "note": "\", not an IP and port\""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+ERROR: deslag detected sentences that end in a denial!
+
+README.md has 1 sentence that ends in a denial.
+
+TODO: matt writes the error message instructions!
+
+The places:
+  line 5: ", never in plain storage"
+
+deslag: 1 of 1 files with sentences that end in a denial.
+deslag: only a human writes or changes an exemption; leave the sentence as it is, and give the human its text and a reason.
+deslag: 1 exemption applied; deslag explain <PATH> lists a file's.

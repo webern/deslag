@@ -22,6 +22,24 @@ A denial that follows another in a list:
 
 A message that fails stops nothing: not the process, not its queue, not another receiver of the same component.
 
+A list of denials whose first denial has a quote or a bracket before it:
+
+"Never leave the cache stale, never skip a check here."
+
+“Never leave the cache stale, never skip a check here.”
+
+[Never] leave the cache stale, never skip a check here.
+
+'No one shall pass the gate, not through here.'
+
+A sign in the tail:
+
+Parent nodes should summarize their children's responsibilities, not x = y here.
+
+Parent nodes should summarize their children's responsibilities, not x -> y here.
+
+Parent nodes should summarize their children's responsibilities, not x => y here.
+
 An arrow in the tail:
 
 Confident → ✓ recommended badge; not confident → preselect the analysis's recommended_selection as a neutral "suggested" default.

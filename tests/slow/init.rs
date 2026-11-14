@@ -42,14 +42,8 @@ fn it_writes_deslag_toml_which_check_passes_and_a_second_run_refuses() {
     );
 
     let check = repo.check();
-    // TODO: the descriptions `init` writes into the config include sentences that `denial_tail`
-    // fails, so the run exits 1 on the config itself until they are reworded; it must not exit 2.
-    assert_ne!(code(&check), 2, "{}", raw_stderr(&check));
-    assert!(
-        raw_stderr(&check).is_empty() || raw_stderr(&check).contains("deslag.toml has 2 sentences"),
-        "{}",
-        raw_stderr(&check)
-    );
+    assert_eq!(code(&check), 0, "{}", raw_stderr(&check));
+    assert_eq!(raw_stderr(&check), "");
 
     let again = repo.run(&["init"]);
     assert_eq!(code(&again), 2);
@@ -104,8 +98,7 @@ fn config_path_names_the_file_it_writes_which_must_be_toml_and_where_check_looks
     assert!(!repo.root().join("deslag.toml").exists());
     // `check` reads what `init` wrote with no flag.
     let check = repo.check();
-    // TODO: as above, the run exits 1 on the config itself until its descriptions are reworded.
-    assert_ne!(code(&check), 2, "{}", raw_stderr(&check));
+    assert_eq!(code(&check), 0, "{}", raw_stderr(&check));
 
     let again = repo.run(&["init", "--config-path", ".agents/deslag.toml"]);
     assert_eq!(code(&again), 2);

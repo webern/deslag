@@ -62,7 +62,7 @@ pub struct Lints {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("since" = "0.0.1"))]
     pub density: Option<Density>,
-    /// That a sentence negates its verb, not its object.
+    /// That a sentence negates its verb in place of its object.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("since" = "0.0.1"))]
     pub verbs_no_nouns: Option<VerbsNoNouns>,
@@ -70,7 +70,7 @@ pub struct Lints {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("since" = "0.0.3"))]
     pub not_at_all: Option<NotAtAll>,
-    /// That a sentence names what its verb did not find, not `nothing` or `none`.
+    /// That no sentence makes `nothing` or `none` the object of its verb.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[schemars(extend("since" = "0.0.5"))]
     pub verbs_nothing: Option<VerbsNothing>,
@@ -947,7 +947,7 @@ impl Merge for PossessiveOwn {
 /// `lints.denial_tail`: a file fails when a sentence ends in a `not` or `never` tail, as in `The
 /// contract is defined on the body, not on the transport coding.`
 ///
-/// The table itself turns the check on. The words it excuses are the lint's, not the config's.
+/// The table itself turns the check on. The words it excuses are set in the lint.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct DenialTail {

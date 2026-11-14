@@ -1,0 +1,41 @@
+ERROR: deslag detected sentences that end in a denial!
+
+cr.md has 2 sentences that end in a denial.
+
+TODO: matt writes the error message instructions!
+
+The places:
+  line 3: ", not on the transport coding"
+  line 6: ", not a replacement"
+
+ERROR: deslag detected sentences that end in a denial!
+
+crlf.md has 2 sentences that end in a denial.
+
+TODO: matt writes the error message instructions!
+
+The places:
+  line 3: ", not on the transport coding"
+  line 6: ", not a replacement"
+
+ERROR: deslag detected sentences that end in a denial!
+
+lf.md has 2 sentences that end in a denial.
+
+TODO: matt writes the error message instructions!
+
+The places:
+  line 3: ", not on the transport coding"
+  line 6: ", not a replacement"
+
+ERROR: deslag detected sentences that end in a denial!
+
+mixed.md has 2 sentences that end in a denial.
+
+TODO: matt writes the error message instructions!
+
+The places:
+  line 3: ", not on the transport coding"
+  line 6: ", not a replacement"
+
+deslag: 4 of 4 files with sentences that end in a denial.

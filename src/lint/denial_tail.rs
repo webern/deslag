@@ -12,8 +12,8 @@
 //!    follows it; any other mark that splits the tail, `;`, `:`, `(` or a dash with space around
 //!    it, ends it early, and then the tail does not end the sentence;
 //! 4. nothing after the tail but closing punctuation: the tail ends the sentence;
-//! 5. at least [`MIN_LEAD`] words before the mark, and more of them than there are words in the
-//!    tail.
+//! 5. more words before the mark than there are in the tail, so at least three, as the tail has at
+//!    least [`MIN_TAIL`].
 //!
 //! A word is a word, a number or a code span; the parts of a word joined by a hyphen or a slash
 //! count once. The sentence yields at most one match, the first mark that qualifies.
@@ -50,9 +50,6 @@ pub const MIN_TAIL: usize = 2;
 
 /// The most words in a tail.
 pub const MAX_TAIL: usize = 12;
-
-/// The fewest words before the mark.
-pub const MIN_LEAD: usize = 3;
 
 /// What follows `not` or `never` when the sentence is another construction or an evaluation, as
 /// in `not only`, `not including the tests` and `not the best idea`: each entry is a word, or
@@ -179,9 +176,6 @@ fn tail_end(
         return None;
     }
     let lead = words(&tokens[..mark]);
-    if lead < MIN_LEAD {
-        return None;
-    }
     // The tail runs to the end of the sentence, less its closing punctuation.
     let mut last = tokens.len();
     while last > denial + 1 && is_closing(&tokens[last - 1]) {
@@ -195,7 +189,7 @@ fn tail_end(
     if splits(document, tokens, folded, denial + 1..last) {
         return None;
     }
-    let text = document.text(tokens[denial + 1].range.start..tokens[last - 1].range.end);
+    let text = visible(&tokens[denial + 1..last]);
     if ["\u{2192}", "->", "=>", "="]
         .iter()
         .any(|sign| text.contains(sign))
@@ -203,6 +197,27 @@ fn tail_end(
         return None;
     }
     Some(last)
+}
+
+/// The text of `tokens` that a reader sees: a link's destination, a tag, a footnote mark and a
+/// URL are not in it, and a code span is. A token that touches the one before it follows it with no space.
+fn visible(tokens: &[Token<'_>]) -> String {
+    let mut text = String::new();
+    let mut end = None;
+    for token in tokens {
+        if matches!(
+            token.kind,
+            TokenKind::Url | TokenKind::Html | TokenKind::Footnote
+        ) {
+            continue;
+        }
+        if end.is_some_and(|end| end != token.range.start) {
+            text.push(' ');
+        }
+        text.push_str(&token.text);
+        end = Some(token.range.end);
+    }
+    text
 }
 
 /// If the token `at` opens a mark that may open a denial, the number of tokens the mark takes:
@@ -292,6 +307,10 @@ fn follows_a_denial(
         .rev()
         .find_map(|at| separates(document, tokens, at).map(|width| at + width))
         .unwrap_or(0);
+    // A quote, a bracket or a tag before the opener does not hide it.
+    let start = (start..mark)
+        .find(|&at| !matches!(tokens[at].kind, TokenKind::Punctuation | TokenKind::Html))
+        .unwrap_or(mark);
     tokens.get(start).is_some_and(|first| {
         first.kind == TokenKind::Word && DENIALS.contains(&folded[start].as_str())
     })
@@ -564,12 +583,31 @@ mod tests {
 
     #[test]
     fn a_not_then_phrase_is_not_a_denial() {
-        for tail in NOT_THEN {
-            let text = format!(
-                "Parent nodes should summarize their children's responsibilities, not {tail} duplicate their details."
-            );
-            assert!(found(&text).is_empty(), "{text}");
-        }
+        // One sentence for each entry of `NOT_THEN`, so that dropping an entry fails here.
+        assert!(found("Parent nodes should summarize their children's responsibilities, not only duplicate their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not necessarily duplicate their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not to mention their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not all of their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not every one of their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not even their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not yet finished with details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not by much over details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not that anyone reads details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not sure about their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not because of their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not including their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not counting their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not really about their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not quite their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not exactly their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not the best way for details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not a good place for details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not a great place for details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not ideal for their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not great for their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not bad for their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not too long for their details.").is_empty());
+        assert!(found("Parent nodes should summarize their children's responsibilities, not so much their details.").is_empty());
         // Only a whole word counts: `not yetis` is no `not yet`.
         assert_eq!(
             found(
@@ -580,10 +618,69 @@ mod tests {
     }
 
     #[test]
+    fn a_tail_that_holds_a_sign_is_not_a_denial() {
+        for sign in ["=", "->", "=>", "\u{2192}"] {
+            let text = format!(
+                "Parent nodes should summarize their children's responsibilities, not a {sign} b."
+            );
+            assert!(found(&text).is_empty(), "{text}");
+        }
+        assert!(
+            found(
+                "Parent nodes should summarize their children's responsibilities, not x = y here."
+            )
+            .is_empty()
+        );
+        assert!(
+            found(
+                "Parent nodes should summarize their children's responsibilities, not x -> y here."
+            )
+            .is_empty()
+        );
+        assert!(
+            found(
+                "Parent nodes should summarize their children's responsibilities, not x => y here."
+            )
+            .is_empty()
+        );
+        assert!(
+            found(
+                "Parent nodes should summarize their children's responsibilities, not `a = b` here."
+            )
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn a_sign_in_a_link_destination_does_not_hide_a_denial() {
+        assert_eq!(
+            found(
+                "Alpha beta gamma delta epsilon zeta eta theta, not [a thing](http://example.com/?a=b) here."
+            ),
+            [", not [a thing](http://example.com/?a=b) here"]
+        );
+    }
+
+    #[test]
     fn a_list_of_denials_is_not_a_denial() {
         assert!(
             found("It stops nothing: not the process, not its queue, not a receiver.").is_empty()
         );
         assert!(found("Never leave the cache stale, never skip a check, never mind.").is_empty());
+        assert!(
+            found("It stops nothing (not the process, not its queue, not a receiver).").is_empty()
+        );
+    }
+
+    #[test]
+    fn a_quote_or_bracket_before_the_first_denial_does_not_hide_the_list() {
+        for text in [
+            "\"Never leave the cache stale, never skip a check here.\"",
+            "\u{201C}Never leave the cache stale, never skip a check here.\u{201D}",
+            "[Never] leave the cache stale, never skip a check here.",
+            "'No one shall pass the gate, not through here.'",
+        ] {
+            assert!(found(text).is_empty(), "{text}");
+        }
     }
 }

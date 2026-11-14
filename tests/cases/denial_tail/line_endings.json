@@ -1,0 +1,115 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 4,
+  "findings": [
+    {
+      "path": "cr.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\ncr.md has 2 sentences that end in a denial.\n\nTODO: matt writes the error message instructions!\n\nThe places:\n  line 3: \", not on the transport coding\"\n  line 6: \", not a replacement\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 45,
+          "end": 74,
+          "line": 3,
+          "column": 36,
+          "end_line": 4,
+          "end_column": 28,
+          "note": "\", not on the transport coding\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 122,
+          "end": 141,
+          "line": 6,
+          "column": 46,
+          "end_line": 6,
+          "end_column": 65,
+          "note": "\", not a replacement\""
+        }
+      ]
+    },
+    {
+      "path": "crlf.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\ncrlf.md has 2 sentences that end in a denial.\n\nTODO: matt writes the error message instructions!\n\nThe places:\n  line 3: \", not on the transport coding\"\n  line 6: \", not a replacement\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 47,
+          "end": 77,
+          "line": 3,
+          "column": 36,
+          "end_line": 4,
+          "end_column": 28,
+          "note": "\", not on the transport coding\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 127,
+          "end": 146,
+          "line": 6,
+          "column": 46,
+          "end_line": 6,
+          "end_column": 65,
+          "note": "\", not a replacement\""
+        }
+      ]
+    },
+    {
+      "path": "lf.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\nlf.md has 2 sentences that end in a denial.\n\nTODO: matt writes the error message instructions!\n\nThe places:\n  line 3: \", not on the transport coding\"\n  line 6: \", not a replacement\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 45,
+          "end": 74,
+          "line": 3,
+          "column": 36,
+          "end_line": 4,
+          "end_column": 28,
+          "note": "\", not on the transport coding\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 122,
+          "end": 141,
+          "line": 6,
+          "column": 46,
+          "end_line": 6,
+          "end_column": 65,
+          "note": "\", not a replacement\""
+        }
+      ]
+    },
+    {
+      "path": "mixed.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\nmixed.md has 2 sentences that end in a denial.\n\nTODO: matt writes the error message instructions!\n\nThe places:\n  line 3: \", not on the transport coding\"\n  line 6: \", not a replacement\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 45,
+          "end": 75,
+          "line": 3,
+          "column": 36,
+          "end_line": 4,
+          "end_column": 28,
+          "note": "\", not on the transport coding\""
+        },
+        {
+          "kind": "occurrence",
+          "start": 125,
+          "end": 144,
+          "line": 6,
+          "column": 46,
+          "end_line": 6,
+          "end_column": 65,
+          "note": "\", not a replacement\""
+        }
+      ]
+    }
+  ]
+}

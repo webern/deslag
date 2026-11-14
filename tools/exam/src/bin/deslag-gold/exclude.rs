@@ -290,7 +290,7 @@ impl Repos {
     }
 
     /// `files` without those of the repositories, and how many were removed. A repository is
-    /// matched by each sidecar's `source.repo`.
+    /// matched by each sidecar's `source.repo`, never by a path.
     pub fn drop<'a>(&self, files: Vec<File<'a>>) -> (Vec<File<'a>>, usize) {
         let (kept, dropped) = self.split(files);
         (kept, dropped.len())
@@ -650,7 +650,7 @@ mod tests {
                 "# sent_id = q\n# source = f.md bytes 0-1\n# repo = {repo}\n1\tHi\t_\tI\t_\t_\t_\t_\t_\t_\n"
             )
         };
-        // Missing or empty manifests are errors.
+        // Missing or empty manifests are errors, not an empty set.
         assert!(Repos::reserved(gold, &[]).is_err());
         std::fs::write(gold.join("dev.manifest.tsv"), manifest("d/ev")).unwrap();
         std::fs::write(gold.join("holdout.manifest.tsv"), "sent_id\trepo\n").unwrap();

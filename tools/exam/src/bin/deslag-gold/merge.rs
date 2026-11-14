@@ -555,7 +555,7 @@ struct Row {
     said: Vec<String>,
 }
 
-/// The worklist, in parts of about `per_part` items, each holding whole sentences. Each part is
+/// The worklist, in parts of about `per_part` items, never splitting a sentence. Each part is
 /// text for the adjudicator: the numbered sentences, their words in dispute, and a slot to fill
 /// for each item. The parts hold no tier, split or file. `names` is what each tagger is called in
 /// them, in the order of an item's `said`: `blind`, `harper` and `spacy`, or `A`, `B` and `C` so

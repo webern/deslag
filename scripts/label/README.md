@@ -187,7 +187,7 @@ down to one sentence; one still cut off alone abstains and is not asked again by
 
 If
 both halves of a split of three or four sentences are cut off too, the batch is lost: the splitting
-stops (3 calls) and the batch's sentences are left to the retry rounds. A lost batch does not
+stops after 3 calls, where splitting down to single sentences would take 2n-1, and the batch's sentences are left to the retry rounds. A lost batch does not
 by itself give up the endpoint. It does when at least two batches are lost (one, if the run has only
 one batch) and they are more than a quarter of the batches asked so far; the endpoint then switches as
 above.
@@ -275,7 +275,7 @@ file, worklist and `voters.tsv` are all it reads of it.
 The two merges must have been made with the same
 `min_voters`, and both must record it: otherwise the difference would be the rule's as well as the
 adjudicator's, and `--versus` refuses, naming the two minimums. A merge made before the minimum was recorded
-is unknown. `--mixed-rules` compares them anyway and starts `report.txt` with a
+is unknown, and an unknown minimum does not equal any other. `--mixed-rules` compares them anyway and starts `report.txt` with a
 `warning: --mixed-rules` line.
 
 An adjudicator run is continued only for its own scope: the merge directory, each voter with the run its
@@ -930,7 +930,7 @@ it quotes is excluded now, and its audit met a bar of at least 95.0 over at leas
 accepted it.
 
 A reader of silver for training must hold a batch to the same: read only a live batch that
-stands.
+stands. A retired batch does not qualify, and neither does one with no audit.
 
 A failure names the two
 ways out: undo the gold change (`rank`, `queue` and `sample` leave silver out, so it came some other way: a

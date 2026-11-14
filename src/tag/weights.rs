@@ -9,8 +9,8 @@
 //! A feature is a template and its fields. Where the model had a feature string, a row here has a
 //! template id, up to two small integers (a previous tag, a tag, a confidence, a set of tags) and a
 //! text, so no code builds or splits a feature string. A row's totals are cells, each an `i32`
-//! holding the total shifted up four bits with the tag's place in `codes` (the alphabetical order, while
-//! [`super::Tag::ALL`] is the exam's order) in the low four.
+//! holding the total shifted up four bits with the tag's place in `codes` (the alphabetical order,
+//! not [`super::Tag::ALL`]) in the low four.
 //!
 //! **Folded features.** The features that have no text to read have few values: the bias, the
 //! previous tags, and the rules' tag and confidence. Their rows are added up when the crate builds

@@ -194,7 +194,7 @@ pub fn compare(oracle: &[Span], scanner: &[Span], blind: &[Range<usize>]) -> Vec
 }
 
 #[cfg(test)]
-// A list of one blind range is the case under test.
+// A list of one blind range is the case under test, not a mistake for a list of its integers.
 #[allow(clippy::single_range_in_vec_init)]
 mod tests {
     use super::*;

@@ -822,7 +822,7 @@ fn keys(schema: &Value, found: &mut BTreeSet<String>) {
     }
 }
 
-/// A change is a flag CI passes.
+/// A change is a flag CI passes, never a setting in the config.
 #[test]
 fn the_config_has_no_setting_for_a_change() {
     let mut found = BTreeSet::new();

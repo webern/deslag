@@ -187,7 +187,7 @@ fn raw_text_in_an_item() {
 
 #[test]
 fn a_hanging_label_reads_as_raw() {
-    // The cost of two columns: prose missed, with every finding still true.
+    // The cost of two columns: prose missed, never a finding made up.
     assert_eq!(outline("TODO: x\n      y"), "p TODO: x\nraw y");
 }
 

@@ -276,7 +276,7 @@ fn a_repository_in_the_dev_or_holdout_manifest_or_a_listed_fixture_yields_no_sen
     );
     fs::remove_file(&kept).unwrap();
 
-    // A holdout manifest with no repository is an error.
+    // A holdout manifest with no repository is an error, not an empty set.
     let saved = fs::read(&hold).unwrap();
     fs::write(&hold, HEAD).unwrap();
     let broken = gold(

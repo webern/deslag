@@ -1,4 +1,4 @@
-//! `silver check`: a batch against what it recorded.
+//! `silver check`: a batch against what it recorded, never against today's checkout.
 //!
 //! **These rules are frozen.** A batch records the version of them it was built under
 //! ([`CHECK_VERSION`](super::kit::CHECK_VERSION) in `record/kit.tsv`), and the image keeps it for

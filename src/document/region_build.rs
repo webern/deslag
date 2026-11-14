@@ -64,7 +64,7 @@ pub(super) fn line_region(
     skip: List,
 ) -> Option<Region> {
     let first = rows[0].lead;
-    // A trailing comment's new lines take the indent of its line.
+    // A trailing comment's new lines take the indent of its line, not the code before it.
     let before = &source[line_start(source, first)..first];
     let indent = &before[..before.len() - before.trim_start_matches([' ', '\t']).len()];
     let template = format!("{indent}{} ", &source[first..first + marker]);

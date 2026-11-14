@@ -162,7 +162,8 @@ fn write_checked(path: &Path, text: &Checked) -> Result<(), Error> {
 }
 
 /// Whether the owner of the file has made it read-only. A file the owner cannot write is read-only
-/// on purpose even when its group can, so on Unix it is the owner's write bit that counts.
+/// on purpose even when its group can, so on Unix it is the owner's write bit that counts, not
+/// whether any bit is set.
 fn is_read_only(metadata: &fs::Metadata) -> bool {
     #[cfg(unix)]
     {
@@ -926,7 +927,7 @@ mod tests {
         assert!(matches!(error, Error::CopyIsDirectory { .. }), "{error}");
         assert!(error.to_string().contains("is a directory"), "{error}");
 
-        // `update` of the edited config gives the same refusal.
+        // `update` of the edited config gives the same refusal, not one about reading a copy.
         let updated = run(&dir, false, None, &nothing_new()).expect_err("a directory beside it");
         assert!(
             matches!(updated, Error::CopyIsDirectory { .. }),

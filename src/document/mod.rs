@@ -393,7 +393,7 @@ impl<'a> Document<'a> {
     }
 
     /// The text the lints read at `range`, a range of the file. In a Markdown file it is the file
-    /// as written, so an entity such as `&amp;` reads as those five characters. In
+    /// as written, so an entity such as `&amp;` is the entity, not the character it stands for. In
     /// a comment of a code file it is the text of the region, without the markers and indents that
     /// part its lines: a line break stands where the lines part, so a range over two `///` lines
     /// reads as the sentence it is. A range that is not in one region is read from the file.

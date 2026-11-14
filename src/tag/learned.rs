@@ -6,7 +6,7 @@
 //! - A word the rules call `Sure` keeps their reading. Its tag still counts as the previous tag
 //!   of the word after it.
 //! - A word with one tag possible has nothing to choose and keeps its reading.
-//! - Any other word is scored over the tags still possible. The best score is
+//! - Any other word is scored over the tags still possible, never over the 13. The best score is
 //!   the new best guess. The margin between it and the second best sets the confidence: from the
 //!   `Sure` cutoff it is `Sure`, below the `Unsure` cutoff `Unsure`, between them `Likely`, with
 //!   `Kept=` narrowed to the one tag at `Sure` and `Likely`. A word the model never saw and the
@@ -120,7 +120,7 @@ enum Norm<'t> {
 
 /// The normal form of the token: lower case, with a year as `!YEAR` and any other form that opens
 /// with a digit as `!DIGITS`. A form that needs lower-casing is written to the end of `arena`, so
-/// that a sentence's forms take one allocation.
+/// that a sentence's forms take one allocation, not one each.
 fn normal<'t>(weights: &Weights, token: &'t Token<'_>, arena: &mut String) -> Norm<'t> {
     if token.kind == TokenKind::Word
         && let Some((_, lower)) = placeholder(token.origin)

@@ -5,7 +5,7 @@
 //! A word names its runs in `Runs=`, and `runs.tsv` describes each: the model, the endpoint, the
 //! licence that was true when the run was made, the commit of deslag, the hashes of the prompt and
 //! the guide, and the sha256 of `voters.json` as it stood when the run began. A batch is checked
-//! against these and the `voters.json` it carries in `record/`.
+//! against these and the `voters.json` it carries in `record/`, never against the checkout.
 
 use std::collections::{BTreeMap, BTreeSet};
 

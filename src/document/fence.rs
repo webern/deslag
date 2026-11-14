@@ -127,7 +127,7 @@ impl Fence {
         let mut text = String::new();
         let mut map = SourceMap::default();
         for (at, piece) in pieces.iter().enumerate() {
-            // The line break that ends the last line is the closer's.
+            // The line break that ends the last line is the closer's, not the code's.
             let last = at + 1 == pieces.len();
             let kept = piece.text.strip_suffix('\n').filter(|_| last);
             let kept = kept.unwrap_or(&piece.text);

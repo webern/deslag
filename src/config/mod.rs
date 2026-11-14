@@ -113,7 +113,7 @@ fn reading_section(rel_path: &str) -> Option<(&'static str, &str)> {
 /// version. A bump is for a change to what a config already written means, such as a default that
 /// flips or a table whose empty form means something new. A bump is made like this:
 ///
-/// - the reader of the old schema is frozen as a module, such as `v1`;
+/// - the reader of the old schema is frozen as a module, such as `v1`, never edited again;
 /// - a step in [`migrate`] reads a config of the old schema through it, rewrites the text in the
 ///   words of the new schema, and keeps the result only if it means what the old text did;
 /// - `Config::parse` refuses a config of an older schema, saying to run `deslag update`, which

@@ -460,7 +460,7 @@ fn columns_count_characters_not_bytes() {
 
 #[test]
 fn a_range_ends_on_the_line_of_its_last_byte() {
-    // A range over a whole line and its LF ends on that line.
+    // A range over a whole line and its LF ends on that line, not the next.
     assert_eq!(located("ab\ncd\n", "ab\n"), (0, 3, 1, 1, 1, 4));
     assert_eq!(located("ab\ncd\nef", "b\ncd\ne"), (1, 7, 1, 2, 3, 2));
 }

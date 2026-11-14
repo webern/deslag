@@ -954,7 +954,7 @@ mod tests {
     /// The most reads the scan makes for each byte of the source. `Reader` is the only way the
     /// scan reads the source, and it counts one for each byte it hands out: one for `at` and
     /// `byte`, the length for `slice` and `has_at`, the bytes up to the hit for `find`. The bound is
-    /// argued from the code. A lexeme start in `scan` makes at most 11
+    /// argued from the code, not found by running it. A lexeme start in `scan` makes at most 11
     /// reads (the busiest is a `#` and the blanks and word after it) and steps over at least one
     /// byte. Each loop in the body of a lexeme (`word`, `number_end`, `literal`, the comments,
     /// `header_name`) makes at most 2 reads for each byte it steps over. A blank after a backslash

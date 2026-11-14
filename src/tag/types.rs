@@ -156,7 +156,7 @@ impl FromIterator<Tag> for TagSet {
 
 /// The flags a word's features may set: the 14 of the exam's gold, and [`Features::CONTRACTION`].
 ///
-/// They come from the lexicon alone.
+/// They come from the lexicon, never from context.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub struct Features(u16);
 

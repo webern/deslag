@@ -141,7 +141,7 @@ fn nothing_above_the_top_of_the_work_tree_is_read() {
 
 #[test]
 fn a_git_file_ends_the_search_as_a_directory_does() {
-    // A linked worktree and a submodule hold a `.git` file.
+    // A linked worktree and a submodule hold a `.git` file, not a directory.
     let outer = Repo::new();
     outer.mark_work_tree();
     outer.write("deslag.toml", DASHES);

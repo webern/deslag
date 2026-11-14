@@ -356,7 +356,7 @@ fn the_pilot_runs_from_a_skeleton_to_a_report_with_provenance_at_every_step() {
     let part = fs::read_to_string(dir.join("merge/worklist-01.txt")).unwrap();
     assert!(part.contains("A V.fi") || part.contains("A R"), "{part}");
     assert!(part.contains("(A, B, C, D)"), "{part}");
-    // The adjudicator is told only letters.
+    // The adjudicator is told letters, never which model said what.
     assert!(!part.contains("spacy") && !part.contains("three"), "{part}");
     let voters = fs::read_to_string(dir.join("merge/voters.tsv")).unwrap();
     assert!(voters.contains("D\tspacy\tyes\tr4\t"), "{voters}");

@@ -422,7 +422,7 @@ mod tests {
         assert_eq!(texts("/*!****\n * a\n ****/"), [doc("a")]);
         assert_eq!(texts("/*!\n * a\n **/"), [doc("a")]);
         assert_eq!(texts("  /****\n   * a\n   ****/"), [plain("a")]);
-        // The blank line before the close is the gap.
+        // The blank line before the close is the gap, not the line of the gutter before it.
         assert_eq!(texts("/**\n * a\n *\n */"), [doc("a\n")]);
         // A single line is neither the top nor the bottom.
         assert_eq!(texts("/***/ /*****/"), [plain("**")]);

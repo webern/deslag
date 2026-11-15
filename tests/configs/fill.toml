@@ -20,6 +20,9 @@ message = "{path} hides the noun"
 [md.lints.possessive_own]
 message = "{path} pads a possessive"
 
+[md.lints.denial_tail]
+message = "{path} ends in a denial"
+
 [[rust.allow]]
 path = "src/lib.rs"
 lint = "not_at_all"
@@ -42,6 +45,9 @@ message = "{path} hides the noun"
 
 [rust.lints.possessive_own]
 message = "{path} pads a possessive"
+
+[rust.lints.denial_tail]
+message = "{path} ends in a denial"
 
 [[cpp.allow]]
 path = "src/a.c"
@@ -66,6 +72,9 @@ message = "{path} hides the noun"
 [cpp.lints.possessive_own]
 message = "{path} pads a possessive"
 
+[cpp.lints.denial_tail]
+message = "{path} ends in a denial"
+
 [[toml.allow]]
 path = "Cargo.toml"
 lint = "not_at_all"
@@ -88,3 +97,6 @@ message = "{path} hides the noun"
 
 [toml.lints.possessive_own]
 message = "{path} pads a possessive"
+
+[toml.lints.denial_tail]
+message = "{path} ends in a denial"

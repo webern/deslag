@@ -82,7 +82,7 @@ mean.
 Run `deslag check --base origin/main`: the base is the branch the work merges into, or `main` with
 no remote. A failing file gets a report on stderr and exit 1; exit 2 means deslag could not run. A
 config fresh from `init` fails most files, mostly on `density`, `verbs_no_nouns` and `max_emphasis`:
-the first run is a tuning session, not a failure. Tell the human what each lint fails and propose a
+the first run is a tuning session. Tell the human what each lint fails and propose a
 limit above the file's size: add 10%, at least 500 bytes. A file needing more gets an override.
 
 Fix the prose by the report's advice, in the comment or fence it names. Never hide text, split a

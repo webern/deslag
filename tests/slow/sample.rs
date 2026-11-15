@@ -20,9 +20,10 @@ use deslag::Lint;
 ///
 /// A new lint adds its `broken` here. A case this names that is renamed or deleted needs another
 /// of the same kind in its place.
-pub const SAMPLE: [&str; 15] = [
+pub const SAMPLE: [&str; 16] = [
     "banned_chars/broken",
     "banned_phrases/broken",
+    "denial_tail/broken",
     "density/broken",
     "max_emphasis/broken",
     "max_size_bytes/broken",
@@ -91,6 +92,7 @@ fn config_of(case: &str) -> String {
 fn every_entry_of_the_sample_is_of_the_kind_the_rule_says() {
     assert_eq!(exit_of("banned_chars/broken"), 1, "banned_chars/broken");
     assert_eq!(exit_of("banned_phrases/broken"), 1, "banned_phrases/broken");
+    assert_eq!(exit_of("denial_tail/broken"), 1, "denial_tail/broken");
     assert_eq!(exit_of("density/broken"), 1, "density/broken");
     assert_eq!(exit_of("max_emphasis/broken"), 1, "max_emphasis/broken");
     assert_eq!(exit_of("max_size_bytes/broken"), 1, "max_size_bytes/broken");

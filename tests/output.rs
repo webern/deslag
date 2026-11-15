@@ -42,6 +42,8 @@ max_paragraph_chars = 60
 [md.lints.verbs_nothing]
 
 [md.lints.possessive_own]
+
+[md.lints.denial_tail]
 ";
 
 /// A file every lint but `max_size_bytes` fails, whose name needs escaping in every format.
@@ -58,7 +60,7 @@ repo/
 
 A paragraph that runs on well past sixty characters, which is the limit here.
 
-It ships no binary. It does not build at all. It finds nothing. It reads the crate's own config.
+It ships no binary. It does not build at all. It finds nothing. It reads the crate's own config. The tool is a linter, not a formatter.
 ";
 
 /// The name of the file holding [`EVERY_LINT`].

@@ -74,6 +74,21 @@ max_paragraph_chars = 500
 # This repo writes the possessive alone, `the crate's version`.
 [md.lints.possessive_own]
 
+# This repo ends a sentence on what it says, with no denial after a comma.
+[md.lints.denial_tail]
+
+[[md.allow]]
+path = "src/instructions/lints/possessive_own.md"
+lint = "denial_tail"
+quote = "Where the contrast is the point, name it instead (\"deslag's config, not the user's\")."
+reason = "The sentence quotes a contrast as an example of what possessive_own passes."
+
+[[md.allow]]
+path = "scripts/label/README.md"
+lint = "denial_tail"
+quote = "A step that is refused, fails or stops, and a smoke run, never writes the lock."
+reason = "A false positive: never negates the verb of a subject that holds commas, and no denial ends the sentence."
+
 [[md.overrides]]
 globs = ["/AGENTS.md"]
 lints.max_size_bytes.value = 4000

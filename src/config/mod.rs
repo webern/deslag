@@ -68,8 +68,8 @@ use crate::version::{BASELINE, Version, current_release, parse_release};
 
 pub use allow::{Allow, Names};
 pub use lints::{
-    BannedChars, BannedPhrases, CharGroups, Density, Lints, MaxEmphasis, MaxSizeBytes, Merge,
-    NotAtAll, PossessiveOwn, RepoLayout, VerbsNoNouns, VerbsNothing,
+    BannedChars, BannedPhrases, CharGroups, DenialTail, Density, Lints, MaxEmphasis, MaxSizeBytes,
+    Merge, NotAtAll, PossessiveOwn, RepoLayout, VerbsNoNouns, VerbsNothing,
 };
 pub use redirect::{REDIRECTS, Redirect, Used};
 pub use search::{

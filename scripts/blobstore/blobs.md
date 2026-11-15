@@ -42,7 +42,7 @@ the layout. `tools/corpus/tests/blobs.rs` reads it.
 - `2026-10-03-02`: 200 `human` fixtures of prose outside software, from four CC0 repositories.
 - `2026-10-03-03`: licence corrections: 856 exclusions, and 376 fixtures added again.
 - `2026-10-03-04`: 200 `llm` stories from one Hugging Face dataset whose publisher names each row's
-  model, a label on the basis of `docs/design/corpus.md` section 3, not a history.
+  model, a label on the basis of `docs/design/corpus.md` section 3 alone.
 
 The `-04` stories share 7 theme and period pairs, so file-weighted n-gram and phrase measures see
 repeats; some loop or stop mid-word at the limit, as written.
@@ -76,7 +76,7 @@ login is checked against the registry and dropped when refused, and the error sa
 CI has no `gh` login; it reads the package anonymously like everyone else, and the `publish-blobs`
 workflow publishes with the workflow token, which works only while the package grants this
 repository access: Packages -> `deslag-blobs` -> Package settings -> Manage Actions access ->
-`webern/deslag` with the Write role. The grant is per package, not per tag.
+`webern/deslag` with the Write role. The grant covers the whole package, every tag.
 
 A ghcr.io outage fails `make ci` and every pull request.
 

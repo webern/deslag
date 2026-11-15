@@ -48,8 +48,8 @@ pub(super) struct AllowFile {
     #[schemars(extend("since" = "0.0.3"))]
     path: String,
     /// The lint to exempt the sentence or line from, one of `banned_chars`, `banned_phrases`,
-    /// `verbs_no_nouns`, `not_at_all`, `verbs_nothing` and `possessive_own`. One entry names one
-    /// lint.
+    /// `verbs_no_nouns`, `not_at_all`, `verbs_nothing`, `possessive_own` and `denial_tail`. One entry
+    /// names one lint.
     #[schemars(schema_with = "lint_schema")]
     #[schemars(extend("since" = "0.0.3"))]
     lint: String,
@@ -108,7 +108,8 @@ fn takes(lint: Lint) -> Result<(), &'static str> {
         | Lint::VerbsNoNouns
         | Lint::NotAtAll
         | Lint::VerbsNothing
-        | Lint::PossessiveOwn => Ok(()),
+        | Lint::PossessiveOwn
+        | Lint::DenialTail => Ok(()),
         Lint::MaxSizeBytes => Err(
             "its finding is the whole file. Set the budget in an override of the file: \
              `lints.max_size_bytes.value`",
@@ -137,9 +138,8 @@ fn takes_line(lint: Lint) -> Result<(), &'static str> {
         | Lint::VerbsNoNouns
         | Lint::NotAtAll
         | Lint::VerbsNothing
-        | Lint::PossessiveOwn => {
-            Err("its findings are in sentences. Name the sentence with `quote`")
-        }
+        | Lint::PossessiveOwn
+        | Lint::DenialTail => Err("its findings are in sentences. Name the sentence with `quote`"),
         Lint::MaxSizeBytes | Lint::MaxEmphasis | Lint::RepoLayout | Lint::Density => {
             Err("it takes no entry")
         }
@@ -583,6 +583,7 @@ mod tests {
             "not_at_all",
             "verbs_nothing",
             "possessive_own",
+            "denial_tail",
         ] {
             for ch in [
                 '\u{200B}',
@@ -723,7 +724,7 @@ mod tests {
             said.contains("\"banned_char\", which is no lint")
                 && said.contains(
                     "`banned_chars`, `banned_phrases`, `verbs_no_nouns`, `not_at_all`, \
-                         `verbs_nothing` or `possessive_own`"
+                         `verbs_nothing`, `possessive_own` or `denial_tail`"
                 ),
             "{said}"
         );
@@ -839,6 +840,7 @@ mod tests {
             "not_at_all",
             "verbs_nothing",
             "possessive_own",
+            "denial_tail",
         ] {
             let said = refused(&line_entry(lint, "A line."));
             assert!(
@@ -899,7 +901,8 @@ mod tests {
                 "verbs_no_nouns",
                 "not_at_all",
                 "verbs_nothing",
-                "possessive_own"
+                "possessive_own",
+                "denial_tail"
             ])
         );
     }

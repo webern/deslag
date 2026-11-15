@@ -1,0 +1,47 @@
+{
+  "format_version": 1,
+  "deslag_version": "[VERSION]",
+  "files_scanned": 1,
+  "findings": [
+    {
+      "path": "README.md",
+      "lint": "denial_tail",
+      "report": "ERROR: deslag detected sentences that end in a denial!\n\nREADME.md has 1 sentence that ends in a denial.\n\nWe found a sentence with a negation run-on that is probably unnecessary. Focus on saying what *is* instead of saying *never* or *not* about what isn't. Oftentimes during a session with a user or even during automated fixes, a user might say \"no, do not frobulate\" and LLMs tend to turn this into a phrase like \", not frobulated\", or worse, \"never frobulated\". This is probably not what the user intended. The user was probably just guiding you to what the positive half of the sentence says. The negative half of the sentence you wrote could lead a future agent astray. Never is a strong statement. Really? Even in 1000 years?\n\nIf at all possible, just delete the trailing negation entirely. If it truly damages the meaning or leaves something out, reword the whole sentence to say it without the negative trailer. Do not mangle the sentence. It should be easier to read and understand after your edit than it was before.\n\nThe places:\n  line 5: \", never in plain storage\"",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 147,
+          "end": 171,
+          "line": 5,
+          "column": 42,
+          "end_line": 5,
+          "end_column": 66,
+          "note": "\", never in plain storage\""
+        }
+      ]
+    }
+  ],
+  "exemptions": [
+    {
+      "section": "md",
+      "path": "README.md",
+      "lint": "denial_tail",
+      "quote": "Parent nodes should summarize their children's responsibilities, not duplicate their details.",
+      "reason": "A quotation from a style guide.",
+      "status": "applied",
+      "marks": [
+        {
+          "kind": "occurrence",
+          "start": 74,
+          "end": 103,
+          "line": 3,
+          "column": 64,
+          "end_line": 3,
+          "end_column": 93,
+          "note": "\", not duplicate their details\""
+        }
+      ],
+      "added": false
+    }
+  ]
+}

@@ -2,7 +2,9 @@ ERROR: deslag detected sentences that end in a denial!
 
 cr.md has 2 sentences that end in a denial.
 
-TODO: matt writes the error message instructions!
+We found a sentence with a negation run-on that is probably unnecessary. Focus on saying what *is* instead of saying *never* or *not* about what isn't. Oftentimes during a session with a user or even during automated fixes, a user might say "no, do not frobulate" and LLMs tend to turn this into a phrase like ", not frobulated", or worse, "never frobulated". This is probably not what the user intended. The user was probably just guiding you to what the positive half of the sentence says. The negative half of the sentence you wrote could lead a future agent astray. Never is a strong statement. Really? Even in 1000 years?
+
+If at all possible, just delete the trailing negation entirely. If it truly damages the meaning or leaves something out, reword the whole sentence to say it without the negative trailer. Do not mangle the sentence. It should be easier to read and understand after your edit than it was before.
 
 The places:
   line 3: ", not on the transport coding"
@@ -12,7 +14,9 @@ ERROR: deslag detected sentences that end in a denial!
 
 crlf.md has 2 sentences that end in a denial.
 
-TODO: matt writes the error message instructions!
+We found a sentence with a negation run-on that is probably unnecessary. Focus on saying what *is* instead of saying *never* or *not* about what isn't. Oftentimes during a session with a user or even during automated fixes, a user might say "no, do not frobulate" and LLMs tend to turn this into a phrase like ", not frobulated", or worse, "never frobulated". This is probably not what the user intended. The user was probably just guiding you to what the positive half of the sentence says. The negative half of the sentence you wrote could lead a future agent astray. Never is a strong statement. Really? Even in 1000 years?
+
+If at all possible, just delete the trailing negation entirely. If it truly damages the meaning or leaves something out, reword the whole sentence to say it without the negative trailer. Do not mangle the sentence. It should be easier to read and understand after your edit than it was before.
 
 The places:
   line 3: ", not on the transport coding"
@@ -22,7 +26,9 @@ ERROR: deslag detected sentences that end in a denial!
 
 lf.md has 2 sentences that end in a denial.
 
-TODO: matt writes the error message instructions!
+We found a sentence with a negation run-on that is probably unnecessary. Focus on saying what *is* instead of saying *never* or *not* about what isn't. Oftentimes during a session with a user or even during automated fixes, a user might say "no, do not frobulate" and LLMs tend to turn this into a phrase like ", not frobulated", or worse, "never frobulated". This is probably not what the user intended. The user was probably just guiding you to what the positive half of the sentence says. The negative half of the sentence you wrote could lead a future agent astray. Never is a strong statement. Really? Even in 1000 years?
+
+If at all possible, just delete the trailing negation entirely. If it truly damages the meaning or leaves something out, reword the whole sentence to say it without the negative trailer. Do not mangle the sentence. It should be easier to read and understand after your edit than it was before.
 
 The places:
   line 3: ", not on the transport coding"
@@ -32,7 +38,9 @@ ERROR: deslag detected sentences that end in a denial!
 
 mixed.md has 2 sentences that end in a denial.
 
-TODO: matt writes the error message instructions!
+We found a sentence with a negation run-on that is probably unnecessary. Focus on saying what *is* instead of saying *never* or *not* about what isn't. Oftentimes during a session with a user or even during automated fixes, a user might say "no, do not frobulate" and LLMs tend to turn this into a phrase like ", not frobulated", or worse, "never frobulated". This is probably not what the user intended. The user was probably just guiding you to what the positive half of the sentence says. The negative half of the sentence you wrote could lead a future agent astray. Never is a strong statement. Really? Even in 1000 years?
+
+If at all possible, just delete the trailing negation entirely. If it truly damages the meaning or leaves something out, reword the whole sentence to say it without the negative trailer. Do not mangle the sentence. It should be easier to read and understand after your edit than it was before.
 
 The places:
   line 3: ", not on the transport coding"

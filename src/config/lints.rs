@@ -80,7 +80,7 @@ pub struct Lints {
     pub possessive_own: Option<PossessiveOwn>,
     /// That a sentence does not end with a `not` or `never` tail.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.7"))]
     pub denial_tail: Option<DenialTail>,
 }
 
@@ -953,7 +953,7 @@ impl Merge for PossessiveOwn {
 pub struct DenialTail {
     /// Replaces the advice in the report. `{path}` in it is replaced with the file's path.
     #[serde(default)]
-    #[schemars(extend("since" = "next"))]
+    #[schemars(extend("since" = "0.0.7"))]
     pub message: Option<String>,
 }
 
